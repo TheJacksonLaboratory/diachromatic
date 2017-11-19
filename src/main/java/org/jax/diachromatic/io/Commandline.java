@@ -99,14 +99,11 @@ public class Commandline {
     {
         final PrintWriter writer = new PrintWriter(System.out);
         final HelpFormatter usageFormatter = new HelpFormatter();
-        final String applicationName="Oncembobulator";
+        final String applicationName="java -jar diachromatic.jar command";
         final Options options=constructGnuOptions();
-        usageFormatter.printUsage(writer, 80, applicationName, options);
-        writer.print("\t where command is one of download-oncokb, download-clinvar, parse.\n");
-        writer.print("\t download-oncokb: Download the OnkoKB data to the data directory.\n");
-        writer.print("\t download-clinvar: Download the ClinVar data to the data directory.\n");
-        writer.print("\t jannovar: Download hg38 transcript data and create Jannovar transcript file.\n");
-        writer.print("\t undiscombobulate: map the the mutations.\n");
+        usageFormatter.printUsage(writer, 120, applicationName, options);
+        writer.println("\twhere command is one of digest,....");
+        writer.println("\t- digest -g genome [-o outputname]: Digest genome at directory (-g), output to file.");
         writer.close();
         System.exit(0);
     }
