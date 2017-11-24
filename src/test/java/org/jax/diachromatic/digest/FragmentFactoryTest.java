@@ -15,8 +15,9 @@ public class FragmentFactoryTest {
     @BeforeClass
     public static void setup() throws IOException {
         ClassLoader classLoader = FragmentFactoryTest.class.getClassLoader();
-        String hpoPath = classLoader.getResource("data/chrUn_KI270745v1.fa").getFile();
+        String fastaPath = classLoader.getResource("data/chrUn_KI270745v1.fa").getFile();
         genomeDirectoryPath = classLoader.getResource("data").getFile();
+
         factory=new FragmentFactory(genomeDirectoryPath);
     }
 
@@ -32,4 +33,20 @@ public class FragmentFactoryTest {
         int expected=1;
         assertEquals(expected,factory.getGenomeFileCount());
     }
+
+
+    @Test
+    public void testDpnIIcut() {
+        factory.cutWithEnzyme("DpnII");
+
+        // 1. cut with DpnII
+        // 2. make a list of Fragment objects
+        // 3. compare with out put of hicup
+
+
+
+    }
+
+
+
 }

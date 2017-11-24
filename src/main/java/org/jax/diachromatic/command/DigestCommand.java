@@ -1,10 +1,11 @@
 package org.jax.diachromatic.command;
 
-import org.apache.log4j.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class DigestCommand extends Command {
-    static Logger logger = Logger.getLogger(DigestCommand.class.getName());
-
+    private static final Logger logger = LogManager.getLogger();
 
 
     public DigestCommand(String genomeDir) {
