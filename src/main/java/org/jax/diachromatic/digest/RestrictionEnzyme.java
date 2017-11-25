@@ -12,8 +12,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Note that this class was taken originally from VPV and extended here to read files. TODO
+ * Consider putting this version of the class back into VPV.
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
- * @version 0.2.3 (2017-11-25)
+ * @version 0.2.4 (2017-11-25)
  */
 public class RestrictionEnzyme implements Serializable {
     private static final Logger logger = LogManager.getLogger();
@@ -51,19 +53,11 @@ public class RestrictionEnzyme implements Serializable {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getSite() {
         return site;
     }
 
     public String getPlainSite() { return  plainSite; }
-
-    public void setSite(String site) {
-        this.site = site;
-    }
 
     public String getLabel() {
         return String.format("%s: %s",getName(),getSite());
@@ -74,6 +68,7 @@ public class RestrictionEnzyme implements Serializable {
 
     public static List<RestrictionEnzyme> parseRestrictionEnzymesFromFile(String path) {
         List<RestrictionEnzyme> reList=new ArrayList<>();
+        logger.error(String.format("Getting enzymes from %s",path));
         try {
             BufferedReader br = new BufferedReader(new FileReader(path));
             String line=null;
@@ -93,6 +88,8 @@ public class RestrictionEnzyme implements Serializable {
             br.close();
         } catch (IOException e) {
             logger.fatal(String.format("Could not read restriction enzymes from %s",path));
+            logger.fatal(e);
+            System.exit(1);
         }
         return reList;
     }

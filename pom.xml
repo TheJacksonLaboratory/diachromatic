@@ -44,6 +44,7 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>
+            <scope>test</scope>
         </dependency>
 
 
@@ -59,6 +60,15 @@
             <artifactId>htsjdk</artifactId>
             <version>2.8.1</version>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>23.4-jre</version>
+        </dependency>
+
+
 
 
         <!-- End of libraries for GUI testing -->
@@ -112,7 +122,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
+                <version>3.7.0</version>
                 <configuration>
                     <source>${jdk.version}</source>
                     <target>${jdk.version}</target>
@@ -121,7 +131,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>2.6</version>
+                <version>3.0.2</version>
                 <configuration>
                     <archive>
                         <index>true</index>
@@ -133,7 +143,7 @@
                         </manifest>
                     </archive>
                 </configuration>
-                <executions>
+              <!--  <executions>
                     <execution>
                         <id>create-jar</id>
                         <phase>package</phase>
@@ -142,12 +152,12 @@
                         </goals>
                         <inherited>false</inherited>
                     </execution>
-                </executions>
+                </executions> -->
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
-                <version>2.8</version>
+                <version>3.0.2</version>
                 <executions>
                     <execution>
                         <id>copy-dependencies</id>
@@ -166,7 +176,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>2.6</version>
+                <version>3.0.2</version>
                 <executions>
                     <execution>
                         <id>copy-resources</id>
@@ -182,6 +192,7 @@
                                     <filtering>true</filtering>
                                     <includes>
                                         <include>*</include>
+                                        <include>data/*</include>
                                     </includes>
                                 </resource>
                             </resources>
@@ -203,6 +214,9 @@
                         <exclude>**/TestViewPointCreation.java</exclude>
                         <exclude>**/ViewPointPresenterTest.java</exclude>
                     </excludes>-->
+
+                        <redirectTestOutputToFile>true</redirectTestOutputToFile>
+
                 </configuration>
                 <dependencies>
                     <dependency>

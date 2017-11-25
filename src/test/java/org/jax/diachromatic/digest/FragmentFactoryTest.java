@@ -37,6 +37,8 @@ public class FragmentFactoryTest {
 
     @Test
     public void testDpnIIcut() {
+        System.err.println("Indexing FASTA files");
+        factory.indexFASTAfilesIfNeeded();
         factory.cutWithEnzyme("DpnII");
 
         // 1. cut with DpnII
