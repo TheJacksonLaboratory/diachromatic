@@ -4,10 +4,7 @@ import com.sun.org.apache.regexp.internal.RE;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.Serializable;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,11 +63,13 @@ public class RestrictionEnzyme implements Serializable {
     public Integer getOffset() { return this.offset; }
 
 
-    public static List<RestrictionEnzyme> parseRestrictionEnzymesFromFile(String path) {
+    public static List<RestrictionEnzyme> parseRestrictionEnzymes() {
         List<RestrictionEnzyme> reList=new ArrayList<>();
-        logger.error(String.format("Getting enzymes from %s",path));
+        ClassLoader classLoader = RestrictionEnzyme.class.getClassLoader();
+        InputStream is = classLoader.getResourceAsStream("data/enzymelist.tab");
+        logger.error(String.format("Getting enzymes from stream"));
         try {
-            BufferedReader br = new BufferedReader(new FileReader(path));
+            BufferedReader br = new BufferedReader(new InputStreamReader(is));
             String line=null;
             while ((line=br.readLine())!=null) {
                 System.out.println();
@@ -87,7 +86,7 @@ public class RestrictionEnzyme implements Serializable {
             }
             br.close();
         } catch (IOException e) {
-            logger.fatal(String.format("Could not read restriction enzymes from %s",path));
+            logger.fatal(String.format("Could not read restriction enzymes from stream"));
             logger.fatal(e);
             System.exit(1);
         }

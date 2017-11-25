@@ -7,7 +7,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.io.FASTAIndexManager;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,12 +42,19 @@ public class FragmentFactory {
     Map<RestrictionEnzyme,Integer> enzyme2number=null;
     List<Fragment> restrictionFragmentList = null;
     List<String> genomeFilePaths = null;
+    /** File handle for the output of the restriction fragments. */
+    private BufferedWriter out = null;
+    /** Name of output file. TODO set this dynamically */
+    private String outfilename="hicupCloneDigest.txt";
 
     public String getGenomeDirectoryPath() {
         return genomeDirectoryPath;
     }
 
     private String genomeDirectoryPath = null;
+    /** Header of the output file. */
+    private static final String HEADER="Chromosome\tFragment_Start_Position\t" +
+            "Fragment_End_Position\tFragment_Number\t5'_Restriction_Site\t3'_Restriction_Site";
 
 
     public FragmentFactory(String directoryPath) {
@@ -55,9 +64,7 @@ public class FragmentFactory {
         genomeFilePaths = new ArrayList<>();
         identifyFASTAfiles();
         // Note restriction enzyme file is in src/main/resources
-        ClassLoader classLoader = FragmentFactory.class.getClassLoader();
-        String restrictionEnzymesPath = classLoader.getResource("data/enzymelist.tab").getFile();
-        restrictionEnzymeList=RestrictionEnzyme.parseRestrictionEnzymesFromFile(restrictionEnzymesPath);
+        restrictionEnzymeList=RestrictionEnzyme.parseRestrictionEnzymes();
     }
 
 
@@ -83,7 +90,10 @@ public class FragmentFactory {
         }
         for (String path : genomeFilePaths) {
             try {
-                cutChromosome(path);
+                out = new BufferedWriter(new FileWriter(outfilename));
+                out.write(HEADER + "\n");
+                cutChromosome(path,out);
+                out.close();
             } catch (Exception e) {
                 e.printStackTrace();
                 logger.fatal("Could not cut chromo. FATAL TODO -- make better exception");
@@ -93,7 +103,12 @@ public class FragmentFactory {
     }
 
 
-
+    /**
+     * The HTSJDK software requires a FASTA index file for each FASTA file. For instance, for the file {@code example.fa}, HTSJDK
+     * would require abn index file that is named {@code example.fa.fai}. We use a
+     * {@link FASTAIndexManager} object to go through all the FASTA files in {@link #genomeDirectoryPath} and to
+     * generate an index file if needed.
+     */
     public void indexFASTAfilesIfNeeded() {
         FASTAIndexManager manager = new FASTAIndexManager(this.genomeFilePaths);
         try {
@@ -101,12 +116,14 @@ public class FragmentFactory {
             manager.indexChromosomes();
         } catch (Exception e) {
             logger.fatal(String.format("Could not index chromosomes: %s",e.toString()));
-            System.exit(1);
+            System.exit(1); //TODO make exception
         }
-
     }
 
-
+    /** This function will identify FASTA files in the directory {@link #genomeDirectoryPath} by looking for all files
+     * with the suffix {@code .fa}. It will add the absolute path of each file on the local file system to the
+     * list {@link #genomeFilePaths}.
+     */
     private void identifyFASTAfiles() {
         File genomeDir = new File(this.genomeDirectoryPath);
         if (!genomeDir.exists()) {
@@ -118,7 +135,6 @@ public class FragmentFactory {
             System.exit(1); // todo exception
         }
         for (final File fileEntry : genomeDir.listFiles()) {
-            String contigname = null;
             if (fileEntry.isDirectory()) {
                 continue;
             } else if (fileEntry.getName().contains("random")) {
@@ -126,8 +142,7 @@ public class FragmentFactory {
             } else if (!fileEntry.getPath().endsWith(".fa")) {
                 continue;
             } else {
-                this.genomeFilePaths.add(fileEntry.getPath());
-
+                this.genomeFilePaths.add(fileEntry.getAbsolutePath());
             }
         }
     }
@@ -156,7 +171,7 @@ public class FragmentFactory {
 
 
 
-    private void cutChromosome(String chromosomeFilePath) throws Exception {
+    private void cutChromosome(String chromosomeFilePath, BufferedWriter out) throws Exception {
         IndexedFastaSequenceFile fastaReader = new IndexedFastaSequenceFile(new File(chromosomeFilePath));
         ReferenceSequence refseq = fastaReader.nextSequence();
         ImmutableList.Builder<Fragment> builder = new ImmutableList.Builder<>();
@@ -182,7 +197,7 @@ public class FragmentFactory {
             }
         }
         ImmutableList<Fragment> fraglist = builder.build();
-        Collections.sort(fraglist); // todo is it faster to use a google/guave function here?
+        fraglist = ImmutableList.sortedCopyOf(fraglist);// todo better way of coding this?
         String previousCutEnzyme="None";
         Integer previousCutPosition=1; // start of chromosome
         //Header
@@ -190,13 +205,26 @@ public class FragmentFactory {
         String chromo=seqname;
         int n=0;
         for (Fragment f:fraglist) {
-            System.out.println(chromo + "\t" + previousCutPosition + "\t" + f.position +
-            "\t" + String.valueOf(++n) + "\t" + previousCutEnzyme + "\t" + number2enzyme.get(f.enzymeNumber).getName());
+            out.write(String.format("%s\t%d\t%d\t%d\t%s\t%s\n",
+                    chromo,
+                    previousCutPosition,
+                    f.position,
+                    (++n),
+                    previousCutEnzyme,
+                    number2enzyme.get(f.enzymeNumber).getName()));
             previousCutEnzyme=number2enzyme.get(f.enzymeNumber).getName();
             previousCutPosition=f.position;
-
         }
-        // output cuttings for this chromosome to file
+        // output last fragment also
+        // No cut ("None") at end of chromosome
+        int endpos = refseq.length();
+        out.write(String.format("%s\t%d\t%d\t%d\t%s\t%s\n",
+                chromo,
+                previousCutPosition,
+                endpos,
+                (++n),
+                previousCutEnzyme,
+                "None"));
 
     }
 

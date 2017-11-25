@@ -15,9 +15,7 @@ public class RestrictionEnzymeTest {
     @BeforeClass
     public static void setup() throws Exception {
         hindIII = new RestrictionEnzyme("HindIII", "A^AGCTT");
-        ClassLoader classLoader = RestrictionEnzymeTest.class.getClassLoader();
-        String restrictionEnzymesPath = classLoader.getResource("data/enzymelist.tab").getFile();
-        reList=RestrictionEnzyme.parseRestrictionEnzymesFromFile(restrictionEnzymesPath);
+        reList=RestrictionEnzyme.parseRestrictionEnzymes();
     }
     @Test
     public void testGetName() {
