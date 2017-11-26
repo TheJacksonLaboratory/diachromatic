@@ -67,12 +67,10 @@ public class RestrictionEnzyme implements Serializable {
         List<RestrictionEnzyme> reList=new ArrayList<>();
         ClassLoader classLoader = RestrictionEnzyme.class.getClassLoader();
         InputStream is = classLoader.getResourceAsStream("data/enzymelist.tab");
-        logger.error(String.format("Getting enzymes from stream"));
         try {
             BufferedReader br = new BufferedReader(new InputStreamReader(is));
             String line=null;
             while ((line=br.readLine())!=null) {
-                System.out.println();
                 if (line.startsWith("#"))
                     continue; // comment
                 String A[] = line.split("\\s+");
@@ -82,7 +80,6 @@ public class RestrictionEnzyme implements Serializable {
                 }
                 RestrictionEnzyme re = new RestrictionEnzyme(A[0].trim(),A[1].trim());
                 reList.add(re);
-
             }
             br.close();
         } catch (IOException e) {
@@ -90,6 +87,7 @@ public class RestrictionEnzyme implements Serializable {
             logger.fatal(e);
             System.exit(1);
         }
+        logger.error(String.format("Got " + reList.size() + " enzyme definitions."));
         return reList;
     }
 

@@ -41,11 +41,12 @@ public class FragmentFactoryTest {
     @Test
     public void testDpnIIcut() {
         System.err.println("Indexing FASTA files");
-        factory.indexFASTAfilesIfNeeded();
-        String testEnzyme = "DpnII";
-        List<String> enzymes=new ArrayList<>();
-        enzymes.add(testEnzyme);
+
         try {
+            factory.indexFASTAfilesIfNeeded();
+            String testEnzyme = "DpnII";
+            List<String> enzymes=new ArrayList<>();
+            enzymes.add(testEnzyme);
             factory.digestGenome(enzymes);
         } catch (DiachromaticException e) {
             e.printStackTrace();

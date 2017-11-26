@@ -5,6 +5,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jax.diachromatic.Diachromatic;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.io.FASTAIndexManager;
 
@@ -63,7 +64,6 @@ public class FragmentFactory {
         logger.error(String.format("FragmentFactory directory=%s",directoryPath));
         restrictionFragmentList = new ArrayList<>();
         genomeFilePaths = new ArrayList<>();
-        identifyFASTAfiles();
         // Note restriction enzyme file is in src/main/resources
         restrictionEnzymeList=RestrictionEnzyme.parseRestrictionEnzymes();
     }
@@ -72,6 +72,7 @@ public class FragmentFactory {
 
 
     public void digestGenome(List<String> enzymes) throws DiachromaticException {
+        identifyFASTAfiles();
         number2enzyme =new HashMap<>();
         enzyme2number=new HashMap<>();
         int n=0;
@@ -87,18 +88,18 @@ public class FragmentFactory {
                 enzyme2number.put(re,n);
             }
         }
-        for (String path : genomeFilePaths) {
-            try {
-                out = new BufferedWriter(new FileWriter(outfilename));
-                out.write(HEADER + "\n");
-                cutChromosome(path,out);
-                out.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-                logger.fatal("Could not cut chromo. FATAL TODO -- make better exception");
-                System.exit(1);
+        try {
+            out = new BufferedWriter(new FileWriter(outfilename));
+            out.write(HEADER + "\n");
+            for (String path : genomeFilePaths) {
+                cutChromosome(path, out);
             }
+            out.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new DiachromaticException(String.format("Could not digest chromosomes: %s", e.toString()));
         }
+
     }
 
 
@@ -108,14 +109,13 @@ public class FragmentFactory {
      * {@link FASTAIndexManager} object to go through all the FASTA files in {@link #genomeDirectoryPath} and to
      * generate an index file if needed.
      */
-    public void indexFASTAfilesIfNeeded() {
+    public void indexFASTAfilesIfNeeded() throws  DiachromaticException {
         FASTAIndexManager manager = new FASTAIndexManager(this.genomeFilePaths);
         try {
-            System.err.println("indexing fasta files");
+            logger.trace("indexing fasta files");
             manager.indexChromosomes();
         } catch (Exception e) {
-            logger.fatal(String.format("Could not index chromosomes: %s",e.toString()));
-            System.exit(1); //TODO make exception
+            throw new DiachromaticException(String.format("Could not index chromosomes: %s",e.toString()));
         }
     }
 
@@ -123,15 +123,13 @@ public class FragmentFactory {
      * with the suffix {@code .fa}. It will add the absolute path of each file on the local file system to the
      * list {@link #genomeFilePaths}.
      */
-    private void identifyFASTAfiles() {
+    private void identifyFASTAfiles() throws DiachromaticException {
         File genomeDir = new File(this.genomeDirectoryPath);
         if (!genomeDir.exists()) {
-            logger.error(String.format("Could not find directory \"%s\" with genome FASTA files", this.genomeDirectoryPath));
-            System.exit(1); // todo exception
+            throw new DiachromaticException(String.format("Could not find directory \"%s\" with genome FASTA files", this.genomeDirectoryPath));
         }
         if (!genomeDir.isDirectory()) {
-            logger.error(String.format("%s must be a directory with genome FASTA files", this.genomeDirectoryPath));
-            System.exit(1); // todo exception
+            throw new DiachromaticException(String.format("%s must be a directory with genome FASTA files", this.genomeDirectoryPath));
         }
         for (final File fileEntry : genomeDir.listFiles()) {
             if (fileEntry.isDirectory()) {
@@ -152,26 +150,15 @@ public class FragmentFactory {
     }
 
 
-    /**
-     * TODO extend to multiple enzymes
-     * TODO throw exception if problems occur
-     * @param enzymeName
-     */
-    public  void cutWithEnzyme(String enzymeName) {
-        RestrictionEnzyme re=restrictionEnzymeList.stream().filter(renz -> renz.getName().equalsIgnoreCase(enzymeName)).findFirst().orElse(null);
-        if (re==null) {
-            for (RestrictionEnzyme r: restrictionEnzymeList) {
-                System.out.println(r);
-            }
-            logger.fatal(String.format("Could not find enzyme %s, terminating",enzymeName));
-            System.exit(1);
-        }
-    }
-
-
 
     private void cutChromosome(String chromosomeFilePath, BufferedWriter out) throws Exception {
-        IndexedFastaSequenceFile fastaReader = new IndexedFastaSequenceFile(new File(chromosomeFilePath));
+        logger.trace(String.format("cutting chromosomes %s",chromosomeFilePath ));
+        IndexedFastaSequenceFile fastaReader=null;
+        try {
+             fastaReader = new IndexedFastaSequenceFile(new File(chromosomeFilePath));
+        } catch (Exception e) {
+            throw  new DiachromaticException(String.format("Could not create FAI file for %s [%s]",chromosomeFilePath,e.toString()));
+        }
         ReferenceSequence refseq = fastaReader.nextSequence();
         ImmutableList.Builder<Fragment> builder = new ImmutableList.Builder<>();
         //List<Fragment> fraglist=new ArrayList<>();

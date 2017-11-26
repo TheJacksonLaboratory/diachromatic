@@ -26,11 +26,11 @@ public class DigestCommand extends Command {
 
     public void execute() {
         FragmentFactory factory=new FragmentFactory(genomeDirectoryPath);
-        factory.indexFASTAfilesIfNeeded();
-        String testEnzyme = "DpnII";
-        List<String> enzymes=new ArrayList<>();
-        enzymes.add(testEnzyme);
         try {
+            factory.indexFASTAfilesIfNeeded();
+            String testEnzyme = "DpnII";
+            List<String> enzymes=new ArrayList<>();
+            enzymes.add(testEnzyme);
             factory.digestGenome(enzymes);
         } catch (DiachromaticException e) {
             e.printStackTrace();
