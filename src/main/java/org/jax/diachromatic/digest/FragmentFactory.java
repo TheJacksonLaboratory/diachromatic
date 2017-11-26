@@ -5,6 +5,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.io.FASTAIndexManager;
 
 import java.io.BufferedWriter;
@@ -70,18 +71,16 @@ public class FragmentFactory {
 
 
 
-    public void digestGenome(List<String> enzymes) {
+    public void digestGenome(List<String> enzymes) throws DiachromaticException {
         number2enzyme =new HashMap<>();
         enzyme2number=new HashMap<>();
         int n=0;
-        for (String eenz : enzymes) {
+        for (String enzym : enzymes) {
             RestrictionEnzyme re = restrictionEnzymeList.stream().
-                    filter( x ->  eenz.equalsIgnoreCase(x.getName()) ).
+                    filter( x ->  enzym.equalsIgnoreCase(x.getName()) ).
                     findFirst().orElse(null);
             if (re==null) {
-                //TODO replace with exception
-                logger.fatal(String.format("Did not recognize restriction enzyme \"%s\"",eenz));
-                System.exit(1);
+                throw new DiachromaticException(String.format("Did not recognize restriction enzyme \"%s\"",enzym));
             } else {
                 n++;
                 number2enzyme.put(n,re);
