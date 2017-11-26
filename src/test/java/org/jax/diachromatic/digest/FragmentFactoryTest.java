@@ -1,9 +1,12 @@
 package org.jax.diachromatic.digest;
 
+import org.jax.diachromatic.exception.DiachromaticException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -39,7 +42,14 @@ public class FragmentFactoryTest {
     public void testDpnIIcut() {
         System.err.println("Indexing FASTA files");
         factory.indexFASTAfilesIfNeeded();
-        factory.cutWithEnzyme("DpnII");
+        String testEnzyme = "DpnII";
+        List<String> enzymes=new ArrayList<>();
+        enzymes.add(testEnzyme);
+        try {
+            factory.digestGenome(enzymes);
+        } catch (DiachromaticException e) {
+            e.printStackTrace();
+        }
 
         // 1. cut with DpnII
         // 2. make a list of Fragment objects
