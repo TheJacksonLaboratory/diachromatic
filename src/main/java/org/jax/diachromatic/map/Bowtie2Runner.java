@@ -5,21 +5,32 @@ import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.exception.DiachromaticException;
 
 import java.io.*;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class Bowtie2Runner {
     private static final Logger logger = LogManager.getLogger();
 
     private String pathToBowtie2=null;
 
+    private String pathToBowtieIndex=null;
+
+    private String pathToInputFastq=null;
+
+    private String outname=null;
+
     String stdin=null;
 
     String stderr=null;
 
 
-    public Bowtie2Runner(String bowtiepath) throws DiachromaticException {
+    public Bowtie2Runner(String bowtiepath, String btIndexPath, String inputFastqPath, String outnam) throws DiachromaticException {
         if (! checkBowtie2(bowtiepath) ){
             throw new DiachromaticException("Could not start bowtie");
         }
+        pathToBowtieIndex=btIndexPath;
+        pathToInputFastq=inputFastqPath;
+        outname=outnam;
     }
 
 
@@ -38,12 +49,28 @@ public class Bowtie2Runner {
         }
     }
 
-
+    /**
+     * Run bowtie
+     * /usr/bin/bowtie2 --very-sensitive  -x [path to bowtie index] --no-unal -p 1 [path to input fastq] -S [outname.sam]
+     * @throws DiachromaticException
+     */
     public void run() throws DiachromaticException {
-        String args[]=new String[2];
+        String args[]=new String[11];
         args[0]=pathToBowtie2;
-        args[1]="--help";
-        // TODO get rest of command for bowtie2
+        args[1]="--very-sensitive";
+        args[2]="--no-unal";
+        args[3]="-p";
+        args[4]="2";
+        args[5]="--reorder"; // keep same order of records as in FASTQ
+        args[6]="-x";
+        args[7]=pathToBowtieIndex;
+        args[8]=pathToInputFastq; // Input FASTQ file (just one!)
+        args[9]="-S";
+        args[10]=outname;// output name
+
+
+        String btcomd= Arrays.stream(args).collect(Collectors.joining(" "));
+        logger.trace("Running: "+btcomd);
 
         String[] dummy=new String[0];
         try {

@@ -23,6 +23,9 @@ public class Commandline {
     private String file2=null;
     private String enzyme=null;
     private String bowtiepath=null;
+    private String pathToBowtieIndex=null;
+    private String pathToInputFastq1 =null;
+    private String pathToInputFastq2 =null;
 
     public Commandline(String args[]) {
         final CommandLineParser cmdLineGnuParser = new GnuParser();
@@ -60,6 +63,15 @@ public class Commandline {
             }
             if (commandLine.hasOption("b")) {
                 this.bowtiepath=commandLine.getOptionValue("b");
+            }
+            if (commandLine.hasOption("i")) {
+                this.pathToBowtieIndex=commandLine.getOptionValue("i");
+            }
+            if (commandLine.hasOption("q")) {
+                this.pathToInputFastq1 =commandLine.getOptionValue("q");
+            }
+            if (commandLine.hasOption("q2")) {
+                this.pathToInputFastq2 =commandLine.getOptionValue("q2");
             }
             if (commandLine.hasOption("file1")) {
                 this.file1 =commandLine.getOptionValue("file1");
@@ -99,7 +111,19 @@ public class Commandline {
                 if (this.bowtiepath==null) {
                     printUsage("-b option required for map command");
                 }
-                this.command=new MapCommand(bowtiepath);
+                if (this.pathToBowtieIndex==null) {
+                    printUsage("-i option (bowtie index) required for map command");
+                }
+                if (this.pathToInputFastq1 ==null) {
+                    printUsage("-q option (FASTQ 1) required for map command");
+                }
+                if (this.pathToInputFastq2 ==null) {
+                    printUsage("-r option (FASTQ 2) required for map command");
+                }
+                if (this.outputFilePath==null) {
+                    outputFilePath="DEFAULTOUTNAME";
+                }
+                this.command=new MapCommand(bowtiepath,pathToBowtieIndex, pathToInputFastq1,pathToInputFastq2,outputFilePath);
             } else {
                 printUsage(String.format("Did not recognize command: %s", mycommand));
             }
@@ -126,6 +150,9 @@ public class Commandline {
                 .addOption("g", "genome", true, "genome directory (with FASTA files)")
                 .addOption("e", "enzyme", true, "restriction enzyme name")
                 .addOption("b", "bowtie", true, "path to bowtie2")
+                .addOption("i", "bowtieindex", true, "path to bowtie2 index")
+                .addOption("q", "q1", true, "path to FASTQ input file")
+                .addOption("q2", "q2", true, "path to FASTQ input file")
         .addOption( Option.builder( "f1" ).longOpt("file1").desc("path to fastq file 1").hasArg(true).argName("file1").build())
          .addOption( Option.builder( "f2" ).longOpt("file2").desc("path to fastq file 2").hasArg(true).argName("file2").build());
         return gnuOptions;
