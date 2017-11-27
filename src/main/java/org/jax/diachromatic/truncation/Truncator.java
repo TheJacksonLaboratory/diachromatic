@@ -19,6 +19,10 @@ public class Truncator  {
     private final RestrictionEnzyme renzyme;
     private final String filledEndSequence;
 
+    private int removedBecauseAtLeastOneReadTooShort;
+
+    private static final int LENGTH_THRESHOLD=20;
+
 
     public Truncator(String outdir, String file1, String file2,RestrictionEnzyme re){
         this.outdir=outdir;
@@ -36,12 +40,16 @@ public class Truncator  {
         FastQRecord.setLigationSequence(filledEndSequence);
         FastQRecord.setRestrictionSequence(renzyme.getPlainSite());
         FastqPairParser parser = new FastqPairParser(fastqFile1,fastqFile2,filledEndSequence);
-
+        removedBecauseAtLeastOneReadTooShort=0;
         try {
             BufferedWriter out1=new BufferedWriter(new FileWriter("seq1.fastq"));
             BufferedWriter out2=new BufferedWriter(new FileWriter("seq2.fastq"));
             while (parser.hasNextPair()) {
                 Pair<FastQRecord, FastQRecord> pair = parser.getNextPair();
+                if (pair.first.getLen()<LENGTH_THRESHOLD || pair.second.getLen()<LENGTH_THRESHOLD) {
+                    removedBecauseAtLeastOneReadTooShort++;
+                    continue;
+                }
                 pair.first.writeToStream(out1);
                 pair.second.writeToStream(out2);
             }
@@ -50,9 +58,10 @@ public class Truncator  {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        logger.trace(String.format("No. reads processed: %d and No. of reads truncated %d (%.2f%%)",
-                parser.getnReadsProcessed(), parser.getnReadsTruncated(),
-                100.0*parser.getnReadsTruncated()/parser.getnReadsProcessed()));
+        logger.trace(String.format("No. reads processed: %d and No. of forward reads truncated %d (%.2f%%)",
+                parser.getnReadsProcessed(), parser.getReadOneTruncated(),
+                100.0*parser.getReadOneTruncated()/parser.getnReadsProcessed()));
+        logger.trace(String.format("removed b/c too short %d",removedBecauseAtLeastOneReadTooShort ));
 
     }
 

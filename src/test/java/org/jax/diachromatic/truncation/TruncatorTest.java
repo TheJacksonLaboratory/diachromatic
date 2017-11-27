@@ -1,19 +1,28 @@
 package org.jax.diachromatic.truncation;
 
 import org.jax.diachromatic.digest.RestrictionEnzyme;
+import org.jax.diachromatic.util.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class TruncatorTest {
 
     private static FastqPairParser parser=null;
+    private static String fastq_1;
+    private static String fastq_2;
+    private static String ligationSequence;
 
-  @BeforeClass
+    @BeforeClass
     public  static void init() {
       /*  #name   site
-        BmtI	GCTAG^C
+
         KpnI	GGTAC^C
         NsiI	ATGCA^T
         PstI	CTGCA^G
@@ -21,15 +30,15 @@ public class TruncatorTest {
         SacI	GAGCT^C
         SacII	CCGCG^G
         SphI	GCATG^C
-        FaeI	CATG^
+
         TaiI	ACGT^  */
 
       ClassLoader classLoader = TruncatorTest.class.getClassLoader();
-      String fastq_1 = classLoader.getResource("data/fastq/test1.fastq").getFile();
-      String fastq_2 = classLoader.getResource("data/fastq/test2.fastq").getFile();
+      fastq_1 = classLoader.getResource("data/fastq/test1.fastq").getFile();
+      fastq_2 = classLoader.getResource("data/fastq/test2.fastq").getFile();
       RestrictionEnzyme hindIII = new RestrictionEnzyme("HindIII","A^AGCTT");
-      String ligationSequence=Truncator.fillEnd(hindIII);
-      parser=new FastqPairParser(fastq_1,fastq_2,ligationSequence);
+      ligationSequence=Truncator.fillEnd(hindIII);
+
 
     }
 
@@ -97,12 +106,47 @@ public class TruncatorTest {
     }
 
 
-
-
-
     @Test
-    public void testEqualNumberOfSequences() {
+    public void testBmtI () {
+        //BmtI	GCTAG^C
+        // G-CTAG-CTAG-C = GCTAGCTAGC
+        RestrictionEnzyme bmtI = new RestrictionEnzyme("BmtI","GCTAG^C" );
+        String ligationSequence = Truncator.fillEnd(bmtI);
+        String expected = "GCTAGCTAGC";
+        assertEquals(expected,ligationSequence);
+    }
 
+    //
+    @Test
+    public void testFaeI () {
+        //FaeI	CATG^
+        // CATG-CATG = CATGCATG
+        RestrictionEnzyme faeI = new RestrictionEnzyme("FaeI","CATG^" );
+        String ligationSequence = Truncator.fillEnd(faeI);
+        String expected = "CATGCATG";
+        assertEquals(expected,ligationSequence);
+    }
+
+
+    /*
+    Search in test1.fastq reveals three instances of AAGCTAGCTT. Thus,
+    read1 should be truncated 3 times. There are no hits for this sequence
+    int test2.fastq
+     */
+    @Test
+    public void testTruncationCount() {
+        RestrictionEnzyme hindIII = new RestrictionEnzyme("HindIII","A^AGCTT");
+        String ligationSequence = Truncator.fillEnd(hindIII);
+        FastQRecord.setLigationSequence(ligationSequence);
+        FastQRecord.setRestrictionSequence(hindIII.getPlainSite());
+        parser=new FastqPairParser(fastq_1,fastq_2,ligationSequence);
+        while (parser.hasNextPair()) {
+            Pair<FastQRecord, FastQRecord> pair = parser.getNextPair();
+            FastQRecord fqr1=pair.first;
+            FastQRecord fqr2=pair.second;
+        }
+        assertEquals(3,parser.getReadOneTruncated());
+        assertEquals(0,parser.getReadTwoTruncated());
     }
 
 

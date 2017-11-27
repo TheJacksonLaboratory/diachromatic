@@ -3,7 +3,6 @@ package org.jax.diachromatic.truncation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.IOException;
 
@@ -25,6 +24,8 @@ public class FastQRecord {
     public static void setRestrictionSequence(String seq) {
         restrictionSequence=seq;
     }
+
+    public int getLen() { return sequence.length(); }
 
 
     public FastQRecord(String [] lines) {
@@ -50,6 +51,7 @@ public class FastQRecord {
         if (i<0) {
             return false;  // we did not find the ligation sequence
         }
+
         sequence=sequence.substring(0,i) + FastQRecord.restrictionSequence;
         int len=sequence.length();
         quality=quality.substring(0,len);

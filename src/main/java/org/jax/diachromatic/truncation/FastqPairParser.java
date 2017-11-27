@@ -15,11 +15,18 @@ import org.jax.diachromatic.util.Pair;
  */
 public class FastqPairParser {
     private static final Logger logger = LogManager.getLogger();
+    /** First read of paired end sequencing experiment. */
     private final String fastqFile1;
+    /** Second read of paired end sequencing experiment. */
     private final String fastqFile2;
 
+
+    private int nReadOneTruncated;
+
+    private int nReadTwoTruncated;
+
     private int nReadsProcessed;
-    private int nReadsTruncated;
+
 
 
     /** A buffered reader for {@link #fastqFile1}.*/
@@ -57,8 +64,12 @@ public class FastqPairParser {
         return nReadsProcessed;
     }
 
-    public int getnReadsTruncated() {
-        return nReadsTruncated;
+    public int getReadOneTruncated() {
+        return nReadOneTruncated;
+    }
+
+    public int getReadTwoTruncated() {
+        return nReadTwoTruncated;
     }
 
     /**
@@ -123,10 +134,14 @@ public class FastqPairParser {
         // Now construct the FastQRecord objects
         FastQRecord fqr1 = new FastQRecord(read1);
         FastQRecord fqr2 = new FastQRecord(read2);
-        boolean a= fqr1.truncateIfLigationSiteFound();
-        boolean b =fqr2.truncateIfLigationSiteFound();
+        if (fqr1.truncateIfLigationSiteFound()){
+            nReadOneTruncated++;
+        }
+        if (fqr2.truncateIfLigationSiteFound() ) {
+            nReadTwoTruncated++;
+        }
         nReadsProcessed++;
-        if (a || b) nReadsTruncated++;
+
 
 
         currentPair = new Pair<>(fqr1,fqr2);
