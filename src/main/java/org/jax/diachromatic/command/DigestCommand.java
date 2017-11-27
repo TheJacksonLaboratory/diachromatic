@@ -39,4 +39,7 @@ public class DigestCommand extends Command {
         }
         // implement digesting a genome
     }
+
+    @Override
+    public String toString() {return "diachromatic:digest";}
 }

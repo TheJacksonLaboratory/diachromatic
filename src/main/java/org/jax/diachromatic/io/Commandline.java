@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.cli.*;
 import org.jax.diachromatic.command.Command;
 import org.jax.diachromatic.command.DigestCommand;
+import org.jax.diachromatic.command.MapCommand;
 import org.jax.diachromatic.command.TruncateCommand;
 import org.jax.diachromatic.exception.DiachromaticException;
 
@@ -21,6 +22,7 @@ public class Commandline {
     private String file1=null;
     private String file2=null;
     private String enzyme=null;
+    private String bowtiepath=null;
 
     public Commandline(String args[]) {
         final CommandLineParser cmdLineGnuParser = new GnuParser();
@@ -56,6 +58,9 @@ public class Commandline {
             if (commandLine.hasOption("e")) {
                 this.enzyme=commandLine.getOptionValue("e");
             }
+            if (commandLine.hasOption("b")) {
+                this.bowtiepath=commandLine.getOptionValue("b");
+            }
             if (commandLine.hasOption("file1")) {
                 this.file1 =commandLine.getOptionValue("file1");
             }
@@ -79,18 +84,22 @@ public class Commandline {
                     this.command = new DigestCommand(this.genomeDirectory, this.outputFilePath);
                 }
             } else if (mycommand.equalsIgnoreCase("truncate")) {
-                if (this.outputFilePath==null) {
+                if (this.outputFilePath == null) {
                     printUsage("-o option required for truncate command");
-                } else if (this.file1==null) {
+                } else if (this.file1 == null) {
                     printUsage("--file1 option required for truncate command");
-                } else if (this.file2==null) {
+                } else if (this.file2 == null) {
                     printUsage("--file2 option required for truncate command");
-                }else if (this.enzyme==null) {
+                } else if (this.enzyme == null) {
                     printUsage("-e option required for truncate command");
                 }
-            //String outdir, String file1, String file2, String enzymeName
-                this.command = new TruncateCommand(outputFilePath,file1,file2,enzyme);
-
+                //String outdir, String file1, String file2, String enzymeName
+                this.command = new TruncateCommand(outputFilePath, file1, file2, enzyme);
+            } else if (mycommand.equalsIgnoreCase("map")) {
+                if (this.bowtiepath==null) {
+                    printUsage("-b option required for map command");
+                }
+                this.command=new MapCommand(bowtiepath);
             } else {
                 printUsage(String.format("Did not recognize command: %s", mycommand));
             }
@@ -116,6 +125,7 @@ public class Commandline {
         gnuOptions.addOption("o", "out", true, "name/path of output file/directory")
                 .addOption("g", "genome", true, "genome directory (with FASTA files)")
                 .addOption("e", "enzyme", true, "restriction enzyme name")
+                .addOption("b", "bowtie", true, "path to bowtie2")
         .addOption( Option.builder( "f1" ).longOpt("file1").desc("path to fastq file 1").hasArg(true).argName("file1").build())
          .addOption( Option.builder( "f2" ).longOpt("file2").desc("path to fastq file 2").hasArg(true).argName("file2").build());
         return gnuOptions;

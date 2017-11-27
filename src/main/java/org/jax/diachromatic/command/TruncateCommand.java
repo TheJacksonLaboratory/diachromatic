@@ -62,4 +62,7 @@ public class TruncateCommand extends Command {
         logger.trace(String.format("Starting truncate command on files %s and %s",fastaqFile1,fastaqFile2 ));
         truncator.parseFASTQ();
     }
+
+    @Override
+    public String toString() {return "diachromatic:truncate";}
 }
