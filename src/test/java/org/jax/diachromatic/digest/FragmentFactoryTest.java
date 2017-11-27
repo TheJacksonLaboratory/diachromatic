@@ -2,7 +2,9 @@ package org.jax.diachromatic.digest;
 
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,6 +13,9 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 public class FragmentFactoryTest {
+
+    @Rule
+    public TemporaryFolder folder= new TemporaryFolder();
 
     private static String genomeDirectoryPath=null;
     private static FragmentFactory factory=null;

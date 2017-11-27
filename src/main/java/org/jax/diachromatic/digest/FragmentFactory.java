@@ -59,8 +59,9 @@ public class FragmentFactory {
             "Fragment_End_Position\tFragment_Number\t5'_Restriction_Site\t3'_Restriction_Site";
 
 
-    public FragmentFactory(String directoryPath) {
+    public FragmentFactory(String directoryPath, String outfile) {
         this.genomeDirectoryPath = directoryPath;
+        outfilename=outfile;
         logger.error(String.format("FragmentFactory directory=%s",directoryPath));
         restrictionFragmentList = new ArrayList<>();
         genomeFilePaths = new ArrayList<>();

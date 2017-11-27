@@ -17,6 +17,7 @@ public class Commandline {
 
     private String genomeDirectory=null;
     private String outputFilePath=null;
+    private String digestfilename="hicupCloneDigest.txt";
     private String file1=null;
     private String file2=null;
     private String enzyme=null;

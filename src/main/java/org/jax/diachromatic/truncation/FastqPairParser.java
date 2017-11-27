@@ -19,33 +19,27 @@ public class FastqPairParser {
     private final String fastqFile1;
     /** Second read of paired end sequencing experiment. */
     private final String fastqFile2;
-
-
+    /** Number of reads from file 1 that got truncated during processing. */
     private int nReadOneTruncated;
-
+    /** Number of reads from file 2 that got truncated during processing. */
     private int nReadTwoTruncated;
-
+    /** Total number of reads from each file that got processed. */
     private int nReadsProcessed;
-
-
-
     /** A buffered reader for {@link #fastqFile1}.*/
     private BufferedReader br1;
     /** A buffered reader for {@link #fastqFile2}.*/
     private BufferedReader br2;
-
+    /** This is used to store the last processed pair of reads roughly in the style of an iterator. */
     private Pair<FastQRecord,FastQRecord> currentPair=null;
-
+    /** This is the Hi-C ligation sequence that is created from the restriction enzyme. */
     private String ligationSequence=null;
 
     public FastqPairParser(String file1, String file2, String ligationSequence) {
         fastqFile1=file1;
         fastqFile2=file2;
-        logger.trace(String.format("Processing FASTQ files %s and %s",file1,file2 ));
-        logger.trace(String.format("Using ligation sequence %s",ligationSequence ));
+        logger.trace(String.format("Processing FASTQ files %s and %s with ligation sequence %s",file1,file2,ligationSequence ));
         try {
             setUpIterator(ligationSequence);
-
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1); // todo exception
