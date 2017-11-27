@@ -62,7 +62,7 @@ public class FragmentFactory {
     public FragmentFactory(String directoryPath, String outfile) {
         this.genomeDirectoryPath = directoryPath;
         outfilename=outfile;
-        logger.error(String.format("FragmentFactory directory=%s",directoryPath));
+        logger.trace(String.format("FragmentFactory directory=%s",directoryPath));
         restrictionFragmentList = new ArrayList<>();
         genomeFilePaths = new ArrayList<>();
         // Note restriction enzyme file is in src/main/resources
@@ -162,7 +162,6 @@ public class FragmentFactory {
         }
         ReferenceSequence refseq = fastaReader.nextSequence();
         ImmutableList.Builder<Fragment> builder = new ImmutableList.Builder<>();
-        //List<Fragment> fraglist=new ArrayList<>();
         String seqname = refseq.getName();
 
         for (Map.Entry<RestrictionEnzyme,Integer> ent : enzyme2number.entrySet()) {
@@ -172,7 +171,7 @@ public class FragmentFactory {
             int offset = enzyme.getOffset();
 
             // note fastaReader refers to one-based numbering scheme.
-            String sequence = fastaReader.getSequence(seqname).getBaseString();//(seqname, genomicPos - maxDistToGenomicPosUp, genomicPos + maxDistToGenomicPosDown).getBaseString().toUpperCase();
+            String sequence = fastaReader.getSequence(seqname).getBaseString().toUpperCase();//(seqname, genomicPos - maxDistToGenomicPosUp, genomicPos + maxDistToGenomicPosDown).getBaseString().toUpperCase();
             Pattern pattern = Pattern.compile(cutpat);
             Matcher matcher = pattern.matcher(sequence);
             ArrayList<Integer> cuttingPositionList = new ArrayList<>();
@@ -180,13 +179,14 @@ public class FragmentFactory {
             while (matcher.find()) {
                 // replaces matcher.start() - maxDistToGenomicPosUp + offset;
                 int pos = matcher.start() + offset; /* one-based position of first nucleotide after the restriction enzyme cuts */
+                logger.trace(String.format("Adding %d to search for %s",pos,cutpat));
                 builder.add(new Fragment(enzymeNumber,pos));
             }
         }
         ImmutableList<Fragment> fraglist = builder.build();
         fraglist = ImmutableList.sortedCopyOf(fraglist);// todo better way of coding this?
         String previousCutEnzyme="None";
-        Integer previousCutPosition=1; // start of chromosome
+        Integer previousCutPosition=0; // start of chromosome
         //Header
         //Chromosome      Fragment_Start_Position Fragment_End_Position   Fragment_Number RE1_Fragment_Number     5'_Restriction_Site     3'_Restriction_Site
         String chromo=seqname;
@@ -194,7 +194,7 @@ public class FragmentFactory {
         for (Fragment f:fraglist) {
             out.write(String.format("%s\t%d\t%d\t%d\t%s\t%s\n",
                     chromo,
-                    previousCutPosition,
+                    (previousCutPosition+1),
                     f.position,
                     (++n),
                     previousCutEnzyme,
@@ -207,7 +207,7 @@ public class FragmentFactory {
         int endpos = refseq.length();
         out.write(String.format("%s\t%d\t%d\t%d\t%s\t%s\n",
                 chromo,
-                previousCutPosition,
+                (previousCutPosition+1),
                 endpos,
                 (++n),
                 previousCutEnzyme,

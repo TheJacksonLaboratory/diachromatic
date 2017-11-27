@@ -13,6 +13,8 @@ public class DigestCommand extends Command {
     private static final Logger logger = LogManager.getLogger();
 
     private String genomeDirectoryPath=null;
+    /** Name of output file. TODO set this dynamically */
+    private String outfilename="hicupCloneDigest.txt";
 
 
     public DigestCommand(String genomeDir) {
@@ -25,7 +27,7 @@ public class DigestCommand extends Command {
 
 
     public void execute() {
-        FragmentFactory factory=new FragmentFactory(genomeDirectoryPath);
+        FragmentFactory factory=new FragmentFactory(genomeDirectoryPath,outfilename);
         try {
             factory.indexFASTAfilesIfNeeded();
             String testEnzyme = "DpnII";

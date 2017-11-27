@@ -14,7 +14,7 @@
             <DefaultRolloverStrategy max="2" />
         </RollingFile>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="[%t] %-5level (%F:%L) - %m%n- %msg%n"/>
+            <PatternLayout pattern="[%t] %-5level (%F:%L) - %msg%n"/>
         </Console>
     </Appenders>
     <Loggers>

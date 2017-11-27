@@ -87,7 +87,7 @@ public class RestrictionEnzyme implements Serializable {
             logger.fatal(e);
             System.exit(1);
         }
-        logger.error(String.format("Got " + reList.size() + " enzyme definitions."));
+        logger.trace(String.format("Got " + reList.size() + " enzyme definitions."));
         return reList;
     }
 
