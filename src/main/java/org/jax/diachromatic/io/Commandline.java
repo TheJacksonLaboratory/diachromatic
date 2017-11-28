@@ -28,7 +28,7 @@ public class Commandline {
     private String pathToInputFastq2 =null;
 
     public Commandline(String args[]) {
-        final CommandLineParser cmdLineGnuParser = new GnuParser();
+        final CommandLineParser cmdLineGnuParser = new DefaultParser();
 
         final Options gnuOptions = constructGnuOptions();
         org.apache.commons.cli.CommandLine commandLine;
