@@ -92,12 +92,12 @@ public class SAMPairer {
             // first check whether both reads were mapped.
             int flag1 = pair.first.getFlags();
             int flag2 = pair.second.getFlags();
-            //TODO we should also be able to do simply if (pair.first.getReadUnmappedFlag() ....
-            if (SamBitflagFilter.segmentIsUnmapped(flag1)) {
+            //read 1 could not be aligned
+            if (pair.first.getReadUnmappedFlag()) {
                 n_unmapped_read1++;
                 n_unmapped_pair++;
-                if (SamBitflagFilter.segmentIsUnmapped(flag2)) n_unmapped_read2++;
-            } else if (SamBitflagFilter.segmentIsUnmapped(flag2)) {
+                if (pair.second.getReadUnmappedFlag()) n_unmapped_read2++;
+            } else if (pair.first.getReadUnmappedFlag()) {
                 n_unmapped_read2++; // note read1 must be OK if we get here...
                 n_unmapped_pair++;
             } else  if ( pair.first.getAttribute("XS") != null ) {
@@ -122,8 +122,8 @@ public class SAMPairer {
                     // do something here to add this VALID INTERACTION PAIR to a data structure
                     // also write it out to our BAM file
                     // Note we need to add corresponding bits to the SAM flag
-                    //pair.first.setFirstOfPairFlag(true);
-                    //pair.second.setSecondOfPairFlag(true);
+                    pair.first.setFirstOfPairFlag(true);
+                    pair.second.setSecondOfPairFlag(true);
                     System.out.println("*****  READ 1  *****");
                     SamBitflagFilter.debugDisplayBitflag(flag1);
                     System.out.println("*****  READ 2  *****");
@@ -132,7 +132,15 @@ public class SAMPairer {
                     System.out.println("     READ 1  read paired flag");
                     pair.first.setReadPairedFlag(true);// 0x1
                     pair.first.setProperPairFlag(true);//0x2
+                    pair.second.setReadPairedFlag(true);
+                    pair.second.setProperPairFlag(true);
                     SamBitflagFilter.debugDisplayBitflag(pair.first.getFlags());
+
+                    // Indicate if pair is on the reverse strand
+                    System.out.println("   READ 1&2  set mate negative strand flag");
+                    pair.first.setMateNegativeStrandFlag(pair.second.getReadNegativeStrandFlag());
+                    pair.second.setMateNegativeStrandFlag(pair.first.getReadNegativeStrandFlag());
+
 
                     // Set which reads are which in the pair
                     pair.first.setFirstOfPairFlag(true);
@@ -142,19 +150,9 @@ public class SAMPairer {
                     System.out.println("   READ 2  set second segment in template");
                     SamBitflagFilter.debugDisplayBitflag(pair.second.getFlags());
 
-                    // Indicate if pair is on the reverse strand
-                    System.out.println("   READ 1&2  set mate negative strand flag");
-                    pair.first.setMateNegativeStrandFlag(pair.second.getReadNegativeStrandFlag());
-                    pair.second.setMateNegativeStrandFlag(pair.first.getReadNegativeStrandFlag());
+
 
                     // Set the RNEXT and PNEXT values
-//                    if (pair.first.getReferenceName().equals(pair.second.getReferenceName())) {
-//                        pair.first.setMateReferenceName("=");
-//                        pair.second.setMateReferenceName("=");  // both reads are on same chromosome
-//                    } else {
-//                        pair.first.setMateReferenceName(pair.second.getReferenceName());
-//                        pair.second.setMateReferenceName(pair.first.getReferenceName());
-//                    }
                     // If the reference indices are the same, then the following should print "=" TODO CHeck this.
                     pair.first.setMateReferenceIndex(pair.second.getReferenceIndex());
                     pair.second.setMateReferenceIndex(pair.first.getReferenceIndex());

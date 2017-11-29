@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
  * </pre>
  *
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
- * @version 0.0.1
+ * @version 0.0.2
  */
 public class FragmentFactory {
     private static final Logger logger = LogManager.getLogger();
@@ -150,7 +150,7 @@ public class FragmentFactory {
         return genomeFilePaths.size();
     }
 
-
+    int counter=1;
 
     private void cutChromosome(String chromosomeFilePath, BufferedWriter out) throws Exception {
         logger.trace(String.format("cutting chromosomes %s",chromosomeFilePath ));
@@ -179,7 +179,10 @@ public class FragmentFactory {
             while (matcher.find()) {
                 // replaces matcher.start() - maxDistToGenomicPosUp + offset;
                 int pos = matcher.start() + offset; /* one-based position of first nucleotide after the restriction enzyme cuts */
-                logger.trace(String.format("Adding %d to search for %s",pos,cutpat));
+               // logger.trace(String.format("Adding %d to search for %s",pos,cutpat));
+                if (counter%1000==0) {
+                    System.out.println(String.format("Added %d th fragment",counter ));
+                }
                 builder.add(new Fragment(enzymeNumber,pos));
             }
         }

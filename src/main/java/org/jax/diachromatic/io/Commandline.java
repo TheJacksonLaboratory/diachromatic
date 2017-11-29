@@ -90,10 +90,13 @@ public class Commandline {
                 if (this.genomeDirectory == null) {
                     printUsage("-g option required for digest command");
                 }
+                if (this.enzyme==null) {
+                    printUsage("-e option required for digest command");
+                }
                 if (this.outputFilePath == null) {
-                    this.command = new DigestCommand(this.genomeDirectory);
+                    this.command = new DigestCommand(this.genomeDirectory,enzyme);
                 } else {
-                    this.command = new DigestCommand(this.genomeDirectory, this.outputFilePath);
+                    this.command = new DigestCommand(this.genomeDirectory, enzyme,this.outputFilePath);
                 }
             } else if (mycommand.equalsIgnoreCase("truncate")) {
                 if (this.outputFilePath == null) {

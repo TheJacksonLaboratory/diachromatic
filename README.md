@@ -75,6 +75,12 @@ For now, we will run bowtie from the command line
 $  java -jar diachromatic-0.0.1.jar map -b /usr/bin/bowtie2 -i /path/to/bowtie2index/hg19 -q1 example1.fastq -q2 example2.fastq
 ```
 The mapped combines mapping and filtering. The steps are
-1. 
+1. Call bowtie2 and map each of the input files separately (as it they were single-end sequences).
+2. Then input both of the resulting SAM files. The files are filtered and
+mapped accoding to the following criteria
+* Discard a read pair if one or more of the reads could not be mapped by bowtei2
+* Discard the pair if one of more of the reads was multimapped (bowtie2: XS:i tag exists)
+* to do -- filter the read to remove typical HiC artefacts
+* todo -- demand that at least one read maps to one of the VPV target regions
 
 
