@@ -97,37 +97,76 @@ public class SAMPairer {
                 n_unmapped_read1++;
                 n_unmapped_pair++;
                 if (SamBitflagFilter.segmentIsUnmapped(flag2)) n_unmapped_read2++;
-                continue;
             } else if (SamBitflagFilter.segmentIsUnmapped(flag2)) {
                 n_unmapped_read2++; // note read1 must be OK if we get here...
                 n_unmapped_pair++;
-                continue;
-            }
-            // Now look for multimapped reads.
-            // If a read has an XS attribute, then bowtie2 multi-mapped it.
-            if ( pair.first.getAttribute("XS") != null ) {
+            } else  if ( pair.first.getAttribute("XS") != null ) {
+                // Now look for multimapped reads.
+                // If a read has an XS attribute, then bowtie2 multi-mapped it.
                 n_multimapped_read1++;
                 if (pair.second.getAttribute("XS") != null) { n_multimapped_read2++; }
                 n_multimappedPair++;
-                continue;
             } else if (pair.second.getAttribute("XS") != null) {
                 n_multimapped_read2++; // note if we are here, read1 was not multimapped
                 n_multimappedPair++;
-                continue;
-            }
-            // If we get here, then we want to figure out where the reads map to.
-            String chrom1 = pair.first.getReferenceName();
-            int start1 = pair.first.getAlignmentStart();
-            int end1 = pair.first.getAlignmentEnd();
-            String chrom2 = pair.second.getReferenceName();
-            int start2 = pair.second.getAlignmentStart();
-            int end2 = pair.second.getAlignmentEnd();
+            } else {
+                // If we get here, then we want to figure out where the reads map to.
+                String chrom1 = pair.first.getReferenceName();
+                int start1 = pair.first.getAlignmentStart();
+                int end1 = pair.first.getAlignmentEnd();
+                String chrom2 = pair.second.getReferenceName();
+                int start2 = pair.second.getAlignmentStart();
+                int end2 = pair.second.getAlignmentEnd();
 
-            if (is_valid(chrom1,start1,end1,chrom2,start2,end2)) {
-                // do something here to add this VALID INTERACTION PAIR to a data structure
-                // also write it out to our BAM file
-                writer.addAlignment(pair.first);
-                writer.addAlignment(pair.second);
+                if (is_valid(chrom1, start1, end1, chrom2, start2, end2)) {
+                    // do something here to add this VALID INTERACTION PAIR to a data structure
+                    // also write it out to our BAM file
+                    // Note we need to add corresponding bits to the SAM flag
+                    //pair.first.setFirstOfPairFlag(true);
+                    //pair.second.setSecondOfPairFlag(true);
+                    System.out.println("*****  READ 1  *****");
+                    SamBitflagFilter.debugDisplayBitflag(flag1);
+                    System.out.println("*****  READ 2  *****");
+                    SamBitflagFilter.debugDisplayBitflag(flag1);
+                    // Now set the flag to indicate it is paired end data
+                    System.out.println("     READ 1  read paired flag");
+                    pair.first.setReadPairedFlag(true);// 0x1
+                    pair.first.setProperPairFlag(true);//0x2
+                    SamBitflagFilter.debugDisplayBitflag(pair.first.getFlags());
+
+                    // Set which reads are which in the pair
+                    pair.first.setFirstOfPairFlag(true);
+                    System.out.println("   READ 1  set first segment in template");
+                    SamBitflagFilter.debugDisplayBitflag(pair.first.getFlags());
+                    pair.second.setSecondOfPairFlag(true);
+                    System.out.println("   READ 2  set second segment in template");
+                    SamBitflagFilter.debugDisplayBitflag(pair.second.getFlags());
+
+                    // Indicate if pair is on the reverse strand
+                    System.out.println("   READ 1&2  set mate negative strand flag");
+                    pair.first.setMateNegativeStrandFlag(pair.second.getReadNegativeStrandFlag());
+                    pair.second.setMateNegativeStrandFlag(pair.first.getReadNegativeStrandFlag());
+
+                    // Set the RNEXT and PNEXT values
+//                    if (pair.first.getReferenceName().equals(pair.second.getReferenceName())) {
+//                        pair.first.setMateReferenceName("=");
+//                        pair.second.setMateReferenceName("=");  // both reads are on same chromosome
+//                    } else {
+//                        pair.first.setMateReferenceName(pair.second.getReferenceName());
+//                        pair.second.setMateReferenceName(pair.first.getReferenceName());
+//                    }
+                    // If the reference indices are the same, then the following should print "=" TODO CHeck this.
+                    pair.first.setMateReferenceIndex(pair.second.getReferenceIndex());
+                    pair.second.setMateReferenceIndex(pair.first.getReferenceIndex());
+
+                    pair.first.setMateAlignmentStart(pair.second.getAlignmentStart());
+                    pair.second.setMateAlignmentStart(pair.first.getAlignmentStart());
+
+                    System.out.println(pair.first.getSAMString());
+
+                    writer.addAlignment(pair.first);
+                    writer.addAlignment(pair.second);
+                }
             }
 
 
@@ -151,5 +190,9 @@ public class SAMPairer {
         logger.trace(String.format("read 1: %s:%d-%d; read 2: %s:%d-%d",chrom1,start1,end1,chrom2,start2,end2));
         return true; // dummy function but we will do the right thing here.
     }
+
+
+
+
 
 }

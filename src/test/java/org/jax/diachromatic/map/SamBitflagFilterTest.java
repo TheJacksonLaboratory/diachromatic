@@ -21,4 +21,14 @@ public class SamBitflagFilterTest {
 
 
 
+
+    @Test
+    public void testRePairSAMflag() {
+
+
+
+    }
+
+
+
 }
