@@ -26,6 +26,7 @@ public class Commandline {
     private String pathToBowtieIndex=null;
     private String pathToInputFastq1 =null;
     private String pathToInputFastq2 =null;
+    private String pathToDiachromaticDigestFile=null;
 
     public Commandline(String args[]) {
         final CommandLineParser cmdLineGnuParser = new DefaultParser();
@@ -63,6 +64,9 @@ public class Commandline {
             }
             if (commandLine.hasOption("b")) {
                 this.bowtiepath=commandLine.getOptionValue("b");
+            }
+            if (commandLine.hasOption("d")) {
+                this.pathToDiachromaticDigestFile=commandLine.getOptionValue("d");
             }
             if (commandLine.hasOption("i")) {
                 this.pathToBowtieIndex=commandLine.getOptionValue("i");
@@ -126,7 +130,10 @@ public class Commandline {
                 if (this.outputFilePath==null) {
                     outputFilePath="DEFAULTOUTNAME";
                 }
-                this.command=new MapCommand(bowtiepath,pathToBowtieIndex, pathToInputFastq1,pathToInputFastq2,outputFilePath);
+                if (pathToDiachromaticDigestFile==null) {
+                    printUsage("-d option required for map command");
+                }
+                this.command=new MapCommand(bowtiepath,pathToBowtieIndex, pathToInputFastq1,pathToInputFastq2,outputFilePath,digestfilename);
             } else {
                 printUsage(String.format("Did not recognize command: %s", mycommand));
             }
@@ -153,6 +160,7 @@ public class Commandline {
                 .addOption("g", "genome", true, "genome directory (with FASTA files)")
                 .addOption("e", "enzyme", true, "restriction enzyme name")
                 .addOption("b", "bowtie", true, "path to bowtie2")
+                .addOption("d", "digest", true, "path to diachromatic digest file")
                 .addOption("i", "bowtieindex", true, "path to bowtie2 index")
                 .addOption("q", "q1", true, "path to FASTQ input file")
                 .addOption("q2", "q2", true, "path to FASTQ input file")

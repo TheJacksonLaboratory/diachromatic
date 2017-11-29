@@ -1,12 +1,18 @@
 package org.jax.diachromatic.map;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Digest {
     private static final Logger logger = LogManager.getLogger();
@@ -35,18 +41,69 @@ public class Digest {
     }
 
 
+    public String getChromosome() {
+        return chromosome;
+    }
+
+    public int getStartpos() {
+        return startpos;
+    }
+
+    public int getEndpos() {
+        return endpos;
+    }
+
+    public int getFragmentNumber() {
+        return fragmentNumber;
+    }
+
+    public String getFivePrimeRestrictionSite() {
+        return fivePrimeRestrictionSite;
+    }
+
+    public String getThreePrimeRestrictionSite() {
+        return threePrimeRestrictionSite;
+    }
+
+
+    public int getSize() {
+        return endpos - startpos + 1;
+    }
+
+
+    /** Note -- by the way these objects are created in this program, it is sufficient to check whether
+     * the chromosome and the start position are equal in order to know whether the objects are equal.
+     * @param o
+     * @return
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (o==null) return false;
+        if (! (o instanceof Digest) ) return false;
+        Digest other = (Digest) o;
+        return (chromosome.equals(other.chromosome) &&
+        startpos==other.startpos);
+    }
+
+
     /**
      * Parse in the digest file (see {@link org.jax.diachromatic.digest.FragmentFactory} for details on file format).
      * @param digestFilePath
      * @return
      */
-    public static ImmutableList<Digest> readDigests(String digestFilePath) {
-        ImmutableList.Builder<Digest>  builder = new ImmutableList.Builder();
+    public static Map<String,List<Digest>> readDigests(String digestFilePath) {
+        Map<String,List<Digest>> map = new HashMap<>();
         try {
+            File f = new File(digestFilePath);
+            if (! f.exists()) {
+                logger.error(String.format("Could not find digest file at ", f.getAbsolutePath() ));
+                System.exit(1);
+            }
+
             BufferedReader br = new BufferedReader(new FileReader(digestFilePath));
             String line=null;
             while ((line=br.readLine())!=null) {
-                System.out.println(line);
+                //System.out.println(line);
                 if (line.startsWith("Chromosome")) continue; // the header line
                 String fields[] = line.split("\t");
                 if (fields.length!= 6) {
@@ -54,13 +111,21 @@ public class Digest {
                     System.exit(1); // todo throw exception
                 }
                 Digest dig = new Digest(fields);
-                builder.add(dig);
+                String chrom = dig.getChromosome();
+                List<Digest> dlist=null;
+                if (map.containsKey(chrom)) {
+                    dlist=map.get(chrom);
+                } else {
+                    dlist=new ArrayList<>();
+                    map.put(chrom,dlist);
+                }
+                dlist.add(dig);
             }
             br.close();
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1); // todo throw exception
         }
-        return builder.build();
+        return map;
     }
 }

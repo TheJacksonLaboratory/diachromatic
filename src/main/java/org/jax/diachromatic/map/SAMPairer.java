@@ -1,30 +1,32 @@
 package org.jax.diachromatic.map;
 
 
+
 import htsjdk.samtools.*;
 import htsjdk.samtools.SAMFileWriterFactory;
 
 
-import htsjdk.samtools.seekablestream.SeekableStream;
+
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.util.Pair;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 
 public class SAMPairer {
     private static final Logger logger = LogManager.getLogger();
-    String VERSION="1.0";
+    private static final htsjdk.samtools.util.Log log = Log.getInstance(SAMPairer.class);
+    private static String VERSION="1.0";
 
-    private static final Log log = Log.getInstance(SAMPairer.class);
+
 
     String samPath1,samPath2;
 
@@ -41,13 +43,39 @@ public class SAMPairer {
     /** Number of  read pairs where one or two reads were multimapped (had an XS tag) */
     int n_multimappedPair=0;
 
+    int n_could_not_assign_to_digest=0;
+
+    int n_over_size_threshold=0;
+
+    int n_circularized_read=0;
+
+    int n_same_dangling_end=0;
+
+    int n_same_internal=0;
+
+    int n_religation=0;
+
+    int n_contiguous=0;
+
+    int n_good=0;
+
+    int n_total=0;
+
+    static private int SIZE_THRESHOLD=1500;
+
+    static private int DANGLING_THRESHOLD=7;
+
+
+    private Map<String,List<Digest>> digestmap=null;
 
 
 
 
-    public SAMPairer(String sam1, String sam2) {
+
+    public SAMPairer(String sam1, String sam2, Map<String,List<Digest>> digests) {
         samPath1=sam1;
         samPath2=sam2;
+        digestmap=digests;
     }
 
     Pair<SAMRecord,SAMRecord> getNextPair(Iterator<SAMRecord> it1,Iterator<SAMRecord> it2) {
@@ -89,6 +117,7 @@ public class SAMPairer {
 
         Pair<SAMRecord,SAMRecord> pair = getNextPair(it1,it2);
         while (pair != null) {
+            n_total++;
             // first check whether both reads were mapped.
             int flag1 = pair.first.getFlags();
             int flag2 = pair.second.getFlags();
@@ -118,36 +147,30 @@ public class SAMPairer {
                 int start2 = pair.second.getAlignmentStart();
                 int end2 = pair.second.getAlignmentEnd();
 
-                if (is_valid(chrom1, start1, end1, chrom2, start2, end2)) {
+                if (is_valid(pair.first,pair.second)) {
                     // do something here to add this VALID INTERACTION PAIR to a data structure
                     // also write it out to our BAM file
                     // Note we need to add corresponding bits to the SAM flag
                     pair.first.setFirstOfPairFlag(true);
                     pair.second.setSecondOfPairFlag(true);
-                    System.out.println("*****  READ 1  *****");
-                    SamBitflagFilter.debugDisplayBitflag(flag1);
-                    System.out.println("*****  READ 2  *****");
-                    SamBitflagFilter.debugDisplayBitflag(flag1);
                     // Now set the flag to indicate it is paired end data
-                    System.out.println("     READ 1  read paired flag");
                     pair.first.setReadPairedFlag(true);// 0x1
                     pair.first.setProperPairFlag(true);//0x2
                     pair.second.setReadPairedFlag(true);
                     pair.second.setProperPairFlag(true);
-                    SamBitflagFilter.debugDisplayBitflag(pair.first.getFlags());
 
                     // Indicate if pair is on the reverse strand
-                    System.out.println("   READ 1&2  set mate negative strand flag");
                     pair.first.setMateNegativeStrandFlag(pair.second.getReadNegativeStrandFlag());
                     pair.second.setMateNegativeStrandFlag(pair.first.getReadNegativeStrandFlag());
 
 
                     // Set which reads are which in the pair
                     pair.first.setFirstOfPairFlag(true);
-                    System.out.println("   READ 1  set first segment in template");
-                    SamBitflagFilter.debugDisplayBitflag(pair.first.getFlags());
+
                     pair.second.setSecondOfPairFlag(true);
-                    System.out.println("   READ 2  set second segment in template");
+                    System.out.println("   READ 1 ");
+                    SamBitflagFilter.debugDisplayBitflag(pair.first.getFlags());
+                    System.out.println("   READ 2  ");
                     SamBitflagFilter.debugDisplayBitflag(pair.second.getFlags());
 
 
@@ -160,10 +183,15 @@ public class SAMPairer {
                     pair.first.setMateAlignmentStart(pair.second.getAlignmentStart());
                     pair.second.setMateAlignmentStart(pair.first.getAlignmentStart());
 
+
+
                     System.out.println(pair.first.getSAMString());
 
+
+                    // TODO put hash here to check for duplicates. Do not write duplicates to file.
                     writer.addAlignment(pair.first);
                     writer.addAlignment(pair.second);
+                    n_good++;
                 }
             }
 
@@ -176,6 +204,136 @@ public class SAMPairer {
     /**
      * Decide if this candidate pair is valid according to the rules for capture Hi-C
      * TODO right now we only print out the pair but we need to do the right thing here!
+     * @return
+     */
+    private boolean is_valid(SAMRecord readF,SAMRecord readR) {
+
+        String chrom1=readF.getReferenceName();
+        int start1=readF.getAlignmentStart();
+        int end1=readF.getAlignmentEnd();
+        String chrom2= readR.getReferenceName();
+        int start2=readR.getAlignmentStart();
+        int end2=readR.getAlignmentEnd();
+
+        logger.trace(String.format("read 1: %s:%d-%d; read 2: %s:%d-%d",chrom1,start1,end1,chrom2,start2,end2));
+        // TODO
+        //1 check if on same chromosome. Do we discard reads that are on different ones? (filter p. 26)
+        //2 position the reads on chromosome .
+        Pair<Digest, Digest> digestPair = getDigestPair(chrom1,start1, end1, chrom2, start2, end2);
+        if (digestPair==null) return false;
+        //3 Check that calculated insert size is realistic
+        int insertSize = getCalculatedInsertSize(digestPair,readF,readR);
+        if (insertSize>SIZE_THRESHOLD) {
+            n_over_size_threshold++;
+            return  false;
+        }
+        if (! readF.getReferenceName().equals(readR.getReferenceName())) {
+            // identify ditags on different chromosomes
+            readF.setAttribute("CT","TRANS");
+            readR.setAttribute("CT","TRANS");
+        }
+        // Now check if both reads are on the same fragment
+        if (digestPair.first.equals(digestPair.second)) { // both reads in same restriction fragment.
+            if (readF.getAlignmentStart() < readR.getAlignmentStart() &&
+                  readF.getReadNegativeStrandFlag() && (! readR.getReadNegativeStrandFlag())  ) {
+                // one restriction fragment self ligates (circularizes). The sequence insert spans the
+                // ligation site. Mapping the reads "flips" them, so that read 1 is before read2 and points in
+                // the opposite direction.
+                n_circularized_read++;
+                return false;
+            }
+            if (readR.getAlignmentStart() < readF.getAlignmentStart() &&
+                    readR.getReadNegativeStrandFlag() && (! readF.getReadNegativeStrandFlag())) {
+                // analogous to above
+                n_circularized_read++;
+                return false;
+            }
+            // ditags on the same restriction fragment but not circularized with be either same internal or same dangling end
+            // check if the mapped ends of the reads are near to the end of a restriction fragment
+            if ( Math.abs(readF.getAlignmentStart() - digestPair.first.getStartpos())<DANGLING_THRESHOLD  ||
+                    Math.abs(readF.getAlignmentStart() - digestPair.first.getEndpos())<DANGLING_THRESHOLD ||
+                    Math.abs(readR.getAlignmentStart() - digestPair.first.getStartpos())<DANGLING_THRESHOLD ||
+                    Math.abs(readR.getAlignmentStart() - digestPair.first.getEndpos())<DANGLING_THRESHOLD ) {
+                n_same_dangling_end++;
+                return false;
+            }
+            // if we get here, we have reads from the same digest that are not circularized and are not dangling end, so
+            // they must be same_internal
+            n_same_internal++;
+            return false;
+        }
+        // if we get here, then the reads do not map to the same restriction fragment. If they map to neighboring fragments,
+        // then there may be a religation.
+        if (digestPair.second.getFragmentNumber()-digestPair.first.getFragmentNumber()==1 ) {
+            if (readF.getReadNegativeStrandFlag() != readR.getReadNegativeStrandFlag()) {
+                // adjacent fragments have the same orientation and thus the reads have opposite orientation
+                n_religation++;
+                return false;
+            }
+        }
+        // If we get here, we are on different fragments and the two fragments are not direct neighbors. If they are located
+        // within one expecte fragment size, then they are contiguous sequences that were not properly digested
+        if (Math.max(readR.getAlignmentEnd() - readF.getAlignmentStart(),readF.getAlignmentEnd()-readR.getAlignmentStart())<SIZE_THRESHOLD ) {
+            n_contiguous++;
+            return false;
+        }
+
+  //#$max_possible_insert_size used for determining distance of separation between fragments
+    //    my $max_possible_insert_size = ( $lookup_end_site1 - $lookup_start_site1 ) + ( $lookup_end_site2 - $lookup_start_site2 );
+        int max_possible_insert_size = digestPair.first.getSize() + digestPair.second.getSize();
+        // decide whether the reads are close or far.
+        if (readF.getAlignmentStart() < readR.getAlignmentStart()) {
+            // read 1 is mapped upstream of read 2
+
+            if ( ( digestPair.second.getEndpos() - digestPair.first.getStartpos() -max_possible_insert_size ) > 10_000) {
+                readF.setAttribute("CT","FAR");
+                readR.setAttribute("CT","FAR");
+            } else {
+                readF.setAttribute("CT","CLOSE");
+                readR.setAttribute("CT","CLOSE");
+            }
+        }
+        // todo what if readR is mapped upstream of readF
+        // when we get here, we have ruled out artefacts
+        return true;
+    }
+
+
+    /**
+     * Mapped reads always "point towards" the ligation sequence. We can infer that the actualy (physical) size of the
+     * insert goes from the 5' end of a read to the ligation sequence (for each read of the ditag). We calculate this
+     * size and will filter out reads whose size is substantially above what we expect given the reported experimental
+     * size selection step.
+     * TODO test me
+     * @param digestPair
+     * @param readF the forward read
+     * @param readR the reverse read
+     * @return
+     */
+    public int getCalculatedInsertSize(Pair<Digest,Digest> digestPair,SAMRecord readF,SAMRecord readR) {
+        int distF, distR;
+        if (readF.getReadNegativeStrandFlag()) { // readF is on the negative strand
+            distF=readF.getAlignmentEnd() - digestPair.first.getStartpos() + 1;
+        } else {
+            distF=digestPair.first.getEndpos() - readF.getAlignmentStart() +1;
+        }
+        if (readR.getReadNegativeStrandFlag()) { // readR is on the negative strand
+            distR=readR.getAlignmentEnd() - digestPair.second.getStartpos() + 1;
+        } else {
+            distR=digestPair.second.getEndpos() - readR.getAlignmentStart() + 1;
+        }
+
+        return distF+distR;
+    }
+
+    /**
+     * Get the restriction fragments ({@link Digest} objects) to which the reads map. TODO do we need a different algorithm
+     * Note this from hicup
+     *  Using the terminal ends of a di-tag to position a read on the digested genome could be problematic because
+     a restiction enzyme may not cut in the same position on both strands (i.e. creates sticky ends). Filling-in
+     and truncating reads at the Hi-C junction makes this situation even more complex.
+     To overcome this problem simply the script uses the position 10 bp upstream of the start of each read when
+     assigning reads to a fragment in the digested genome.
      * @param chrom1
      * @param start1
      * @param end1
@@ -184,12 +342,51 @@ public class SAMPairer {
      * @param end2
      * @return
      */
-    private boolean is_valid(String chrom1,int start1, int end1,String chrom2,int start2,int end2) {
-        logger.trace(String.format("read 1: %s:%d-%d; read 2: %s:%d-%d",chrom1,start1,end1,chrom2,start2,end2));
-        return true; // dummy function but we will do the right thing here.
+    public Pair<Digest, Digest> getDigestPair(String chrom1,int start1, int end1,String chrom2,int start2,int end2) {
+        List<Digest> list =  digestmap.get(chrom1);
+        Digest d1 = list.stream().filter( digest -> (digest.getStartpos() <= start1 && digest.getEndpos() >= end1) ).findFirst().orElse(null);
+        if (d1==null) {
+            logger.error(String.format("Could not identify digest for read 1 at %s:%d-%d",chrom1,start1,end1 ));
+            n_could_not_assign_to_digest++;
+            return null; // should never happen todo throw exception
+        }
+        list =  digestmap.get(chrom2);
+        Digest d2 = list.stream().filter( digest -> (digest.getStartpos() <= start2 && digest.getEndpos() >= end2) ).findFirst().orElse(null);
+        if (d2==null) {
+            logger.error(String.format("Could not identify digest for read 2 at %s:%d-%d",chrom2,start2,end2 ));
+            n_could_not_assign_to_digest++;
+            return  null; // should never happen todo throw exception
+        }
+        if (d1.getStartpos() < d2.getStartpos()) {
+            return new Pair<>(d1, d2);
+        } else {
+            return new Pair<>(d2,d1); // ensure that the returned pairs are in order
+        }
     }
 
 
+
+    public void printStatistics() {
+        logger.trace(String.format("n_total pairs=%d\n", n_total));
+        logger.trace(String.format("n_unmapped_read1=%d", n_unmapped_read1));
+        logger.trace(String.format("n_unmapped_read2=%d", n_unmapped_read2));
+        logger.trace(String.format("n_unmapped_pair=%d (%.1f%%)", n_unmapped_pair,(100.0*n_unmapped_pair/n_total)));
+
+        logger.trace(String.format("n_multimapped_read1=%d", n_multimapped_read1));
+        logger.trace(String.format("n_multimapped_read2=%d", n_multimapped_read2));
+        logger.trace(String.format("n_multimappedPair=%d (%.1f%%)", n_multimappedPair,(100.0*n_multimappedPair/n_total)));
+        logger.trace(String.format("n_could_not_assign_to_digest=%d (%.1f%%)", n_could_not_assign_to_digest,(100.0*n_could_not_assign_to_digest/n_total)));
+        logger.trace(String.format("n_over_size_threshold=%d  (%.1f%%)", n_over_size_threshold, (100.0*n_over_size_threshold/n_total)));
+        logger.trace(String.format("n_circularized_read=%d", n_circularized_read));
+        logger.trace(String.format("n_same_dangling_end=%d", n_same_dangling_end));
+        logger.trace(String.format("n_same_internal=%d", n_same_internal));
+        logger.trace(String.format("n_religation=%d", n_religation));
+        logger.trace(String.format("n_contiguous=%d", n_contiguous));
+        logger.trace(String.format("n_good=%d (%.1f%%)", n_good,(100.0*n_good/n_total)));
+
+
+
+    }
 
 
 
