@@ -2,6 +2,8 @@ package org.jax.diachromatic.truncation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jax.diachromatic.Diachromatic;
+import org.jax.diachromatic.exception.DiachromaticException;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -28,17 +30,20 @@ public class FastQRecord {
     public int getLen() { return sequence.length(); }
 
 
-    public FastQRecord(String [] lines) {
+    public FastQRecord(String [] lines) throws DiachromaticException {
         assert lines.length==4; // should never happen, by design we only pass 4 entry arrays, TODO remove if all is ok
         name=lines[0];
         sequence=lines[1];
         // note lines[2] should be just "."
         name2=lines[2];
+
         quality=lines[3];
         if (! name.startsWith("@")) {
-            logger.fatal(String.format("Malformed FASTQ name line (did not start with @ symbol): %s",name ));
-            System.exit(1); // to do throw exception
+            throw new DiachromaticException(String.format("Malformed FASTQ name line (did not start with @ symbol): %s",name ));
+        } else if (! name2.startsWith("+")) {
+            throw new DiachromaticException(String.format("Malformed FASTQ name2 line (did not start with + symbol): %s",name ));
         }
+
     }
 
     /**

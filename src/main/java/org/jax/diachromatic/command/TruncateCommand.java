@@ -46,7 +46,7 @@ public class TruncateCommand extends Command {
 
     private RestrictionEnzyme re=null;
 
-    public TruncateCommand (String outdir, String file1, String file2, String enzymeName) throws DiachromaticException {
+    public TruncateCommand (String outdir, String file1, String file2, String enzymeName, String suffix) throws DiachromaticException {
         this.outdir=outdir;
         this.fastaqFile1=file1;
         this.fastaqFile2=file2;
@@ -55,7 +55,7 @@ public class TruncateCommand extends Command {
         if (re==null) {
             throw new DiachromaticException(String.format("Could not identify restriction enzyme for \"%s\"",enzymeName));
         }
-        truncator = new Truncator(outdir,fastaqFile1,fastaqFile2,re);
+        truncator = new Truncator(outdir,fastaqFile1,fastaqFile2,re,suffix);
     }
 
     public void execute() {

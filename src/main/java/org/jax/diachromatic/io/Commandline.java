@@ -18,6 +18,8 @@ public class Commandline {
 
     private final static String DEFAULT_DIGEST_FILE_NAME="hicupCloneDigest.txt";
 
+    private final static String DEFAULT_TRUNCATION_SUFFIX="truncated";
+
 
     private String genomeDirectory=null;
     private String outputFilePath=null;
@@ -30,6 +32,7 @@ public class Commandline {
     private String pathToInputFastq1 =null;
     private String pathToInputFastq2 =null;
     private String pathToDiachromaticDigestFile=null;
+    private String suffix=null;
 
     public Commandline(String args[]) {
         final CommandLineParser cmdLineGnuParser = new DefaultParser();
@@ -86,6 +89,9 @@ public class Commandline {
             if (commandLine.hasOption("file2")) {
                 this.file2=commandLine.getOptionValue("file2");
             }
+            if (commandLine.hasOption("s")) {
+                this.suffix=commandLine.getOptionValue("s");
+            }
         }
         catch (ParseException parseException)  // checked exception
         {
@@ -115,8 +121,11 @@ public class Commandline {
                 } else if (this.enzyme == null) {
                     printUsage("-e option required for truncate command");
                 }
+                if (suffix==null) {
+                    suffix=DEFAULT_TRUNCATION_SUFFIX;
+                }
                 //String outdir, String file1, String file2, String enzymeName
-                this.command = new TruncateCommand(outputFilePath, file1, file2, enzyme);
+                this.command = new TruncateCommand(outputFilePath, file1, file2, enzyme,suffix);
             } else if (mycommand.equalsIgnoreCase("map")) {
                 if (this.bowtiepath==null) {
                     printUsage("-b option required for map command");
@@ -164,6 +173,7 @@ public class Commandline {
                 .addOption("e", "enzyme", true, "restriction enzyme name")
                 .addOption("b", "bowtie", true, "path to bowtie2")
                 .addOption("d", "digest", true, "path to diachromatic digest file")
+                .addOption("s", "suffix", true, "suffix for output filenames")
                 .addOption("i", "bowtieindex", true, "path to bowtie2 index")
                 .addOption("q", "q1", true, "path to FASTQ input file")
                 .addOption("q2", "q2", true, "path to FASTQ input file")

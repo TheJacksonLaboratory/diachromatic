@@ -47,7 +47,11 @@ chr12_KI270835v1_alt    1236    2327    2       2       Re1     Re1
 
 ### Truncate
 The next part of the pipeline truncates part of reads that contain the ligation
-sequence. ToDo -- document me.
+sequence. It will output two truncated FASTQ files in the directory specified by -o.
+
+```$xslt
+truncate -o outdir --file1 test1.fastq --file2 test2.fastq -e DpnII -s suffix
+```
 
 ### Mapping
 We now align the truncated FASTQ files to the genome. We will start for now with 
