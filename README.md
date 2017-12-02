@@ -31,8 +31,8 @@ path to the directory that contains the genome FASTA files. This
 should be the same directory used to choose the viewpoints with VPV. We will assume
 that the genome has be extracted, i.e., we will look for FASTA files
 in the directory and disregard gz files.
-The default name for the output file is XXX, but can be overridden with 
-the -o option.
+The default name for the output file is hicupCloneDigest.txt, but can be overridden with 
+the -o option. We will use this file further below for the map command.
 
 We will choose to use the same output format as HiCUP, which is as follows
 ```
@@ -42,6 +42,9 @@ chr12_KI270835v1_alt    1       1235    1       1       None    Re1
 chr12_KI270835v1_alt    1236    2327    2       2       Re1     Re1
 (...)
 ```
+
+
+
 ### Truncate
 The next part of the pipeline truncates part of reads that contain the ligation
 sequence. ToDo -- document me.
@@ -72,8 +75,8 @@ bowtie2 was installed using the Ubuntu apt system.
 
 For now, we will run bowtie from the command line
 ```$xslt
-$  java -jar diachromatic-0.0.1.jar map -b /usr/bin/bowtie2 -i /path/to/bowtie2index/hg19 -q1 example1.fastq -q2 example2.fastq
-```
+ map -b /usr/bin/bowtie2 -i /home/robinp/bin/bowtie2/hg19 -q1 seq1.fastq -q2 seq2.fastq -d hicupCloneDigest.txt  
+ ```
 The mapped combines mapping and filtering. The steps are
 1. Call bowtie2 and map each of the input files separately (as it they were single-end sequences).
 2. Then input both of the resulting SAM files. The files are filtered and

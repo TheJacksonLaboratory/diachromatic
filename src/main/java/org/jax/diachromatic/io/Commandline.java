@@ -16,9 +16,12 @@ public class Commandline {
 
     private Command command=null;
 
+    private final static String DEFAULT_DIGEST_FILE_NAME="hicupCloneDigest.txt";
+
+
     private String genomeDirectory=null;
     private String outputFilePath=null;
-    private String digestfilename="hicupCloneDigest.txt";
+    private String digestfilename=null;
     private String file1=null;
     private String file2=null;
     private String enzyme=null;
@@ -98,10 +101,10 @@ public class Commandline {
                     printUsage("-e option required for digest command");
                 }
                 if (this.outputFilePath == null) {
-                    this.command = new DigestCommand(this.genomeDirectory,enzyme);
-                } else {
-                    this.command = new DigestCommand(this.genomeDirectory, enzyme,this.outputFilePath);
+                    outputFilePath=DEFAULT_DIGEST_FILE_NAME;
                 }
+                this.command = new DigestCommand(this.genomeDirectory, enzyme,this.outputFilePath);
+
             } else if (mycommand.equalsIgnoreCase("truncate")) {
                 if (this.outputFilePath == null) {
                     printUsage("-o option required for truncate command");

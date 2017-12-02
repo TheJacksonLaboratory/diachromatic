@@ -93,6 +93,7 @@ public class FragmentFactory {
             out = new BufferedWriter(new FileWriter(outfilename));
             out.write(HEADER + "\n");
             for (String path : genomeFilePaths) {
+                FASTAIndexManager.indexChromosome(path);
                 cutChromosome(path, out);
             }
             out.close();
@@ -104,21 +105,6 @@ public class FragmentFactory {
     }
 
 
-    /**
-     * The HTSJDK software requires a FASTA index file for each FASTA file. For instance, for the file {@code example.fa}, HTSJDK
-     * would require abn index file that is named {@code example.fa.fai}. We use a
-     * {@link FASTAIndexManager} object to go through all the FASTA files in {@link #genomeDirectoryPath} and to
-     * generate an index file if needed.
-     */
-    public void indexFASTAfilesIfNeeded() throws  DiachromaticException {
-        FASTAIndexManager manager = new FASTAIndexManager(this.genomeFilePaths);
-        try {
-            logger.trace("indexing fasta files");
-            manager.indexChromosomes();
-        } catch (Exception e) {
-            throw new DiachromaticException(String.format("Could not index chromosomes: %s",e.toString()));
-        }
-    }
 
     /** This function will identify FASTA files in the directory {@link #genomeDirectoryPath} by looking for all files
      * with the suffix {@code .fa}. It will add the absolute path of each file on the local file system to the
@@ -135,8 +121,6 @@ public class FragmentFactory {
         for (final File fileEntry : genomeDir.listFiles()) {
             if (fileEntry.isDirectory()) {
                 continue;
-            } else if (fileEntry.getName().contains("random")) {
-                continue; /* skip random contigs! */
             } else if (!fileEntry.getPath().endsWith(".fa")) {
                 continue;
             } else {
@@ -156,6 +140,8 @@ public class FragmentFactory {
         logger.trace(String.format("cutting chromosomes %s",chromosomeFilePath ));
         IndexedFastaSequenceFile fastaReader=null;
         try {
+
+
              fastaReader = new IndexedFastaSequenceFile(new File(chromosomeFilePath));
         } catch (Exception e) {
             throw  new DiachromaticException(String.format("Could not create FAI file for %s [%s]",chromosomeFilePath,e.toString()));
@@ -174,7 +160,7 @@ public class FragmentFactory {
             String sequence = fastaReader.getSequence(seqname).getBaseString().toUpperCase();//(seqname, genomicPos - maxDistToGenomicPosUp, genomicPos + maxDistToGenomicPosDown).getBaseString().toUpperCase();
             Pattern pattern = Pattern.compile(cutpat);
             Matcher matcher = pattern.matcher(sequence);
-            ArrayList<Integer> cuttingPositionList = new ArrayList<>();
+           // ArrayList<Integer> cuttingPositionList = new ArrayList<>();
             /* one-based position of first nucleotide in the entire subsequence returned by fasta reader */
             while (matcher.find()) {
                 // replaces matcher.start() - maxDistToGenomicPosUp + offset;

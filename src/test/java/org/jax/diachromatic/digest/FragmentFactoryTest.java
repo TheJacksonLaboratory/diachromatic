@@ -82,7 +82,6 @@ public class FragmentFactoryTest {
         System.err.println("Indexing FASTA files");
         // 1. cut with DpnII
         try {
-            factory.indexFASTAfilesIfNeeded();
             String testEnzyme = "HindIII";
             List<String> enzymes=new ArrayList<>();
             enzymes.add(testEnzyme);
