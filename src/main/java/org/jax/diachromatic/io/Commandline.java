@@ -21,9 +21,12 @@ public class Commandline {
     private final static String DEFAULT_TRUNCATION_SUFFIX="truncated";
 
 
+
+    private final static String DEFAULT_OUTPUT_BAM_NAME="diachromatic-processed";
+
+
     private String genomeDirectory=null;
     private String outputFilePath=null;
-    private String digestfilename=null;
     private String file1=null;
     private String file2=null;
     private String enzyme=null;
@@ -140,12 +143,12 @@ public class Commandline {
                     printUsage("-r option (FASTQ 2) required for map command");
                 }
                 if (this.outputFilePath==null) {
-                    outputFilePath="DEFAULTOUTNAME";
+                    outputFilePath=DEFAULT_OUTPUT_BAM_NAME;
                 }
                 if (pathToDiachromaticDigestFile==null) {
                     printUsage("-d option required for map command");
                 }
-                this.command=new MapCommand(bowtiepath,pathToBowtieIndex, pathToInputFastq1,pathToInputFastq2,outputFilePath,digestfilename);
+                this.command=new MapCommand(bowtiepath,pathToBowtieIndex, pathToInputFastq1,pathToInputFastq2,outputFilePath,pathToDiachromaticDigestFile);
             } else {
                 printUsage(String.format("Did not recognize command: %s", mycommand));
             }

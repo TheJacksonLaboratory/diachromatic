@@ -88,6 +88,7 @@ public class Digest {
 
     /**
      * Parse in the digest file (see {@link org.jax.diachromatic.digest.FragmentFactory} for details on file format).
+     * The map has the chromosome as a key and a list of {@link Digest} objects on the chromosome as the value
      * @param digestFilePath
      * @return
      */

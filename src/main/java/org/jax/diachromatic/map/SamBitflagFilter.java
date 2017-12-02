@@ -31,10 +31,10 @@ public class SamBitflagFilter {
     public static final int SUPPLEMENTARY_ALIGNMENT = 0x800;
 
 
-    public static boolean segmentIsUnmapped(int flag) {
-        return (flag & SEGMENT_IS_UNMAPPED)== SEGMENT_IS_UNMAPPED;
-    }
-
+//    public static boolean segmentIsUnmapped(int flag) {
+//        return (flag & SEGMENT_IS_UNMAPPED)== SEGMENT_IS_UNMAPPED;
+//    }
+//
 
 
     public static  void debugDisplayBitflag(int flag) {

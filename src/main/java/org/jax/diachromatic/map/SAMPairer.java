@@ -65,20 +65,23 @@ public class SAMPairer {
 
     static private int DANGLING_THRESHOLD=7;
 
-
+    /** Key: chromosome; value: a list of {@link Digest} objects on the chromosome. */
     private Map<String,List<Digest>> digestmap=null;
 
 
-
-
-
+    /**
+     *
+     * @param sam1 SAM file for the truncated "forward" reads
+     * @param sam2 SAM file for the truncated "reverse" reads
+     * @param digests see {@link #digestmap}.
+     */
     public SAMPairer(String sam1, String sam2, Map<String,List<Digest>> digests) {
         samPath1=sam1;
         samPath2=sam2;
         digestmap=digests;
     }
 
-    Pair<SAMRecord,SAMRecord> getNextPair(Iterator<SAMRecord> it1,Iterator<SAMRecord> it2) {
+    private Pair<SAMRecord,SAMRecord> getNextPair(Iterator<SAMRecord> it1,Iterator<SAMRecord> it2) {
         SAMRecord record1=null;
         SAMRecord record2=null;
         if (it1.hasNext() && it2.hasNext()) {
@@ -119,14 +122,12 @@ public class SAMPairer {
         while (pair != null) {
             n_total++;
             // first check whether both reads were mapped.
-            int flag1 = pair.first.getFlags();
-            int flag2 = pair.second.getFlags();
-            //read 1 could not be aligned
             if (pair.first.getReadUnmappedFlag()) {
+                //read 1 could not be aligned
                 n_unmapped_read1++;
                 n_unmapped_pair++;
                 if (pair.second.getReadUnmappedFlag()) n_unmapped_read2++;
-            } else if (pair.first.getReadUnmappedFlag()) {
+            } else if (pair.second.getReadUnmappedFlag()) {
                 n_unmapped_read2++; // note read1 must be OK if we get here...
                 n_unmapped_pair++;
             } else  if ( pair.first.getAttribute("XS") != null ) {
@@ -140,17 +141,16 @@ public class SAMPairer {
                 n_multimappedPair++;
             } else {
                 // If we get here, then we want to figure out where the reads map to.
-                String chrom1 = pair.first.getReferenceName();
-                int start1 = pair.first.getAlignmentStart();
-                int end1 = pair.first.getAlignmentEnd();
-                String chrom2 = pair.second.getReferenceName();
-                int start2 = pair.second.getAlignmentStart();
-                int end2 = pair.second.getAlignmentEnd();
+//                String chrom1 = pair.first.getReferenceName();
+//                int start1 = pair.first.getAlignmentStart();
+//                int end1 = pair.first.getAlignmentEnd();
+//                String chrom2 = pair.second.getReferenceName();
+//                int start2 = pair.second.getAlignmentStart();
+//                int end2 = pair.second.getAlignmentEnd();
 
                 if (is_valid(pair.first,pair.second)) {
-                    // do something here to add this VALID INTERACTION PAIR to a data structure
-                    // also write it out to our BAM file
-                    // Note we need to add corresponding bits to the SAM flag
+                    // This pair is a valid read pair
+                    // We therefore need to add corresponding bits to the SAM flag
                     pair.first.setFirstOfPairFlag(true);
                     pair.second.setSecondOfPairFlag(true);
                     // Now set the flag to indicate it is paired end data
@@ -168,10 +168,10 @@ public class SAMPairer {
                     pair.first.setFirstOfPairFlag(true);
 
                     pair.second.setSecondOfPairFlag(true);
-                    System.out.println("   READ 1 ");
-                    SamBitflagFilter.debugDisplayBitflag(pair.first.getFlags());
-                    System.out.println("   READ 2  ");
-                    SamBitflagFilter.debugDisplayBitflag(pair.second.getFlags());
+//                    System.out.println("   READ 1 ");
+//                    SamBitflagFilter.debugDisplayBitflag(pair.first.getFlags());
+//                    System.out.println("   READ 2  ");
+//                    SamBitflagFilter.debugDisplayBitflag(pair.second.getFlags());
 
 
 
@@ -185,7 +185,7 @@ public class SAMPairer {
 
 
 
-                    System.out.println(pair.first.getSAMString());
+//                    System.out.println(pair.first.getSAMString());
 
 
                     // TODO put hash here to check for duplicates. Do not write duplicates to file.
@@ -216,8 +216,7 @@ public class SAMPairer {
         int end2=readR.getAlignmentEnd();
 
         logger.trace(String.format("read 1: %s:%d-%d; read 2: %s:%d-%d",chrom1,start1,end1,chrom2,start2,end2));
-        // TODO
-        //1 check if on same chromosome. Do we discard reads that are on different ones? (filter p. 26)
+        //1 check if on same chromosome.
         //2 position the reads on chromosome .
         Pair<Digest, Digest> digestPair = getDigestPair(chrom1,start1, end1, chrom2, start2, end2);
         if (digestPair==null) return false;
@@ -272,7 +271,7 @@ public class SAMPairer {
             }
         }
         // If we get here, we are on different fragments and the two fragments are not direct neighbors. If they are located
-        // within one expecte fragment size, then they are contiguous sequences that were not properly digested
+        // within one expected fragment size, then they are contiguous sequences that were not properly digested
         if (Math.max(readR.getAlignmentEnd() - readF.getAlignmentStart(),readF.getAlignmentEnd()-readR.getAlignmentStart())<SIZE_THRESHOLD ) {
             n_contiguous++;
             return false;
@@ -294,6 +293,16 @@ public class SAMPairer {
             }
         }
         // todo what if readR is mapped upstream of readF
+        /*
+        WOULD THIS BE CORRECT?????
+          if ( ( digestPair.first.getEndpos() - digestPair.second.getStartpos() -max_possible_insert_size ) > 10_000) {
+                readF.setAttribute("CT","FAR");
+                readR.setAttribute("CT","FAR");
+            } else {
+                readF.setAttribute("CT","CLOSE");
+                readR.setAttribute("CT","CLOSE");
+            }
+        */
         // when we get here, we have ruled out artefacts
         return true;
     }
@@ -344,6 +353,10 @@ public class SAMPairer {
      */
     public Pair<Digest, Digest> getDigestPair(String chrom1,int start1, int end1,String chrom2,int start2,int end2) {
         List<Digest> list =  digestmap.get(chrom1);
+        if (list==null) {
+            logger.error(String.format("Could not retrieve digests for chromosome %s",chrom1 ));
+            return null;
+        }
         Digest d1 = list.stream().filter( digest -> (digest.getStartpos() <= start1 && digest.getEndpos() >= end1) ).findFirst().orElse(null);
         if (d1==null) {
             logger.error(String.format("Could not identify digest for read 1 at %s:%d-%d",chrom1,start1,end1 ));
@@ -351,6 +364,10 @@ public class SAMPairer {
             return null; // should never happen todo throw exception
         }
         list =  digestmap.get(chrom2);
+        if (list==null) {
+            logger.error(String.format("Could not retrieve digests for chromosome %s",chrom2 ));
+            return null;
+        }
         Digest d2 = list.stream().filter( digest -> (digest.getStartpos() <= start2 && digest.getEndpos() >= end2) ).findFirst().orElse(null);
         if (d2==null) {
             logger.error(String.format("Could not identify digest for read 2 at %s:%d-%d",chrom2,start2,end2 ));
