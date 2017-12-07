@@ -25,44 +25,46 @@ public class SAMPairer {
     private static final Logger logger = LogManager.getLogger();
     private static final htsjdk.samtools.util.Log log = Log.getInstance(SAMPairer.class);
     private static String VERSION="1.0";
-
-
-
-    String samPath1,samPath2;
-
+    /** Path to the SAMfile representing the forward read of a paired end experiment. The SAM files should have been
+     * processed with the truncate command of this package */
+    private String samPath1;
+    /** Path to the SAMfile representing the reverse read of a paired end experiment. The SAM files should have been
+     * processed with the truncate command of this package */
+    private String samPath2;
     /** Number of unmapped forward reads (SAM flag==4) */
-    int n_unmapped_read1=0;
+    private int n_unmapped_read1=0;
     /** Number of unmapped reverse reads (Note: SAM flag is also 4, because the reverse reads are mapped as single-end reads). */
-    int n_unmapped_read2=0;
+    private int n_unmapped_read2=0;
     /** Number of pairs with 1 or 2 unmapped reads (these pairs are discarded from further analysis).*/
-    int n_unmapped_pair=0;
+    private int n_unmapped_pair=0;
     /** Number of forward reads that were multimapped (had an XS tag) */
-    int n_multimapped_read1=0;
+    private int n_multimapped_read1=0;
     /** Number of reverse reads that were multimapped (had an XS tag) */
-    int n_multimapped_read2=0;
+    private int n_multimapped_read2=0;
     /** Number of  read pairs where one or two reads were multimapped (had an XS tag) */
-    int n_multimappedPair=0;
+    private int n_multimappedPair=0;
 
-    int n_could_not_assign_to_digest=0;
+    private int n_could_not_assign_to_digest=0;
 
-    int n_over_size_threshold=0;
+    private int n_over_size_threshold=0;
+    /** Number of circularized reads, a type of artefact where the ends of one fragment ligate with each other. */
+    private int n_circularized_read=0;
+    /** Number of dangling end reads, a type of artefact where one end of the read is internal and the other is at the
+     * end of a restriction fragment. */
+    private int n_same_dangling_end=0;
 
-    int n_circularized_read=0;
+    private int n_same_internal=0;
 
-    int n_same_dangling_end=0;
+    private int n_religation=0;
 
-    int n_same_internal=0;
-
-    int n_religation=0;
-
-    int n_contiguous=0;
-
-    int n_good=0;
-
-    int n_total=0;
+    private int n_contiguous=0;
+    /** Number of reads that pass all quality filters. */
+    private int n_good=0;
+    /** Total number of reads TODO do we mean each read of the paired end reads? */
+    private int n_total=0;
 
     static private int SIZE_THRESHOLD=1500;
-
+    /** Length threshold in nucleotides for the end of a read being near to a restriction fragment/ligation sequence */
     static private int DANGLING_THRESHOLD=7;
 
     /** Key: chromosome; value: a list of {@link Digest} objects on the chromosome. */
@@ -70,7 +72,6 @@ public class SAMPairer {
 
 
     /**
-     *
      * @param sam1 SAM file for the truncated "forward" reads
      * @param sam2 SAM file for the truncated "reverse" reads
      * @param digests see {@link #digestmap}.
@@ -81,6 +82,14 @@ public class SAMPairer {
         digestmap=digests;
     }
 
+    /**
+     * An iterator over pairs of SAMRecords -- similar to "next()" in a standard iteratr, but will return a pair
+     * of SAMRecord objects. Both files should be equally long. This function will return null of there is any issue with
+     * with of the individual iterators.
+     * @param it1
+     * @param it2
+     * @return A pair of SAMRecord objects represening the forward and the reverse reads.
+     */
     private Pair<SAMRecord,SAMRecord> getNextPair(Iterator<SAMRecord> it1,Iterator<SAMRecord> it2) {
         SAMRecord record1=null;
         SAMRecord record2=null;
@@ -91,10 +100,45 @@ public class SAMPairer {
         } else {
             return null;
         }
-
     }
 
-    public void pair() throws IOException {
+    /**
+     * Determine if both reads from a paired-end could be uniquely mapped. If so, return true. If not,
+     * increment the corresponding counter (e.g., {@link #n_multimapped_read1}) and return false. There are two
+     * things that can go wrong -- either one or both reads could not be mapped, or one or both reads were mapped
+     * to more than one locus in the genome.
+     * @param pair A pair of SAMrecords representing a paired end read.
+     * @return true if both reads could be uniquely mapped.
+     */
+    private boolean readPairUniquelyMapped(Pair<SAMRecord,SAMRecord> pair) {
+        if (pair.first.getReadUnmappedFlag()) {
+            //read 1 could not be aligned
+            n_unmapped_read1++;
+            n_unmapped_pair++;
+            if (pair.second.getReadUnmappedFlag()) n_unmapped_read2++;
+            return false;
+        } else if (pair.second.getReadUnmappedFlag()) {
+            n_unmapped_read2++; // note read1 must be OK if we get here...
+            n_unmapped_pair++;
+            return false;
+        } else  if ( pair.first.getAttribute("XS") != null ) {
+            // Now look for multimapped reads.
+            // If a read has an XS attribute, then bowtie2 multi-mapped it.
+            n_multimapped_read1++;
+            if (pair.second.getAttribute("XS") != null) { n_multimapped_read2++; }
+            n_multimappedPair++;
+            return false;
+        } else if (pair.second.getAttribute("XS") != null) {
+            n_multimapped_read2++; // note if we are here, read1 was not multimapped
+            n_multimappedPair++;
+            return false;
+        }
+        return true;
+    }
+
+
+    /** Input the pair of truncated SAM files. */
+    public void inputSAMfiles() throws IOException {
         final SamReader reader1 = SamReaderFactory.makeDefault().open(new File(samPath1));
         final SamReader reader2 = SamReaderFactory.makeDefault().open(new File(samPath2));
 
@@ -122,34 +166,10 @@ public class SAMPairer {
         while (pair != null) {
             n_total++;
             // first check whether both reads were mapped.
-            if (pair.first.getReadUnmappedFlag()) {
-                //read 1 could not be aligned
-                n_unmapped_read1++;
-                n_unmapped_pair++;
-                if (pair.second.getReadUnmappedFlag()) n_unmapped_read2++;
-            } else if (pair.second.getReadUnmappedFlag()) {
-                n_unmapped_read2++; // note read1 must be OK if we get here...
-                n_unmapped_pair++;
-            } else  if ( pair.first.getAttribute("XS") != null ) {
-                // Now look for multimapped reads.
-                // If a read has an XS attribute, then bowtie2 multi-mapped it.
-                n_multimapped_read1++;
-                if (pair.second.getAttribute("XS") != null) { n_multimapped_read2++; }
-                n_multimappedPair++;
-            } else if (pair.second.getAttribute("XS") != null) {
-                n_multimapped_read2++; // note if we are here, read1 was not multimapped
-                n_multimappedPair++;
-            } else {
-                // If we get here, then we want to figure out where the reads map to.
-//                String chrom1 = pair.first.getReferenceName();
-//                int start1 = pair.first.getAlignmentStart();
-//                int end1 = pair.first.getAlignmentEnd();
-//                String chrom2 = pair.second.getReferenceName();
-//                int start2 = pair.second.getAlignmentStart();
-//                int end2 = pair.second.getAlignmentEnd();
-
+            if ( readPairUniquelyMapped(pair) ) {
+                // If we get here, then both reads were uniquely mappable.
                 if (is_valid(pair.first,pair.second)) {
-                    // This pair is a valid read pair
+                    // This inputSAMfiles is a valid read inputSAMfiles
                     // We therefore need to add corresponding bits to the SAM flag
                     pair.first.setFirstOfPairFlag(true);
                     pair.second.setSecondOfPairFlag(true);
@@ -159,19 +179,19 @@ public class SAMPairer {
                     pair.second.setReadPairedFlag(true);
                     pair.second.setProperPairFlag(true);
 
-                    // Indicate if pair is on the reverse strand
+                    // Indicate if inputSAMfiles is on the reverse strand
                     pair.first.setMateNegativeStrandFlag(pair.second.getReadNegativeStrandFlag());
                     pair.second.setMateNegativeStrandFlag(pair.first.getReadNegativeStrandFlag());
 
 
-                    // Set which reads are which in the pair
+                    // Set which reads are which in the inputSAMfiles
                     pair.first.setFirstOfPairFlag(true);
 
                     pair.second.setSecondOfPairFlag(true);
 //                    System.out.println("   READ 1 ");
-//                    SamBitflagFilter.debugDisplayBitflag(pair.first.getFlags());
+//                    SamBitflagFilter.debugDisplayBitflag(inputSAMfiles.first.getFlags());
 //                    System.out.println("   READ 2  ");
-//                    SamBitflagFilter.debugDisplayBitflag(pair.second.getFlags());
+//                    SamBitflagFilter.debugDisplayBitflag(inputSAMfiles.second.getFlags());
 
 
 
@@ -185,7 +205,7 @@ public class SAMPairer {
 
 
 
-//                    System.out.println(pair.first.getSAMString());
+//                    System.out.println(inputSAMfiles.first.getSAMString());
 
 
                     // TODO put hash here to check for duplicates. Do not write duplicates to file.
@@ -202,8 +222,8 @@ public class SAMPairer {
     }
 
     /**
-     * Decide if this candidate pair is valid according to the rules for capture Hi-C
-     * TODO right now we only print out the pair but we need to do the right thing here!
+     * Decide if this candidate inputSAMfiles is valid according to the rules for capture Hi-C
+     * TODO right now we only print out the inputSAMfiles but we need to do the right thing here!
      * @return
      */
     private boolean is_valid(SAMRecord readF,SAMRecord readR) {

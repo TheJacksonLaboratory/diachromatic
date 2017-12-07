@@ -1,6 +1,5 @@
 package org.jax.diachromatic.command;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.exception.DiachromaticException;
@@ -48,7 +47,7 @@ public class MapCommand extends Command {
             Bowtie2Runner runner2 = new Bowtie2Runner(bowtiepath,pathToBowtieIndex, pathToInputFastq2,outname2);
             runner2.run();
             SAMPairer pairer = new SAMPairer(outname1,outname2,digestmap);
-            pairer.pair();
+            pairer.inputSAMfiles();
             pairer.printStatistics();
         } catch (DiachromaticException e){
             e.printStackTrace();

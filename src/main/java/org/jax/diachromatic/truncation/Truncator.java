@@ -24,15 +24,15 @@ public class Truncator {
 
     private String outputFASTQ1, outputFASTQ2;
     /**
-     * Read 1 was too short after truncation, leading to the removal of the affected read pair.
+     * Read 1 was too short after truncation, leading to the removal of the affected read inputSAMfiles.
      */
     private int read1tooShort = 0;
     /**
-     * Read 2 was too short after truncation, leading to the removal of the affected read pair.
+     * Read 2 was too short after truncation, leading to the removal of the affected read inputSAMfiles.
      */
     private int read2tooShort;
     /**
-     * Read 1 or read 2 or both were too short after truncation, leading to the removal of the affected read pair.
+     * Read 1 or read 2 or both were too short after truncation, leading to the removal of the affected read inputSAMfiles.
      */
     private int removedBecauseAtLeastOneReadTooShort;
 
@@ -73,9 +73,9 @@ public class Truncator {
     }
 
     /**
-     * Parse the two input FASTQ files using a {@link FastqPairParser} object that returns one pair of reads at a time.
-     * For each pair of reads, if one or both of the reads was truncated to the extent that the remaining read is too
-     * short, then skip the read pair. Write out each read of valid pairs to separate output files.
+     * Parse the two input FASTQ files using a {@link FastqPairParser} object that returns one inputSAMfiles of reads at a time.
+     * For each inputSAMfiles of reads, if one or both of the reads was truncated to the extent that the remaining read is too
+     * short, then skip the read inputSAMfiles. Write out each read of valid pairs to separate output files.
      */
     public void parseFASTQ() {
         FastQRecord.setLigationSequence(filledEndSequence);

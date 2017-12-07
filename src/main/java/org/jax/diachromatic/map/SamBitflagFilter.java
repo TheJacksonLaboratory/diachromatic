@@ -5,7 +5,7 @@ package org.jax.diachromatic.map;
  * for reads that did not map or had other problems.
  */
 public class SamBitflagFilter {
-    /* multiple segments, e.g., a read pair. The bit is set if the read is part of a paired end pair. */
+    /* multiple segments, e.g., a read inputSAMfiles. The bit is set if the read is part of a paired end inputSAMfiles. */
     public static final int TEMPLATE_HAS_MULTIPLE_SEGMENTS = 0x1;
 
     public static final int EACH_SEGMENT_PROPERLY_ALIGNED = 0x2;
