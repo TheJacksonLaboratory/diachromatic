@@ -9,15 +9,17 @@ Welcome to Diachromatic's documentation!
 	:maxdepth: 2
 	:caption: Contents:
 
-	CHC
+	In silico digest <digest>
+    Truncating raw reads <truncate>
+    Mapping truncated reads <mapping>
 
 Diachromatic
 ~~~~~~~~~~~~
-Diachromatic (**Di**fferential **A**nalysis of **Chromat**in **I**nteractions by **C**apture)
+Diachromatic (Differential Analysis of Chromatin Interactions by Capture)
 implements a capture Hi-C preprocessing pipeline followed by analysis of differential chromatin interactions
 ("loopings").  Diachromatic is a Java application. The preprocessing pipeline is based on the
 Perl scripts of HiCUP and produces comparable results. Diachromatic is designed to work
-with the capture probes as designed by VPV (todo--link to RTD site).
+with the capture probes as designed by VPV (see next section).
 
 
 
@@ -41,7 +43,28 @@ Quick start
 Diachromatic requires Java 8 or higher to run. The source code of Diachromatic can be downloaded
 from the Diachromatic GitHub repository and the application can be built using maven (see the GitHub page for instructions).
 
-This site provides detailed explanations and tips for the various steps of preprocessing and analyzing
+To build the application, clone the repository and create the Java app with maven. ::
+
+    $ git clone https://github.com/TheJacksonLaboratory/diachromatic.git
+    $ cd diachromatic
+    $ mvn package
+
+To test whether the build process was successful, enter the following command. ::
+
+    $ java -jar target/target/diachromatic-0.0.2.jar
+
+You should see a help message in the shell. In the following, we will refer to the diachromatic executable simply
+as ``Diachromatic.jar``. Please adjust your path accordingly.
+
+
+The mapping step of the diachromatic pipeline relies on bowtie2
+(http://bowtie-bio.sourceforge.net/bowtie2/index.shtml). If needed, install bowtie2
+on your system. For instance, on Debian linux systems bowtie2 can be installed with the
+following command. ::
+
+  $ sudo apt-get install bowtie2
+
+The remaining pages of this site provide detailed explanations and tips for the various steps of preprocessing and analyzing
 capture Hi-C data with diachromatic.
  
 

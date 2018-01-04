@@ -16,6 +16,9 @@ import static org.jax.diachromatic.digest.RestrictionEnzyme.parseRestrictionEnzy
 /**
  * This class coordinates the creation of a digest file that contains a list of restriction fragments across an
  * entire genome.
+ * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
+ * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
+ * @version 0.0.2 (2018-01-05)
  */
 public class DigestCommand extends Command {
     private static final Logger logger = LogManager.getLogger();
@@ -37,11 +40,6 @@ public class DigestCommand extends Command {
         genomeDirectoryPath=genomeDir;
         outfilename=outputFile;
     }
-
-
-
-
-
 
     public void execute() {
         FragmentFactory factory=new FragmentFactory(genomeDirectoryPath,outfilename);

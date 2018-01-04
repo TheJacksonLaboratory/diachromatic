@@ -30,7 +30,9 @@ import static org.jax.diachromatic.digest.RestrictionEnzyme.parseRestrictionEnzy
  *     The method requires the names of the files to be processed as well as the restriction enzymes used to process the
  *     DNA. We will expect that there are two FAASTQ files that are gzipped that represent the paired end sequences.
  * </P>
- *
+ * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
+ * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
+ * @version 0.0.2 (2018-01-05)
  */
 public class TruncateCommand extends Command {
     private static final Logger logger = LogManager.getLogger();

@@ -5,7 +5,7 @@
 
     <groupId>org.jax</groupId>
     <artifactId>diachromatic</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
     <packaging>jar</packaging>
 
     <name>diachromatic</name>
@@ -15,7 +15,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <jdk.version>1.8</jdk.version>
-        <htsjdk.version>2.10.1</htsjdk.version>
+        <htsjdk.version>2.14.0</htsjdk.version>
     </properties>
 
     <dependencies>
@@ -33,13 +33,6 @@
             <artifactId>log4j-slf4j-impl</artifactId>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/com.google.collections/google-collections
-        <dependency>
-            <groupId>com.google.collections</groupId>
-            <artifactId>google-collections</artifactId>
-            <version>1.0</version>
-        </dependency>
-        -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -58,14 +51,14 @@
         <dependency>
             <groupId>com.github.samtools</groupId>
             <artifactId>htsjdk</artifactId>
-            <version>2.8.1</version>
+            <version>${htsjdk.version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>23.4-jre</version>
+            <version>23.6-jre</version>
         </dependency>
 
 
@@ -140,19 +133,11 @@
                             <classpathPrefix>lib/</classpathPrefix>
                             <useUniqueVersions>false</useUniqueVersions>
                             <mainClass>org.jax.diachromatic.Diachromatic</mainClass>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
                 </configuration>
-              <!--  <executions>
-                    <execution>
-                        <id>create-jar</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                        <inherited>false</inherited>
-                    </execution>
-                </executions> -->
+
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -237,9 +222,6 @@
             </plugin>
         </plugins>
 
-
-
     </build>
-
 
 </project>

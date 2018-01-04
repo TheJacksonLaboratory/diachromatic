@@ -11,22 +11,28 @@ import org.jax.diachromatic.command.MapCommand;
 import org.jax.diachromatic.command.TruncateCommand;
 import org.jax.diachromatic.exception.DiachromaticException;
 
-
+/**
+ * Class to capture options and command from the command line.
+ * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
+ * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
+ * @version 0.0.2 (2018-01-05)
+ */
 public class Commandline {
 
     private Command command=null;
+    /** The default name of the file that is produced by the {@code digest} command. */
+    private final static String DEFAULT_DIGEST_FILE_NAME="diachromaticDigest.txt";
 
-    private final static String DEFAULT_DIGEST_FILE_NAME="hicupCloneDigest.txt";
+    private final static String DEFAULT_OUTPUT_DIRECTORY="results";
 
     private final static String DEFAULT_TRUNCATION_SUFFIX="truncated";
-
-
 
     private final static String DEFAULT_OUTPUT_BAM_NAME="diachromatic-processed";
 
 
     private String genomeDirectory=null;
     private String outputFilePath=null;
+    private String outputDirectory=null;
     private String file1=null;
     private String file2=null;
     private String enzyme=null;
@@ -68,6 +74,9 @@ public class Commandline {
             if (commandLine.hasOption("o")) {
                 this.outputFilePath=commandLine.getOptionValue("o");
             }
+            if (commandLine.hasOption("outdir")) {
+                outputDirectory=commandLine.getOptionValue("outdir");
+            }
             if (commandLine.hasOption("e")) {
                 this.enzyme=commandLine.getOptionValue("e");
             }
@@ -83,14 +92,8 @@ public class Commandline {
             if (commandLine.hasOption("q")) {
                 this.pathToInputFastq1 =commandLine.getOptionValue("q");
             }
-            if (commandLine.hasOption("q2")) {
-                this.pathToInputFastq2 =commandLine.getOptionValue("q2");
-            }
-            if (commandLine.hasOption("file1")) {
-                this.file1 =commandLine.getOptionValue("file1");
-            }
-            if (commandLine.hasOption("file2")) {
-                this.file2=commandLine.getOptionValue("file2");
+            if (commandLine.hasOption("r")) {
+                this.pathToInputFastq2 =commandLine.getOptionValue("r");
             }
             if (commandLine.hasOption("s")) {
                 this.suffix=commandLine.getOptionValue("s");
@@ -115,12 +118,12 @@ public class Commandline {
                 this.command = new DigestCommand(this.genomeDirectory, enzyme,this.outputFilePath);
 
             } else if (mycommand.equalsIgnoreCase("truncate")) {
-                if (this.outputFilePath == null) {
-                    printUsage("-o option required for truncate command");
-                } else if (this.file1 == null) {
-                    printUsage("--file1 option required for truncate command");
-                } else if (this.file2 == null) {
-                    printUsage("--file2 option required for truncate command");
+                if (this.outputDirectory == null) {
+                    this.outputDirectory=DEFAULT_OUTPUT_DIRECTORY;
+                } else if (this.pathToInputFastq1 == null) {
+                    printUsage("-q option required for truncate command");
+                } else if (this.pathToInputFastq2 == null) {
+                    printUsage("-r option required for truncate command");
                 } else if (this.enzyme == null) {
                     printUsage("-e option required for truncate command");
                 }
@@ -128,7 +131,7 @@ public class Commandline {
                     suffix=DEFAULT_TRUNCATION_SUFFIX;
                 }
                 //String outdir, String file1, String file2, String enzymeName
-                this.command = new TruncateCommand(outputFilePath, file1, file2, enzyme,suffix);
+                this.command = new TruncateCommand(outputDirectory, pathToInputFastq1, pathToInputFastq2, enzyme,suffix);
             } else if (mycommand.equalsIgnoreCase("map")) {
                 if (this.bowtiepath==null) {
                     printUsage("-b option required for map command");
@@ -178,8 +181,9 @@ public class Commandline {
                 .addOption("d", "digest", true, "path to diachromatic digest file")
                 .addOption("s", "suffix", true, "suffix for output filenames")
                 .addOption("i", "bowtieindex", true, "path to bowtie2 index")
-                .addOption("q", "q1", true, "path to FASTQ input file")
-                .addOption("q2", "q2", true, "path to FASTQ input file")
+                .addOption("outdir", "outdir", true, "path to output directory")
+                .addOption("q", "q", true, "path to forward FASTQ input file")
+                .addOption("r", "r", true, "path to reverse FASTQ input file")
         .addOption( Option.builder( "f1" ).longOpt("file1").desc("path to fastq file 1").hasArg(true).argName("file1").build())
          .addOption( Option.builder( "f2" ).longOpt("file2").desc("path to fastq file 2").hasArg(true).argName("file2").build());
         return gnuOptions;
@@ -192,15 +196,41 @@ public class Commandline {
      */
     public static void printUsage(String message)
     {
+        String version="";
+        try {
+            Package p = Commandline.class.getPackage();
+            version = p.getImplementationVersion();
+        } catch (Exception e) {
+            // do nothing
+        }
+
+
         final PrintWriter writer = new PrintWriter(System.out);
         final HelpFormatter usageFormatter = new HelpFormatter();
         final String applicationName="java -jar diachromatic.jar command";
         final Options options=constructGnuOptions();
         writer.println(message);
-        usageFormatter.printUsage(writer, 120, applicationName, options);
-        writer.println("\twhere command is one of digest,truncate,....");
-        writer.println("\t- digest -g genome [-o outputname]: Digest genome at directory (-g), output to file.");
-        writer.println("\t- truncate -o outdir --file1 example1.fq.gz --file2 example2.fq.gz - enzymeName: truncate fastq files.");
+        writer.println();
+        //usageFormatter.printUsage(writer, 120, applicationName, options);
+        writer.println("Program: Diachromatic (Analysis of Differential Capture Hi-C Interactions)");
+        writer.println("Version: "+version);
+        writer.println();
+        writer.println("Usage: java -jar Diachromatic.jar <command> [options]");
+        writer.println();
+        writer.println("Available commands:");
+        writer.println();
+        writer.println("digest:");
+        writer.println("\tjava -jar Diachromatic.jar digest -g <path> -e <enzyme> [-o <outfile>]");
+        writer.println("\t-path: path to a directory containing indexed genome FASTA files");
+        writer.println("\t-enzyme: symbol of the restriction enzyme (e.g., DsnII)");
+        writer.println(String.format("\t-outfile: optional name of output file (Default: \"%s\")",DEFAULT_DIGEST_FILE_NAME));
+        writer.println();
+        writer.println("truncate:");
+        writer.println("\tjava -jar Diachromatic.jar truncate --file1 example1.fq.gz \\");
+        writer.println("\t\t--file2 example2.fq.gz -e enzymeName -s <suffix> --outdir <directory>");
+        writer.println();
+        writer.println("map:");
+        writer.println("\tjava -jar Diachromatic.jar map -o outdir --file1 example1.fq.gz \\");
         writer.close();
         System.exit(0);
     }
