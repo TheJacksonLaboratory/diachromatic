@@ -12,6 +12,7 @@ import htsjdk.samtools.util.Log;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jax.diachromatic.io.Commandline;
 import org.jax.diachromatic.util.Pair;
 
 import java.io.File;
@@ -20,10 +21,22 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-
+/**
+ * This class takes as input two SAM files that have been created by {@code bowtie2} from the
+ * truncated FASTQ files produced by {@link org.jax.diachromatic.command.TruncateCommand}. Its purpose
+ * is to rejoin the pairs of reads that correspond to the chimeric fragments in the input files and
+ * to perform Q/C and filtering on the reads to remove characteristic Hi-C artefacts.
+ * Note that we have made several of the functions in this class package access for testing purposes
+ * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
+ * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
+ * @version 0.0.2 (2018-01-05)
+ */
 public class SAMPairer {
     private static final Logger logger = LogManager.getLogger();
     private static final htsjdk.samtools.util.Log log = Log.getInstance(SAMPairer.class);
+    /** Version of diachromatic. This is initialized within the command line class on the basis of the program
+     * version given in the pom.xml file.
+     */
     private static String VERSION="1.0";
     /** Path to the SAMfile representing the forward read of a paired end experiment. The SAM files should have been
      * processed with the truncate command of this package */
@@ -80,6 +93,7 @@ public class SAMPairer {
         samPath1=sam1;
         samPath2=sam2;
         digestmap=digests;
+        VERSION= Commandline.getVersion();
     }
 
     /**
@@ -88,14 +102,12 @@ public class SAMPairer {
      * with of the individual iterators.
      * @param it1
      * @param it2
-     * @return A pair of SAMRecord objects represening the forward and the reverse reads.
+     * @return A pair of SAMRecord objects representing the forward and the reverse reads.
      */
-    private Pair<SAMRecord,SAMRecord> getNextPair(Iterator<SAMRecord> it1,Iterator<SAMRecord> it2) {
-        SAMRecord record1=null;
-        SAMRecord record2=null;
+    Pair<SAMRecord,SAMRecord> getNextPair(Iterator<SAMRecord> it1,Iterator<SAMRecord> it2) {
         if (it1.hasNext() && it2.hasNext()) {
-            record1=it1.next();
-            record2=it2.next();
+            SAMRecord record1=it1.next();
+            SAMRecord record2=it2.next();
             return new Pair<>(record1,record2);
         } else {
             return null;
@@ -104,13 +116,13 @@ public class SAMPairer {
 
     /**
      * Determine if both reads from a paired-end could be uniquely mapped. If so, return true. If not,
-     * increment the corresponding counter (e.g., {@link #n_multimapped_read1}) and return false. There are two
+     * increment the corresponding counter (e.g., {@link #n_unmapped_read1}) and return false. There are two
      * things that can go wrong -- either one or both reads could not be mapped, or one or both reads were mapped
      * to more than one locus in the genome.
      * @param pair A pair of SAMrecords representing a paired end read.
      * @return true if both reads could be uniquely mapped.
      */
-    private boolean readPairUniquelyMapped(Pair<SAMRecord,SAMRecord> pair) {
+    boolean readPairUniquelyMapped(Pair<SAMRecord,SAMRecord> pair) {
         if (pair.first.getReadUnmappedFlag()) {
             //read 1 could not be aligned
             n_unmapped_read1++;
@@ -141,11 +153,8 @@ public class SAMPairer {
     public void inputSAMfiles() throws IOException {
         final SamReader reader1 = SamReaderFactory.makeDefault().open(new File(samPath1));
         final SamReader reader2 = SamReaderFactory.makeDefault().open(new File(samPath2));
-
-
         SAMFileHeader header = reader1.getFileHeader();
-        // TODO Add CL:"/usr/bin/bowtie2-align-s --wrapper basic-0 --very-sensitive -x /home/robinp/bin/bowtie2/hg19 -p 1 - --passthrough"
-        String programGroupId="@PG\tID:Diachromatic\tPN:Diachromatic\tVN:" + VERSION;//"\@PG\tID:HiCUP Mapper\tVN:" . "$hicup_module::VERSION\n";
+        String programGroupId="@PG\tID:Diachromatic\tPN:Diachromatic\tVN:" + VERSION;
         SAMProgramRecord programRecord = new SAMProgramRecord(programGroupId);
         header.addProgramRecord(programRecord);
 
@@ -226,7 +235,7 @@ public class SAMPairer {
      * TODO right now we only print out the inputSAMfiles but we need to do the right thing here!
      * @return
      */
-    private boolean is_valid(SAMRecord readF,SAMRecord readR) {
+    boolean is_valid(SAMRecord readF,SAMRecord readR) {
 
         String chrom1=readF.getReferenceName();
         int start1=readF.getAlignmentStart();

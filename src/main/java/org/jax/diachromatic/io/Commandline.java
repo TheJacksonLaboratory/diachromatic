@@ -189,26 +189,29 @@ public class Commandline {
         return gnuOptions;
     }
 
-
-
-    /**
-     * Print usage information to provided OutputStream.
-     */
-    public static void printUsage(String message)
-    {
-        String version="";
+    public static String getVersion() {
+        String version="0.0.0";// default, should be overwritten by the following.
         try {
             Package p = Commandline.class.getPackage();
             version = p.getImplementationVersion();
         } catch (Exception e) {
             // do nothing
         }
+        return version;
+    }
+
+    /**
+     * Print usage information to provided OutputStream.
+     */
+    public static void printUsage(String message)
+    {
 
 
+        String version=getVersion();
         final PrintWriter writer = new PrintWriter(System.out);
-        final HelpFormatter usageFormatter = new HelpFormatter();
-        final String applicationName="java -jar diachromatic.jar command";
-        final Options options=constructGnuOptions();
+       // final HelpFormatter usageFormatter = new HelpFormatter();
+       // final String applicationName="java -jar diachromatic.jar command";
+       // final Options options=constructGnuOptions();
         writer.println(message);
         writer.println();
         //usageFormatter.printUsage(writer, 120, applicationName, options);
@@ -221,16 +224,31 @@ public class Commandline {
         writer.println();
         writer.println("digest:");
         writer.println("\tjava -jar Diachromatic.jar digest -g <path> -e <enzyme> [-o <outfile>]");
-        writer.println("\t-path: path to a directory containing indexed genome FASTA files");
-        writer.println("\t-enzyme: symbol of the restriction enzyme (e.g., DsnII)");
-        writer.println(String.format("\t-outfile: optional name of output file (Default: \"%s\")",DEFAULT_DIGEST_FILE_NAME));
+        writer.println("\t<path>: path to a directory containing indexed genome FASTA files");
+        writer.println("\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII)");
+        writer.println(String.format("\t<outfile>: optional name of output file (Default: \"%s\")",DEFAULT_DIGEST_FILE_NAME));
         writer.println();
         writer.println("truncate:");
-        writer.println("\tjava -jar Diachromatic.jar truncate --file1 example1.fq.gz \\");
-        writer.println("\t\t--file2 example2.fq.gz -e enzymeName -s <suffix> --outdir <directory>");
+        writer.println("\tjava -jar Diachromatic.jar truncate -q <forward.fq.gz> \\");
+        writer.println("\t\t-r <reverse.fq.gz> -e <enzyme> -s <suffix> --outdir <directory>");
+        writer.println("\t<forward.fq.gz>: path to the forward FASTQ file (may or may not be compressed with gzip)");
+        writer.println("\t<reverse.fq.gz>: path to the reverse FASTQ file (may or may not be compressed with gzip)");
+        writer.println("\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII)");
+        writer.println("\t<suffix>: suffix that will be added to the output truncated FASTQ files");
+        writer.println(String.format("\t<outfile>: optional name of output file (Default: \"%s\")",DEFAULT_TRUNCATION_SUFFIX));
         writer.println();
         writer.println("map:");
-        writer.println("\tjava -jar Diachromatic.jar map -o outdir --file1 example1.fq.gz \\");
+        writer.println("\tjava -jar Diachromatic.jar map -b <bowtie2> -i <bowtie2-index> \\");
+        writer.println("\t\t-q <forward.truncated.fq.gz> -r <reverse.truncated.fq.gz> \\");
+        writer.println("\t\t-d <digest> [-o <outfile>]");
+        writer.println("\t<bowtie2>: path to bowtie2 executable");
+        writer.println("\t<bowtie2-index>: path to bowtie2 index for digested genome");
+        writer.println("\t<forward.truncated.fq.gz>: path to the truncated forward FASTQ file");
+        writer.println("\t<reverse.truncated.fq.gz>: path to the truncated reverse FASTQ file");
+        writer.println("\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII)");
+        writer.println("\t<digest>: path to the digest file produced by the digest command");
+        writer.println(String.format("\t<outfile>: optional name of output file (Default: \"%s.bam\")",DEFAULT_OUTPUT_BAM_NAME));
+        writer.println();
         writer.close();
         System.exit(0);
     }

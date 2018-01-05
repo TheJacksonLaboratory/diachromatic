@@ -10,20 +10,28 @@ import org.jax.diachromatic.map.SAMPairer;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-
+/**
+ * Class to coordinate bowtie2-mapping of the truncated FASTQ files followed by Q/C and filtering of the
+ * mapped reads.
+ * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
+ * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
+ * @version 0.0.2 (2018-01-05)
+ */
 public class MapCommand extends Command {
     private static final Logger logger = LogManager.getLogger();
+    /** Path to the bowite2 exectuable, e.g., {@code /usr/bin/bowtie2}. */
     private final String bowtiepath;
-
-
-    private String pathToBowtieIndex=null;
-
+    /** Path to the bowtie2 index files. Note that the index is made up of multiple files, e.g.,
+     * hg19.1.bt2,  hg19.3.bt2,  hg19.rev.1.bt2, hg19.2.bt2,  hg19.4.bt2,  hg19.rev.2.bt2. Assuming all files
+     * are in a directory called {@code /path/to/index/}, this parameter should be {@code /path/to/index/hg19}.*/
+    private final String pathToBowtieIndex;
+    /** Path to the forward truncated FASTQ file produced by {@link org.jax.diachromatic.command.TruncateCommand}. */
     private String pathToInputFastq1 =null;
-
+    /** Path to the reverse truncated FASTQ file produced by {@link org.jax.diachromatic.command.TruncateCommand}. */
     private String pathToInputFastq2 =null;
-
+    /** Name of the output BAM file that will be produced in this step. */
     private String outname=null;
-
+    /** Path to the genome digest file produced by {@link org.jax.diachromatic.command.DigestCommand}.*/
     private String digestFile=null;
 
     public MapCommand(String bowtie, String btIndexPath, String inputFastqPath1,String inputFastqPath2, String outnam, String digest) {
@@ -33,7 +41,6 @@ public class MapCommand extends Command {
         pathToInputFastq2 =inputFastqPath2;
         outname=outnam;
         digestFile=digest;
-
     }
 
     public void execute() {
