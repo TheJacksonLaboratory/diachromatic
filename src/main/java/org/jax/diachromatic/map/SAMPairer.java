@@ -12,6 +12,8 @@ import htsjdk.samtools.util.Log;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jax.diachromatic.exception.DiachromaticException;
+import org.jax.diachromatic.exception.DigestNotFoundException;
 import org.jax.diachromatic.io.Commandline;
 import org.jax.diachromatic.util.Pair;
 
@@ -29,7 +31,7 @@ import java.util.Map;
  * Note that we have made several of the functions in this class package access for testing purposes
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
- * @version 0.0.2 (2018-01-05)
+ * @version 0.0.3 (2018-01-05)
  */
 public class SAMPairer {
     private static final Logger logger = LogManager.getLogger();
@@ -82,6 +84,14 @@ public class SAMPairer {
 
     /** Key: chromosome; value: a list of {@link Digest} objects on the chromosome. */
     private Map<String,List<Digest>> digestmap=null;
+    /** A reader for the forward reads. */
+    final private SamReader reader1;
+    /** A reader for the reverse reads. */
+    final private SamReader reader2;
+    /** Iterator over reads from {@link #reader1}. */
+    final private Iterator<SAMRecord> it1;
+    /** Iterator over reads from {@link #reader2}. */
+    final private Iterator<SAMRecord> it2;
 
 
     /**
@@ -92,6 +102,10 @@ public class SAMPairer {
     public SAMPairer(String sam1, String sam2, Map<String,List<Digest>> digests) {
         samPath1=sam1;
         samPath2=sam2;
+        reader1 = SamReaderFactory.makeDefault().open(new File(samPath1));
+        reader2 = SamReaderFactory.makeDefault().open(new File(samPath2));
+        it1=reader1.iterator();
+        it2 =reader2.iterator();
         digestmap=digests;
         VERSION= Commandline.getVersion();
     }
@@ -100,11 +114,9 @@ public class SAMPairer {
      * An iterator over pairs of SAMRecords -- similar to "next()" in a standard iteratr, but will return a pair
      * of SAMRecord objects. Both files should be equally long. This function will return null of there is any issue with
      * with of the individual iterators.
-     * @param it1
-     * @param it2
      * @return A pair of SAMRecord objects representing the forward and the reverse reads.
      */
-    Pair<SAMRecord,SAMRecord> getNextPair(Iterator<SAMRecord> it1,Iterator<SAMRecord> it2) {
+    Pair<SAMRecord,SAMRecord> getNextPair() {
         if (it1.hasNext() && it2.hasNext()) {
             SAMRecord record1=it1.next();
             SAMRecord record2=it2.next();
@@ -151,8 +163,7 @@ public class SAMPairer {
 
     /** Input the pair of truncated SAM files. */
     public void inputSAMfiles() throws IOException {
-        final SamReader reader1 = SamReaderFactory.makeDefault().open(new File(samPath1));
-        final SamReader reader2 = SamReaderFactory.makeDefault().open(new File(samPath2));
+
         SAMFileHeader header = reader1.getFileHeader();
         String programGroupId="@PG\tID:Diachromatic\tPN:Diachromatic\tVN:" + VERSION;
         SAMProgramRecord programRecord = new SAMProgramRecord(programGroupId);
@@ -165,67 +176,62 @@ public class SAMPairer {
 
         final ProgressLogger pl = new ProgressLogger(log, 1000000);
 
-
-        Iterator<SAMRecord> it1 =reader1.iterator();
-        Iterator<SAMRecord> it2 =reader2.iterator();
-
-
-
-        Pair<SAMRecord,SAMRecord> pair = getNextPair(it1,it2);
+        Pair<SAMRecord,SAMRecord> pair = getNextPair();
         while (pair != null) {
             n_total++;
-            // first check whether both reads were mapped.
-            if ( readPairUniquelyMapped(pair) ) {
-                // If we get here, then both reads were uniquely mappable.
-                if (is_valid(pair.first,pair.second)) {
-                    // This inputSAMfiles is a valid read inputSAMfiles
-                    // We therefore need to add corresponding bits to the SAM flag
-                    pair.first.setFirstOfPairFlag(true);
-                    pair.second.setSecondOfPairFlag(true);
-                    // Now set the flag to indicate it is paired end data
-                    pair.first.setReadPairedFlag(true);// 0x1
-                    pair.first.setProperPairFlag(true);//0x2
-                    pair.second.setReadPairedFlag(true);
-                    pair.second.setProperPairFlag(true);
+            try {
+                // first check whether both reads were mapped.
+                if (readPairUniquelyMapped(pair)) {
+                    // If we get here, then both reads were uniquely mappable.
+                    if (is_valid(pair.first, pair.second)) {
+                        // This inputSAMfiles is a valid read inputSAMfiles
+                        // We therefore need to add corresponding bits to the SAM flag
+                        pair.first.setFirstOfPairFlag(true);
+                        pair.second.setSecondOfPairFlag(true);
+                        // Now set the flag to indicate it is paired end data
+                        pair.first.setReadPairedFlag(true);// 0x1
+                        pair.first.setProperPairFlag(true);//0x2
+                        pair.second.setReadPairedFlag(true);
+                        pair.second.setProperPairFlag(true);
 
-                    // Indicate if inputSAMfiles is on the reverse strand
-                    pair.first.setMateNegativeStrandFlag(pair.second.getReadNegativeStrandFlag());
-                    pair.second.setMateNegativeStrandFlag(pair.first.getReadNegativeStrandFlag());
+                        // Indicate if inputSAMfiles is on the reverse strand
+                        pair.first.setMateNegativeStrandFlag(pair.second.getReadNegativeStrandFlag());
+                        pair.second.setMateNegativeStrandFlag(pair.first.getReadNegativeStrandFlag());
 
 
-                    // Set which reads are which in the inputSAMfiles
-                    pair.first.setFirstOfPairFlag(true);
+                        // Set which reads are which in the inputSAMfiles
+                        pair.first.setFirstOfPairFlag(true);
 
-                    pair.second.setSecondOfPairFlag(true);
+                        pair.second.setSecondOfPairFlag(true);
 //                    System.out.println("   READ 1 ");
 //                    SamBitflagFilter.debugDisplayBitflag(inputSAMfiles.first.getFlags());
 //                    System.out.println("   READ 2  ");
 //                    SamBitflagFilter.debugDisplayBitflag(inputSAMfiles.second.getFlags());
 
 
+                        // Set the RNEXT and PNEXT values
+                        // If the reference indices are the same, then the following should print "=" TODO CHeck this.
+                        pair.first.setMateReferenceIndex(pair.second.getReferenceIndex());
+                        pair.second.setMateReferenceIndex(pair.first.getReferenceIndex());
 
-                    // Set the RNEXT and PNEXT values
-                    // If the reference indices are the same, then the following should print "=" TODO CHeck this.
-                    pair.first.setMateReferenceIndex(pair.second.getReferenceIndex());
-                    pair.second.setMateReferenceIndex(pair.first.getReferenceIndex());
-
-                    pair.first.setMateAlignmentStart(pair.second.getAlignmentStart());
-                    pair.second.setMateAlignmentStart(pair.first.getAlignmentStart());
-
+                        pair.first.setMateAlignmentStart(pair.second.getAlignmentStart());
+                        pair.second.setMateAlignmentStart(pair.first.getAlignmentStart());
 
 
 //                    System.out.println(inputSAMfiles.first.getSAMString());
 
 
-                    // TODO put hash here to check for duplicates. Do not write duplicates to file.
-                    writer.addAlignment(pair.first);
-                    writer.addAlignment(pair.second);
-                    n_good++;
+                        // TODO put hash here to check for duplicates. Do not write duplicates to file.
+                        writer.addAlignment(pair.first);
+                        writer.addAlignment(pair.second);
+                        n_good++;
+                    }
                 }
+            } catch (DiachromaticException e) {
+                logger.error(e.getMessage()); // todo refactor
             }
 
-
-            pair=getNextPair(it1,it2);
+            pair=getNextPair();
         }
         writer.close();
     }
@@ -235,7 +241,7 @@ public class SAMPairer {
      * TODO right now we only print out the inputSAMfiles but we need to do the right thing here!
      * @return
      */
-    boolean is_valid(SAMRecord readF,SAMRecord readR) {
+    boolean is_valid(SAMRecord readF,SAMRecord readR) throws DiachromaticException {
 
         String chrom1=readF.getReferenceName();
         int start1=readF.getAlignmentStart();
@@ -380,31 +386,29 @@ public class SAMPairer {
      * @param end2
      * @return
      */
-    public Pair<Digest, Digest> getDigestPair(String chrom1,int start1, int end1,String chrom2,int start2,int end2) {
+    Pair<Digest, Digest> getDigestPair(String chrom1,int start1, int end1,String chrom2,int start2,int end2) throws DiachromaticException {
         List<Digest> list =  digestmap.get(chrom1);
         if (list==null) {
-            logger.error(String.format("Could not retrieve digests for chromosome %s",chrom1 ));
-            return null;
+            n_could_not_assign_to_digest++; // should never happen
+            throw new DigestNotFoundException(String.format("Could not retrieve digest list for chromosome %s",chrom1 ));
         }
         Digest d1 = list.stream().filter( digest -> (digest.getStartpos() <= start1 && digest.getEndpos() >= end1) ).findFirst().orElse(null);
         if (d1==null) {
-            logger.error(String.format("Could not identify digest for read 1 at %s:%d-%d",chrom1,start1,end1 ));
-            n_could_not_assign_to_digest++;
-            return null; // should never happen todo throw exception
+            n_could_not_assign_to_digest++; // should never happen
+            throw new DigestNotFoundException(String.format("Could not identify digest for read 1 at %s:%d-%d",chrom1,start1,end1 ));
         }
         list =  digestmap.get(chrom2);
         if (list==null) {
-            logger.error(String.format("Could not retrieve digests for chromosome %s",chrom2 ));
-            return null;
+            n_could_not_assign_to_digest++; // should never happen
+            throw new DigestNotFoundException(String.format("Could not retrieve digest list for chromosome %s",chrom2 ));
         }
         Digest d2 = list.stream().filter( digest -> (digest.getStartpos() <= start2 && digest.getEndpos() >= end2) ).findFirst().orElse(null);
         if (d2==null) {
-            logger.error(String.format("Could not identify digest for read 2 at %s:%d-%d",chrom2,start2,end2 ));
-            n_could_not_assign_to_digest++;
-            return  null; // should never happen todo throw exception
+            n_could_not_assign_to_digest++; // should never happen
+            throw new DigestNotFoundException(String.format("Could not identify digest for read 2 at %s:%d-%d",chrom2,start2,end2 ));
         }
         if (d1.getStartpos() < d2.getStartpos()) {
-            return new Pair<>(d1, d2);
+            return new Pair<>(d1,d2);
         } else {
             return new Pair<>(d2,d1); // ensure that the returned pairs are in order
         }
