@@ -268,7 +268,7 @@ public class SAMPairer {
                 if (readPairUniquelyMapped(pair)) {
                     // If we get here, then both reads were uniquely mappable.
                     if (is_valid(pair)) {
-                        // This inputSAMfiles is a valid read inputSAMfiles
+                        // This read pair is valid
                         // We therefore need to add corresponding bits to the SAM flag
                         pair.first.setFirstOfPairFlag(true);
                         pair.second.setSecondOfPairFlag(true);
@@ -282,7 +282,6 @@ public class SAMPairer {
                         pair.first.setMateNegativeStrandFlag(pair.second.getReadNegativeStrandFlag());
                         pair.second.setMateNegativeStrandFlag(pair.first.getReadNegativeStrandFlag());
 
-
                         // Set which reads are which in the inputSAMfiles
                         pair.first.setFirstOfPairFlag(true);
 
@@ -292,7 +291,6 @@ public class SAMPairer {
 //                    System.out.println("   READ 2  ");
 //                    SamBitflagFilter.debugDisplayBitflag(inputSAMfiles.second.getFlags());
 
-
                         // Set the RNEXT and PNEXT values
                         // If the reference indices are the same, then the following should print "=" TODO CHeck this.
                         pair.first.setMateReferenceIndex(pair.second.getReferenceIndex());
@@ -301,9 +299,7 @@ public class SAMPairer {
                         pair.first.setMateAlignmentStart(pair.second.getAlignmentStart());
                         pair.second.setMateAlignmentStart(pair.first.getAlignmentStart());
 
-
 //                    System.out.println(inputSAMfiles.first.getSAMString());
-
 
                         // TODO put hash here to check for duplicates. Do not write duplicates to file.
                         validReadsWriter.addAlignment(pair.first);
@@ -321,10 +317,10 @@ public class SAMPairer {
     }
 
     /**
-     * Decide if this candidate inputSAMfiles is valid according to the rules for capture Hi-C
-     * TODO right now we only print out the inputSAMfiles but we need to do the right thing here!
+     * Decide if a candidate readpair (pair of SAMRecord objects) is valid according to the rules for capture Hi-C
+     * As a side effect, write invalid reads to {@link #rejectedBamFileName}.
      *
-     * @return
+     * @return true if the read is valid
      */
     boolean is_valid(Pair<SAMRecord, SAMRecord> readpair) throws DiachromaticException {
         SAMRecord readF = readpair.first;
@@ -426,15 +422,11 @@ public class SAMPairer {
             return false;
         }
 
-        //#$max_possible_insert_size used for determining distance of separation between fragments
-        //    my $max_possible_insert_size = ( $lookup_end_site1 - $lookup_start_site1 ) + ( $lookup_end_site2 - $lookup_start_site2 );
+        // maximum possible insert size is used for determining distance of separation between fragments
         int max_possible_insert_size = digestPair.first.getSize() + digestPair.second.getSize();
-
-
         // decide whether the reads are close or far.
         if (readF.getAlignmentStart() < readR.getAlignmentStart()) {
             // read 1 is mapped upstream of read 2
-
             if ((digestPair.second.getEndpos() - digestPair.first.getStartpos() - max_possible_insert_size) > 10_000) {
                 readF.setAttribute("CT", "FAR");
                 readR.setAttribute("CT", "FAR");
@@ -442,18 +434,15 @@ public class SAMPairer {
                 readF.setAttribute("CT", "CLOSE");
                 readR.setAttribute("CT", "CLOSE");
             }
-        }
-        // todo what if readR is mapped upstream of readF
-        /*
-        WOULD THIS BE CORRECT?????
-          if ( ( digestPair.first.getEndpos() - digestPair.second.getStartpos() -max_possible_insert_size ) > 10_000) {
+        }  else {
+            if ( ( digestPair.first.getEndpos() - digestPair.second.getStartpos() -max_possible_insert_size ) > 10_000) {
                 readF.setAttribute("CT","FAR");
                 readR.setAttribute("CT","FAR");
             } else {
                 readF.setAttribute("CT","CLOSE");
                 readR.setAttribute("CT","CLOSE");
             }
-        */
+        }
         // when we get here, we have ruled out artefacts
         return true;
     }

@@ -240,7 +240,6 @@ public class SAMPairerTest {
         assertTrue(sampairer.religation(digestpair,readpair));
         //assertFalse(sampairer.contiguous(readpair))
         readpair = sampairer.getNextPair(); //6-- contiguous but not religated (not on adjacent digests)!
-        System.err.println("1) " + readpair.first.getAlignmentStart() + "\n2) "+readpair.second.getAlignmentStart());
         assertTrue(sampairer.contiguous(readpair));
         digestpair = sampairer.getDigestPair(readpair);
         assertFalse(sampairer.religation(digestpair,readpair));
