@@ -12,6 +12,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A class to represent a restriction fragment resulting from an in silico digestion of the genome.
+ * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
+ * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
+ * @version 0.1.3 (2018-01-07)
+ */
 public class Digest {
     private static final Logger logger = LogManager.getLogger();
     private final String chromosome;
@@ -126,5 +132,16 @@ public class Digest {
             System.exit(1); // todo throw exception
         }
         return map;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Digest at %s:%d-%d [frag. %d;%s/%s]",
+                chromosome,
+                startpos,
+                endpos,
+                fragmentNumber,
+                fivePrimeRestrictionSite,
+                threePrimeRestrictionSite);
     }
 }

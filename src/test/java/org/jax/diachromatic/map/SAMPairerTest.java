@@ -6,15 +6,14 @@ import org.jax.diachromatic.exception.DigestNotFoundException;
 import org.jax.diachromatic.util.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class SAMPairerTest {
 
@@ -43,8 +42,13 @@ public class SAMPairerTest {
         digestmap.put("chr1",digests);
         digests=makeFakeDigestList("chr11",new Pair<>(92314037,92316529),new Pair<>(92316530,92317574));
         digestmap.put("chr11",digests);
-        digests=makeFakeDigestList("chr15",new Pair<>(91492555,91497580));
-        digestmap.put("chr15",digests);
+        // Note -- the following command will give these two digests neighboring digest numbers
+        // this is needed for the test and resembles what we would have for a full dataset.
+        digests=makeFakeDigestList("chr13",new Pair<>(31_421_583,31_425_191),new Pair<>(31425192,	31425873	));
+        digestmap.put("chr13",digests);
+        //chr15	91492555	91497580
+        digests=makeFakeDigestList("chr15",new Pair<>(91_492_555,91_497_580));
+        digestmap.put("chr15",digests);//chr15	91492809
         digests=makeFakeDigestList("chr16",new Pair<>(31497401,31527040), new Pair<>(84172259,84175274));
         digestmap.put("chr16",digests);
         digests=makeFakeDigestList("chr17",new Pair<>(22262265,22262874));
@@ -188,5 +192,26 @@ public class SAMPairerTest {
         readpair = sampairer.getNextPair();//3, skip it, not on same chromosome
         readpair = sampairer.getNextPair();// fourth read pair, self-ligation!
         assertTrue(sampairer.selfLigation(readpair));
+    }
+
+
+    @Test
+    public void testReligation() throws DiachromaticException {
+        //chr13	31421583	31425191
+        //chr13	31425192	31425873
+        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
+        Pair<SAMRecord,SAMRecord> readpair = sampairer.getNextPair();
+        Pair<Digest, Digest> digestpair = sampairer.getDigestPair(readpair);
+        assertFalse(sampairer.religation(digestpair,readpair));
+        readpair = sampairer.getNextPair();//2, skip it, not on same chromosome
+        readpair = sampairer.getNextPair();//3, skip it, not on same chromosome
+        readpair = sampairer.getNextPair();// fourth read pair, self-ligation--not religation
+        digestpair = sampairer.getDigestPair(readpair);
+        assertFalse(sampairer.religation(digestpair,readpair));
+        readpair = sampairer.getNextPair();// 5. religation!
+        assertEquals(readpair.first.getReferenceName(),"chr13");// check we have right read!
+        assertEquals(readpair.second.getReferenceName(),"chr13");// check we have right read!
+        digestpair = sampairer.getDigestPair(readpair);
+        assertTrue(sampairer.religation(digestpair,readpair));
     }
 }

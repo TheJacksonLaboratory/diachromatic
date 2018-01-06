@@ -160,6 +160,14 @@ public class SAMPairer {
     private final static String BADREAD_ATTRIBUTE="YY";
     /** Tag to mark self ligation/circularization. */
     private final static String SELF_LIGATION_TAG="SL";
+    /** Tag to mark dangling end. */
+    private final static String DANGLING_END_TAG="DE";
+    /** Tag to same fragment internal reads. */
+    private final static String SAME_INTERNAL_TAG="SI";
+    /** Tag religation reads. */
+    private final static String RELIGATION_TAG="RL";
+    /** Tag contiguous reads. */
+    private final static String CONTIGUOUS_TAG="CT";
 
 
     /**
@@ -357,29 +365,39 @@ public class SAMPairer {
                 }
                 return false;
             }
-
-            // ditags on the same restriction fragment but not circularized with be either same internal or same dangling end
-            // check if the mapped ends of the reads are near to the end of a restriction fragment
-            if (Math.abs(readF.getAlignmentStart() - digestPair.first.getStartpos()) < DANGLING_THRESHOLD ||
-                    Math.abs(readF.getAlignmentStart() - digestPair.first.getEndpos()) < DANGLING_THRESHOLD ||
-                    Math.abs(readR.getAlignmentStart() - digestPair.first.getStartpos()) < DANGLING_THRESHOLD ||
-                    Math.abs(readR.getAlignmentStart() - digestPair.first.getEndpos()) < DANGLING_THRESHOLD) {
+            if (danglingEnd(digestPair,readpair)) {
                 n_same_dangling_end++;
+                if (outputRejectedReads) {
+                    readpair.first.setAttribute(BADREAD_ATTRIBUTE, DANGLING_END_TAG);
+                    readpair.first.setAttribute(BADREAD_ATTRIBUTE, DANGLING_END_TAG);
+                    rejectedReadsWriter.addAlignment(readpair.first);
+                    rejectedReadsWriter.addAlignment(readpair.second);
+                }
                 return false;
             }
             // if we get here, we have reads from the same digest that are not circularized and are not dangling end, so
             // they must be same_internal
             n_same_internal++;
+            if (outputRejectedReads) {
+                readpair.first.setAttribute(BADREAD_ATTRIBUTE, SAME_INTERNAL_TAG);
+                readpair.first.setAttribute(BADREAD_ATTRIBUTE, SAME_INTERNAL_TAG);
+                rejectedReadsWriter.addAlignment(readpair.first);
+                rejectedReadsWriter.addAlignment(readpair.second);
+            }
             return false;
         }
-        // if we get here, then the reads do not map to the same restriction fragment. If they map to neighboring fragments,
+        // If we get here, then the reads do not map to the same restriction fragment.
+        // If they map to neighboring fragments,
         // then there may be a religation.
-        if (digestPair.second.getFragmentNumber() - digestPair.first.getFragmentNumber() == 1) {
-            if (readF.getReadNegativeStrandFlag() != readR.getReadNegativeStrandFlag()) {
-                // adjacent fragments have the same orientation and thus the reads have opposite orientation
-                n_religation++;
-                return false;
+        if (religation(digestPair, readpair)) {
+            n_religation++;
+            if (outputRejectedReads) {
+                readpair.first.setAttribute(BADREAD_ATTRIBUTE, RELIGATION_TAG);
+                readpair.first.setAttribute(BADREAD_ATTRIBUTE, RELIGATION_TAG);
+                rejectedReadsWriter.addAlignment(readpair.first);
+                rejectedReadsWriter.addAlignment(readpair.second);
             }
+            return false;
         }
         // If we get here, we are on different fragments and the two fragments are not direct neighbors. If they are located
         // within one expected fragment size, then they are contiguous sequences that were not properly digested
@@ -441,6 +459,35 @@ public class SAMPairer {
     }
 
     /**
+     * If ditags are on the same restriction fragment (which MUST be checked before calling this
+     * function), but not circularized and if the mapped end of one of the reads is near to the
+     * end of a restriction fragment, this is termed a dangling end. Note that we only need to
+     * check one Digest since by definition the reads have been found to both map to the same
+     * fragment.
+     * @param digestPair
+     * @param readpair
+     * @return
+     */
+    boolean danglingEnd(Pair<Digest,Digest> digestPair,Pair<SAMRecord,SAMRecord> readpair) {
+       return ( Math.abs(readpair.first.getAlignmentStart() - digestPair.first.getStartpos()) < DANGLING_THRESHOLD ||
+                Math.abs(readpair.first.getAlignmentStart() - digestPair.first.getEndpos()) < DANGLING_THRESHOLD ||
+                Math.abs(readpair.second.getAlignmentStart() - digestPair.first.getStartpos()) < DANGLING_THRESHOLD ||
+                Math.abs(readpair.second.getAlignmentStart() - digestPair.first.getEndpos()) < DANGLING_THRESHOLD);
+    }
+
+    /**
+     *  Adjacent fragments have the same orientation and thus the reads have opposite orientation
+     *  We know the fragments are adjacent because their fragment numbers differ by 1
+     * @param digestPair
+     * @param readpair
+     * @return
+     */
+    boolean religation(Pair<Digest,Digest> digestPair,Pair<SAMRecord,SAMRecord> readpair) {
+        return ( (Math.abs(digestPair.second.getFragmentNumber() - digestPair.first.getFragmentNumber()) == 1)  &&
+            (readpair.first.getReadNegativeStrandFlag() != readpair.second.getReadNegativeStrandFlag()) ) ;
+    }
+
+    /**
      * Mapped reads always "point towards" the ligation sequence. We can infer that the actualy (physical) size of the
      * insert goes from the 5' end of a read to the ligation sequence (for each read of the ditag). We calculate this
      * size and will filter out reads whose size is substantially above what we expect given the reported experimental
@@ -490,17 +537,23 @@ public class SAMPairer {
     }
 
     /**
-     * version of the function for testing.
+     * Using the terminal ends of a di-tag to position a read on the digested genome could be problematic because
+     * a restiction enzyme may not cut in the same position on both strands (i.e. creates sticky ends). Filling-in
+     * and truncating reads at the Hi-C junction makes this situation even more complex.
+     * To overcome this problem we use the position 10 bp upstream of the start of each read when
+     * assigning reads to a fragment in the digested genome. This approach was adopted from the HiCup script.
      *
      * @return
      */
     Pair<Digest, Digest> getDigestPair(String chrom1, int start1, int end1, String chrom2, int start2, int end2) throws DiachromaticException {
+        final int OFFSET=10;
         List<Digest> list = digestmap.get(chrom1);
         if (list == null) {
             n_could_not_assign_to_digest++; // should never happen
             throw new DigestNotFoundException(String.format("Could not retrieve digest list for chromosome %s", chrom1));
         }
-        Digest d1 = list.stream().filter(digest -> (digest.getStartpos() <= start1 && digest.getEndpos() >= end1)).findFirst().orElse(null);
+        int pos1=start1+OFFSET; // strand does not matter here.
+        Digest d1 = list.stream().filter(digest -> (digest.getStartpos() <= pos1 && pos1 <= digest.getEndpos())).findFirst().orElse(null);
         if (d1 == null) {
             n_could_not_assign_to_digest++; // should never happen
             throw new DigestNotFoundException(String.format("Could not identify digest for read 1 at %s:%d-%d", chrom1, start1, end1));
@@ -510,16 +563,15 @@ public class SAMPairer {
             n_could_not_assign_to_digest++; // should never happen
             throw new DigestNotFoundException(String.format("Could not retrieve digest list for chromosome %s", chrom2));
         }
-        Digest d2 = list.stream().filter(digest -> (digest.getStartpos() <= start2 && digest.getEndpos() >= end2)).findFirst().orElse(null);
+        int pos2=start2+OFFSET;
+        Digest d2 = list.stream().filter(digest -> (digest.getStartpos() <= pos2 && pos2 <= digest.getEndpos())).findFirst().orElse(null);
         if (d2 == null) {
             n_could_not_assign_to_digest++; // should never happen
             throw new DigestNotFoundException(String.format("Could not identify digest for read 2 at %s:%d-%d", chrom2, start2, end2));
         }
-        if (d1.getStartpos() < d2.getStartpos()) {
-            return new Pair<>(d1, d2);
-        } else {
-            return new Pair<>(d2, d1); // ensure that the returned pairs are in order
-        }
+
+        return new Pair<>(d1, d2);
+
     }
 
 
