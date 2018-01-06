@@ -34,13 +34,17 @@ public class MapCommand extends Command {
     /** Path to the genome digest file produced by {@link org.jax.diachromatic.command.DigestCommand}.*/
     private String digestFile=null;
 
-    public MapCommand(String bowtie, String btIndexPath, String inputFastqPath1,String inputFastqPath2, String outnam, String digest) {
+    private final boolean outputRejectedReads;
+
+    public MapCommand(String bowtie, String btIndexPath, String inputFastqPath1,String inputFastqPath2, String outnam, String digest,
+                      boolean outputRejected) {
         bowtiepath=bowtie;
         pathToBowtieIndex=btIndexPath;
         pathToInputFastq1 =inputFastqPath1;
         pathToInputFastq2 =inputFastqPath2;
         outname=outnam;
         digestFile=digest;
+        outputRejectedReads=outputRejected;
     }
 
     public void execute() {
@@ -53,7 +57,7 @@ public class MapCommand extends Command {
             runner.run();
             Bowtie2Runner runner2 = new Bowtie2Runner(bowtiepath,pathToBowtieIndex, pathToInputFastq2,outname2);
             runner2.run();
-            SAMPairer pairer = new SAMPairer(outname1,outname2,digestmap);
+            SAMPairer pairer = new SAMPairer(outname1,outname2,digestmap,outputRejectedReads);
             pairer.inputSAMfiles();
             pairer.printStatistics();
         } catch (DiachromaticException e){

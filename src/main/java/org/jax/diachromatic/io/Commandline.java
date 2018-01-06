@@ -42,6 +42,7 @@ public class Commandline {
     private String pathToInputFastq2 =null;
     private String pathToDiachromaticDigestFile=null;
     private String suffix=null;
+    private boolean outputRejectedReads=false;
 
     public Commandline(String args[]) {
         final CommandLineParser cmdLineGnuParser = new DefaultParser();
@@ -85,6 +86,11 @@ public class Commandline {
             }
             if (commandLine.hasOption("d")) {
                 this.pathToDiachromaticDigestFile=commandLine.getOptionValue("d");
+            }
+            if (commandLine.hasOption("b")) {
+                outputRejectedReads=true;
+            } else {
+                outputRejectedReads=false;
             }
             if (commandLine.hasOption("i")) {
                 this.pathToBowtieIndex=commandLine.getOptionValue("i");
@@ -151,7 +157,13 @@ public class Commandline {
                 if (pathToDiachromaticDigestFile==null) {
                     printUsage("-d option required for map command");
                 }
-                this.command=new MapCommand(bowtiepath,pathToBowtieIndex, pathToInputFastq1,pathToInputFastq2,outputFilePath,pathToDiachromaticDigestFile);
+                this.command=new MapCommand(bowtiepath,
+                        pathToBowtieIndex,
+                        pathToInputFastq1,
+                        pathToInputFastq2,
+                        outputFilePath,
+                        pathToDiachromaticDigestFile,
+                        outputRejectedReads);
             } else {
                 printUsage(String.format("Did not recognize command: %s", mycommand));
             }
@@ -184,6 +196,7 @@ public class Commandline {
                 .addOption("outdir", "outdir", true, "path to output directory")
                 .addOption("q", "q", true, "path to forward FASTQ input file")
                 .addOption("r", "r", true, "path to reverse FASTQ input file")
+                .addOption("b", "bad", false, "output bad (rejected) reads to separated file")
         .addOption( Option.builder( "f1" ).longOpt("file1").desc("path to fastq file 1").hasArg(true).argName("file1").build())
          .addOption( Option.builder( "f2" ).longOpt("file2").desc("path to fastq file 2").hasArg(true).argName("file2").build());
         return gnuOptions;
@@ -240,7 +253,7 @@ public class Commandline {
         writer.println("map:");
         writer.println("\tjava -jar Diachromatic.jar map -b <bowtie2> -i <bowtie2-index> \\");
         writer.println("\t\t-q <forward.truncated.fq.gz> -r <reverse.truncated.fq.gz> \\");
-        writer.println("\t\t-d <digest> [-o <outfile>]");
+        writer.println("\t\t-d <digest> [-o <outfile>] [-b]");
         writer.println("\t<bowtie2>: path to bowtie2 executable");
         writer.println("\t<bowtie2-index>: path to bowtie2 index for digested genome");
         writer.println("\t<forward.truncated.fq.gz>: path to the truncated forward FASTQ file");
@@ -248,6 +261,7 @@ public class Commandline {
         writer.println("\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII)");
         writer.println("\t<digest>: path to the digest file produced by the digest command");
         writer.println(String.format("\t<outfile>: optional name of output file (Default: \"%s.bam\")",DEFAULT_OUTPUT_BAM_NAME));
+        writer.println("\t-b: output rejected reads to file (false if no -b option passed)");
         writer.println();
         writer.close();
         System.exit(0);

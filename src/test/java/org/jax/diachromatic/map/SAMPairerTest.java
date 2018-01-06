@@ -25,6 +25,8 @@ public class SAMPairerTest {
     private static String sam1;
     private static String sam2;
 
+    private static final boolean outputRejectedReads=false;
+
     @BeforeClass
     public  static void init() {
         ClassLoader classLoader = SAMPairerTest.class.getClassLoader();
@@ -41,6 +43,8 @@ public class SAMPairerTest {
         digestmap.put("chr1",digests);
         digests=makeFakeDigestList("chr11",new Pair<>(92314037,92316529),new Pair<>(92316530,92317574));
         digestmap.put("chr11",digests);
+        digests=makeFakeDigestList("chr15",new Pair<>(91492555,91497580));
+        digestmap.put("chr15",digests);
         digests=makeFakeDigestList("chr16",new Pair<>(31497401,31527040), new Pair<>(84172259,84175274));
         digestmap.put("chr16",digests);
         digests=makeFakeDigestList("chr17",new Pair<>(22262265,22262874));
@@ -86,7 +90,7 @@ public class SAMPairerTest {
 
     @Test
     public void testIteratorReturnsFirstPairOfReads() {
-        sampairer = new SAMPairer(sam1,sam2,digestmap);
+        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
         Pair<SAMRecord,SAMRecord> pair = sampairer.getNextPair();
         assertNotNull(pair);
     }
@@ -101,7 +105,7 @@ public class SAMPairerTest {
      */
     @Test
     public void testFilterMultipleAlignment() {
-        sampairer = new SAMPairer(sam1,sam2,digestmap);
+        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
         Pair<SAMRecord,SAMRecord> pair = sampairer.getNextPair();
         assertTrue(sampairer.readPairUniquelyMapped(pair));
         pair=sampairer.getNextPair();
@@ -115,7 +119,7 @@ public class SAMPairerTest {
      */
     @Test(expected = DigestNotFoundException.class)
     public void testDigestNotFound() throws DiachromaticException{
-        sampairer = new SAMPairer(sam1,sam2,digestmap);
+        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
         Pair<Digest, Digest> pair = sampairer.getDigestPair("crazyChromosome1", 1, 2, "wrongChromosome2", 3, 4);
     }
 
@@ -124,7 +128,7 @@ public class SAMPairerTest {
     public void testDigestFound1() throws DiachromaticException {
         // we should find a digest for chr1	221618744 and for chr18	71915472
         // note the reads are 40bp long
-        sampairer = new SAMPairer(sam1,sam2,digestmap);
+        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
         Pair<Digest, Digest> pair = sampairer.getDigestPair("chr1",221618744,(221618744+40),
                 "chr18",71915472,(71915472+40));
         assertNotNull(pair);
@@ -134,7 +138,7 @@ public class SAMPairerTest {
     public void testDigestFound2() throws DiachromaticException {
         // we should find a digest for chr11 92316468 and for chr17	22262669
         // note the reads are 40bp long
-        sampairer = new SAMPairer(sam1,sam2,digestmap);
+        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
         Pair<Digest, Digest> pair = sampairer.getDigestPair("chr11",	92316468,(92316468+40),
                 "chr17",	22262669,(22262669+40));
         assertNotNull(pair);
@@ -152,7 +156,7 @@ public class SAMPairerTest {
     public void testFragmentToLarge() throws DiachromaticException {
         int UPPER_SIZE_THRESHOLD=800;
         int LOWER_SIZE_THRESHOLD=150;
-        sampairer = new SAMPairer(sam1,sam2,digestmap);
+        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
         Pair<SAMRecord,SAMRecord> readpair = sampairer.getNextPair();
         Pair<Digest, Digest> digestpair = sampairer.getDigestPair(readpair);
         int insertSize=  sampairer.getCalculatedInsertSize(digestpair,readpair);
@@ -167,5 +171,22 @@ public class SAMPairerTest {
         digestpair = sampairer.getDigestPair(readpair);
         insertSize=  sampairer.getCalculatedInsertSize(digestpair,readpair);
         assertTrue(insertSize>UPPER_SIZE_THRESHOLD);
+    }
+
+    /**
+     * We are testing the fourth pair of reads that self-circularizes. The first read
+     * pair is from the same chromosome but does not self-circularize. (by manual inspection).
+     * The second and third pairs have distinct chromosomes and cnnot be tested for self circularization.
+     * @throws DiachromaticException
+     */
+    @Test
+    public void testSelfLigation() throws DiachromaticException {
+        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
+        Pair<SAMRecord,SAMRecord> readpair = sampairer.getNextPair();
+        assertFalse(sampairer.selfLigation(readpair));
+        readpair = sampairer.getNextPair();//2, skip it, not on same chromosome
+        readpair = sampairer.getNextPair();//3, skip it, not on same chromosome
+        readpair = sampairer.getNextPair();// fourth read pair, self-ligation!
+        assertTrue(sampairer.selfLigation(readpair));
     }
 }

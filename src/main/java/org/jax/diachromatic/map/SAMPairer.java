@@ -1,10 +1,8 @@
 package org.jax.diachromatic.map;
 
 
-
 import htsjdk.samtools.*;
 import htsjdk.samtools.SAMFileWriterFactory;
-
 
 
 import htsjdk.samtools.util.ProgressLogger;
@@ -29,6 +27,7 @@ import java.util.Map;
  * is to rejoin the pairs of reads that correspond to the chimeric fragments in the input files and
  * to perform Q/C and filtering on the reads to remove characteristic Hi-C artefacts.
  * Note that we have made several of the functions in this class package access for testing purposes
+ *
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
  * @version 0.1.2 (2018-01-06)
@@ -36,102 +35,162 @@ import java.util.Map;
 public class SAMPairer {
     private static final Logger logger = LogManager.getLogger();
     private static final htsjdk.samtools.util.Log log = Log.getInstance(SAMPairer.class);
-    /** Version of diachromatic. This is initialized within the command line class on the basis of the program
-     * version given in the pom.xml file. A default number of zero is given in case initialization doesnt work.*/
-    private static String VERSION="0.0";
-    /** Path to the SAMfile representing the forward read of a paired end experiment. The SAM files should have been
-     * processed with the truncate command of this package */
+    /**
+     * Version of diachromatic. This is initialized within the command line class on the basis of the program
+     * version given in the pom.xml file. A default number of zero is given in case initialization doesnt work.
+     */
+    private static String VERSION = "0.0";
+    /**
+     * Path to the SAMfile representing the forward read of a paired end experiment. The SAM files should have been
+     * processed with the truncate command of this package
+     */
     private String samPath1;
-    /** Path to the SAMfile representing the reverse read of a paired end experiment. The SAM files should have been
-     * processed with the truncate command of this package */
+    /**
+     * Path to the SAMfile representing the reverse read of a paired end experiment. The SAM files should have been
+     * processed with the truncate command of this package
+     */
     private String samPath2;
-    /** Number of unmapped forward reads (SAM flag==4) */
-    private int n_unmapped_read1=0;
-    /** Number of unmapped reverse reads (Note: SAM flag is also 4, because the reverse reads are mapped as single-end reads). */
-    private int n_unmapped_read2=0;
-    /** Number of pairs with 1 or 2 unmapped reads (these pairs are discarded from further analysis).*/
-    private int n_unmapped_pair=0;
-    /** Number of forward reads that were multimapped (had an XS tag) */
-    private int n_multimapped_read1=0;
-    /** Number of reverse reads that were multimapped (had an XS tag) */
-    private int n_multimapped_read2=0;
-    /** Number of  read pairs where one or two reads were multimapped (had an XS tag) */
-    private int n_multimappedPair=0;
+    /**
+     * Number of unmapped forward reads (SAM flag==4)
+     */
+    private int n_unmapped_read1 = 0;
+    /**
+     * Number of unmapped reverse reads (Note: SAM flag is also 4, because the reverse reads are mapped as single-end reads).
+     */
+    private int n_unmapped_read2 = 0;
+    /**
+     * Number of pairs with 1 or 2 unmapped reads (these pairs are discarded from further analysis).
+     */
+    private int n_unmapped_pair = 0;
+    /**
+     * Number of forward reads that were multimapped (had an XS tag)
+     */
+    private int n_multimapped_read1 = 0;
+    /**
+     * Number of reverse reads that were multimapped (had an XS tag)
+     */
+    private int n_multimapped_read2 = 0;
+    /**
+     * Number of  read pairs where one or two reads were multimapped (had an XS tag)
+     */
+    private int n_multimappedPair = 0;
 
-    private int n_could_not_assign_to_digest=0;
-    /** Number of readpairs whose insert was found to be larger than the maximum allow size threshold (Default 1500 nt). */
-    private int n_over_size_threshold=0;
-    /** Number of readpairs whose insert was found to be smaller than the minimum allow size threshold (Default 150 nt). */
-    private int n_below_size_threshold=0;
-    /** Number of circularized reads, a type of artefact where the ends of one fragment ligate with each other. */
-    private int n_circularized_read=0;
-    /** Number of dangling end reads, a type of artefact where one end of the read is internal and the other is at the
-     * end of a restriction fragment. */
-    private int n_same_dangling_end=0;
+    private int n_could_not_assign_to_digest = 0;
+    /**
+     * Number of readpairs whose insert was found to be larger than the maximum allow size threshold (Default 1500 nt).
+     */
+    private int n_over_size_threshold = 0;
+    /**
+     * Number of readpairs whose insert was found to be smaller than the minimum allow size threshold (Default 150 nt).
+     */
+    private int n_below_size_threshold = 0;
+    /**
+     * Number of circularized reads, a type of artefact where the ends of one fragment ligate with each other.
+     */
+    private int n_circularized_read = 0;
+    /**
+     * Number of dangling end reads, a type of artefact where one end of the read is internal and the other is at the
+     * end of a restriction fragment.
+     */
+    private int n_same_dangling_end = 0;
 
-    private int n_same_internal=0;
+    private int n_same_internal = 0;
 
-    private int n_religation=0;
+    private int n_religation = 0;
 
-    private int n_contiguous=0;
-    /** Number of reads that pass all quality filters. */
-    private int n_good=0;
-    /** Total number of reads TODO do we mean each read of the paired end reads? */
-    private int n_total=0;
-    /** Largest allowable size of the insert of a read pair. */
-    static private int UPPER_SIZE_THRESHOLD =1500;
-    /** Smallest allowable size of the insert of a read pair. */
-    static private int LOWER_SIZE_THRESHOLD =150;
-    /** Length threshold in nucleotides for the end of a read being near to a restriction fragment/ligation sequence */
-    static private int DANGLING_THRESHOLD=7;
+    private int n_contiguous = 0;
+    /**
+     * Number of reads that pass all quality filters.
+     */
+    private int n_good = 0;
+    /**
+     * Total number of reads TODO do we mean each read of the paired end reads?
+     */
+    private int n_total = 0;
+    /**
+     * Largest allowable size of the insert of a read pair.
+     */
+    static private int UPPER_SIZE_THRESHOLD = 1500;
+    /**
+     * Smallest allowable size of the insert of a read pair.
+     */
+    static private int LOWER_SIZE_THRESHOLD = 150;
+    /**
+     * Length threshold in nucleotides for the end of a read being near to a restriction fragment/ligation sequence
+     */
+    static private int DANGLING_THRESHOLD = 7;
 
-    /** Key: chromosome; value: a list of {@link Digest} objects on the chromosome. */
-    private Map<String,List<Digest>> digestmap=null;
-    /** A reader for the forward reads. */
+    /**
+     * Key: chromosome; value: a list of {@link Digest} objects on the chromosome.
+     */
+    private Map<String, List<Digest>> digestmap = null;
+    /**
+     * A reader for the forward reads.
+     */
     final private SamReader reader1;
-    /** A reader for the reverse reads. */
+    /**
+     * A reader for the reverse reads.
+     */
     final private SamReader reader2;
-    /** Iterator over reads from {@link #reader1}. */
+    /**
+     * Iterator over reads from {@link #reader1}.
+     */
     final private Iterator<SAMRecord> it1;
-    /** Iterator over reads from {@link #reader2}. */
+    /**
+     * Iterator over reads from {@link #reader2}.
+     */
     final private Iterator<SAMRecord> it2;
-    /** Handle to write valid reads. Used in {@link #inputSAMfiles()}. */
+    /**
+     * Handle to write valid reads. Used in {@link #inputSAMfiles()}.
+     */
     private SAMFileWriter validReadsWriter;
-    /** Handle to write invalid reads. Used in {@link #inputSAMfiles()}. */
+    /**
+     * Handle to write invalid reads. Used in {@link #inputSAMfiles()}.
+     */
     private SAMFileWriter rejectedReadsWriter;
 
-    private String validBamFileName="diachromatic.valid.bam";
+    private String validBamFileName = "diachromatic.valid.bam";
 
-    private String rejectedBamFileName="diachromatic.rejected.bam";
+    private String rejectedBamFileName = "diachromatic.rejected.bam";
+    /**
+     * If set to true, rejected readpairs are output to {@link #rejectedBamFileName} .
+     */
+    private final boolean outputRejectedReads;
+    /** Tag to use to mark invalid reads to output to BAM file. */
+    private final static String BADREAD_ATTRIBUTE="YY";
+    /** Tag to mark self ligation/circularization. */
+    private final static String SELF_LIGATION_TAG="SL";
 
 
     /**
-     * @param sam1 SAM file for the truncated "forward" reads
-     * @param sam2 SAM file for the truncated "reverse" reads
+     * @param sam1    SAM file for the truncated "forward" reads
+     * @param sam2    SAM file for the truncated "reverse" reads
      * @param digests see {@link #digestmap}.
      */
-    public SAMPairer(String sam1, String sam2, Map<String,List<Digest>> digests) {
-        samPath1=sam1;
-        samPath2=sam2;
+    public SAMPairer(String sam1, String sam2, Map<String, List<Digest>> digests, boolean outputRejected) {
+        samPath1 = sam1;
+        samPath2 = sam2;
         reader1 = SamReaderFactory.makeDefault().open(new File(samPath1));
         reader2 = SamReaderFactory.makeDefault().open(new File(samPath2));
-        it1=reader1.iterator();
-        it2 =reader2.iterator();
-        digestmap=digests;
-        VERSION= Commandline.getVersion();
+        it1 = reader1.iterator();
+        it2 = reader2.iterator();
+        digestmap = digests;
+        outputRejectedReads = outputRejected;
+        VERSION = Commandline.getVersion();
     }
 
     /**
      * An iterator over pairs of SAMRecords -- similar to "next()" in a standard iterator, but will return a pair
      * of SAMRecord objects. Both files must be equally long. This function will return null of there is any issue with
      * with of the individual iterators.
+     *
      * @return A pair of SAMRecord objects representing the forward and the reverse reads.
      */
-    Pair<SAMRecord,SAMRecord> getNextPair() {
+    Pair<SAMRecord, SAMRecord> getNextPair() {
         if (it1.hasNext() && it2.hasNext()) {
-            SAMRecord record1=it1.next();
-            SAMRecord record2=it2.next();
-            return new Pair<>(record1,record2);
+            SAMRecord record1 = it1.next();
+            SAMRecord record2 = it2.next();
+            return new Pair<>(record1, record2);
         } else {
             return null;
         }
@@ -142,10 +201,11 @@ public class SAMPairer {
      * increment the corresponding counter (e.g., {@link #n_unmapped_read1}) and return false. There are two
      * things that can go wrong -- either one or both reads could not be mapped, or one or both reads were mapped
      * to more than one locus in the genome.
+     *
      * @param pair A pair of SAMrecords representing a paired end read.
      * @return true if both reads could be uniquely mapped.
      */
-    boolean readPairUniquelyMapped(Pair<SAMRecord,SAMRecord> pair) {
+    boolean readPairUniquelyMapped(Pair<SAMRecord, SAMRecord> pair) {
         if (pair.first.getReadUnmappedFlag()) {
             //read 1 could not be aligned
             n_unmapped_read1++;
@@ -156,11 +216,13 @@ public class SAMPairer {
             n_unmapped_read2++; // note read1 must be OK if we get here...
             n_unmapped_pair++;
             return false;
-        } else  if ( pair.first.getAttribute("XS") != null ) {
+        } else if (pair.first.getAttribute("XS") != null) {
             // Now look for multimapped reads.
             // If a read has an XS attribute, then bowtie2 multi-mapped it.
             n_multimapped_read1++;
-            if (pair.second.getAttribute("XS") != null) { n_multimapped_read2++; }
+            if (pair.second.getAttribute("XS") != null) {
+                n_multimapped_read2++;
+            }
             n_multimappedPair++;
             return false;
         } else if (pair.second.getAttribute("XS") != null) {
@@ -172,21 +234,23 @@ public class SAMPairer {
     }
 
 
-    /** Input the pair of truncated SAM files. */
+    /**
+     * Input the pair of truncated SAM files.
+     */
     public void inputSAMfiles() throws IOException {
 
         SAMFileHeader header = reader1.getFileHeader();
-        String programGroupId="@PG\tID:Diachromatic\tPN:Diachromatic\tVN:" + VERSION;
+        String programGroupId = "@PG\tID:Diachromatic\tPN:Diachromatic\tVN:" + VERSION;
         SAMProgramRecord programRecord = new SAMProgramRecord(programGroupId);
         header.addProgramRecord(programRecord);
 
         // init BAM outfile
-        boolean presorted=false;
-        this.validReadsWriter = new SAMFileWriterFactory().makeBAMWriter(header,presorted,new File(validBamFileName));
-        this.rejectedReadsWriter = new SAMFileWriterFactory().makeBAMWriter(header,presorted,new File(rejectedBamFileName));
+        boolean presorted = false;
+        this.validReadsWriter = new SAMFileWriterFactory().makeBAMWriter(header, presorted, new File(validBamFileName));
+        this.rejectedReadsWriter = new SAMFileWriterFactory().makeBAMWriter(header, presorted, new File(rejectedBamFileName));
         final ProgressLogger pl = new ProgressLogger(log, 1000000);
 
-        Pair<SAMRecord,SAMRecord> pair = getNextPair();
+        Pair<SAMRecord, SAMRecord> pair = getNextPair();
         while (pair != null) {
             n_total++;
             try {
@@ -241,7 +305,7 @@ public class SAMPairer {
                 logger.error(e.getMessage()); // todo refactor
             }
 
-            pair=getNextPair();
+            pair = getNextPair();
         }
         validReadsWriter.close();
     }
@@ -249,56 +313,57 @@ public class SAMPairer {
     /**
      * Decide if this candidate inputSAMfiles is valid according to the rules for capture Hi-C
      * TODO right now we only print out the inputSAMfiles but we need to do the right thing here!
+     *
      * @return
      */
-    boolean is_valid(Pair<SAMRecord,SAMRecord> readpair) throws DiachromaticException {
-        SAMRecord readF=readpair.first;
-        SAMRecord readR=readpair.second;
-        String chrom1=readF.getReferenceName();
-        int start1=readF.getAlignmentStart();
-        int end1=readF.getAlignmentEnd();
-        String chrom2= readR.getReferenceName();
-        int start2=readR.getAlignmentStart();
-        int end2=readR.getAlignmentEnd();
+    boolean is_valid(Pair<SAMRecord, SAMRecord> readpair) throws DiachromaticException {
+        SAMRecord readF = readpair.first;
+        SAMRecord readR = readpair.second;
+        String chrom1 = readF.getReferenceName();
+        int start1 = readF.getAlignmentStart();
+        int end1 = readF.getAlignmentEnd();
+        String chrom2 = readR.getReferenceName();
+        int start2 = readR.getAlignmentStart();
+        int end2 = readR.getAlignmentEnd();
 
-        logger.trace(String.format("read 1: %s:%d-%d; read 2: %s:%d-%d",chrom1,start1,end1,chrom2,start2,end2));
+        logger.trace(String.format("read 1: %s:%d-%d; read 2: %s:%d-%d", chrom1, start1, end1, chrom2, start2, end2));
         //1 check if on same chromosome.
         //2 position the reads on chromosome .
         Pair<Digest, Digest> digestPair = getDigestPair(readpair);
-        if (digestPair==null) return false;
+        if (digestPair == null) return false;
         //3 Check that calculated insert size is realistic
-        int insertSize = getCalculatedInsertSize(digestPair,readpair);
-        if (insertSize> LOWER_SIZE_THRESHOLD) {
+        int insertSize = getCalculatedInsertSize(digestPair, readpair);
+        if (insertSize > UPPER_SIZE_THRESHOLD) {
             n_over_size_threshold++;
-            return  false;
+            return false;
+        } else if (insertSize < LOWER_SIZE_THRESHOLD) {
+            n_below_size_threshold++;
+            return false;
         }
-        if (! readF.getReferenceName().equals(readR.getReferenceName())) {
+        if (!readF.getReferenceName().equals(readR.getReferenceName())) {
             // identify ditags on different chromosomes
-            readF.setAttribute("CT","TRANS");
-            readR.setAttribute("CT","TRANS");
+            readF.setAttribute("CT", "TRANS");
+            readR.setAttribute("CT", "TRANS");
         }
         // Now check if both reads are on the same fragment
         if (digestPair.first.equals(digestPair.second)) { // both reads in same restriction fragment.
-            if (readF.getAlignmentStart() < readR.getAlignmentStart() &&
-                  readF.getReadNegativeStrandFlag() && (! readR.getReadNegativeStrandFlag())  ) {
-                // one restriction fragment self ligates (circularizes). The sequence insert spans the
-                // ligation site. Mapping the reads "flips" them, so that read 1 is before read2 and points in
-                // the opposite direction.
+            if (selfLigation(readpair)) {
                 n_circularized_read++;
+                if (outputRejectedReads) {
+                    readpair.first.setAttribute(BADREAD_ATTRIBUTE, SELF_LIGATION_TAG);
+                    readpair.first.setAttribute(BADREAD_ATTRIBUTE, SELF_LIGATION_TAG);
+                    rejectedReadsWriter.addAlignment(readpair.first);
+                    rejectedReadsWriter.addAlignment(readpair.second);
+                }
                 return false;
             }
-            if (readR.getAlignmentStart() < readF.getAlignmentStart() &&
-                    readR.getReadNegativeStrandFlag() && (! readF.getReadNegativeStrandFlag())) {
-                // analogous to above
-                n_circularized_read++;
-                return false;
-            }
+
             // ditags on the same restriction fragment but not circularized with be either same internal or same dangling end
             // check if the mapped ends of the reads are near to the end of a restriction fragment
-            if ( Math.abs(readF.getAlignmentStart() - digestPair.first.getStartpos())<DANGLING_THRESHOLD  ||
-                    Math.abs(readF.getAlignmentStart() - digestPair.first.getEndpos())<DANGLING_THRESHOLD ||
-                    Math.abs(readR.getAlignmentStart() - digestPair.first.getStartpos())<DANGLING_THRESHOLD ||
-                    Math.abs(readR.getAlignmentStart() - digestPair.first.getEndpos())<DANGLING_THRESHOLD ) {
+            if (Math.abs(readF.getAlignmentStart() - digestPair.first.getStartpos()) < DANGLING_THRESHOLD ||
+                    Math.abs(readF.getAlignmentStart() - digestPair.first.getEndpos()) < DANGLING_THRESHOLD ||
+                    Math.abs(readR.getAlignmentStart() - digestPair.first.getStartpos()) < DANGLING_THRESHOLD ||
+                    Math.abs(readR.getAlignmentStart() - digestPair.first.getEndpos()) < DANGLING_THRESHOLD) {
                 n_same_dangling_end++;
                 return false;
             }
@@ -309,7 +374,7 @@ public class SAMPairer {
         }
         // if we get here, then the reads do not map to the same restriction fragment. If they map to neighboring fragments,
         // then there may be a religation.
-        if (digestPair.second.getFragmentNumber()-digestPair.first.getFragmentNumber()==1 ) {
+        if (digestPair.second.getFragmentNumber() - digestPair.first.getFragmentNumber() == 1) {
             if (readF.getReadNegativeStrandFlag() != readR.getReadNegativeStrandFlag()) {
                 // adjacent fragments have the same orientation and thus the reads have opposite orientation
                 n_religation++;
@@ -318,24 +383,24 @@ public class SAMPairer {
         }
         // If we get here, we are on different fragments and the two fragments are not direct neighbors. If they are located
         // within one expected fragment size, then they are contiguous sequences that were not properly digested
-        if (Math.max(readR.getAlignmentEnd() - readF.getAlignmentStart(),readF.getAlignmentEnd()-readR.getAlignmentStart())< LOWER_SIZE_THRESHOLD) {
+        if (Math.max(readR.getAlignmentEnd() - readF.getAlignmentStart(), readF.getAlignmentEnd() - readR.getAlignmentStart()) < LOWER_SIZE_THRESHOLD) {
             n_contiguous++;
             return false;
         }
 
-  //#$max_possible_insert_size used for determining distance of separation between fragments
-    //    my $max_possible_insert_size = ( $lookup_end_site1 - $lookup_start_site1 ) + ( $lookup_end_site2 - $lookup_start_site2 );
+        //#$max_possible_insert_size used for determining distance of separation between fragments
+        //    my $max_possible_insert_size = ( $lookup_end_site1 - $lookup_start_site1 ) + ( $lookup_end_site2 - $lookup_start_site2 );
         int max_possible_insert_size = digestPair.first.getSize() + digestPair.second.getSize();
         // decide whether the reads are close or far.
         if (readF.getAlignmentStart() < readR.getAlignmentStart()) {
             // read 1 is mapped upstream of read 2
 
-            if ( ( digestPair.second.getEndpos() - digestPair.first.getStartpos() -max_possible_insert_size ) > 10_000) {
-                readF.setAttribute("CT","FAR");
-                readR.setAttribute("CT","FAR");
+            if ((digestPair.second.getEndpos() - digestPair.first.getStartpos() - max_possible_insert_size) > 10_000) {
+                readF.setAttribute("CT", "FAR");
+                readR.setAttribute("CT", "FAR");
             } else {
-                readF.setAttribute("CT","CLOSE");
-                readR.setAttribute("CT","CLOSE");
+                readF.setAttribute("CT", "CLOSE");
+                readR.setAttribute("CT", "CLOSE");
             }
         }
         // todo what if readR is mapped upstream of readF
@@ -355,108 +420,129 @@ public class SAMPairer {
 
 
     /**
+     * Check if a fragment self ligates (circularizes). The sequence insert spans the
+     * ligation site. Mapping the reads "flips" them, so that read 1 is before read2 and points in
+     * the opposite direction. Vice versa if read2 is before read 1.
+     * Note that this function should be called ONLY for pairs of reads
+     * mapping to the same chromosome (which is checked by the calling function {@link #is_valid(Pair)}).
+     *
+     * @param readpair
+     * @return
+     */
+    boolean selfLigation(Pair<SAMRecord, SAMRecord> readpair) {
+        if (readpair.first.getAlignmentStart() < readpair.second.getAlignmentStart() &&
+                readpair.first.getReadNegativeStrandFlag() && (!readpair.second.getReadNegativeStrandFlag()))
+            return true;
+        else if (readpair.second.getAlignmentStart() < readpair.first.getAlignmentStart() &&
+                !readpair.first.getReadNegativeStrandFlag() && readpair.second.getReadNegativeStrandFlag())
+            return true;
+        else
+            return false;
+    }
+
+    /**
      * Mapped reads always "point towards" the ligation sequence. We can infer that the actualy (physical) size of the
      * insert goes from the 5' end of a read to the ligation sequence (for each read of the ditag). We calculate this
      * size and will filter out reads whose size is substantially above what we expect given the reported experimental
      * size selection step
+     *
      * @param digestPair
-     * @param readpair the forward and reverse reads
+     * @param readpair   the forward and reverse reads
      * @return calculate insert size of chimeric read.
      */
-    int getCalculatedInsertSize(Pair<Digest,Digest> digestPair,Pair<SAMRecord,SAMRecord> readpair) {
-        SAMRecord readF=readpair.first;
-        SAMRecord readR=readpair.second;
+    int getCalculatedInsertSize(Pair<Digest, Digest> digestPair, Pair<SAMRecord, SAMRecord> readpair) {
+        SAMRecord readF = readpair.first;
+        SAMRecord readR = readpair.second;
         int distF, distR;
         if (readF.getReadNegativeStrandFlag()) { // readF is on the negative strand
-            distF=readF.getAlignmentEnd() - digestPair.first.getStartpos() + 1;
+            distF = readF.getAlignmentEnd() - digestPair.first.getStartpos() + 1;
         } else {
-            distF=digestPair.first.getEndpos() - readF.getAlignmentStart() +1;
+            distF = digestPair.first.getEndpos() - readF.getAlignmentStart() + 1;
         }
         if (readR.getReadNegativeStrandFlag()) { // readR is on the negative strand
-            distR=readR.getAlignmentEnd() - digestPair.second.getStartpos() + 1;
+            distR = readR.getAlignmentEnd() - digestPair.second.getStartpos() + 1;
         } else {
-            distR=digestPair.second.getEndpos() - readR.getAlignmentStart() + 1;
+            distR = digestPair.second.getEndpos() - readR.getAlignmentStart() + 1;
         }
-        return distF+distR;
+        return distF + distR;
     }
 
     /**
      * Get the restriction fragments ({@link Digest} objects) to which the reads map. TODO do we need a different algorithm
      * Note this from hicup
-     *  Using the terminal ends of a di-tag to position a read on the digested genome could be problematic because
-     a restiction enzyme may not cut in the same position on both strands (i.e. creates sticky ends). Filling-in
-     and truncating reads at the Hi-C junction makes this situation even more complex.
-     To overcome this problem simply the script uses the position 10 bp upstream of the start of each read when
-     assigning reads to a fragment in the digested genome.
+     * Using the terminal ends of a di-tag to position a read on the digested genome could be problematic because
+     * a restiction enzyme may not cut in the same position on both strands (i.e. creates sticky ends). Filling-in
+     * and truncating reads at the Hi-C junction makes this situation even more complex.
+     * To overcome this problem simply the script uses the position 10 bp upstream of the start of each read when
+     * assigning reads to a fragment in the digested genome.
+     *
      * @param readpair Pair of reads (forward, reverse).
      * @return
      */
-    Pair<Digest, Digest> getDigestPair(Pair<SAMRecord,SAMRecord> readpair) throws DiachromaticException {
-        String chrom1=readpair.first.getReferenceName();
-        int start1=readpair.first.getAlignmentStart();
-        int end1=readpair.first.getAlignmentEnd();
-        String chrom2=readpair.second.getReferenceName();
-        int start2=readpair.second.getAlignmentStart();
-        int end2=readpair.second.getAlignmentEnd();
-        return getDigestPair(chrom1,start1,end1,chrom2,start2,end2);
+    Pair<Digest, Digest> getDigestPair(Pair<SAMRecord, SAMRecord> readpair) throws DiachromaticException {
+        String chrom1 = readpair.first.getReferenceName();
+        int start1 = readpair.first.getAlignmentStart();
+        int end1 = readpair.first.getAlignmentEnd();
+        String chrom2 = readpair.second.getReferenceName();
+        int start2 = readpair.second.getAlignmentStart();
+        int end2 = readpair.second.getAlignmentEnd();
+        return getDigestPair(chrom1, start1, end1, chrom2, start2, end2);
     }
 
     /**
      * version of the function for testing.
+     *
      * @return
      */
-    Pair<Digest, Digest> getDigestPair(String chrom1,int start1,int end1,String chrom2,int start2,int end2) throws DiachromaticException {
-        List<Digest> list =  digestmap.get(chrom1);
-        if (list==null) {
+    Pair<Digest, Digest> getDigestPair(String chrom1, int start1, int end1, String chrom2, int start2, int end2) throws DiachromaticException {
+        List<Digest> list = digestmap.get(chrom1);
+        if (list == null) {
             n_could_not_assign_to_digest++; // should never happen
-            throw new DigestNotFoundException(String.format("Could not retrieve digest list for chromosome %s",chrom1 ));
+            throw new DigestNotFoundException(String.format("Could not retrieve digest list for chromosome %s", chrom1));
         }
-        Digest d1 = list.stream().filter( digest -> (digest.getStartpos() <= start1 && digest.getEndpos() >= end1) ).findFirst().orElse(null);
-        if (d1==null) {
+        Digest d1 = list.stream().filter(digest -> (digest.getStartpos() <= start1 && digest.getEndpos() >= end1)).findFirst().orElse(null);
+        if (d1 == null) {
             n_could_not_assign_to_digest++; // should never happen
-            throw new DigestNotFoundException(String.format("Could not identify digest for read 1 at %s:%d-%d",chrom1,start1,end1 ));
+            throw new DigestNotFoundException(String.format("Could not identify digest for read 1 at %s:%d-%d", chrom1, start1, end1));
         }
-        list =  digestmap.get(chrom2);
-        if (list==null) {
+        list = digestmap.get(chrom2);
+        if (list == null) {
             n_could_not_assign_to_digest++; // should never happen
-            throw new DigestNotFoundException(String.format("Could not retrieve digest list for chromosome %s",chrom2 ));
+            throw new DigestNotFoundException(String.format("Could not retrieve digest list for chromosome %s", chrom2));
         }
-        Digest d2 = list.stream().filter( digest -> (digest.getStartpos() <= start2 && digest.getEndpos() >= end2) ).findFirst().orElse(null);
-        if (d2==null) {
+        Digest d2 = list.stream().filter(digest -> (digest.getStartpos() <= start2 && digest.getEndpos() >= end2)).findFirst().orElse(null);
+        if (d2 == null) {
             n_could_not_assign_to_digest++; // should never happen
-            throw new DigestNotFoundException(String.format("Could not identify digest for read 2 at %s:%d-%d",chrom2,start2,end2 ));
+            throw new DigestNotFoundException(String.format("Could not identify digest for read 2 at %s:%d-%d", chrom2, start2, end2));
         }
         if (d1.getStartpos() < d2.getStartpos()) {
-            return new Pair<>(d1,d2);
+            return new Pair<>(d1, d2);
         } else {
-            return new Pair<>(d2,d1); // ensure that the returned pairs are in order
+            return new Pair<>(d2, d1); // ensure that the returned pairs are in order
         }
     }
-
 
 
     public void printStatistics() {
         logger.trace(String.format("n_total pairs=%d\n", n_total));
         logger.trace(String.format("n_unmapped_read1=%d", n_unmapped_read1));
         logger.trace(String.format("n_unmapped_read2=%d", n_unmapped_read2));
-        logger.trace(String.format("n_unmapped_pair=%d (%.1f%%)", n_unmapped_pair,(100.0*n_unmapped_pair/n_total)));
+        logger.trace(String.format("n_unmapped_pair=%d (%.1f%%)", n_unmapped_pair, (100.0 * n_unmapped_pair / n_total)));
 
         logger.trace(String.format("n_multimapped_read1=%d", n_multimapped_read1));
         logger.trace(String.format("n_multimapped_read2=%d", n_multimapped_read2));
-        logger.trace(String.format("n_multimappedPair=%d (%.1f%%)", n_multimappedPair,(100.0*n_multimappedPair/n_total)));
-        logger.trace(String.format("n_could_not_assign_to_digest=%d (%.1f%%)", n_could_not_assign_to_digest,(100.0*n_could_not_assign_to_digest/n_total)));
-        logger.trace(String.format("n_over_size_threshold=%d  (%.1f%%)", n_over_size_threshold, (100.0*n_over_size_threshold/n_total)));
+        logger.trace(String.format("n_multimappedPair=%d (%.1f%%)", n_multimappedPair, (100.0 * n_multimappedPair / n_total)));
+        logger.trace(String.format("n_could_not_assign_to_digest=%d (%.1f%%)", n_could_not_assign_to_digest, (100.0 * n_could_not_assign_to_digest / n_total)));
+        logger.trace(String.format("n_over_size_threshold=%d  (%.1f%%)", n_over_size_threshold, (100.0 * n_over_size_threshold / n_total)));
         logger.trace(String.format("n_circularized_read=%d", n_circularized_read));
         logger.trace(String.format("n_same_dangling_end=%d", n_same_dangling_end));
         logger.trace(String.format("n_same_internal=%d", n_same_internal));
         logger.trace(String.format("n_religation=%d", n_religation));
         logger.trace(String.format("n_contiguous=%d", n_contiguous));
-        logger.trace(String.format("n_good=%d (%.1f%%)", n_good,(100.0*n_good/n_total)));
-
+        logger.trace(String.format("n_good=%d (%.1f%%)", n_good, (100.0 * n_good / n_total)));
 
 
     }
-
 
 
 }
