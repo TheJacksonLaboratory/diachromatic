@@ -40,6 +40,13 @@ public class SAMPairerTest {
         */
         List<Digest> digests = makeFakeDigestList("chr1",new Pair<>(221612607,221618800));
         digestmap.put("chr1",digests);
+        // Note that we put in three contiguous segments, here. This is important for
+        // test testContiguous(); if we leave out the middle segment, then the sixth read would
+        // mistakenly be classified as religated (the reads are on the two outer Digests of a triplet!).
+        digests = makeFakeDigestList("chr10", new Pair<>(53_177_087,53_179_904),
+                new Pair<>(53_179_905,	53_180_587), new Pair<>(53_180_588,53187288));
+        digestmap.put("chr10",digests);
+
         digests=makeFakeDigestList("chr11",new Pair<>(92314037,92316529),new Pair<>(92316530,92317574));
         digestmap.put("chr11",digests);
         // Note -- the following command will give these two digests neighboring digest numbers
@@ -229,9 +236,28 @@ public class SAMPairerTest {
         assertFalse(sampairer.contiguous(readpair));
         readpair = sampairer.getNextPair(); //5 -- note readpair 5 was on adjacent fragments and
         // thus is religation and not contiguous!
+        Pair<Digest, Digest> digestpair = sampairer.getDigestPair(readpair);
+        assertTrue(sampairer.religation(digestpair,readpair));
         //assertFalse(sampairer.contiguous(readpair))
-        readpair = sampairer.getNextPair(); //6-- contiguous!
+        readpair = sampairer.getNextPair(); //6-- contiguous but not religated (not on adjacent digests)!
         System.err.println("1) " + readpair.first.getAlignmentStart() + "\n2) "+readpair.second.getAlignmentStart());
         assertTrue(sampairer.contiguous(readpair));
+        digestpair = sampairer.getDigestPair(readpair);
+        assertFalse(sampairer.religation(digestpair,readpair));
+    }
+
+    /** The insert of the third rad pair is above threshold of 800. */
+    @Test
+    public void testInsertTooLarge() throws DiachromaticException {
+        int THRESHOLD=800;
+        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
+        Pair<SAMRecord,SAMRecord> readpair = sampairer.getNextPair(); //1
+        readpair = sampairer.getNextPair(); //2
+        readpair = sampairer.getNextPair(); //3
+        Pair<Digest, Digest> digestpair = sampairer.getDigestPair(readpair);
+        int insertSize=sampairer.getCalculatedInsertSize(digestpair,readpair);
+        //System.err.println("insert size = " + insertSize); 3823
+        assertTrue(insertSize>THRESHOLD);
+
     }
 }

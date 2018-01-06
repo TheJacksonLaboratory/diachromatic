@@ -76,14 +76,11 @@ public class SAMPairer {
     private int n_multimappedPair = 0;
 
     private int n_could_not_assign_to_digest = 0;
-    /**
-     * Number of readpairs whose insert was found to be larger than the maximum allow size threshold (Default 1500 nt).
-     */
-    private int n_over_size_threshold = 0;
-    /**
-     * Number of readpairs whose insert was found to be smaller than the minimum allow size threshold (Default 150 nt).
-     */
-    private int n_below_size_threshold = 0;
+    /** Number of readpairs whose insert was found to have a size below or above the thresdholds defined by
+     * {@link #LOWER_SIZE_THRESHOLD} and {@link #UPPER_SIZE_THRESHOLD},=.*/
+    private int n_insert_too_long = 0;
+
+    private int n_insert_too_short = 0;
     /**
      * Number of circularized reads, a type of artefact where the ends of one fragment ligate with each other.
      */
@@ -168,6 +165,11 @@ public class SAMPairer {
     private final static String RELIGATION_TAG="RL";
     /** Tag contiguous reads. */
     private final static String CONTIGUOUS_TAG="CT";
+    /** Tag for reads with too high size. */
+    private final static String INSERT_TOO_BIG_TAG="TB";
+
+    private final static String INSERT_TOO_SMALL_TAG="TS";
+
 
 
     /**
@@ -342,10 +344,22 @@ public class SAMPairer {
         //3 Check that calculated insert size is realistic
         int insertSize = getCalculatedInsertSize(digestPair, readpair);
         if (insertSize > UPPER_SIZE_THRESHOLD) {
-            n_over_size_threshold++;
+            n_insert_too_long++;
+            if (outputRejectedReads) {
+                readpair.first.setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_BIG_TAG);
+                readpair.second.setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_BIG_TAG);
+                rejectedReadsWriter.addAlignment(readpair.first);
+                rejectedReadsWriter.addAlignment(readpair.second);
+            }
             return false;
         } else if (insertSize < LOWER_SIZE_THRESHOLD) {
-            n_below_size_threshold++;
+            n_insert_too_short++;
+            if (outputRejectedReads) {
+                readpair.first.setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_SMALL_TAG);
+                readpair.second.setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_SMALL_TAG);
+                rejectedReadsWriter.addAlignment(readpair.first);
+                rejectedReadsWriter.addAlignment(readpair.second);
+            }
             return false;
         }
         if (!readF.getReferenceName().equals(readR.getReferenceName())) {
@@ -415,6 +429,8 @@ public class SAMPairer {
         //#$max_possible_insert_size used for determining distance of separation between fragments
         //    my $max_possible_insert_size = ( $lookup_end_site1 - $lookup_start_site1 ) + ( $lookup_end_site2 - $lookup_start_site2 );
         int max_possible_insert_size = digestPair.first.getSize() + digestPair.second.getSize();
+
+
         // decide whether the reads are close or far.
         if (readF.getAlignmentStart() < readR.getAlignmentStart()) {
             // read 1 is mapped upstream of read 2
@@ -509,17 +525,15 @@ public class SAMPairer {
     boolean contiguous(Pair<SAMRecord,SAMRecord> readpair) {
         SAMRecord readF=readpair.first;
         SAMRecord readR=readpair.second;
-        logger.trace(String.format("contiguosus check. read1 is %s:%d-%d",readF.getReferenceName(),readF.getAlignmentStart(),readF.getAlignmentEnd()));
-        logger.trace(String.format("contiguosus check. read2 is %s:%d-%d",readR.getReferenceName(),readR.getAlignmentStart(),readR.getAlignmentEnd()));
-        logger.trace("LOWER_SIZE_THRESHOLD="+LOWER_SIZE_THRESHOLD);
-        logger.trace("readR.getAlignmentEnd() - readF.getAlignmentStart()="+(readR.getAlignmentEnd() - readF.getAlignmentStart()));
-        logger.trace("readF.getAlignmentEnd() - readR.getAlignmentStart()="+(readF.getAlignmentEnd() - readR.getAlignmentStart()));
+//        logger.trace(String.format("contiguosus check. read1 is %s:%d-%d",readF.getReferenceName(),readF.getAlignmentStart(),readF.getAlignmentEnd()));
+//        logger.trace(String.format("contiguosus check. read2 is %s:%d-%d",readR.getReferenceName(),readR.getAlignmentStart(),readR.getAlignmentEnd()));
+//        logger.trace("LOWER_SIZE_THRESHOLD="+LOWER_SIZE_THRESHOLD);
+//        logger.trace("readR.getAlignmentEnd() - readF.getAlignmentStart()="+(readR.getAlignmentEnd() - readF.getAlignmentStart()));
+//        logger.trace("readF.getAlignmentEnd() - readR.getAlignmentStart()="+(readF.getAlignmentEnd() - readR.getAlignmentStart()));
         int contigsize=Math.max(readR.getAlignmentStart() - readF.getAlignmentStart(),
                 readF.getAlignmentStart() - readR.getAlignmentStart());
         return (contigsize >  LOWER_SIZE_THRESHOLD && contigsize < UPPER_SIZE_THRESHOLD);
-
     }
-
 
 
     /**
@@ -620,7 +634,8 @@ public class SAMPairer {
         logger.trace(String.format("n_multimapped_read2=%d", n_multimapped_read2));
         logger.trace(String.format("n_multimappedPair=%d (%.1f%%)", n_multimappedPair, (100.0 * n_multimappedPair / n_total)));
         logger.trace(String.format("n_could_not_assign_to_digest=%d (%.1f%%)", n_could_not_assign_to_digest, (100.0 * n_could_not_assign_to_digest / n_total)));
-        logger.trace(String.format("n_over_size_threshold=%d  (%.1f%%)", n_over_size_threshold, (100.0 * n_over_size_threshold / n_total)));
+        logger.trace(String.format("n_insert_too_long=%d  (%.1f%%)", n_insert_too_long, (100.0 * n_insert_too_long / n_total)));
+        logger.trace(String.format("n_insert_too_short=%d  (%.1f%%)", n_insert_too_short, (100.0 * n_insert_too_short / n_total)));
         logger.trace(String.format("n_circularized_read=%d", n_circularized_read));
         logger.trace(String.format("n_same_dangling_end=%d", n_same_dangling_end));
         logger.trace(String.format("n_same_internal=%d", n_same_internal));
