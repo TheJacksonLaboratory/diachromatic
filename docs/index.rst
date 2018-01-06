@@ -6,13 +6,13 @@
 Welcome to Diachromatic's documentation!
 ===============================
 .. toctree::
-	:maxdepth: 2
-	:caption: Contents:
+   :maxdepth: 2
+   :caption: Contents:
 
-	In silico digest <digest>
-    Truncating raw reads <truncate>
-    Mapping truncated reads <mapping>
-    testing
+   In silico digest <digest>
+   Truncating raw reads <truncate>
+   Mapping truncated reads <mapping>
+   testing
 
 Diachromatic
 ~~~~~~~~~~~~

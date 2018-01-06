@@ -31,15 +31,14 @@ import java.util.Map;
  * Note that we have made several of the functions in this class package access for testing purposes
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
- * @version 0.0.3 (2018-01-05)
+ * @version 0.1.2 (2018-01-06)
  */
 public class SAMPairer {
     private static final Logger logger = LogManager.getLogger();
     private static final htsjdk.samtools.util.Log log = Log.getInstance(SAMPairer.class);
     /** Version of diachromatic. This is initialized within the command line class on the basis of the program
-     * version given in the pom.xml file.
-     */
-    private static String VERSION="1.0";
+     * version given in the pom.xml file. A default number of zero is given in case initialization doesnt work.*/
+    private static String VERSION="0.0";
     /** Path to the SAMfile representing the forward read of a paired end experiment. The SAM files should have been
      * processed with the truncate command of this package */
     private String samPath1;
@@ -60,8 +59,10 @@ public class SAMPairer {
     private int n_multimappedPair=0;
 
     private int n_could_not_assign_to_digest=0;
-
+    /** Number of readpairs whose insert was found to be larger than the maximum allow size threshold (Default 1500 nt). */
     private int n_over_size_threshold=0;
+    /** Number of readpairs whose insert was found to be smaller than the minimum allow size threshold (Default 150 nt). */
+    private int n_below_size_threshold=0;
     /** Number of circularized reads, a type of artefact where the ends of one fragment ligate with each other. */
     private int n_circularized_read=0;
     /** Number of dangling end reads, a type of artefact where one end of the read is internal and the other is at the
@@ -77,8 +78,10 @@ public class SAMPairer {
     private int n_good=0;
     /** Total number of reads TODO do we mean each read of the paired end reads? */
     private int n_total=0;
-
-    static private int SIZE_THRESHOLD=1500;
+    /** Largest allowable size of the insert of a read pair. */
+    static private int UPPER_SIZE_THRESHOLD =1500;
+    /** Smallest allowable size of the insert of a read pair. */
+    static private int LOWER_SIZE_THRESHOLD =150;
     /** Length threshold in nucleotides for the end of a read being near to a restriction fragment/ligation sequence */
     static private int DANGLING_THRESHOLD=7;
 
@@ -92,6 +95,14 @@ public class SAMPairer {
     final private Iterator<SAMRecord> it1;
     /** Iterator over reads from {@link #reader2}. */
     final private Iterator<SAMRecord> it2;
+    /** Handle to write valid reads. Used in {@link #inputSAMfiles()}. */
+    private SAMFileWriter validReadsWriter;
+    /** Handle to write invalid reads. Used in {@link #inputSAMfiles()}. */
+    private SAMFileWriter rejectedReadsWriter;
+
+    private String validBamFileName="diachromatic.valid.bam";
+
+    private String rejectedBamFileName="diachromatic.rejected.bam";
 
 
     /**
@@ -111,8 +122,8 @@ public class SAMPairer {
     }
 
     /**
-     * An iterator over pairs of SAMRecords -- similar to "next()" in a standard iteratr, but will return a pair
-     * of SAMRecord objects. Both files should be equally long. This function will return null of there is any issue with
+     * An iterator over pairs of SAMRecords -- similar to "next()" in a standard iterator, but will return a pair
+     * of SAMRecord objects. Both files must be equally long. This function will return null of there is any issue with
      * with of the individual iterators.
      * @return A pair of SAMRecord objects representing the forward and the reverse reads.
      */
@@ -170,10 +181,9 @@ public class SAMPairer {
         header.addProgramRecord(programRecord);
 
         // init BAM outfile
-        String outfile="test.bam";
         boolean presorted=false;
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeBAMWriter(header,presorted,new File(outfile));
-
+        this.validReadsWriter = new SAMFileWriterFactory().makeBAMWriter(header,presorted,new File(validBamFileName));
+        this.rejectedReadsWriter = new SAMFileWriterFactory().makeBAMWriter(header,presorted,new File(rejectedBamFileName));
         final ProgressLogger pl = new ProgressLogger(log, 1000000);
 
         Pair<SAMRecord,SAMRecord> pair = getNextPair();
@@ -183,7 +193,7 @@ public class SAMPairer {
                 // first check whether both reads were mapped.
                 if (readPairUniquelyMapped(pair)) {
                     // If we get here, then both reads were uniquely mappable.
-                    if (is_valid(pair.first, pair.second)) {
+                    if (is_valid(pair)) {
                         // This inputSAMfiles is a valid read inputSAMfiles
                         // We therefore need to add corresponding bits to the SAM flag
                         pair.first.setFirstOfPairFlag(true);
@@ -222,8 +232,8 @@ public class SAMPairer {
 
 
                         // TODO put hash here to check for duplicates. Do not write duplicates to file.
-                        writer.addAlignment(pair.first);
-                        writer.addAlignment(pair.second);
+                        validReadsWriter.addAlignment(pair.first);
+                        validReadsWriter.addAlignment(pair.second);
                         n_good++;
                     }
                 }
@@ -233,7 +243,7 @@ public class SAMPairer {
 
             pair=getNextPair();
         }
-        writer.close();
+        validReadsWriter.close();
     }
 
     /**
@@ -241,8 +251,9 @@ public class SAMPairer {
      * TODO right now we only print out the inputSAMfiles but we need to do the right thing here!
      * @return
      */
-    boolean is_valid(SAMRecord readF,SAMRecord readR) throws DiachromaticException {
-
+    boolean is_valid(Pair<SAMRecord,SAMRecord> readpair) throws DiachromaticException {
+        SAMRecord readF=readpair.first;
+        SAMRecord readR=readpair.second;
         String chrom1=readF.getReferenceName();
         int start1=readF.getAlignmentStart();
         int end1=readF.getAlignmentEnd();
@@ -253,11 +264,11 @@ public class SAMPairer {
         logger.trace(String.format("read 1: %s:%d-%d; read 2: %s:%d-%d",chrom1,start1,end1,chrom2,start2,end2));
         //1 check if on same chromosome.
         //2 position the reads on chromosome .
-        Pair<Digest, Digest> digestPair = getDigestPair(chrom1,start1, end1, chrom2, start2, end2);
+        Pair<Digest, Digest> digestPair = getDigestPair(readpair);
         if (digestPair==null) return false;
         //3 Check that calculated insert size is realistic
-        int insertSize = getCalculatedInsertSize(digestPair,readF,readR);
-        if (insertSize>SIZE_THRESHOLD) {
+        int insertSize = getCalculatedInsertSize(digestPair,readpair);
+        if (insertSize> LOWER_SIZE_THRESHOLD) {
             n_over_size_threshold++;
             return  false;
         }
@@ -307,7 +318,7 @@ public class SAMPairer {
         }
         // If we get here, we are on different fragments and the two fragments are not direct neighbors. If they are located
         // within one expected fragment size, then they are contiguous sequences that were not properly digested
-        if (Math.max(readR.getAlignmentEnd() - readF.getAlignmentStart(),readF.getAlignmentEnd()-readR.getAlignmentStart())<SIZE_THRESHOLD ) {
+        if (Math.max(readR.getAlignmentEnd() - readF.getAlignmentStart(),readF.getAlignmentEnd()-readR.getAlignmentStart())< LOWER_SIZE_THRESHOLD) {
             n_contiguous++;
             return false;
         }
@@ -347,14 +358,14 @@ public class SAMPairer {
      * Mapped reads always "point towards" the ligation sequence. We can infer that the actualy (physical) size of the
      * insert goes from the 5' end of a read to the ligation sequence (for each read of the ditag). We calculate this
      * size and will filter out reads whose size is substantially above what we expect given the reported experimental
-     * size selection step.
-     * TODO test me
+     * size selection step
      * @param digestPair
-     * @param readF the forward read
-     * @param readR the reverse read
-     * @return
+     * @param readpair the forward and reverse reads
+     * @return calculate insert size of chimeric read.
      */
-    public int getCalculatedInsertSize(Pair<Digest,Digest> digestPair,SAMRecord readF,SAMRecord readR) {
+    int getCalculatedInsertSize(Pair<Digest,Digest> digestPair,Pair<SAMRecord,SAMRecord> readpair) {
+        SAMRecord readF=readpair.first;
+        SAMRecord readR=readpair.second;
         int distF, distR;
         if (readF.getReadNegativeStrandFlag()) { // readF is on the negative strand
             distF=readF.getAlignmentEnd() - digestPair.first.getStartpos() + 1;
@@ -366,7 +377,6 @@ public class SAMPairer {
         } else {
             distR=digestPair.second.getEndpos() - readR.getAlignmentStart() + 1;
         }
-
         return distF+distR;
     }
 
@@ -378,15 +388,24 @@ public class SAMPairer {
      and truncating reads at the Hi-C junction makes this situation even more complex.
      To overcome this problem simply the script uses the position 10 bp upstream of the start of each read when
      assigning reads to a fragment in the digested genome.
-     * @param chrom1
-     * @param start1
-     * @param end1
-     * @param chrom2
-     * @param start2
-     * @param end2
+     * @param readpair Pair of reads (forward, reverse).
      * @return
      */
-    Pair<Digest, Digest> getDigestPair(String chrom1,int start1, int end1,String chrom2,int start2,int end2) throws DiachromaticException {
+    Pair<Digest, Digest> getDigestPair(Pair<SAMRecord,SAMRecord> readpair) throws DiachromaticException {
+        String chrom1=readpair.first.getReferenceName();
+        int start1=readpair.first.getAlignmentStart();
+        int end1=readpair.first.getAlignmentEnd();
+        String chrom2=readpair.second.getReferenceName();
+        int start2=readpair.second.getAlignmentStart();
+        int end2=readpair.second.getAlignmentEnd();
+        return getDigestPair(chrom1,start1,end1,chrom2,start2,end2);
+    }
+
+    /**
+     * version of the function for testing.
+     * @return
+     */
+    Pair<Digest, Digest> getDigestPair(String chrom1,int start1,int end1,String chrom2,int start2,int end2) throws DiachromaticException {
         List<Digest> list =  digestmap.get(chrom1);
         if (list==null) {
             n_could_not_assign_to_digest++; // should never happen

@@ -32,12 +32,21 @@ public class SAMPairerTest {
         sam2 = classLoader.getResource("data/sam/reversetest.sam").getFile();
         // make fake digests for the reads we will test
         restrictionsite="HindIII";
-        digestmap=new HashMap<>();
-        List<Digest> digests = makeFakeDigestList("chr16",31526917);
-        digestmap.put("chr16",digests);
-        digests=makeFakeDigestList("chr11",92316468);
+        digestmap=new HashMap<>();/*
+          String fields1[]= {"chr1","221612607","221618800","56554","HindIII","HindIII"};
+        Digest d1 = new Digest(fields1);
+        String fields2[]={"chr18","71910154","71919237","21136","HindIII",	"HindIII"};
+        */
+        List<Digest> digests = makeFakeDigestList("chr1",new Pair<>(221612607,221618800));
+        digestmap.put("chr1",digests);
+        digests=makeFakeDigestList("chr11",new Pair<>(92314037,92316529),new Pair<>(92316530,92317574));
         digestmap.put("chr11",digests);
-
+        digests=makeFakeDigestList("chr16",new Pair<>(31497401,31527040), new Pair<>(84172259,84175274));
+        digestmap.put("chr16",digests);
+        digests=makeFakeDigestList("chr17",new Pair<>(22262265,22262874));
+        digestmap.put("chr17",digests);
+        digests=makeFakeDigestList("chr18",new Pair<>(71910154,71919237));
+        digestmap.put("chr18",digests);
     }
 
 
@@ -45,13 +54,13 @@ public class SAMPairerTest {
      * We require a digest list for the {@link SAMPairer} constructor. We make a "fake" digest list for
      * simplicity that will allow us to perform testing of various functionalities.
      * @param chrom
-     * @param pos
+     * @param pos_pair
      * @return
      */
-    private static List<Digest> makeFakeDigestList(String chrom,Integer ...pos) {
+    private static List<Digest> makeFakeDigestList(String chrom,Pair<Integer,Integer> ...pos_pair) {
         List<Digest> dlist = new ArrayList<>();
-        for (Integer p : pos) {
-            Digest d = makeFakeDigest(chrom,p);
+        for (Pair<Integer,Integer> p : pos_pair) {
+            Digest d = makeFakeDigest(chrom,p.first,p.second);
             dlist.add(d);
         }
         return dlist;
@@ -60,14 +69,15 @@ public class SAMPairerTest {
     /**
      *
      * @param chr
-     * @param pos
-     * @return one fake {@link Digest} object (See {@link #makeFakeDigestList(String, Integer...)}).
+     * @param topos
+     * @param frompos
+     * @return one fake {@link Digest} object (See {@link #makeFakeDigestList(String, Pair[])}).
      */
-    private static Digest makeFakeDigest(String chr, int pos) {
+    private static Digest makeFakeDigest(String chr, int frompos, int topos) {
         String fields[]=new String[6];
         fields[0]=chr;
-        fields[1]=String.valueOf(pos);
-        fields[2]=String.valueOf(pos+1);
+        fields[1]=String.valueOf(frompos);
+        fields[2]=String.valueOf(topos);
         fields[3]=String.valueOf(++digestcounter);
         fields[4]=restrictionsite;
         fields[5]=restrictionsite;
@@ -107,5 +117,55 @@ public class SAMPairerTest {
     public void testDigestNotFound() throws DiachromaticException{
         sampairer = new SAMPairer(sam1,sam2,digestmap);
         Pair<Digest, Digest> pair = sampairer.getDigestPair("crazyChromosome1", 1, 2, "wrongChromosome2", 3, 4);
+    }
+
+
+    @Test
+    public void testDigestFound1() throws DiachromaticException {
+        // we should find a digest for chr1	221618744 and for chr18	71915472
+        // note the reads are 40bp long
+        sampairer = new SAMPairer(sam1,sam2,digestmap);
+        Pair<Digest, Digest> pair = sampairer.getDigestPair("chr1",221618744,(221618744+40),
+                "chr18",71915472,(71915472+40));
+        assertNotNull(pair);
+    }
+
+    @Test
+    public void testDigestFound2() throws DiachromaticException {
+        // we should find a digest for chr11 92316468 and for chr17	22262669
+        // note the reads are 40bp long
+        sampairer = new SAMPairer(sam1,sam2,digestmap);
+        Pair<Digest, Digest> pair = sampairer.getDigestPair("chr11",	92316468,(92316468+40),
+                "chr17",	22262669,(22262669+40));
+        assertNotNull(pair);
+    }
+
+    /**
+     * We are testing the third pair of reads, which was extracted from the file
+     * {@code _wrong_size.filter.sam}. The first two
+     * reads should be OK. The digests are created to encompass these two reads
+     * from the corresponding digest file.
+     * We are testing the fragments are ok in size. Note that we have added the corresponding
+     * Digests for the first three fragments.
+     */
+    @Test
+    public void testFragmentToLarge() throws DiachromaticException {
+        int UPPER_SIZE_THRESHOLD=800;
+        int LOWER_SIZE_THRESHOLD=150;
+        sampairer = new SAMPairer(sam1,sam2,digestmap);
+        Pair<SAMRecord,SAMRecord> readpair = sampairer.getNextPair();
+        Pair<Digest, Digest> digestpair = sampairer.getDigestPair(readpair);
+        int insertSize=  sampairer.getCalculatedInsertSize(digestpair,readpair);
+        assertFalse(insertSize<LOWER_SIZE_THRESHOLD);
+        assertFalse(insertSize>UPPER_SIZE_THRESHOLD);
+        readpair = sampairer.getNextPair();
+        digestpair = sampairer.getDigestPair(readpair);
+        insertSize=  sampairer.getCalculatedInsertSize(digestpair,readpair);
+        assertFalse(insertSize<LOWER_SIZE_THRESHOLD);
+        assertFalse(insertSize>UPPER_SIZE_THRESHOLD);
+        readpair = sampairer.getNextPair(); // This one is too big!
+        digestpair = sampairer.getDigestPair(readpair);
+        insertSize=  sampairer.getCalculatedInsertSize(digestpair,readpair);
+        assertTrue(insertSize>UPPER_SIZE_THRESHOLD);
     }
 }
