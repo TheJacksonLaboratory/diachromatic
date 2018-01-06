@@ -359,7 +359,7 @@ public class SAMPairer {
                 n_circularized_read++;
                 if (outputRejectedReads) {
                     readpair.first.setAttribute(BADREAD_ATTRIBUTE, SELF_LIGATION_TAG);
-                    readpair.first.setAttribute(BADREAD_ATTRIBUTE, SELF_LIGATION_TAG);
+                    readpair.second.setAttribute(BADREAD_ATTRIBUTE, SELF_LIGATION_TAG);
                     rejectedReadsWriter.addAlignment(readpair.first);
                     rejectedReadsWriter.addAlignment(readpair.second);
                 }
@@ -369,7 +369,7 @@ public class SAMPairer {
                 n_same_dangling_end++;
                 if (outputRejectedReads) {
                     readpair.first.setAttribute(BADREAD_ATTRIBUTE, DANGLING_END_TAG);
-                    readpair.first.setAttribute(BADREAD_ATTRIBUTE, DANGLING_END_TAG);
+                    readpair.second.setAttribute(BADREAD_ATTRIBUTE, DANGLING_END_TAG);
                     rejectedReadsWriter.addAlignment(readpair.first);
                     rejectedReadsWriter.addAlignment(readpair.second);
                 }
@@ -380,7 +380,7 @@ public class SAMPairer {
             n_same_internal++;
             if (outputRejectedReads) {
                 readpair.first.setAttribute(BADREAD_ATTRIBUTE, SAME_INTERNAL_TAG);
-                readpair.first.setAttribute(BADREAD_ATTRIBUTE, SAME_INTERNAL_TAG);
+                readpair.second.setAttribute(BADREAD_ATTRIBUTE, SAME_INTERNAL_TAG);
                 rejectedReadsWriter.addAlignment(readpair.first);
                 rejectedReadsWriter.addAlignment(readpair.second);
             }
@@ -393,7 +393,7 @@ public class SAMPairer {
             n_religation++;
             if (outputRejectedReads) {
                 readpair.first.setAttribute(BADREAD_ATTRIBUTE, RELIGATION_TAG);
-                readpair.first.setAttribute(BADREAD_ATTRIBUTE, RELIGATION_TAG);
+                readpair.second.setAttribute(BADREAD_ATTRIBUTE, RELIGATION_TAG);
                 rejectedReadsWriter.addAlignment(readpair.first);
                 rejectedReadsWriter.addAlignment(readpair.second);
             }
@@ -401,8 +401,14 @@ public class SAMPairer {
         }
         // If we get here, we are on different fragments and the two fragments are not direct neighbors. If they are located
         // within one expected fragment size, then they are contiguous sequences that were not properly digested
-        if (Math.max(readR.getAlignmentEnd() - readF.getAlignmentStart(), readF.getAlignmentEnd() - readR.getAlignmentStart()) < LOWER_SIZE_THRESHOLD) {
+        if (contiguous(readpair)) {
             n_contiguous++;
+            if (outputRejectedReads) {
+                readpair.first.setAttribute(BADREAD_ATTRIBUTE, CONTIGUOUS_TAG);
+                readpair.second.setAttribute(BADREAD_ATTRIBUTE, CONTIGUOUS_TAG);
+                rejectedReadsWriter.addAlignment(readpair.first);
+                rejectedReadsWriter.addAlignment(readpair.second);
+            }
             return false;
         }
 
@@ -486,6 +492,35 @@ public class SAMPairer {
         return ( (Math.abs(digestPair.second.getFragmentNumber() - digestPair.first.getFragmentNumber()) == 1)  &&
             (readpair.first.getReadNegativeStrandFlag() != readpair.second.getReadNegativeStrandFlag()) ) ;
     }
+
+    /**
+     *  <From: Wingett S et al. HiCUP: pipeline for mapping and processing Hi-C data. F1000Research 2015, 4:1310>
+     *      The Hi-C protocol does not prevent entirely two adjacent restriction fragments re-ligating,
+     *  but HiCUP discards such di-tags since they provide no useful three-dimensional proximity information.
+     *  Similarly, multiple fragments could re-ligate forming a contig, but here paired reads will not map to
+     *  adjacent genomic restriction fragments
+     * This function is called if the two reads are on different fragments that are not direct neighbors. If they are located
+     * within one expected fragment size, then they are contiguous sequences that were not properly digested. This function
+     * should only be called from {@link #is_valid(Pair)} except for testing.
+     * The test demands that the contig size is above the lower threshold and below the upper threshold.
+     * @param readpair
+     * @return
+     */
+    boolean contiguous(Pair<SAMRecord,SAMRecord> readpair) {
+        SAMRecord readF=readpair.first;
+        SAMRecord readR=readpair.second;
+        logger.trace(String.format("contiguosus check. read1 is %s:%d-%d",readF.getReferenceName(),readF.getAlignmentStart(),readF.getAlignmentEnd()));
+        logger.trace(String.format("contiguosus check. read2 is %s:%d-%d",readR.getReferenceName(),readR.getAlignmentStart(),readR.getAlignmentEnd()));
+        logger.trace("LOWER_SIZE_THRESHOLD="+LOWER_SIZE_THRESHOLD);
+        logger.trace("readR.getAlignmentEnd() - readF.getAlignmentStart()="+(readR.getAlignmentEnd() - readF.getAlignmentStart()));
+        logger.trace("readF.getAlignmentEnd() - readR.getAlignmentStart()="+(readF.getAlignmentEnd() - readR.getAlignmentStart()));
+        int contigsize=Math.max(readR.getAlignmentStart() - readF.getAlignmentStart(),
+                readF.getAlignmentStart() - readR.getAlignmentStart());
+        return (contigsize >  LOWER_SIZE_THRESHOLD && contigsize < UPPER_SIZE_THRESHOLD);
+
+    }
+
+
 
     /**
      * Mapped reads always "point towards" the ligation sequence. We can infer that the actualy (physical) size of the

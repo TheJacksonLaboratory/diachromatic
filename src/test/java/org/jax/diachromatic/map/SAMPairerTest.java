@@ -194,7 +194,7 @@ public class SAMPairerTest {
         assertTrue(sampairer.selfLigation(readpair));
     }
 
-
+    /* The fifth pair shows religation! */
     @Test
     public void testReligation() throws DiachromaticException {
         //chr13	31421583	31425191
@@ -213,5 +213,25 @@ public class SAMPairerTest {
         assertEquals(readpair.second.getReferenceName(),"chr13");// check we have right read!
         digestpair = sampairer.getDigestPair(readpair);
         assertTrue(sampairer.religation(digestpair,readpair));
+    }
+
+    /** The sixth read pair is contiguous (by manual inspection) */
+    @Test
+    public void testContiguous() throws DiachromaticException {
+        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
+        Pair<SAMRecord,SAMRecord> readpair = sampairer.getNextPair(); //1
+        assertFalse(sampairer.contiguous(readpair));
+        readpair = sampairer.getNextPair(); //2
+        assertFalse(sampairer.contiguous(readpair));
+        readpair = sampairer.getNextPair(); //3
+        assertFalse(sampairer.contiguous(readpair));
+        readpair = sampairer.getNextPair(); //4
+        assertFalse(sampairer.contiguous(readpair));
+        readpair = sampairer.getNextPair(); //5 -- note readpair 5 was on adjacent fragments and
+        // thus is religation and not contiguous!
+        //assertFalse(sampairer.contiguous(readpair))
+        readpair = sampairer.getNextPair(); //6-- contiguous!
+        System.err.println("1) " + readpair.first.getAlignmentStart() + "\n2) "+readpair.second.getAlignmentStart());
+        assertTrue(sampairer.contiguous(readpair));
     }
 }
