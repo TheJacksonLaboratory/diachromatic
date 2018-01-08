@@ -85,3 +85,16 @@ Sure enough, the bowtie2 single-end alignments are now retained.
 These can be used in conjunction with the other output files of hicup to identify read pairs that should be filtered
 out because of mapping issues or artefacts, as well as read pairs that are ok. We can test most of the diachromatic
 code using a small SAM file that is excerpted from these.
+
+Test class
+~~~~~~~~~~
+The main tests of the logic of the Q/C code are in SAMPairerTest. There is currently one pair of sequences
+(in forwardtest.sam and reversetest.sam) for each of the tests we perform.
+
+SRR071233.1
+SRR071233.1     67      chr16   31526917        8       40M     =       84175204        0       NAAGATACCTTGACCGCTCATCCCCTGNNTTCATGAAAGA        !##########################!!###########        AS:i:-13
+        XN:i:0  XM:i:8  XO:i:0  XG:i:0  NM:i:8  MD:Z:0C26A0C6G0T0C0T0T0 YT:Z:UU
+SRR071233.1     131     chr16   84175204        42      40M     =       31526917        0       AGAACCCATTCACACTCCCGCCAGCAGCAGGTTCGTGCCA        @BABA@BBBBBBBB?BBBB@:?AAAB5<BAA92A=2:;77        AS:i:0  XN:i:0  XM:i:0  XO:i:0  XG:i:0  NM:i:0  MD:Z:40 YT:Z:UU
+
+The first read should be set to 67 [read paired (0x1); read mapped in proper pair (0x2);first in pair (0x40)]. The reverse read is
+131 [read paired (0x1); read mapped in proper pair (0x2); second in pair (0x80)].

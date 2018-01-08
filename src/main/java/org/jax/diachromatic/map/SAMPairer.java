@@ -167,11 +167,8 @@ public class SAMPairer {
     private final static String CONTIGUOUS_TAG="CT";
     /** Tag for reads with too high size. */
     private final static String INSERT_TOO_BIG_TAG="TB";
-
+    /** Tag for reads with too small size. */
     private final static String INSERT_TOO_SMALL_TAG="TS";
-
-
-
     /**
      * @param sam1    SAM file for the truncated "forward" reads
      * @param sam2    SAM file for the truncated "reverse" reads
@@ -268,38 +265,7 @@ public class SAMPairer {
                 if (readPairUniquelyMapped(pair)) {
                     // If we get here, then both reads were uniquely mappable.
                     if (is_valid(pair)) {
-                        // This read pair is valid
-                        // We therefore need to add corresponding bits to the SAM flag
-                        pair.first.setFirstOfPairFlag(true);
-                        pair.second.setSecondOfPairFlag(true);
-                        // Now set the flag to indicate it is paired end data
-                        pair.first.setReadPairedFlag(true);// 0x1
-                        pair.first.setProperPairFlag(true);//0x2
-                        pair.second.setReadPairedFlag(true);
-                        pair.second.setProperPairFlag(true);
-
-                        // Indicate if inputSAMfiles is on the reverse strand
-                        pair.first.setMateNegativeStrandFlag(pair.second.getReadNegativeStrandFlag());
-                        pair.second.setMateNegativeStrandFlag(pair.first.getReadNegativeStrandFlag());
-
-                        // Set which reads are which in the inputSAMfiles
-                        pair.first.setFirstOfPairFlag(true);
-
-                        pair.second.setSecondOfPairFlag(true);
-//                    System.out.println("   READ 1 ");
-//                    SamBitflagFilter.debugDisplayBitflag(inputSAMfiles.first.getFlags());
-//                    System.out.println("   READ 2  ");
-//                    SamBitflagFilter.debugDisplayBitflag(inputSAMfiles.second.getFlags());
-
-                        // Set the RNEXT and PNEXT values
-                        // If the reference indices are the same, then the following should print "=" TODO CHeck this.
-                        pair.first.setMateReferenceIndex(pair.second.getReferenceIndex());
-                        pair.second.setMateReferenceIndex(pair.first.getReferenceIndex());
-
-                        pair.first.setMateAlignmentStart(pair.second.getAlignmentStart());
-                        pair.second.setMateAlignmentStart(pair.first.getAlignmentStart());
-
-//                    System.out.println(inputSAMfiles.first.getSAMString());
+                        pairReads(pair); // set the SAM flags to paired-end
 
                         // TODO put hash here to check for duplicates. Do not write duplicates to file.
                         validReadsWriter.addAlignment(pair.first);
@@ -315,6 +281,51 @@ public class SAMPairer {
         }
         validReadsWriter.close();
     }
+
+
+    /**
+     * If we get here, then the pair of reads passed all Q/C checks, and we need to adjust its SAM flags to
+     * indicate that they are a valid read pair.
+     * @param pair
+     * @return
+     */
+     void pairReads(Pair<SAMRecord, SAMRecord> pair) {
+         // This read pair is valid
+         // We therefore need to add corresponding bits to the SAM flag
+         pair.first.setFirstOfPairFlag(true);
+         pair.second.setSecondOfPairFlag(true);
+         // Now set the flag to indicate it is paired end data
+         pair.first.setReadPairedFlag(true);// 0x1
+         pair.first.setProperPairFlag(true);//0x2
+         pair.second.setReadPairedFlag(true);
+         pair.second.setProperPairFlag(true);
+
+         // Indicate if inputSAMfiles is on the reverse strand
+         pair.first.setMateNegativeStrandFlag(pair.second.getReadNegativeStrandFlag());
+         pair.second.setMateNegativeStrandFlag(pair.first.getReadNegativeStrandFlag());
+
+         // Set which reads are which in the inputSAMfiles
+         pair.first.setFirstOfPairFlag(true);
+
+         pair.second.setSecondOfPairFlag(true);
+//                    System.out.println("   READ 1 ");
+//                    SamBitflagFilter.debugDisplayBitflag(inputSAMfiles.first.getFlags());
+//                    System.out.println("   READ 2  ");
+//                    SamBitflagFilter.debugDisplayBitflag(inputSAMfiles.second.getFlags());
+
+         // Set the RNEXT and PNEXT values
+         // If the reference indices are the same, then the following should print "=" TODO CHeck this.
+         pair.first.setMateReferenceIndex(pair.second.getReferenceIndex());
+         pair.second.setMateReferenceIndex(pair.first.getReferenceIndex());
+
+         pair.first.setMateAlignmentStart(pair.second.getAlignmentStart());
+         pair.second.setMateAlignmentStart(pair.first.getAlignmentStart());
+
+//                    System.out.println(inputSAMfiles.first.getSAMString());
+
+     }
+
+
 
     /**
      * Decide if a candidate readpair (pair of SAMRecord objects) is valid according to the rules for capture Hi-C

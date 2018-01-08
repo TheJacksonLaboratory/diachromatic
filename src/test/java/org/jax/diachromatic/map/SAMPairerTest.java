@@ -245,7 +245,7 @@ public class SAMPairerTest {
         assertFalse(sampairer.religation(digestpair,readpair));
     }
 
-    /** The insert of the third rad pair is above threshold of 800. */
+    /** The insert of the third read pair is above threshold of 800. */
     @Test
     public void testInsertTooLarge() throws DiachromaticException {
         int THRESHOLD=800;
@@ -257,6 +257,24 @@ public class SAMPairerTest {
         int insertSize=sampairer.getCalculatedInsertSize(digestpair,readpair);
         //System.err.println("insert size = " + insertSize); 3823
         assertTrue(insertSize>THRESHOLD);
+    }
 
+    /** The insert of the seventh read pair is above threshold of 800. */
+    @Test
+    public void testSetSamFlagsForCorrectPair() throws DiachromaticException {
+
+        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
+        Pair<SAMRecord,SAMRecord> readpair=null;
+        for (int i=0;i<7;i++) {
+            readpair=sampairer.getNextPair();
+        }
+        SamBitflagFilter.debugDisplayBitflag(readpair.first.getFlags());
+        // before we pair, the flags are set only to zero.
+        assertEquals(0,readpair.first.getFlags());
+        assertEquals(0,readpair.second.getFlags());
+        sampairer.pairReads(readpair);
+        assertEquals(67,readpair.first.getFlags());
+        assertEquals(131,readpair.second.getFlags());
+        SamBitflagFilter.debugDisplayBitflag(readpair.first.getFlags());
     }
 }
