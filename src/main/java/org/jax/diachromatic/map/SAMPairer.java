@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This class takes as input two SAM files that have been created by {@code bowtie2} from the
@@ -137,6 +138,10 @@ public class SAMPairer {
      * Iterator over reads from {@link #reader2}.
      */
     final private Iterator<SAMRecord> it2;
+    /** This will be used to keep a record of valid ditags in order to throw out duplicates. */
+    Set<DiTag> ditagSet;
+
+
     /**
      * Handle to write valid reads. Used in {@link #inputSAMfiles()}.
      */
@@ -299,30 +304,19 @@ public class SAMPairer {
          pair.first.setProperPairFlag(true);//0x2
          pair.second.setReadPairedFlag(true);
          pair.second.setProperPairFlag(true);
-
          // Indicate if inputSAMfiles is on the reverse strand
          pair.first.setMateNegativeStrandFlag(pair.second.getReadNegativeStrandFlag());
          pair.second.setMateNegativeStrandFlag(pair.first.getReadNegativeStrandFlag());
 
          // Set which reads are which in the inputSAMfiles
          pair.first.setFirstOfPairFlag(true);
-
          pair.second.setSecondOfPairFlag(true);
-//                    System.out.println("   READ 1 ");
-//                    SamBitflagFilter.debugDisplayBitflag(inputSAMfiles.first.getFlags());
-//                    System.out.println("   READ 2  ");
-//                    SamBitflagFilter.debugDisplayBitflag(inputSAMfiles.second.getFlags());
-
          // Set the RNEXT and PNEXT values
-         // If the reference indices are the same, then the following should print "=" TODO CHeck this.
+         // If the reference indices are the same, then the following should print "="
          pair.first.setMateReferenceIndex(pair.second.getReferenceIndex());
          pair.second.setMateReferenceIndex(pair.first.getReferenceIndex());
-
          pair.first.setMateAlignmentStart(pair.second.getAlignmentStart());
          pair.second.setMateAlignmentStart(pair.first.getAlignmentStart());
-
-//                    System.out.println(inputSAMfiles.first.getSAMString());
-
      }
 
 
