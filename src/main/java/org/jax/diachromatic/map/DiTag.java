@@ -3,8 +3,7 @@ package org.jax.diachromatic.map;
 import htsjdk.samtools.SAMRecord;
 import org.jax.diachromatic.util.Pair;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This class is used to capture a valid ditag and to check for duplicates. A ditag is defined by
@@ -34,8 +33,19 @@ public class DiTag {
     private static Map<Character,String> char2stringChrom=new HashMap<>();
     private static Map<String,Character> string2char=new HashMap<>();
 
+    private static Set<DiTag> ditagset=new HashSet();
+
     private DiTag (){
         // disallow contructor
+    }
+
+    private DiTag(Tag[] ar) {
+        chrom1=ar[0].chrom;
+        strand1=ar[0].strand;
+        sonicationStartF=ar[0].sonicationStart;
+        chrom2=ar[1].chrom;
+        strand2=ar[1].strand;
+        sonicationStartR=ar[1].sonicationStart;
     }
 
 
@@ -54,28 +64,65 @@ public class DiTag {
     }
 
 
+
+    static class Tag {
+         Character chrom;
+         byte strand;
+        int sonicationStart;
+    }
+
+    static class TagComparator implements Comparator<Tag>
+    {
+        public int compare(Tag t1, Tag t2)
+        {
+            if (! t1.chrom.equals(t2.chrom)) return t1.chrom.compareTo(t2.chrom);
+            if (! (t1.strand == t2.strand) ) return t1.strand - t2.strand;
+            return t1.sonicationStart - t2.sonicationStart;
+        }
+    }
+
+
+
     public static boolean isDuplicate(Pair<SAMRecord,SAMRecord> readpair) {
-        DiTag ditag = new DiTag();
+
+        Tag tag1 = new Tag();
+        Tag tag2 = new Tag();
+        tag1.chrom =getChromosomeCharacter(readpair.first.getReferenceName());
+        tag2.chrom =getChromosomeCharacter(readpair.second.getReferenceName());
         if (readpair.first.getReadNegativeStrandFlag()) {
-            ditag.strand1='-';
-            ditag.sonicationStartF=readpair.first.getAlignmentEnd();
+//            ditag.strand='-';
+//            ditag.sonicationStartF=readpair.first.getAlignmentEnd();
+            tag1.strand ='-';
+            tag1.sonicationStart =readpair.first.getAlignmentEnd();
+
         } else {
-            ditag.strand1='+';
-            ditag.sonicationStartF=readpair.first.getAlignmentStart();
+//            ditag.strand='+';
+//            ditag.sonicationStartF=readpair.first.getAlignmentStart();
+            tag1.strand ='+';
+            tag1.sonicationStart =readpair.first.getAlignmentStart();
         }
         if (readpair.second.getReadNegativeStrandFlag()) {
-            ditag.strand2='-';
-            ditag.sonicationStartR=readpair.second.getAlignmentEnd();
+//            ditag.strand2='-';
+//            ditag.sonicationStartR=readpair.second.getAlignmentEnd();
+            tag2.strand ='+';
+            tag2.sonicationStart =readpair.second.getAlignmentEnd();
+
         } else {
-            ditag.strand2='+';
-            ditag.sonicationStartR=readpair.second.getAlignmentStart();
+//            ditag.strand2='+';
+//            ditag.sonicationStartR=readpair.second.getAlignmentStart();
+            tag2.strand ='+';
+            tag2.sonicationStart =readpair.second.getAlignmentStart();;
         }
-        ditag.chrom1=getChromosomeCharacter(readpair.first.getReferenceName());
-        ditag.chrom2=getChromosomeCharacter(readpair.second.getReferenceName());
+        Tag[] ar={tag1,tag2};
+        Arrays.sort(ar,new TagComparator());
 
-        // now need to sort them!
-
+        DiTag ditag = new DiTag(ar);
+        if (ditagset.contains(ditag)) return true;
+        ditagset.add(ditag);
         return false;
+//        ditag.chrom=getChromosomeCharacter(readpair.first.getReferenceName());
+//        ditag.chrom2=getChromosomeCharacter(readpair.second.getReferenceName());
+
     }
 }
 

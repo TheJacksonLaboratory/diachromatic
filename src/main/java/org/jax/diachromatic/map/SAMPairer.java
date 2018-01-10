@@ -97,6 +97,10 @@ public class SAMPairer {
     private int n_religation = 0;
 
     private int n_contiguous = 0;
+
+    private int n_duplicate=0;
+
+
     /**
      * Number of reads that pass all quality filters.
      */
@@ -271,10 +275,12 @@ public class SAMPairer {
                     // If we get here, then both reads were uniquely mappable.
                     if (is_valid(pair)) {
                         pairReads(pair); // set the SAM flags to paired-end
-
-                        // TODO put hash here to check for duplicates. Do not write duplicates to file.
-                        validReadsWriter.addAlignment(pair.first);
-                        validReadsWriter.addAlignment(pair.second);
+                        if (! DiTag.isDuplicate(pair)) { // check for duplicate reads
+                            validReadsWriter.addAlignment(pair.first);
+                            validReadsWriter.addAlignment(pair.second);
+                        } else {
+                            n_duplicate++;
+                        }
                         n_good++;
                     }
                 }
