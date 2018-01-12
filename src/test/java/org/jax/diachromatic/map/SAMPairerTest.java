@@ -24,6 +24,12 @@ public class SAMPairerTest {
     private static String sam1;
     private static String sam2;
 
+    /** We will; use this to keep track of the read pairs from the test files forwardtest and reverse test.
+     * Note that we have labeled the read pairs in those file to make them easy find for these tests.
+     */
+    private static Map<String,Pair<SAMRecord,SAMRecord>> readpairmap;
+
+
     private static final boolean outputRejectedReads=false;
 
     @BeforeClass
@@ -62,6 +68,13 @@ public class SAMPairerTest {
         digestmap.put("chr17",digests);
         digests=makeFakeDigestList("chr18",new Pair<>(71910154,71919237));
         digestmap.put("chr18",digests);
+        readpairmap = new HashMap<>();
+        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
+        Pair<SAMRecord,SAMRecord> pair=null;
+        while ((pair = sampairer.getNextPair())!=null) {
+            readpairmap.put(pair.first.getReadName(),pair);
+            System.err.println(pair.first.getReadName());
+        }
     }
 
 

@@ -39,13 +39,13 @@ public class DiTag {
         // disallow contructor
     }
 
-    private DiTag(Tag[] ar) {
-        chrom1=ar[0].chrom;
-        strand1=ar[0].strand;
-        sonicationStartF=ar[0].sonicationStart;
-        chrom2=ar[1].chrom;
-        strand2=ar[1].strand;
-        sonicationStartR=ar[1].sonicationStart;
+    private DiTag(Tag t1, Tag t2) {
+        chrom1=t1.chrom;
+        strand1=t1.strand;
+        sonicationStartF=t1.sonicationStart;
+        chrom2=t2.chrom;
+        strand2=t2.strand;
+        sonicationStartR=t2.sonicationStart;
     }
 
 
@@ -64,24 +64,30 @@ public class DiTag {
     }
 
 
-
+    /** Note that which read of a pair is sequenced first is by chance -- we therefore first
+     * record the relevant data for each read as a Tag, sort the Tags, and then create a {@link DiTag} object
+     * from which we will determine if a given read pais is a duplicate or not.
+     */
     static class Tag {
          Character chrom;
          byte strand;
         int sonicationStart;
     }
 
-    static class TagComparator implements Comparator<Tag>
+
+    /**
+     * See explanation for {@link Tag}. We compare the order of two {@link Tag} objects with this function
+     * prior to combining a pair of {@link Tag}'s into a {@link DiTag}.
+     * @param t1
+     * @param t2
+     * @return
+     */
+    public static int compare(Tag t1, Tag t2)
     {
-        public int compare(Tag t1, Tag t2)
-        {
-            if (! t1.chrom.equals(t2.chrom)) return t1.chrom.compareTo(t2.chrom);
-            if (! (t1.strand == t2.strand) ) return t1.strand - t2.strand;
-            return t1.sonicationStart - t2.sonicationStart;
-        }
+        if (! t1.chrom.equals(t2.chrom)) return t1.chrom.compareTo(t2.chrom);
+        if (! (t1.strand == t2.strand) ) return t1.strand - t2.strand;
+        return t1.sonicationStart - t2.sonicationStart;
     }
-
-
 
     public static boolean isDuplicate(Pair<SAMRecord,SAMRecord> readpair) {
 
@@ -90,89 +96,40 @@ public class DiTag {
         tag1.chrom =getChromosomeCharacter(readpair.first.getReferenceName());
         tag2.chrom =getChromosomeCharacter(readpair.second.getReferenceName());
         if (readpair.first.getReadNegativeStrandFlag()) {
-//            ditag.strand='-';
-//            ditag.sonicationStartF=readpair.first.getAlignmentEnd();
             tag1.strand ='-';
             tag1.sonicationStart =readpair.first.getAlignmentEnd();
-
         } else {
-//            ditag.strand='+';
-//            ditag.sonicationStartF=readpair.first.getAlignmentStart();
             tag1.strand ='+';
             tag1.sonicationStart =readpair.first.getAlignmentStart();
         }
         if (readpair.second.getReadNegativeStrandFlag()) {
-//            ditag.strand2='-';
-//            ditag.sonicationStartR=readpair.second.getAlignmentEnd();
             tag2.strand ='+';
             tag2.sonicationStart =readpair.second.getAlignmentEnd();
-
         } else {
-//            ditag.strand2='+';
-//            ditag.sonicationStartR=readpair.second.getAlignmentStart();
             tag2.strand ='+';
             tag2.sonicationStart =readpair.second.getAlignmentStart();;
         }
-        Tag[] ar={tag1,tag2};
-        Arrays.sort(ar,new TagComparator());
+        DiTag ditag=null;
+        if (compare(tag1,tag2)>=0) {
+             ditag = new DiTag(tag1,tag2);
+        } else {
+             ditag = new DiTag(tag2,tag1);
+        }
 
-        DiTag ditag = new DiTag(ar);
-        if (ditagset.contains(ditag)) return true;
-        ditagset.add(ditag);
-        return false;
-//        ditag.chrom=getChromosomeCharacter(readpair.first.getReferenceName());
-//        ditag.chrom2=getChromosomeCharacter(readpair.second.getReferenceName());
-
+        if (ditagset.contains(ditag))  {
+            return true; // we have already seen this readpair, it is a duplicate.
+        } else {
+            ditagset.add(ditag); // never before seen, add to HashSet
+            return false;
+        }
     }
 }
 
 
 /*
 #############################
-#Subroutine 'ditag_labeller':
-#input is a paired read from a SAM file and returns a di-tag label comprising the
-#chromsome name, start position and strand of each read in the pair
-#A di-tag is defined by:
-#Forward read starting position (sonication cut site)
-#Forward read orientation
-#Reverse read starting position (sonication cut site)
-#Reverse read orientation
-sub ditag_labeller {
 
-    my ( $readF, $readR ) = @_;
 
-    my $readF_strand = ( split( /\t/, $readF ) )[1];
-    my $readF_csome  = ( split( /\t/, $readF ) )[2];
-    my $readF_start  = ( split( /\t/, $readF ) )[3];    #Most upstream base on reference genome
-    my $readF_seq    = ( split( /\t/, $readF ) )[9];
-    my $readF_sonic;
-
-    my $readR_strand = ( split( /\t/, $readR ) )[1];
-    my $readR_csome  = ( split( /\t/, $readR ) )[2];
-    my $readR_start  = ( split( /\t/, $readR ) )[3];    #Most upstream base on reference genome
-    my $readR_seq    = ( split( /\t/, $readR ) )[9];
-    my $readR_sonic;
-
-    #
-    if ( $readF_strand & 0x10 ) {
-        $readF_strand = '-';
-        $readF_sonic  = $readF_start + length($readF_seq) - 1;
-    } else {
-        $readF_strand = '+';
-        $readF_sonic  = $readF_start;
-    }
-
-    if ( $readR_strand & 0x10 ) {
-        $readR_strand = '-';
-        $readR_sonic  = $readR_start + length($readR_seq) - 1;
-    } else {
-        $readR_strand = '+';
-        $readR_sonic  = $readR_start;
-    }
-
-    my $labelF = "$readF_csome\t$readF_sonic\t$readF_strand";
-    my $labelR = "$readR_csome\t$readR_sonic\t$readR_strand";
-    my $ditag_label;
 
     #Which read of the read pair is sequenced first is random (i.e. expected to be 50:50),
     #and is not of biological significance.
