@@ -99,11 +99,7 @@ public class SAMPairer {
     private int n_contiguous = 0;
 
     private int n_duplicate=0;
-
-
-    /**
-     * Number of reads that pass all quality filters.
-     */
+    /** Number of reads that pass all quality filters.*/
     private int n_good = 0;
     /**
      * Total number of reads TODO do we mean each read of the paired end reads?

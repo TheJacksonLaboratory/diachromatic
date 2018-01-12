@@ -1,6 +1,8 @@
 package org.jax.diachromatic.map;
 
 import htsjdk.samtools.SAMRecord;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.util.Pair;
 
 import java.util.*;
@@ -21,6 +23,7 @@ import java.util.*;
   * genomic reference sequence
  */
 public class DiTag {
+    private static final Logger logger = LogManager.getLogger();
     private Character chrom1;
     private byte strand1;
     private Character chrom2;
@@ -115,7 +118,7 @@ public class DiTag {
         } else {
              ditag = new DiTag(tag2,tag1);
         }
-
+        logger.trace(String.format("ditag %s",ditag.chrom1));
         if (ditagset.contains(ditag))  {
             return true; // we have already seen this readpair, it is a duplicate.
         } else {
@@ -126,18 +129,3 @@ public class DiTag {
 }
 
 
-/*
-#############################
-
-
-
-    #Which read of the read pair is sequenced first is random (i.e. expected to be 50:50),
-    #and is not of biological significance.
-    if ( ( $labelF cmp $labelR ) == 1 ) {
-        $ditag_label = "$labelR\t$labelF";
-    } else {
-        $ditag_label = "$labelF\t$labelR";
-    }
-}
-
- */
