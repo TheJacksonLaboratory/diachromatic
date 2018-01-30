@@ -17,10 +17,10 @@ that is regulating the promoter.
 
 In most cases, one of the reads of the read pair will map
 to a single ligation fragment, and the reverse read will map to another fragment.
-However, this is not always true because the Hi-C ligation junction cvan be located within one of the sequenced reads.
+However, this is not always true because the Hi-C ligation junction can be located within one of the sequenced reads.
 This step of the pipeline attempts to address this situation (which could lead to the
 read with the Hi-C junction not being mapped during the mapping
-step), by deleting sequenced that is downstream of the enzyme recognition site.
+step), by deleting the sequence that is downstream of the enzyme recognition site.
 
 
 For example, if the forward read is entirely contained within one ligation fragment and the reverse read starts in
