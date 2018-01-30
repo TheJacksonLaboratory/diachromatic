@@ -16,8 +16,8 @@ The command to perform in silico digestion is: ::
     $ java -jar Diachromatic.jar digest -g <path> -e <enzyme> [-o <outfile>]
 
 The meaning of the options is
-   * -g <path> The path to the directory with genome FASTA files (one per chromosome; for instance, the genome fasta files downloaded from the UCSC Genome Browser are in this format).
-   * -e <enzyme> The symbol of the restriction enzyme used in the Capture Hi-C experiment
+   * -g <path> The path to the directory with genome FASTA files (one per chromosome; for instance, the genome fasta files downloaded from the UCSC Genome Browser are in this format). The FASTA files need to be unzipped.
+   * -e <enzyme> The symbol of the restriction enzyme used in the Capture Hi-C experiment.
    * [-o <outfile>] Name and path of the output file. This flag is optional and if it is not passed, the default name of ``diachromaticDigest.txt`` will be used.
 
 For example, the following command will digest the genome files found in the directory ``hg19`` using
@@ -54,6 +54,19 @@ the ``map`` step of the Diachromatic pipeline.
 
 **ToDo** offer option to restrict to canonical chromosomes.
 
-**To Do** Check whether the first entry is correct for DpnII (not shown now).
+**To Do** Check whether the first entry is correct for DpnII (not shown now). If I run the truncate command with DpnII I get
+
++-------------+-----------+---------+--------+----------+----------+
+| Chromosome  | Start_Pos | End_Pos | Frag_N | 5'_RSite | 3'_RSite |
++=============+===========+=========+========+==========+==========+
+| chr22       | 1         | 16050000| 1      | None     | DpnII    |
++-------------+-----------+---------+--------+----------+----------+
+| chr22       | 16050001  | 16050155| 2      | DpnII    | DpnII    |
++-------------+-----------+---------+--------+----------+----------+
+| chr22       | 16050156  | 16050444| 3      | DpnII    | DpnII    |
++-------------+-----------+---------+--------+----------+----------+
+
+and the first entry is correct.
+
 
 
