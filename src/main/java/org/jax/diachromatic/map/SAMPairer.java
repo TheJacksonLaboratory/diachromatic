@@ -279,6 +279,12 @@ public class SAMPairer {
                         }
                         n_good++;
                     }
+                    else{
+                        pairReads(pair);
+                        rejectedReadsWriter.addAlignment(pair.first);
+                        rejectedReadsWriter.addAlignment(pair.second);
+                    }
+
                 }
             } catch (DiachromaticException e) {
                 logger.error(e.getMessage()); // todo refactor
@@ -287,6 +293,7 @@ public class SAMPairer {
             pair = getNextPair();
         }
         validReadsWriter.close();
+        rejectedReadsWriter.close();
     }
 
 
