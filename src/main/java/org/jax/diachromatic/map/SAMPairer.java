@@ -259,7 +259,9 @@ public class SAMPairer {
         // init BAM outfile
         boolean presorted = false;
         this.validReadsWriter = new SAMFileWriterFactory().makeBAMWriter(header, presorted, new File(validBamFileName));
-        this.rejectedReadsWriter = new SAMFileWriterFactory().makeBAMWriter(header, presorted, new File(rejectedBamFileName));
+        if(outputRejectedReads) {
+            this.rejectedReadsWriter = new SAMFileWriterFactory().makeBAMWriter(header, presorted, new File(rejectedBamFileName));
+        }
         final ProgressLogger pl = new ProgressLogger(log, 1000000);
 
         Pair<SAMRecord, SAMRecord> pair = getNextPair();
@@ -280,11 +282,12 @@ public class SAMPairer {
                         n_good++;
                     }
                     else{
-                        pairReads(pair);
-                        rejectedReadsWriter.addAlignment(pair.first);
-                        rejectedReadsWriter.addAlignment(pair.second);
+                        if(outputRejectedReads) {
+                            pairReads(pair);
+                            rejectedReadsWriter.addAlignment(pair.first);
+                            rejectedReadsWriter.addAlignment(pair.second);
+                        }
                     }
-
                 }
             } catch (DiachromaticException e) {
                 logger.error(e.getMessage()); // todo refactor
@@ -293,7 +296,10 @@ public class SAMPairer {
             pair = getNextPair();
         }
         validReadsWriter.close();
-        rejectedReadsWriter.close();
+        if(outputRejectedReads) {
+            rejectedReadsWriter.close();
+
+        }
     }
 
 
