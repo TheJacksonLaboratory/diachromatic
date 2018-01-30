@@ -270,9 +270,10 @@ public class SAMPairer {
             try {
                 // first check whether both reads were mapped.
                 if (readPairUniquelyMapped(pair)) {
+                    pairReads(pair);
                     // If we get here, then both reads were uniquely mappable.
                     if (is_valid(pair)) {
-                        pairReads(pair); // set the SAM flags to paired-end
+                         // set the SAM flags to paired-end
                         if (! DiTag.isDuplicate(pair)) { // check for duplicate reads
                             validReadsWriter.addAlignment(pair.first);
                             validReadsWriter.addAlignment(pair.second);
@@ -280,13 +281,6 @@ public class SAMPairer {
                             n_duplicate++;
                         }
                         n_good++;
-                    }
-                    else{
-                        if(outputRejectedReads) {
-                            pairReads(pair);
-                            rejectedReadsWriter.addAlignment(pair.first);
-                            rejectedReadsWriter.addAlignment(pair.second);
-                        }
                     }
                 }
             } catch (DiachromaticException e) {
