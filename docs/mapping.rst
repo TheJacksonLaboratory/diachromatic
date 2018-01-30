@@ -30,11 +30,11 @@ We will call the path to the directory where the index was unpacked /path/to/bow
 
 Performing the mapping and Q/C step
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Use the following command. ::
+Use the following command: ::
 
     $ java -jar Diachromatic.jar map -b <bowtie2> -i <bowtie2-index> -q <fastq1> -r <fastq2> -d <digest> [-o <outfile>]
 
-The meaning of the options is
+The meaning of the options is:
     * -b <bowtie2> Path to the bowtie2 executable
     * -i <bowtie2-index> Path to the bowtie2 index for the genome used to map the FASTQ files
     * --q <fastq1> Name and path to the *truncated* "forward" FASTQ file (produced in previous step)
@@ -42,19 +42,24 @@ The meaning of the options is
     * -d <digest> Path to the digest file produced in the first step
     * [-o <outfile>] This flag is optional and if it is not passed, the default name of ``diachromatic-processed.bam`` will be used.
 
-For instance, xxx. ::
+For instance, the following command will use bowtie2 to map the two FASTQ files of a paired-end run independently (as it they were single-end sequences). Subsequently, the two resulting mappings will be paired, and pairs that show characteristics of known artifacts will be counted and sorted out. Finally, duplicates will be removed. ::
 
     $ java -jar target/diachromatic-0.0.2.jar map -b /usr/bin/bowtie2 -i btindex/hg19 -q hindIIIhg19chc/test_dataset1.hindIIIhg19.fastq -r hindIIIhg19chc/test_dataset2.hindIIIhg19.fastq -d hg19HindIIIdigest.txtr -o hindIII
 
-Explain output.
+Two output files will be produced:
+    * ``diachromatic.valid.bam`` contains all uniquely mapped pairs. Known artifacts and duplicated reads are removed. This file can be used for downstream analyses.
+    * ``diachromatic.rejected.bam`` contains all pairs that show characteristics of known artifacts:
+        * insert too long
+        * insert too short
+        * circularized read
+        * same dangling end
+        * same internal
+        * re-ligation
+        * contiguous
 
-The mapped combines mapping and filtering. The steps are
-1. Call bowtie2 and map each of the input files separately (as it they were single-end sequences).
-2. Then input both of the resulting SAM files. The files are filtered and
-mapped accoding to the following criteria
-* Discard a read pair if one or more of the reads could not be mapped by bowtei2
-* Discard the pair if one of more of the reads was multimapped (bowtie2: XS:i tag exists)
-* to do -- filter the read to remove typical HiC artefacts
-* todo -- demand that at least one read maps to one of the VPV target regions
+Read pairs for which one read cannot be mapped or cannot be mapped uniquely (bowtie2: XS:i tag exists) will be discarded completely. Statistics about the numbers of unmappable reads, multimappable reads, and artifact pairs will be written to the screen.
+
+
+todo -- demand that at least one read maps to one of the VPV target regions
 
 
