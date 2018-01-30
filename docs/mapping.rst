@@ -41,6 +41,7 @@ The meaning of the options is:
     * --r <fastq2> Name and path to the *truncated* "reverse" FASTQ file (produced in previous step)
     * -d <digest> Path to the digest file produced in the first step
     * [-o <outfile>] This flag is optional and if it is not passed, the default name of ``diachromatic-processed.bam`` will be used.
+    * [-x] If this is option is used a set, an additional BAM file for rejected pairs will be created. The general tag for rejected reads is ``YY``. See below for tags of individual artifacts.
 
 For instance, the following command will use bowtie2 to map the two FASTQ files of a paired-end run independently (as it they were single-end sequences). Subsequently, the two resulting mappings will be paired, and pairs that show characteristics of known artifacts will be counted and sorted out. Finally, duplicates will be removed. ::
 
@@ -49,13 +50,13 @@ For instance, the following command will use bowtie2 to map the two FASTQ files 
 Two output files will be produced:
     * ``diachromatic.valid.bam`` contains all uniquely mapped pairs. Known artifacts and duplicated reads are removed. This file can be used for downstream analyses.
     * ``diachromatic.rejected.bam`` contains all pairs that show characteristics of known artifacts:
-        * insert too long
-        * insert too short
-        * circularized read
-        * same dangling end
-        * same internal
-        * re-ligation
-        * contiguous
+        * insert too long (Tag: ``TB``)
+        * insert too short (Tag: ``TS``)
+        * circularized read (Tag: ``SL``)
+        * same dangling end (Tag: ``DE``)
+        * same internal (Tag: ``SI``)
+        * re-ligation (Tag: ``RL``)
+        * contiguous (Tag: ``CT``)
 
 Read pairs for which one read cannot be mapped or cannot be mapped uniquely (bowtie2: XS:i tag exists) will be discarded completely. Statistics about the numbers of unmappable reads, multimappable reads, and artifact pairs will be written to the screen.
 
