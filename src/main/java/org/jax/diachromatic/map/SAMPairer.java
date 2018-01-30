@@ -112,7 +112,7 @@ public class SAMPairer {
     /**
      * Smallest allowable size of the insert of a read pair.
      */
-    static private int LOWER_SIZE_THRESHOLD = 150;
+    static private int LOWER_SIZE_THRESHOLD = 100;
     /**
      * Length threshold in nucleotides for the end of a read being near to a restriction fragment/ligation sequence
      */
@@ -355,6 +355,7 @@ public class SAMPairer {
         int insertSize = getCalculatedInsertSize(digestPair, readpair);
         if (insertSize > UPPER_SIZE_THRESHOLD) {
             n_insert_too_long++;
+            System.out.println(UPPER_SIZE_THRESHOLD + " " + insertSize);
             if (outputRejectedReads) {
                 readpair.first.setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_BIG_TAG);
                 readpair.second.setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_BIG_TAG);
@@ -552,18 +553,25 @@ public class SAMPairer {
     int getCalculatedInsertSize(Pair<Digest, Digest> digestPair, Pair<SAMRecord, SAMRecord> readpair) {
         SAMRecord readF = readpair.first;
         SAMRecord readR = readpair.second;
-        int distF, distR;
-        if (readF.getReadNegativeStrandFlag()) { // readF is on the negative strand
-            distF = readF.getAlignmentEnd() - digestPair.first.getStartpos() + 1;
-        } else {
-            distF = digestPair.first.getEndpos() - readF.getAlignmentStart() + 1;
+        if(!digestPair.first.equals(digestPair.second)) {
+            int distF, distR;
+            if (readF.getReadNegativeStrandFlag()) { // readF is on the negative strand
+                distF = readF.getAlignmentEnd() - digestPair.first.getStartpos() + 1;
+            } else {
+                distF = digestPair.first.getEndpos() - readF.getAlignmentStart() + 1;
+            }
+            if (readR.getReadNegativeStrandFlag()) { // readR is on the negative strand
+                distR = readR.getAlignmentEnd() - digestPair.second.getStartpos() + 1;
+            } else {
+                distR = digestPair.second.getEndpos() - readR.getAlignmentStart() + 1;
+            }
+            return distF + distR;
+        } else { // if both reads map to the same restriction fragment
+            int sta=Math.min(Math.min(readF.getAlignmentStart(),readF.getAlignmentEnd()),Math.min(readR.getAlignmentStart(),readR.getAlignmentEnd()));
+            int end=Math.max(Math.max(readF.getAlignmentStart(),readF.getAlignmentEnd()),Math.max(readR.getAlignmentStart(),readR.getAlignmentEnd()));
+            System.out.println("XXX: " + (end-sta+1));
+            return end-sta+1;
         }
-        if (readR.getReadNegativeStrandFlag()) { // readR is on the negative strand
-            distR = readR.getAlignmentEnd() - digestPair.second.getStartpos() + 1;
-        } else {
-            distR = digestPair.second.getEndpos() - readR.getAlignmentStart() + 1;
-        }
-        return distF + distR;
     }
 
     /**
