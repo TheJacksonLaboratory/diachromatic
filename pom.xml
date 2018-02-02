@@ -110,7 +110,7 @@
                 </includes>
             </resource>
         </resources>
-        <finalName>diachromatic-${project.version}</finalName>
+        <finalName>Diachromatic</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

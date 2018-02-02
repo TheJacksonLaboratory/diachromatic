@@ -98,3 +98,13 @@ SRR071233.1     131     chr16   84175204        42      40M     =       31526917
 
 The first read should be set to 67 [read paired (0x1); read mapped in proper pair (0x2);first in pair (0x40)]. The reverse read is
 131 [read paired (0x1); read mapped in proper pair (0x2); second in pair (0x80)].
+
+* Test mapping
+
+
+The paired FASTQ files hg19_HindIII_test_data_sam_flags_1.fast1 and hg19_HindIII_test_data_sam_flags_2.fastq were
+processed with the command
+
+    $ java -jar Diachromatic.jar map -b /usr/bin/bowtie2 -i /path-to/bowtie2-index/hg19 -q hg19_HindIII_test_data_sam_flags_1.fastq -r fastq/hg19_HindIII_test_data_sam_flags_2.fastq -d hg38digest
+
+The resulting SAM files are being used for unit testing (to simplify and robustify testing).
