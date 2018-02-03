@@ -25,4 +25,11 @@ public class DigestPair {
     public Digest reverse() { return reverseDigest; }
 
 
+
+    // int max_possible_insert_size = digestPair.forward().getSize() + digestPair.reverse().getSize();
+    public int getMaximumPossibleInsertSize() {
+        return forwardDigest.getSize() + reverseDigest.getSize();
+    }
+
+
 }

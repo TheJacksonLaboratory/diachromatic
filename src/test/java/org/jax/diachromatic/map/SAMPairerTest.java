@@ -187,9 +187,9 @@ public class SAMPairerTest {
     public void testSelfLigation() throws DiachromaticException {
         sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
         ReadPair readpair = readpairmap.get("1_uniquelyAlignedRead");
-        assertFalse(sampairer.selfLigation(readpair));
+        assertFalse(readpair.selfLigation());
         readpair = readpairmap.get("4_selfLigation");//sampairer.getNextPair();// fourth read pair, self-ligation!
-        assertTrue(sampairer.selfLigation(readpair));
+        assertTrue(readpair.selfLigation());
     }
 
     /* The fifth pair shows religation! */
@@ -198,33 +198,33 @@ public class SAMPairerTest {
 
         ReadPair readpair  = readpairmap.get("1_uniquelyAlignedRead");
         DigestPair digestpair = sampairer.getDigestPair(readpair);
-        assertFalse(sampairer.religation(digestpair,readpair));
+        assertFalse(readpair.religation(digestpair));
         readpair = readpairmap.get("4_selfLigation");// fourth read pair, self-ligation--not religation
         digestpair = sampairer.getDigestPair(readpair);
-        assertFalse(sampairer.religation(digestpair,readpair));
+        assertFalse(readpair.religation(digestpair));
         //chr13	31421583	31425191
         //chr13	31425192	31425873
         readpair = readpairmap.get("5_religation");// 5. religation!
         assertEquals(readpair.forward().getReferenceName(),"chr13");// check we have right read!
         assertEquals(readpair.reverse().getReferenceName(),"chr13");// check we have right read!
         digestpair = sampairer.getDigestPair(readpair);
-        assertTrue(sampairer.religation(digestpair,readpair));
+        assertTrue(readpair.religation(digestpair));
     }
 
     /** The sixth read pair is contiguous (by manual inspection) */
     @Test
     public void testContiguous() throws DiachromaticException {
         ReadPair readpair  = readpairmap.get("1_uniquelyAlignedRead");
-        assertFalse(sampairer.contiguous(readpair));
+        assertFalse(readpair.contiguous());
         readpair = readpairmap.get("5_religation"); //5 -- note readpair 5 was on adjacent fragments and
         // thus is religation and not contiguous!
         DigestPair digestpair = sampairer.getDigestPair(readpair);
-        assertTrue(sampairer.religation(digestpair,readpair));
+        assertTrue(readpair.religation(digestpair));
         //assertFalse(sampairer.contiguous(readpair))
         readpair = readpairmap.get("6_contiguous");//sampairer.getNextPair(); //6-- contiguous but not religated (not on adjacent digests)!
-        assertTrue(sampairer.contiguous(readpair));
+        assertTrue(readpair.contiguous());
         digestpair = sampairer.getDigestPair(readpair);
-        assertFalse(sampairer.religation(digestpair,readpair));
+        assertFalse(readpair.religation(digestpair));
     }
 
     /** The insert of the third read pair is above threshold of 800. */
