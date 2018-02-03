@@ -261,7 +261,6 @@ public class SAMPairer {
         validReadsWriter.close();
         if(outputRejectedReads) {
             rejectedReadsWriter.close();
-
         }
     }
 
@@ -315,10 +314,10 @@ public class SAMPairer {
         int start2 = readR.getAlignmentStart();
         int end2 = readR.getAlignmentEnd();
 
-        logger.trace(String.format("read 1: %s:%d-%d; read 2: %s:%d-%d", chrom1, start1, end1, chrom2, start2, end2));
+       // logger.trace(String.format("read 1: %s:%d-%d; read 2: %s:%d-%d", chrom1, start1, end1, chrom2, start2, end2));
         //1 check if on same chromosome.
         //2 position the reads on chromosome .
-        Pair<Digest, Digest> digestPair = getDigestPair(readpair);
+        DigestPair digestPair = getDigestPair(readpair);
         if (digestPair == null) return false;
         //3 Check that calculated insert size is realistic
         int insertSize = getCalculatedInsertSize(digestPair, readpair);
@@ -348,7 +347,7 @@ public class SAMPairer {
             readR.setAttribute("CT", "TRANS");
         }
         // Now check if both reads are on the same fragment
-        if (digestPair.first.equals(digestPair.second)) { // both reads in same restriction fragment.
+        if (digestPair.forward().equals(digestPair.reverse())) { // both reads in same restriction fragment.
             if (selfLigation(readpair)) {
                 n_circularized_read++;
                 if (outputRejectedReads) {
@@ -407,11 +406,11 @@ public class SAMPairer {
         }
 
         // maximum possible insert size is used for determining distance of separation between fragments
-        int max_possible_insert_size = digestPair.first.getSize() + digestPair.second.getSize();
+        int max_possible_insert_size = digestPair.forward().getSize() + digestPair.reverse().getSize();
         // decide whether the reads are close or far.
         if (readF.getAlignmentStart() < readR.getAlignmentStart()) {
             // read 1 is mapped upstream of read 2
-            if ((digestPair.second.getEndpos() - digestPair.first.getStartpos() - max_possible_insert_size) > 10_000) {
+            if ((digestPair.reverse().getEndpos() - digestPair.forward().getStartpos() - max_possible_insert_size) > 10_000) {
                 readF.setAttribute("CT", "FAR");
                 readR.setAttribute("CT", "FAR");
             } else {
@@ -419,7 +418,7 @@ public class SAMPairer {
                 readR.setAttribute("CT", "CLOSE");
             }
         }  else {
-            if ( ( digestPair.first.getEndpos() - digestPair.second.getStartpos() -max_possible_insert_size ) > 10_000) {
+            if ( ( digestPair.forward().getEndpos() - digestPair.reverse().getStartpos() -max_possible_insert_size ) > 10_000) {
                 readF.setAttribute("CT","FAR");
                 readR.setAttribute("CT","FAR");
             } else {
@@ -463,11 +462,11 @@ public class SAMPairer {
      * @param readpair
      * @return
      */
-    boolean danglingEnd(Pair<Digest,Digest> digestPair,ReadPair readpair) {
-       return ( Math.abs(readpair.forward().getAlignmentStart() - digestPair.first.getStartpos()) < DANGLING_THRESHOLD ||
-                Math.abs(readpair.forward().getAlignmentStart() - digestPair.first.getEndpos()) < DANGLING_THRESHOLD ||
-                Math.abs(readpair.reverse().getAlignmentStart() - digestPair.first.getStartpos()) < DANGLING_THRESHOLD ||
-                Math.abs(readpair.reverse().getAlignmentStart() - digestPair.first.getEndpos()) < DANGLING_THRESHOLD);
+    boolean danglingEnd(DigestPair digestPair,ReadPair readpair) {
+       return ( Math.abs(readpair.forward().getAlignmentStart() - digestPair.forward().getStartpos()) < DANGLING_THRESHOLD ||
+                Math.abs(readpair.forward().getAlignmentStart() - digestPair.forward().getEndpos()) < DANGLING_THRESHOLD ||
+                Math.abs(readpair.reverse().getAlignmentStart() - digestPair.forward().getStartpos()) < DANGLING_THRESHOLD ||
+                Math.abs(readpair.reverse().getAlignmentStart() - digestPair.forward().getEndpos()) < DANGLING_THRESHOLD);
     }
 
     /**
@@ -477,8 +476,8 @@ public class SAMPairer {
      * @param readpair
      * @return
      */
-    boolean religation(Pair<Digest,Digest> digestPair,ReadPair readpair) {
-        return ( (Math.abs(digestPair.second.getFragmentNumber() - digestPair.first.getFragmentNumber()) == 1)  &&
+    boolean religation(DigestPair digestPair,ReadPair readpair) {
+        return ( (Math.abs(digestPair.reverse().getFragmentNumber() - digestPair.forward().getFragmentNumber()) == 1)  &&
             (readpair.forward().getReadNegativeStrandFlag() != readpair.reverse().getReadNegativeStrandFlag()) ) ;
     }
 
@@ -519,20 +518,20 @@ public class SAMPairer {
      * @param readpair   the forward and reverse reads
      * @return calculate insert size of chimeric read.
      */
-    int getCalculatedInsertSize(Pair<Digest, Digest> digestPair, ReadPair readpair) {
+    int getCalculatedInsertSize(DigestPair digestPair, ReadPair readpair) {
         SAMRecord readF = readpair.forward();
         SAMRecord readR = readpair.reverse();
-        if(!digestPair.first.equals(digestPair.second)) {
+        if(!digestPair.forward().equals(digestPair.reverse())) {
             int distF, distR;
             if (readF.getReadNegativeStrandFlag()) { // readF is on the negative strand
-                distF = readF.getAlignmentEnd() - digestPair.first.getStartpos() + 1;
+                distF = readF.getAlignmentEnd() - digestPair.forward().getStartpos() + 1;
             } else {
-                distF = digestPair.first.getEndpos() - readF.getAlignmentStart() + 1;
+                distF = digestPair.forward().getEndpos() - readF.getAlignmentStart() + 1;
             }
             if (readR.getReadNegativeStrandFlag()) { // readR is on the negative strand
-                distR = readR.getAlignmentEnd() - digestPair.second.getStartpos() + 1;
+                distR = readR.getAlignmentEnd() - digestPair.reverse().getStartpos() + 1;
             } else {
-                distR = digestPair.second.getEndpos() - readR.getAlignmentStart() + 1;
+                distR = digestPair.reverse().getEndpos() - readR.getAlignmentStart() + 1;
             }
             return distF + distR;
         } else { // if both reads map to the same restriction fragment
@@ -553,9 +552,9 @@ public class SAMPairer {
      * assigning reads to a fragment in the digested genome.
      *
      * @param readpair Pair of reads (forward, reverse).
-     * @return
+     * @return the corresponding {@link DigestPair} object.
      */
-    Pair<Digest, Digest> getDigestPair(ReadPair readpair) throws DiachromaticException {
+    DigestPair getDigestPair(ReadPair readpair) throws DiachromaticException {
         String chrom1 = readpair.forward().getReferenceName();
         int start1 = readpair.forward().getAlignmentStart();
         int end1 = readpair.forward().getAlignmentEnd();
@@ -574,7 +573,7 @@ public class SAMPairer {
      *
      * @return
      */
-    Pair<Digest, Digest> getDigestPair(String chrom1, int start1, int end1, String chrom2, int start2, int end2) throws DiachromaticException {
+    DigestPair getDigestPair(String chrom1, int start1, int end1, String chrom2, int start2, int end2) throws DiachromaticException {
         final int OFFSET=10;
         List<Digest> list = digestmap.get(chrom1);
         if (list == null) {
@@ -599,7 +598,7 @@ public class SAMPairer {
             throw new DigestNotFoundException(String.format("Could not identify digest for read 2 at %s:%d-%d", chrom2, start2, end2));
         }
 
-        return new Pair<>(d1, d2);
+        return new DigestPair(d1, d2);
 
     }
 

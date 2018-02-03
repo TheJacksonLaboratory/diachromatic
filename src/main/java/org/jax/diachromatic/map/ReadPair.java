@@ -10,6 +10,10 @@ import static org.jax.diachromatic.map.ErrorCode.*;
 
 /**
  * This class represents a pair: one forward and one reverse read.
+ *
+ * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
+ * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
+ * @version 0.1.3 (2018-01-06)
  */
 public class ReadPair {
     /** First (forward) read in a read pair. */
@@ -36,6 +40,9 @@ public class ReadPair {
     }
 
     public Set<ErrorCode> getErrorCodes(){ return errorcodes; }
+
+    public boolean isUnmapped() { return errorcodes.contains(READPAIR_UNMAPPED);}
+    public boolean isMultimapped(){ return errorcodes.contains(READPAIR_MULTIMAPPED);}
 
 
 

@@ -114,20 +114,6 @@ public class SAMPairerTest {
     }
 
 
-    /**
-     * XS:i:<n> Alignment score for the best-scoring alignment found other than the alignment reported.
-     * Can be negative. Can be greater than 0 in --local mode (but not in --end-to-end mode).
-     * Only present if the SAM record is for an aligned read and more than one alignment was found for the read.
-     * Note that, when the read is part of a concordantly-aligned pair, this score could be greater than AS:i.
-     * The second read in reversetest.sam has these annotations: AS:i:0	XS:i:0, meaning that we want to filter out
-     * this read. The first read should not be filtered out.
-     */
-    @Test
-    public void testFilterMultipleAlignment() {
-        ReadPair pair=readpairmap.get("1_multiplyAlignedRead");
-        assertNotNull(pair);
-        assertTrue(pair.readPairUniquelyMapped());
-    }
 
 
     /**
@@ -137,7 +123,7 @@ public class SAMPairerTest {
     @Test(expected = DigestNotFoundException.class)
     public void testDigestNotFound() throws DiachromaticException{
         sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
-        Pair<Digest, Digest> pair = sampairer.getDigestPair("crazyChromosome1", 1, 2, "wrongChromosome2", 3, 4);
+        DigestPair pair = sampairer.getDigestPair("crazyChromosome1", 1, 2, "wrongChromosome2", 3, 4);
     }
 
 
@@ -146,7 +132,7 @@ public class SAMPairerTest {
         // we should find a digest for chr1	221618744 and for chr18	71915472
         // note the reads are 40bp long
         int READLEN=40;
-        Pair<Digest, Digest> pair = sampairer.getDigestPair("chr1",221618744,(221618744+READLEN),
+        DigestPair pair = sampairer.getDigestPair("chr1",221618744,(221618744+READLEN),
                 "chr18",71915472,(71915472 + READLEN));
         assertNotNull(pair);
     }
@@ -156,7 +142,7 @@ public class SAMPairerTest {
         // we should find a digest for chr11 92316468 and for chr17	22262669
         int READLEN=40;
         //sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
-        Pair<Digest, Digest> pair = sampairer.getDigestPair("chr11",	92316468,(92316468+READLEN),
+        DigestPair pair = sampairer.getDigestPair("chr11",	92316468,(92316468+READLEN),
                 "chr17",	22262669,(22262669+READLEN));
         assertNotNull(pair);
     }
@@ -174,9 +160,9 @@ public class SAMPairerTest {
         int UPPER_SIZE_THRESHOLD=800;
         int LOWER_SIZE_THRESHOLD=150;
         sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
-        ReadPair readpair =readpairmap.get("1_multiplyAlignedRead");
+        ReadPair readpair =readpairmap.get("1_uniquelyAlignedRead");
         assertNotNull(readpair);
-        Pair<Digest, Digest> digestpair = sampairer.getDigestPair(readpair);
+        DigestPair digestpair = sampairer.getDigestPair(readpair);
         int insertSize=  sampairer.getCalculatedInsertSize(digestpair,readpair);
         assertFalse(insertSize<LOWER_SIZE_THRESHOLD);
         assertFalse(insertSize>UPPER_SIZE_THRESHOLD);
@@ -200,7 +186,7 @@ public class SAMPairerTest {
     @Test
     public void testSelfLigation() throws DiachromaticException {
         sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
-        ReadPair readpair = readpairmap.get("1_multiplyAlignedRead");
+        ReadPair readpair = readpairmap.get("1_uniquelyAlignedRead");
         assertFalse(sampairer.selfLigation(readpair));
         readpair = readpairmap.get("4_selfLigation");//sampairer.getNextPair();// fourth read pair, self-ligation!
         assertTrue(sampairer.selfLigation(readpair));
@@ -210,8 +196,8 @@ public class SAMPairerTest {
     @Test
     public void testReligation() throws DiachromaticException {
 
-        ReadPair readpair  = readpairmap.get("1_multiplyAlignedRead");
-        Pair<Digest, Digest> digestpair = sampairer.getDigestPair(readpair);
+        ReadPair readpair  = readpairmap.get("1_uniquelyAlignedRead");
+        DigestPair digestpair = sampairer.getDigestPair(readpair);
         assertFalse(sampairer.religation(digestpair,readpair));
         readpair = readpairmap.get("4_selfLigation");// fourth read pair, self-ligation--not religation
         digestpair = sampairer.getDigestPair(readpair);
@@ -228,11 +214,11 @@ public class SAMPairerTest {
     /** The sixth read pair is contiguous (by manual inspection) */
     @Test
     public void testContiguous() throws DiachromaticException {
-        ReadPair readpair  = readpairmap.get("1_multiplyAlignedRead");
+        ReadPair readpair  = readpairmap.get("1_uniquelyAlignedRead");
         assertFalse(sampairer.contiguous(readpair));
         readpair = readpairmap.get("5_religation"); //5 -- note readpair 5 was on adjacent fragments and
         // thus is religation and not contiguous!
-        Pair<Digest, Digest> digestpair = sampairer.getDigestPair(readpair);
+        DigestPair digestpair = sampairer.getDigestPair(readpair);
         assertTrue(sampairer.religation(digestpair,readpair));
         //assertFalse(sampairer.contiguous(readpair))
         readpair = readpairmap.get("6_contiguous");//sampairer.getNextPair(); //6-- contiguous but not religated (not on adjacent digests)!
@@ -246,7 +232,7 @@ public class SAMPairerTest {
     public void testInsertTooLarge() throws DiachromaticException {
         int THRESHOLD=800;
         ReadPair readpair  = readpairmap.get("3_tooBig");//1
-        Pair<Digest, Digest> digestpair = sampairer.getDigestPair(readpair);
+        DigestPair digestpair = sampairer.getDigestPair(readpair);
         int insertSize=sampairer.getCalculatedInsertSize(digestpair,readpair);
         //System.err.println("insert size = " + insertSize); 3823
         assertTrue(insertSize>THRESHOLD);
