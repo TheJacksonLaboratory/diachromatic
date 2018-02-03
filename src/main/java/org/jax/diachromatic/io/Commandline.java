@@ -96,7 +96,7 @@ public class Commandline {
             if (commandLine.hasOption("d")) {
                 this.pathToDiachromaticDigestFile = commandLine.getOptionValue("d");
             }
-            if (commandLine.hasOption("b")) {
+            if (commandLine.hasOption("j")) {
                 outputRejectedReads = true;
             } else {
                 outputRejectedReads = false;
@@ -147,7 +147,6 @@ public class Commandline {
                 //String outdir, String file1, String file2, String enzymeName
                 this.command = new TruncateCommand(outputDirectory, pathToInputFastq1, pathToInputFastq2, enzyme, suffix);
             } else if (mycommand.equalsIgnoreCase("map")) {
-                logger.trace("IN MAP");
                 if (this.bowtiepath == null) {
                     printUsageSubprogram("-b option required for map command", "map");
                 }
@@ -234,7 +233,7 @@ public class Commandline {
         writer.println("\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII)");
         writer.println("\t<digest>: path to the digest file produced by the digest command");
         writer.println(String.format("\t<outfile>: optional name of output file (Default: \"%s.bam\")", DEFAULT_OUTPUT_BAM_NAME));
-        writer.println("\t-b: output rejected reads to file (false if no -b option passed)");
+        writer.println("\t-j: output reJected reads to file (false if no -j option passed)");
         writer.println();
     }
 
@@ -295,11 +294,11 @@ public class Commandline {
         writer.println();
         switch (subprogramname) {
             case "truncate":
-                printTruncate(writer);
+                printTruncate(writer);break;
             case "digest":
-                printDigest(writer);
+                printDigest(writer);break;
             case "map":
-                printMap(writer);
+                printMap(writer);break;
             default:
                 writer.println("Did not recognize command: " + subprogramname);
         }

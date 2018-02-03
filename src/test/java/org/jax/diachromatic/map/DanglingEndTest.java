@@ -1,5 +1,13 @@
 package org.jax.diachromatic.map;
 
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.Map;
+
+import static junit.framework.TestCase.assertNotNull;
+import static org.jax.diachromatic.map.TestSamFileImporter.retrieveReadPairsForTesting;
+
 /** This test class is intended to test whether we can recognize dangling ends.
  * It is also possible for non-ligated DNA fragments to insert between sequencing
  * adapters, despite the protocol being designed to minimise such events. Consequently,
@@ -12,4 +20,20 @@ package org.jax.diachromatic.map;
  * but if it does not it is termed an "internal fragment" (Figure 2e).
  */
 public class DanglingEndTest {
+
+    private Map<String,ReadPair> readpairmap;
+
+    @Before
+    public void init() {
+        this.readpairmap = retrieveReadPairsForTesting();
+    }
+
+
+    @Test
+    public void testDanglingEnds() {
+        ReadPair readpair = readpairmap.get("SRR071233.24017.dangling_ends");
+        assertNotNull(readpair);
+    }
+
+
 }
