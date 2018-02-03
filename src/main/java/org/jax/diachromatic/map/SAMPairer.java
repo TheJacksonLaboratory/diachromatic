@@ -230,16 +230,16 @@ public class SAMPairer {
         }
         final ProgressLogger pl = new ProgressLogger(log, 1000000);
 
-        ReadPair pair = getNextPair();
-        while (pair != null) {
+        ReadPair pair;
+        while ((pair = getNextPair())!= null) {
             n_total++;
             try {
                 // first check whether both reads were mapped.
                 if (pair.readPairUniquelyMapped()) {
-                    pairReads(pair);
+                    pair.pairReads();
                 } else {
                     updateErrorMap(pair.getErrorCodes());
-                    continue; // discard this read
+                    continue; // discard this read and go to the next one
                 }
                 // If we get here, then both reads were uniquely mappable.
                 if (is_valid(pair)) {
@@ -251,12 +251,13 @@ public class SAMPairer {
                         n_duplicate++;
                     }
                     n_good++;
+                } else {
+                    updateErrorMap(pair.getErrorCodes());
+                    // discard this read and go to the next one
                 }
             } catch (DiachromaticException e) {
                 logger.error(e.getMessage()); // todo refactor
             }
-
-            pair = getNextPair();
         }
         validReadsWriter.close();
         if(outputRejectedReads) {
@@ -264,37 +265,6 @@ public class SAMPairer {
         }
     }
 
-
-    /**
-     * If we get here, then the pair of reads passed all Q/C checks, and we need to adjust its SAM flags to
-     * indicate that they are a valid read pair.
-     * @param pair
-     * @return
-     */
-     void pairReads(ReadPair pair) {
-         // This read pair is valid
-         // We therefore need to add corresponding bits to the SAM flag
-         pair.forward().setFirstOfPairFlag(true);
-         pair.reverse().setSecondOfPairFlag(true);
-         // Now set the flag to indicate it is paired end data
-         pair.forward().setReadPairedFlag(true);// 0x1
-         pair.forward().setProperPairFlag(true);//0x2
-         pair.reverse().setReadPairedFlag(true);
-         pair.reverse().setProperPairFlag(true);
-         // Indicate if inputSAMfiles is on the reverse strand
-         pair.forward().setMateNegativeStrandFlag(pair.reverse().getReadNegativeStrandFlag());
-         pair.reverse().setMateNegativeStrandFlag(pair.forward().getReadNegativeStrandFlag());
-
-         // Set which reads are which in the inputSAMfiles
-         pair.forward().setFirstOfPairFlag(true);
-         pair.reverse().setSecondOfPairFlag(true);
-         // Set the RNEXT and PNEXT values
-         // If the reference indices are the same, then the following should print "="
-         pair.forward().setMateReferenceIndex(pair.reverse().getReferenceIndex());
-         pair.reverse().setMateReferenceIndex(pair.forward().getReferenceIndex());
-         pair.forward().setMateAlignmentStart(pair.reverse().getAlignmentStart());
-         pair.reverse().setMateAlignmentStart(pair.forward().getAlignmentStart());
-     }
 
 
 
@@ -320,7 +290,7 @@ public class SAMPairer {
         DigestPair digestPair = getDigestPair(readpair);
         if (digestPair == null) return false;
         //3 Check that calculated insert size is realistic
-        int insertSize = getCalculatedInsertSize(digestPair, readpair);
+        int insertSize = readpair.getCalculatedInsertSize(digestPair);
         if (insertSize > UPPER_SIZE_THRESHOLD) {
             n_insert_too_long++;
             System.out.println(UPPER_SIZE_THRESHOLD + " " + insertSize);
@@ -508,39 +478,7 @@ public class SAMPairer {
     }
 
 
-    /**
-     * Mapped reads always "point towards" the ligation sequence. We can infer that the actualy (physical) size of the
-     * insert goes from the 5' end of a read to the ligation sequence (for each read of the ditag). We calculate this
-     * size and will filter out reads whose size is substantially above what we expect given the reported experimental
-     * size selection step
-     *
-     * @param digestPair
-     * @param readpair   the forward and reverse reads
-     * @return calculate insert size of chimeric read.
-     */
-    int getCalculatedInsertSize(DigestPair digestPair, ReadPair readpair) {
-        SAMRecord readF = readpair.forward();
-        SAMRecord readR = readpair.reverse();
-        if(!digestPair.forward().equals(digestPair.reverse())) {
-            int distF, distR;
-            if (readF.getReadNegativeStrandFlag()) { // readF is on the negative strand
-                distF = readF.getAlignmentEnd() - digestPair.forward().getStartpos() + 1;
-            } else {
-                distF = digestPair.forward().getEndpos() - readF.getAlignmentStart() + 1;
-            }
-            if (readR.getReadNegativeStrandFlag()) { // readR is on the negative strand
-                distR = readR.getAlignmentEnd() - digestPair.reverse().getStartpos() + 1;
-            } else {
-                distR = digestPair.reverse().getEndpos() - readR.getAlignmentStart() + 1;
-            }
-            return distF + distR;
-        } else { // if both reads map to the same restriction fragment
-            int sta=Math.min(Math.min(readF.getAlignmentStart(),readF.getAlignmentEnd()),Math.min(readR.getAlignmentStart(),readR.getAlignmentEnd()));
-            int end=Math.max(Math.max(readF.getAlignmentStart(),readF.getAlignmentEnd()),Math.max(readR.getAlignmentStart(),readR.getAlignmentEnd()));
-            System.out.println("XXX: " + (end-sta+1));
-            return end-sta+1;
-        }
-    }
+
 
     /**
      * Get the restriction fragments ({@link Digest} objects) to which the reads map. TODO do we need a different algorithm

@@ -23,27 +23,62 @@ public class ReadPair {
 
     private Set<ErrorCode> errorcodes;
 
-    public ReadPair(SAMRecord f, SAMRecord r) {
+    ReadPair(SAMRecord f, SAMRecord r) {
         forwardRead=f;
         reverseRead=r;
         errorcodes=new HashSet<>();
     }
 
 
-    public SAMRecord forward() {
+    SAMRecord forward() {
         return forwardRead;
     }
 
 
-    public SAMRecord reverse() {
+    SAMRecord reverse() {
         return reverseRead;
     }
 
-    public Set<ErrorCode> getErrorCodes(){ return errorcodes; }
+    Set<ErrorCode> getErrorCodes(){ return errorcodes; }
 
-    public boolean isUnmapped() { return errorcodes.contains(READPAIR_UNMAPPED);}
-    public boolean isMultimapped(){ return errorcodes.contains(READPAIR_MULTIMAPPED);}
+    boolean isUnmapped() { return errorcodes.contains(READPAIR_UNMAPPED);}
+    boolean isMultimapped(){ return errorcodes.contains(READPAIR_MULTIMAPPED);}
 
+
+
+
+    /**
+     * Mapped reads always "point towards" the ligation sequence. We can infer that the actualy (physical) size of the
+     * insert goes from the 5' end of a read to the ligation sequence (for each read of the ditag). We calculate this
+     * size and will filter out reads whose size is substantially above what we expect given the reported experimental
+     * size selection step
+     *
+     * @param digestPair  The digest pair that corresponds to this readpair.
+     * @return the insert size of chimeric read.
+     */
+    int getCalculatedInsertSize(DigestPair digestPair) {
+        SAMRecord readF = forward();
+        SAMRecord readR = reverse();
+        if(!digestPair.forward().equals(digestPair.reverse())) {
+            int distF, distR;
+            if (readF.getReadNegativeStrandFlag()) { // readF is on the negative strand
+                distF = readF.getAlignmentEnd() - digestPair.forward().getStartpos() + 1;
+            } else {
+                distF = digestPair.forward().getEndpos() - readF.getAlignmentStart() + 1;
+            }
+            if (readR.getReadNegativeStrandFlag()) { // readR is on the negative strand
+                distR = readR.getAlignmentEnd() - digestPair.reverse().getStartpos() + 1;
+            } else {
+                distR = digestPair.reverse().getEndpos() - readR.getAlignmentStart() + 1;
+            }
+            return distF + distR;
+        } else { // if both reads map to the same restriction fragment
+            int sta=Math.min(Math.min(readF.getAlignmentStart(),readF.getAlignmentEnd()),Math.min(readR.getAlignmentStart(),readR.getAlignmentEnd()));
+            int end=Math.max(Math.max(readF.getAlignmentStart(),readF.getAlignmentEnd()),Math.max(readR.getAlignmentStart(),readR.getAlignmentEnd()));
+            System.out.println("XXX: " + (end-sta+1));
+            return end-sta+1;
+        }
+    }
 
 
 
@@ -54,7 +89,7 @@ public class ReadPair {
      * determining that the reads should be paired, it is not done automatically by
      * {@link #readPairUniquelyMapped()}.
      */
-    public void pairReads() {
+    void pairReads() {
         // This read pair is valid
         // We therefore need to add corresponding bits to the SAM flag
         forward().setFirstOfPairFlag(true);
@@ -90,7 +125,7 @@ public class ReadPair {
      *
      * @return true if both reads could be uniquely mapped.
      */
-    public boolean readPairUniquelyMapped() {
+    boolean readPairUniquelyMapped() {
         if (forward().getReadUnmappedFlag()) {
             //read 1 could not be aligned
             errorcodes.add(READ_1_UNMAPPED);

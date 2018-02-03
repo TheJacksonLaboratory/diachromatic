@@ -82,9 +82,9 @@ public class SAMPairerTest {
     /**
      * We require a digest list for the {@link SAMPairer} constructor. We make a "fake" digest list for
      * simplicity that will allow us to perform testing of various functionalities.
-     * @param chrom
-     * @param pos_pair
-     * @return
+     * @param chrom chromosome
+     * @param pos_pair pairs of integers with start and end position of the Digests
+     * @return list of "fake" Digest object
      */
     private static List<Digest> makeFakeDigestList(String chrom,Pair<Integer,Integer> ...pos_pair) {
         List<Digest> dlist = new ArrayList<>();
@@ -163,17 +163,17 @@ public class SAMPairerTest {
         ReadPair readpair =readpairmap.get("1_uniquelyAlignedRead");
         assertNotNull(readpair);
         DigestPair digestpair = sampairer.getDigestPair(readpair);
-        int insertSize=  sampairer.getCalculatedInsertSize(digestpair,readpair);
+        int insertSize=  readpair.getCalculatedInsertSize(digestpair);
         assertFalse(insertSize<LOWER_SIZE_THRESHOLD);
         assertFalse(insertSize>UPPER_SIZE_THRESHOLD);
         readpair = readpairmap.get("2_multiplyAlignedRead");
         digestpair = sampairer.getDigestPair(readpair);
-        insertSize=  sampairer.getCalculatedInsertSize(digestpair,readpair);
+        insertSize=  readpair.getCalculatedInsertSize(digestpair);
         assertFalse(insertSize<LOWER_SIZE_THRESHOLD);
         assertFalse(insertSize>UPPER_SIZE_THRESHOLD);
         readpair = readpairmap.get("3_tooBig");
         digestpair = sampairer.getDigestPair(readpair);
-        insertSize=  sampairer.getCalculatedInsertSize(digestpair,readpair);
+        insertSize=  readpair.getCalculatedInsertSize(digestpair);
         assertTrue(insertSize>UPPER_SIZE_THRESHOLD);
     }
 
@@ -233,7 +233,7 @@ public class SAMPairerTest {
         int THRESHOLD=800;
         ReadPair readpair  = readpairmap.get("3_tooBig");//1
         DigestPair digestpair = sampairer.getDigestPair(readpair);
-        int insertSize=sampairer.getCalculatedInsertSize(digestpair,readpair);
+        int insertSize=readpair.getCalculatedInsertSize(digestpair);
         //System.err.println("insert size = " + insertSize); 3823
         assertTrue(insertSize>THRESHOLD);
     }
@@ -246,7 +246,7 @@ public class SAMPairerTest {
         // before we pair, the flags are set only to zero.
         assertEquals(0,readpair.forward().getFlags());
         assertEquals(0,readpair.reverse().getFlags());
-        sampairer.pairReads(readpair);
+        readpair.pairReads();
         assertEquals(67,readpair.forward().getFlags());
         assertEquals(131,readpair.reverse().getFlags());
         SamBitflagFilter.debugDisplayBitflag(readpair.forward().getFlags());
