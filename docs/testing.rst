@@ -86,6 +86,39 @@ These can be used in conjunction with the other output files of hicup to identif
 out because of mapping issues or artefacts, as well as read pairs that are ok. We can test most of the diachromatic
 code using a small SAM file that is excerpted from these.
 
+Finding digests for testing
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Note that many of the readpair functions require a Digest object. The following script can help to find the
+positions of the digests, these were used in the makeFakeDigest functions in the test classes
+
+
+    #!/usr/bin/perl -w
+    use strict;
+    use IO::File;
+
+    my $fname = shift or die "need to pass digest file name";
+    my $chr = shift or die "need to pass chromosome\n";
+    my $pos= shift or die "need to pass position";
+    print "will analyse $fname, $chr, $pos\n";
+
+    my $fh=new IO::File("$fname") or die "$!";
+    while (my $line=<$fh>) {
+        my @a=split(m/\t/,$line);
+        my $chrom=$a[0];
+        #print "chrom=$chrom and chr=$chr\n";
+        next if ($chr ne $chrom);
+        my $from =$a[1];
+        my $to=$a[2];
+        if ($pos>($from-100) && $pos < ($to+100)) {
+            print $line;
+            printf("position $pos is %d nucleotides 3' to start and %d nucleotides 5' to end of digest [len=%d]\n",($pos-$from),($to-$pos),($to-$from));
+        }
+    }
+
+
+
+
+
 Test class
 ~~~~~~~~~~
 The main tests of the logic of the Q/C code are in SAMPairerTest. There is currently one pair of sequences
@@ -98,3 +131,13 @@ SRR071233.1     131     chr16   84175204        42      40M     =       31526917
 
 The first read should be set to 67 [read paired (0x1); read mapped in proper pair (0x2);first in pair (0x40)]. The reverse read is
 131 [read paired (0x1); read mapped in proper pair (0x2); second in pair (0x80)].
+
+* Test mapping
+
+
+The paired FASTQ files hg19_HindIII_test_data_sam_flags_1.fast1 and hg19_HindIII_test_data_sam_flags_2.fastq were
+processed with the command
+
+    $ java -jar Diachromatic.jar map -b /usr/bin/bowtie2 -i /path-to/bowtie2-index/hg19 -q hg19_HindIII_test_data_sam_flags_1.fastq -r fastq/hg19_HindIII_test_data_sam_flags_2.fastq -d hg38digest
+
+The resulting SAM files are being used for unit testing (to simplify and robustify testing).

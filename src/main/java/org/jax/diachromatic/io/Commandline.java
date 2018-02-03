@@ -33,9 +33,8 @@ public class Commandline {
     private String genomeDirectory=null;
     private String outputFilePath=null;
     private String outputDirectory=null;
-    private String file1=null;
-    private String file2=null;
     private String enzyme=null;
+    /** path to the bowtie2 executable. */
     private String bowtiepath=null;
     private String pathToBowtieIndex=null;
     private String pathToInputFastq1 =null;
@@ -59,8 +58,11 @@ public class Commandline {
         {
             commandLine = cmdLineGnuParser.parse(gnuOptions, args);
             String category[] = commandLine.getArgs();
-            if (category.length != 1) {
+            if (category.length ==0) {
                 printUsage("command missing");
+            } else if (category.length > 1) {
+                String cmd= Arrays.stream(category).collect(Collectors.joining("\t"));
+                System.out.println(String.format("%d arguments for command: %s",category.length,cmd ));
             } else {
                 mycommand=category[0];
 
@@ -196,7 +198,7 @@ public class Commandline {
                 .addOption("outdir", "outdir", true, "path to output directory")
                 .addOption("q", "q", true, "path to forward FASTQ input file")
                 .addOption("r", "r", true, "path to reverse FASTQ input file")
-                .addOption("b", "bad", false, "output bad (rejected) reads to separated file")
+                .addOption("j", "bad", false, "output bad (reJected) reads to separated file")
         .addOption( Option.builder( "f1" ).longOpt("file1").desc("path to fastq file 1").hasArg(true).argName("file1").build())
          .addOption( Option.builder( "f2" ).longOpt("file2").desc("path to fastq file 2").hasArg(true).argName("file2").build());
         return gnuOptions;
