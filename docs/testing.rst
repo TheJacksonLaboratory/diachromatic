@@ -95,17 +95,13 @@ positions of the digests, these were used in the makeFakeDigest functions in the
     #!/usr/bin/perl -w
     use strict;
     use IO::File;
-
     my $fname = shift or die "need to pass digest file name";
     my $chr = shift or die "need to pass chromosome\n";
     my $pos= shift or die "need to pass position";
-    print "will analyse $fname, $chr, $pos\n";
-
     my $fh=new IO::File("$fname") or die "$!";
     while (my $line=<$fh>) {
         my @a=split(m/\t/,$line);
         my $chrom=$a[0];
-        #print "chrom=$chrom and chr=$chr\n";
         next if ($chr ne $chrom);
         my $from =$a[1];
         my $to=$a[2];
