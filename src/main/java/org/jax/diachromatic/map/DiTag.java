@@ -92,25 +92,25 @@ public class DiTag {
         return t1.sonicationStart - t2.sonicationStart;
     }
 
-    public static boolean isDuplicate(Pair<SAMRecord,SAMRecord> readpair) {
+    public static boolean isDuplicate(ReadPair readpair) {
 
         Tag tag1 = new Tag();
         Tag tag2 = new Tag();
-        tag1.chrom =getChromosomeCharacter(readpair.first.getReferenceName());
-        tag2.chrom =getChromosomeCharacter(readpair.second.getReferenceName());
-        if (readpair.first.getReadNegativeStrandFlag()) {
+        tag1.chrom =getChromosomeCharacter(readpair.forward().getReferenceName());
+        tag2.chrom =getChromosomeCharacter(readpair.reverse().getReferenceName());
+        if (readpair.forward().getReadNegativeStrandFlag()) {
             tag1.strand ='-';
-            tag1.sonicationStart =readpair.first.getAlignmentEnd();
+            tag1.sonicationStart =readpair.forward().getAlignmentEnd();
         } else {
             tag1.strand ='+';
-            tag1.sonicationStart =readpair.first.getAlignmentStart();
+            tag1.sonicationStart =readpair.forward().getAlignmentStart();
         }
-        if (readpair.second.getReadNegativeStrandFlag()) {
+        if (readpair.reverse().getReadNegativeStrandFlag()) {
             tag2.strand ='+';
-            tag2.sonicationStart =readpair.second.getAlignmentEnd();
+            tag2.sonicationStart =readpair.reverse().getAlignmentEnd();
         } else {
             tag2.strand ='+';
-            tag2.sonicationStart =readpair.second.getAlignmentStart();;
+            tag2.sonicationStart =readpair.reverse().getAlignmentStart();;
         }
         DiTag ditag=null;
         if (compare(tag1,tag2)>=0) {

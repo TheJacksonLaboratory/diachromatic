@@ -28,7 +28,7 @@ public class SAMPairerTest {
     /** We will; use this to keep track of the read pairs from the test files forwardtest and reverse test.
      * Note that we have labeled the read pairs in those file to make them easy find for these tests.
      */
-    private static Map<String,Pair<SAMRecord,SAMRecord>> readpairmap;
+    private static Map<String,ReadPair> readpairmap;
 
 
     private static final boolean outputRejectedReads=false;
@@ -71,10 +71,10 @@ public class SAMPairerTest {
         digestmap.put("chr18",digests);
         readpairmap = new HashMap<>();
         sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
-        Pair<SAMRecord,SAMRecord> pair=null;
+        ReadPair pair;
         while ((pair = sampairer.getNextPair())!=null) {
-            readpairmap.put(pair.first.getReadName(),pair);
-            System.err.println(pair.first.getReadName());
+            readpairmap.put(pair.forward().getReadName(),pair);
+            System.err.println(pair.forward().getReadName());
         }
     }
 
@@ -124,13 +124,9 @@ public class SAMPairerTest {
      */
     @Test
     public void testFilterMultipleAlignment() {
-        //sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
-        Pair<SAMRecord,SAMRecord> pair = sampairer.getNextPair();
-        pair=readpairmap.get("1_multiplyAlignedRead");
+        ReadPair pair=readpairmap.get("1_multiplyAlignedRead");
         assertNotNull(pair);
-        assertTrue(sampairer.readPairUniquelyMapped(pair));
-       // pair=sampairer.getNextPair();
-        //assertFalse(sampairer.readPairUniquelyMapped(pair));
+        assertTrue(pair.readPairUniquelyMapped());
     }
 
 
@@ -178,7 +174,7 @@ public class SAMPairerTest {
         int UPPER_SIZE_THRESHOLD=800;
         int LOWER_SIZE_THRESHOLD=150;
         sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
-        Pair<SAMRecord,SAMRecord> readpair =readpairmap.get("1_multiplyAlignedRead");
+        ReadPair readpair =readpairmap.get("1_multiplyAlignedRead");
         assertNotNull(readpair);
         Pair<Digest, Digest> digestpair = sampairer.getDigestPair(readpair);
         int insertSize=  sampairer.getCalculatedInsertSize(digestpair,readpair);
@@ -204,7 +200,7 @@ public class SAMPairerTest {
     @Test
     public void testSelfLigation() throws DiachromaticException {
         sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
-        Pair<SAMRecord,SAMRecord> readpair = readpairmap.get("1_multiplyAlignedRead");
+        ReadPair readpair = readpairmap.get("1_multiplyAlignedRead");
         assertFalse(sampairer.selfLigation(readpair));
         readpair = readpairmap.get("4_selfLigation");//sampairer.getNextPair();// fourth read pair, self-ligation!
         assertTrue(sampairer.selfLigation(readpair));
@@ -214,7 +210,7 @@ public class SAMPairerTest {
     @Test
     public void testReligation() throws DiachromaticException {
 
-        Pair<SAMRecord,SAMRecord> readpair = readpairmap.get("1_multiplyAlignedRead");
+        ReadPair readpair  = readpairmap.get("1_multiplyAlignedRead");
         Pair<Digest, Digest> digestpair = sampairer.getDigestPair(readpair);
         assertFalse(sampairer.religation(digestpair,readpair));
         readpair = readpairmap.get("4_selfLigation");// fourth read pair, self-ligation--not religation
@@ -223,8 +219,8 @@ public class SAMPairerTest {
         //chr13	31421583	31425191
         //chr13	31425192	31425873
         readpair = readpairmap.get("5_religation");// 5. religation!
-        assertEquals(readpair.first.getReferenceName(),"chr13");// check we have right read!
-        assertEquals(readpair.second.getReferenceName(),"chr13");// check we have right read!
+        assertEquals(readpair.forward().getReferenceName(),"chr13");// check we have right read!
+        assertEquals(readpair.reverse().getReferenceName(),"chr13");// check we have right read!
         digestpair = sampairer.getDigestPair(readpair);
         assertTrue(sampairer.religation(digestpair,readpair));
     }
@@ -232,7 +228,7 @@ public class SAMPairerTest {
     /** The sixth read pair is contiguous (by manual inspection) */
     @Test
     public void testContiguous() throws DiachromaticException {
-        Pair<SAMRecord,SAMRecord> readpair = readpairmap.get("1_multiplyAlignedRead");
+        ReadPair readpair  = readpairmap.get("1_multiplyAlignedRead");
         assertFalse(sampairer.contiguous(readpair));
         readpair = readpairmap.get("5_religation"); //5 -- note readpair 5 was on adjacent fragments and
         // thus is religation and not contiguous!
@@ -249,7 +245,7 @@ public class SAMPairerTest {
     @Test
     public void testInsertTooLarge() throws DiachromaticException {
         int THRESHOLD=800;
-        Pair<SAMRecord,SAMRecord> readpair = readpairmap.get("3_tooBig");//1
+        ReadPair readpair  = readpairmap.get("3_tooBig");//1
         Pair<Digest, Digest> digestpair = sampairer.getDigestPair(readpair);
         int insertSize=sampairer.getCalculatedInsertSize(digestpair,readpair);
         //System.err.println("insert size = " + insertSize); 3823
@@ -259,21 +255,21 @@ public class SAMPairerTest {
     /** The insert of the seventh read pair is above threshold of 800. */
     @Test
     public void testSetSamFlagsForCorrectPair() throws DiachromaticException {
-        Pair<SAMRecord,SAMRecord> readpair=readpairmap.get("7_validRead1");
-        SamBitflagFilter.debugDisplayBitflag(readpair.first.getFlags());
+        ReadPair readpair =readpairmap.get("7_validRead1");
+        SamBitflagFilter.debugDisplayBitflag(readpair.forward().getFlags());
         // before we pair, the flags are set only to zero.
-        assertEquals(0,readpair.first.getFlags());
-        assertEquals(0,readpair.second.getFlags());
+        assertEquals(0,readpair.forward().getFlags());
+        assertEquals(0,readpair.reverse().getFlags());
         sampairer.pairReads(readpair);
-        assertEquals(67,readpair.first.getFlags());
-        assertEquals(131,readpair.second.getFlags());
-        SamBitflagFilter.debugDisplayBitflag(readpair.first.getFlags());
+        assertEquals(67,readpair.forward().getFlags());
+        assertEquals(131,readpair.reverse().getFlags());
+        SamBitflagFilter.debugDisplayBitflag(readpair.forward().getFlags());
     }
 
     //TODO CHECK THIS TEST
     @Test
     public void testDuplicate() {
-        Pair<SAMRecord,SAMRecord> readpair=readpairmap.get("7_validRead1");
+        ReadPair readpair =readpairmap.get("7_validRead1");
         assertFalse(DiTag.isDuplicate(readpair));
         readpair=readpairmap.get("8_validRead1");
 //        assertTrue(DiTag.isDuplicate(readpair));

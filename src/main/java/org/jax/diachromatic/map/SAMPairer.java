@@ -17,10 +17,7 @@ import org.jax.diachromatic.util.Pair;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * This class takes as input two SAM files that have been created by {@code bowtie2} from the
@@ -139,7 +136,11 @@ public class SAMPairer {
      */
     final private Iterator<SAMRecord> it2;
     /** This will be used to keep a record of valid ditags in order to throw out duplicates. */
-    Set<DiTag> ditagSet;
+    private Set<DiTag> ditagSet;
+    /** Count up the number of errors encountered in our reads. THe key is the type of error, and the value is
+     * the count over the entire pair of SAM files.
+     */
+    private Map<ErrorCode,Integer> errorCounts;
 
 
     /**
@@ -189,6 +190,7 @@ public class SAMPairer {
         digestmap = digests;
         outputRejectedReads = outputRejected;
         VERSION = Commandline.getVersion();
+        initializeErrorMap();
     }
 
     /**
@@ -196,54 +198,18 @@ public class SAMPairer {
      * of SAMRecord objects. Both files must be equally long. This function will return null of there is any issue with
      * with of the individual iterators.
      *
-     * @return A pair of SAMRecord objects representing the forward and the reverse reads.
+     * @return A {@link ReadPair}, i.e., a pair of SAMRecord objects representing the forward and the reverse reads.
      */
-    Pair<SAMRecord, SAMRecord> getNextPair() {
+    ReadPair getNextPair() {
         if (it1.hasNext() && it2.hasNext()) {
             SAMRecord record1 = it1.next();
             SAMRecord record2 = it2.next();
-            return new Pair<>(record1, record2);
+            return new ReadPair(record1, record2);
         } else {
             return null;
         }
     }
 
-    /**
-     * Determine if both reads from a paired-end could be uniquely mapped. If so, return true. If not,
-     * increment the corresponding counter (e.g., {@link #n_unmapped_read1}) and return false. There are two
-     * things that can go wrong -- either one or both reads could not be mapped, or one or both reads were mapped
-     * to more than one locus in the genome.
-     *
-     * @param pair A pair of SAMrecords representing a paired end read.
-     * @return true if both reads could be uniquely mapped.
-     */
-    boolean readPairUniquelyMapped(Pair<SAMRecord, SAMRecord> pair) {
-        if (pair.first.getReadUnmappedFlag()) {
-            //read 1 could not be aligned
-            n_unmapped_read1++;
-            n_unmapped_pair++;
-            if (pair.second.getReadUnmappedFlag()) n_unmapped_read2++;
-            return false;
-        } else if (pair.second.getReadUnmappedFlag()) {
-            n_unmapped_read2++; // note read1 must be OK if we get here...
-            n_unmapped_pair++;
-            return false;
-        } else if (pair.first.getAttribute("XS") != null) {
-            // Now look for multimapped reads.
-            // If a read has an XS attribute, then bowtie2 multi-mapped it.
-            n_multimapped_read1++;
-            if (pair.second.getAttribute("XS") != null) {
-                n_multimapped_read2++;
-            }
-            n_multimappedPair++;
-            return false;
-        } else if (pair.second.getAttribute("XS") != null) {
-            n_multimapped_read2++; // note if we are here, read1 was not multimapped
-            n_multimappedPair++;
-            return false;
-        }
-        return true;
-    }
 
 
     /**
@@ -264,24 +230,27 @@ public class SAMPairer {
         }
         final ProgressLogger pl = new ProgressLogger(log, 1000000);
 
-        Pair<SAMRecord, SAMRecord> pair = getNextPair();
+        ReadPair pair = getNextPair();
         while (pair != null) {
             n_total++;
             try {
                 // first check whether both reads were mapped.
-                if (readPairUniquelyMapped(pair)) {
+                if (pair.readPairUniquelyMapped()) {
                     pairReads(pair);
-                    // If we get here, then both reads were uniquely mappable.
-                    if (is_valid(pair)) {
-                         // set the SAM flags to paired-end
-                        if (! DiTag.isDuplicate(pair)) { // check for duplicate reads
-                            validReadsWriter.addAlignment(pair.first);
-                            validReadsWriter.addAlignment(pair.second);
-                        } else {
-                            n_duplicate++;
-                        }
-                        n_good++;
+                } else {
+                    updateErrorMap(pair.getErrorCodes());
+                    continue; // discard this read
+                }
+                // If we get here, then both reads were uniquely mappable.
+                if (is_valid(pair)) {
+                    // set the SAM flags to paired-end
+                    if (! DiTag.isDuplicate(pair)) { // check for duplicate reads
+                        validReadsWriter.addAlignment(pair.forward());
+                        validReadsWriter.addAlignment(pair.reverse());
+                    } else {
+                        n_duplicate++;
                     }
+                    n_good++;
                 }
             } catch (DiachromaticException e) {
                 logger.error(e.getMessage()); // todo refactor
@@ -303,29 +272,29 @@ public class SAMPairer {
      * @param pair
      * @return
      */
-     void pairReads(Pair<SAMRecord, SAMRecord> pair) {
+     void pairReads(ReadPair pair) {
          // This read pair is valid
          // We therefore need to add corresponding bits to the SAM flag
-         pair.first.setFirstOfPairFlag(true);
-         pair.second.setSecondOfPairFlag(true);
+         pair.forward().setFirstOfPairFlag(true);
+         pair.reverse().setSecondOfPairFlag(true);
          // Now set the flag to indicate it is paired end data
-         pair.first.setReadPairedFlag(true);// 0x1
-         pair.first.setProperPairFlag(true);//0x2
-         pair.second.setReadPairedFlag(true);
-         pair.second.setProperPairFlag(true);
+         pair.forward().setReadPairedFlag(true);// 0x1
+         pair.forward().setProperPairFlag(true);//0x2
+         pair.reverse().setReadPairedFlag(true);
+         pair.reverse().setProperPairFlag(true);
          // Indicate if inputSAMfiles is on the reverse strand
-         pair.first.setMateNegativeStrandFlag(pair.second.getReadNegativeStrandFlag());
-         pair.second.setMateNegativeStrandFlag(pair.first.getReadNegativeStrandFlag());
+         pair.forward().setMateNegativeStrandFlag(pair.reverse().getReadNegativeStrandFlag());
+         pair.reverse().setMateNegativeStrandFlag(pair.forward().getReadNegativeStrandFlag());
 
          // Set which reads are which in the inputSAMfiles
-         pair.first.setFirstOfPairFlag(true);
-         pair.second.setSecondOfPairFlag(true);
+         pair.forward().setFirstOfPairFlag(true);
+         pair.reverse().setSecondOfPairFlag(true);
          // Set the RNEXT and PNEXT values
          // If the reference indices are the same, then the following should print "="
-         pair.first.setMateReferenceIndex(pair.second.getReferenceIndex());
-         pair.second.setMateReferenceIndex(pair.first.getReferenceIndex());
-         pair.first.setMateAlignmentStart(pair.second.getAlignmentStart());
-         pair.second.setMateAlignmentStart(pair.first.getAlignmentStart());
+         pair.forward().setMateReferenceIndex(pair.reverse().getReferenceIndex());
+         pair.reverse().setMateReferenceIndex(pair.forward().getReferenceIndex());
+         pair.forward().setMateAlignmentStart(pair.reverse().getAlignmentStart());
+         pair.reverse().setMateAlignmentStart(pair.forward().getAlignmentStart());
      }
 
 
@@ -336,9 +305,9 @@ public class SAMPairer {
      *
      * @return true if the read is valid
      */
-    boolean is_valid(Pair<SAMRecord, SAMRecord> readpair) throws DiachromaticException {
-        SAMRecord readF = readpair.first;
-        SAMRecord readR = readpair.second;
+    boolean is_valid(ReadPair readpair) throws DiachromaticException {
+        SAMRecord readF = readpair.forward();
+        SAMRecord readR = readpair.reverse();
         String chrom1 = readF.getReferenceName();
         int start1 = readF.getAlignmentStart();
         int end1 = readF.getAlignmentEnd();
@@ -357,19 +326,19 @@ public class SAMPairer {
             n_insert_too_long++;
             System.out.println(UPPER_SIZE_THRESHOLD + " " + insertSize);
             if (outputRejectedReads) {
-                readpair.first.setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_BIG_TAG);
-                readpair.second.setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_BIG_TAG);
-                rejectedReadsWriter.addAlignment(readpair.first);
-                rejectedReadsWriter.addAlignment(readpair.second);
+                readpair.forward().setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_BIG_TAG);
+                readpair.reverse().setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_BIG_TAG);
+                rejectedReadsWriter.addAlignment(readpair.forward());
+                rejectedReadsWriter.addAlignment(readpair.reverse());
             }
             return false;
         } else if (insertSize < LOWER_SIZE_THRESHOLD) {
             n_insert_too_short++;
             if (outputRejectedReads) {
-                readpair.first.setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_SMALL_TAG);
-                readpair.second.setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_SMALL_TAG);
-                rejectedReadsWriter.addAlignment(readpair.first);
-                rejectedReadsWriter.addAlignment(readpair.second);
+                readpair.forward().setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_SMALL_TAG);
+                readpair.reverse().setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_SMALL_TAG);
+                rejectedReadsWriter.addAlignment(readpair.forward());
+                rejectedReadsWriter.addAlignment(readpair.reverse());
             }
             return false;
         }
@@ -383,20 +352,20 @@ public class SAMPairer {
             if (selfLigation(readpair)) {
                 n_circularized_read++;
                 if (outputRejectedReads) {
-                    readpair.first.setAttribute(BADREAD_ATTRIBUTE, SELF_LIGATION_TAG);
-                    readpair.second.setAttribute(BADREAD_ATTRIBUTE, SELF_LIGATION_TAG);
-                    rejectedReadsWriter.addAlignment(readpair.first);
-                    rejectedReadsWriter.addAlignment(readpair.second);
+                    readpair.forward().setAttribute(BADREAD_ATTRIBUTE, SELF_LIGATION_TAG);
+                    readpair.reverse().setAttribute(BADREAD_ATTRIBUTE, SELF_LIGATION_TAG);
+                    rejectedReadsWriter.addAlignment(readpair.forward());
+                    rejectedReadsWriter.addAlignment(readpair.reverse());
                 }
                 return false;
             }
             if (danglingEnd(digestPair,readpair)) {
                 n_same_dangling_end++;
                 if (outputRejectedReads) {
-                    readpair.first.setAttribute(BADREAD_ATTRIBUTE, DANGLING_END_TAG);
-                    readpair.second.setAttribute(BADREAD_ATTRIBUTE, DANGLING_END_TAG);
-                    rejectedReadsWriter.addAlignment(readpair.first);
-                    rejectedReadsWriter.addAlignment(readpair.second);
+                    readpair.forward().setAttribute(BADREAD_ATTRIBUTE, DANGLING_END_TAG);
+                    readpair.reverse().setAttribute(BADREAD_ATTRIBUTE, DANGLING_END_TAG);
+                    rejectedReadsWriter.addAlignment(readpair.forward());
+                    rejectedReadsWriter.addAlignment(readpair.reverse());
                 }
                 return false;
             }
@@ -404,10 +373,10 @@ public class SAMPairer {
             // they must be same_internal
             n_same_internal++;
             if (outputRejectedReads) {
-                readpair.first.setAttribute(BADREAD_ATTRIBUTE, SAME_INTERNAL_TAG);
-                readpair.second.setAttribute(BADREAD_ATTRIBUTE, SAME_INTERNAL_TAG);
-                rejectedReadsWriter.addAlignment(readpair.first);
-                rejectedReadsWriter.addAlignment(readpair.second);
+                readpair.forward().setAttribute(BADREAD_ATTRIBUTE, SAME_INTERNAL_TAG);
+                readpair.reverse().setAttribute(BADREAD_ATTRIBUTE, SAME_INTERNAL_TAG);
+                rejectedReadsWriter.addAlignment(readpair.forward());
+                rejectedReadsWriter.addAlignment(readpair.reverse());
             }
             return false;
         }
@@ -417,10 +386,10 @@ public class SAMPairer {
         if (religation(digestPair, readpair)) {
             n_religation++;
             if (outputRejectedReads) {
-                readpair.first.setAttribute(BADREAD_ATTRIBUTE, RELIGATION_TAG);
-                readpair.second.setAttribute(BADREAD_ATTRIBUTE, RELIGATION_TAG);
-                rejectedReadsWriter.addAlignment(readpair.first);
-                rejectedReadsWriter.addAlignment(readpair.second);
+                readpair.forward().setAttribute(BADREAD_ATTRIBUTE, RELIGATION_TAG);
+                readpair.reverse().setAttribute(BADREAD_ATTRIBUTE, RELIGATION_TAG);
+                rejectedReadsWriter.addAlignment(readpair.forward());
+                rejectedReadsWriter.addAlignment(readpair.reverse());
             }
             return false;
         }
@@ -429,10 +398,10 @@ public class SAMPairer {
         if (contiguous(readpair)) {
             n_contiguous++;
             if (outputRejectedReads) {
-                readpair.first.setAttribute(BADREAD_ATTRIBUTE, CONTIGUOUS_TAG);
-                readpair.second.setAttribute(BADREAD_ATTRIBUTE, CONTIGUOUS_TAG);
-                rejectedReadsWriter.addAlignment(readpair.first);
-                rejectedReadsWriter.addAlignment(readpair.second);
+                readpair.forward().setAttribute(BADREAD_ATTRIBUTE, CONTIGUOUS_TAG);
+                readpair.reverse().setAttribute(BADREAD_ATTRIBUTE, CONTIGUOUS_TAG);
+                rejectedReadsWriter.addAlignment(readpair.forward());
+                rejectedReadsWriter.addAlignment(readpair.reverse());
             }
             return false;
         }
@@ -468,17 +437,17 @@ public class SAMPairer {
      * ligation site. Mapping the reads "flips" them, so that read 1 is before read2 and points in
      * the opposite direction. Vice versa if read2 is before read 1.
      * Note that this function should be called ONLY for pairs of reads
-     * mapping to the same chromosome (which is checked by the calling function {@link #is_valid(Pair)}).
+     * mapping to the same chromosome (which is checked by the calling function {@link #is_valid(ReadPair)}).
      *
      * @param readpair
      * @return
      */
-    boolean selfLigation(Pair<SAMRecord, SAMRecord> readpair) {
-        if (readpair.first.getAlignmentStart() < readpair.second.getAlignmentStart() &&
-                readpair.first.getReadNegativeStrandFlag() && (!readpair.second.getReadNegativeStrandFlag()))
+    boolean selfLigation(ReadPair readpair) {
+        if (readpair.forward().getAlignmentStart() < readpair.reverse().getAlignmentStart() &&
+                readpair.forward().getReadNegativeStrandFlag() && (!readpair.reverse().getReadNegativeStrandFlag()))
             return true;
-        else if (readpair.second.getAlignmentStart() < readpair.first.getAlignmentStart() &&
-                !readpair.first.getReadNegativeStrandFlag() && readpair.second.getReadNegativeStrandFlag())
+        else if (readpair.reverse().getAlignmentStart() < readpair.forward().getAlignmentStart() &&
+                !readpair.forward().getReadNegativeStrandFlag() && readpair.reverse().getReadNegativeStrandFlag())
             return true;
         else
             return false;
@@ -494,11 +463,11 @@ public class SAMPairer {
      * @param readpair
      * @return
      */
-    boolean danglingEnd(Pair<Digest,Digest> digestPair,Pair<SAMRecord,SAMRecord> readpair) {
-       return ( Math.abs(readpair.first.getAlignmentStart() - digestPair.first.getStartpos()) < DANGLING_THRESHOLD ||
-                Math.abs(readpair.first.getAlignmentStart() - digestPair.first.getEndpos()) < DANGLING_THRESHOLD ||
-                Math.abs(readpair.second.getAlignmentStart() - digestPair.first.getStartpos()) < DANGLING_THRESHOLD ||
-                Math.abs(readpair.second.getAlignmentStart() - digestPair.first.getEndpos()) < DANGLING_THRESHOLD);
+    boolean danglingEnd(Pair<Digest,Digest> digestPair,ReadPair readpair) {
+       return ( Math.abs(readpair.forward().getAlignmentStart() - digestPair.first.getStartpos()) < DANGLING_THRESHOLD ||
+                Math.abs(readpair.forward().getAlignmentStart() - digestPair.first.getEndpos()) < DANGLING_THRESHOLD ||
+                Math.abs(readpair.reverse().getAlignmentStart() - digestPair.first.getStartpos()) < DANGLING_THRESHOLD ||
+                Math.abs(readpair.reverse().getAlignmentStart() - digestPair.first.getEndpos()) < DANGLING_THRESHOLD);
     }
 
     /**
@@ -508,9 +477,9 @@ public class SAMPairer {
      * @param readpair
      * @return
      */
-    boolean religation(Pair<Digest,Digest> digestPair,Pair<SAMRecord,SAMRecord> readpair) {
+    boolean religation(Pair<Digest,Digest> digestPair,ReadPair readpair) {
         return ( (Math.abs(digestPair.second.getFragmentNumber() - digestPair.first.getFragmentNumber()) == 1)  &&
-            (readpair.first.getReadNegativeStrandFlag() != readpair.second.getReadNegativeStrandFlag()) ) ;
+            (readpair.forward().getReadNegativeStrandFlag() != readpair.reverse().getReadNegativeStrandFlag()) ) ;
     }
 
     /**
@@ -521,14 +490,14 @@ public class SAMPairer {
      *  adjacent genomic restriction fragments
      * This function is called if the two reads are on different fragments that are not direct neighbors. If they are located
      * within one expected fragment size, then they are contiguous sequences that were not properly digested. This function
-     * should only be called from {@link #is_valid(Pair)} except for testing.
+     * should only be called from {@link #is_valid(ReadPair)} except for testing.
      * The test demands that the contig size is above the lower threshold and below the upper threshold.
      * @param readpair
      * @return
      */
-    boolean contiguous(Pair<SAMRecord,SAMRecord> readpair) {
-        SAMRecord readF=readpair.first;
-        SAMRecord readR=readpair.second;
+    boolean contiguous(ReadPair readpair) {
+        SAMRecord readF=readpair.forward();
+        SAMRecord readR=readpair.reverse();
 //        logger.trace(String.format("contiguosus check. read1 is %s:%d-%d",readF.getReferenceName(),readF.getAlignmentStart(),readF.getAlignmentEnd()));
 //        logger.trace(String.format("contiguosus check. read2 is %s:%d-%d",readR.getReferenceName(),readR.getAlignmentStart(),readR.getAlignmentEnd()));
 //        logger.trace("LOWER_SIZE_THRESHOLD="+LOWER_SIZE_THRESHOLD);
@@ -550,9 +519,9 @@ public class SAMPairer {
      * @param readpair   the forward and reverse reads
      * @return calculate insert size of chimeric read.
      */
-    int getCalculatedInsertSize(Pair<Digest, Digest> digestPair, Pair<SAMRecord, SAMRecord> readpair) {
-        SAMRecord readF = readpair.first;
-        SAMRecord readR = readpair.second;
+    int getCalculatedInsertSize(Pair<Digest, Digest> digestPair, ReadPair readpair) {
+        SAMRecord readF = readpair.forward();
+        SAMRecord readR = readpair.reverse();
         if(!digestPair.first.equals(digestPair.second)) {
             int distF, distR;
             if (readF.getReadNegativeStrandFlag()) { // readF is on the negative strand
@@ -586,13 +555,13 @@ public class SAMPairer {
      * @param readpair Pair of reads (forward, reverse).
      * @return
      */
-    Pair<Digest, Digest> getDigestPair(Pair<SAMRecord, SAMRecord> readpair) throws DiachromaticException {
-        String chrom1 = readpair.first.getReferenceName();
-        int start1 = readpair.first.getAlignmentStart();
-        int end1 = readpair.first.getAlignmentEnd();
-        String chrom2 = readpair.second.getReferenceName();
-        int start2 = readpair.second.getAlignmentStart();
-        int end2 = readpair.second.getAlignmentEnd();
+    Pair<Digest, Digest> getDigestPair(ReadPair readpair) throws DiachromaticException {
+        String chrom1 = readpair.forward().getReferenceName();
+        int start1 = readpair.forward().getAlignmentStart();
+        int end1 = readpair.forward().getAlignmentEnd();
+        String chrom2 = readpair.reverse().getReferenceName();
+        int start2 = readpair.reverse().getAlignmentStart();
+        int end2 = readpair.reverse().getAlignmentEnd();
         return getDigestPair(chrom1, start1, end1, chrom2, start2, end2);
     }
 
@@ -632,6 +601,24 @@ public class SAMPairer {
 
         return new Pair<>(d1, d2);
 
+    }
+
+    /** The map {@link #errorCounts} is initialize by setting the counts for all elements to zero. */
+    private void initializeErrorMap() {
+        this.errorCounts=new HashMap<>();
+        for (ErrorCode ec : ErrorCode.values()) {
+            errorCounts.put(ec,0);
+        }
+    }
+
+    /**
+     * Increment the error code for the errors encounted in a read pair.
+     * @param errors Set of errors encountered for some read pair.
+     */
+    private void updateErrorMap(Set<ErrorCode> errors) {
+        for (ErrorCode ec : errors) {
+            errorCounts.put(ec,1+errorCounts.get(ec));
+        }
     }
 
 
