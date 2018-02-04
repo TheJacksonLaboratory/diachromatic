@@ -82,6 +82,7 @@ class TestSamFileImporter {
         // Note -- the following command will give these two digests neighboring digest numbers
         // this is needed for the test and resembles what we would have for a full dataset.
         digests=makeFakeDigestList("chr13",new Pair<>(31_421_583,31_425_191),new Pair<>(31425192,	31425873	));
+
         digestmap.put("chr13",digests);
         //chr15	91492555	91497580
         digests=makeFakeDigestList("chr15",new Pair<>(91_492_555,91_497_580));

@@ -1,7 +1,6 @@
 package org.jax.diachromatic.map;
 
 import org.jax.diachromatic.exception.DiachromaticException;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,9 +43,11 @@ public class ReadsOnSameRestrictionFragmentTest {
         DigestPair digestpair = sampairer.getDigestPair(readpair);
         boolean sameRestrictionFragment=readpair.bothReadsLocatedOnSameRestrictionFragment(digestpair);
         assertTrue(sameRestrictionFragment);
-        Set<ErrorCode> qcCodes=readpair.getErrorCodes();
-        assertTrue(qcCodes.contains(ErrorCode.SAME_DANGLING_END));
+        Set<QCCode> qcCodes=readpair.getErrorCodes();
+        assertTrue(qcCodes.contains(QCCode.SAME_DANGLING_END));
     }
+
+
 
     /**
      * We are testing the fourth pair of reads that self-circularizes. The first read

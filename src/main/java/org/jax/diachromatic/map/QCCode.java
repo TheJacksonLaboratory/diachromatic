@@ -8,7 +8,7 @@ package org.jax.diachromatic.map;
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
  * @version 0.1.3 (2018-01-06)
  */
-public enum ErrorCode {
+public enum QCCode {
 
     READ_1_UNMAPPED("read 1 unmapped"),
     READ_2_UNMAPPED("read 2 unmapped"),
@@ -18,17 +18,18 @@ public enum ErrorCode {
     READPAIR_MULTIMAPPED("readpair multimapped"),
     INSERT_TOO_LONG("insert too long"),
     INSERT_TOO_SHORT("insert too short"),
-    CIRCULARIZED_READ("circularized read (self-ligation)"),
+    RELIGATION("Re-ligation of adjacent restriction fragments"),
     SAME_DANGLING_END("same dangling end"),
     CONTIGUOUS("contiguous"),
-    RELIGATION("religation"),
+    CIRCULARIZATION_INTERNAL("circularization (self-ligation) internal"),
+    CIRCULARIZATION_DANGLING("circularization (self-ligation) dangling end"),
     SAME_INTERNAL("same internal"),
     COULD_NOT_ASSIGN_TO_DIGEST("could not assign read pair to digest");
 
     private final String name;
 
 
-    ErrorCode(String n) { name=n;}
+    QCCode(String n) { name=n;}
 
 
     public String getName(){ return this.name; }

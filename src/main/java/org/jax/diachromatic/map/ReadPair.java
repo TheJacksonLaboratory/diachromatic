@@ -8,7 +8,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.jax.diachromatic.map.ErrorCode.*;
+import static org.jax.diachromatic.map.QCCode.*;
 
 /**
  * This class represents a pair: one forward and one reverse read.
@@ -24,7 +24,7 @@ public class ReadPair {
     /** Second (reverse) read in a read pair.*/
     private final SAMRecord reverseRead;
     /** A set of Q/C criteria that this read pair did NOT pass. */
-    private Set<ErrorCode> errorcodes;
+    private Set<QCCode> QCcodes;
     /** Largest allowable size of the insert of a read pair.*/
     static int UPPER_SIZE_THRESHOLD = 1500;
     /** Smallest allowable size of the insert of a read pair.*/
@@ -52,7 +52,7 @@ public class ReadPair {
     ReadPair(SAMRecord f, SAMRecord r) {
         forwardRead = f;
         reverseRead = r;
-        errorcodes = new HashSet<>();
+        QCcodes = new HashSet<>();
     }
 
     // static methods to adjust threshold
@@ -73,16 +73,16 @@ public class ReadPair {
         return reverseRead;
     }
 
-    Set<ErrorCode> getErrorCodes() {
-        return errorcodes;
+    Set<QCCode> getErrorCodes() {
+        return QCcodes;
     }
 
     boolean isUnmapped() {
-        return errorcodes.contains(READPAIR_UNMAPPED);
+        return QCcodes.contains(READPAIR_UNMAPPED);
     }
 
     boolean isMultimapped() {
-        return errorcodes.contains(READPAIR_MULTIMAPPED);
+        return QCcodes.contains(READPAIR_MULTIMAPPED);
     }
 
 
@@ -141,7 +141,7 @@ public class ReadPair {
         if  (contigsize >  LOWER_SIZE_THRESHOLD && contigsize < UPPER_SIZE_THRESHOLD) {
             forwardRead.setAttribute(BADREAD_ATTRIBUTE, CONTIGUOUS_TAG);
             reverseRead.setAttribute(BADREAD_ATTRIBUTE, CONTIGUOUS_TAG);
-            errorcodes.add(CONTIGUOUS);
+            QCcodes.add(CONTIGUOUS);
             return true;
         } else {
             return false;
@@ -155,22 +155,35 @@ public class ReadPair {
      * @return true if both reads are located on the same digest
      */
     public boolean bothReadsLocatedOnSameRestrictionFragment(DigestPair digestPair) {
-        if (! digestPair.forward().equals(digestPair.reverse())) {
+        if (!digestPair.forward().equals(digestPair.reverse())) {
             return false;
         }
         // if we get here, we know both reads are on the same restriction fragment.
-        if (selfLigation()) {
-            errorcodes.add(RELIGATION);
+        // dangling can apply to both internal and same dangling ends
+        boolean dangling = danglingEnd(digestPair.forward());
+        boolean selfligated = selfLigation();
+
+        if (dangling && selfligated) {
+            QCcodes.add(CIRCULARIZATION_DANGLING);
             forwardRead.setAttribute(BADREAD_ATTRIBUTE, RELIGATION_TAG);
             reverseRead.setAttribute(BADREAD_ATTRIBUTE, RELIGATION_TAG);
-        } else if (danglingEnd(digestPair.forward())) {
             forwardRead.setAttribute(BADREAD_ATTRIBUTE, DANGLING_END_TAG);
             reverseRead.setAttribute(BADREAD_ATTRIBUTE, DANGLING_END_TAG);
-            errorcodes.add(SAME_DANGLING_END);
+        } else if (dangling) {
+            QCcodes.add(SAME_DANGLING_END);
+            forwardRead.setAttribute(BADREAD_ATTRIBUTE, DANGLING_END_TAG);
+            reverseRead.setAttribute(BADREAD_ATTRIBUTE, DANGLING_END_TAG);
+        } else if (selfligated) {
+            QCcodes.add(CIRCULARIZATION_INTERNAL);
+            forwardRead.setAttribute(BADREAD_ATTRIBUTE, RELIGATION_TAG);
+            reverseRead.setAttribute(BADREAD_ATTRIBUTE, RELIGATION_TAG);
         } else {
-            // if we get here, we have reads from the same digest that are not circularized and are not dangling end, so
+            // if we get here, we have reads from the same digest that are not
+            // circularized and are not dangling end, so
             // they must be same_internal
-            setSameInternal();
+            forwardRead.setAttribute(BADREAD_ATTRIBUTE, SAME_INTERNAL_TAG);
+            reverseRead.setAttribute(BADREAD_ATTRIBUTE, SAME_INTERNAL_TAG);
+            QCcodes.add(SAME_INTERNAL);
         }
         return true;
     }
@@ -213,18 +226,10 @@ public class ReadPair {
 
     /** This function gets called if we cannot find valid digests for this readpair. */
     void setInvalidDigest() {
-        errorcodes.add(COULD_NOT_ASSIGN_TO_DIGEST);
+        QCcodes.add(COULD_NOT_ASSIGN_TO_DIGEST);
     }
 
-    /**
-     * This function is called by {@link SAMPairer} if it has determined that the reads are from the same fragment
-     * but has ruled out that they are religated or dangling.
-     */
-    public void setSameInternal() {
-        forwardRead.setAttribute(BADREAD_ATTRIBUTE, SAME_INTERNAL_TAG);
-        reverseRead.setAttribute(BADREAD_ATTRIBUTE, SAME_INTERNAL_TAG);
-        errorcodes.add(SAME_INTERNAL);
-    }
+
 
     /**
      * Check if a fragment self ligates (circularizes). The sequence insert spans the
@@ -233,36 +238,27 @@ public class ReadPair {
      * @return true if this read pair shows self-ligation
      */
     private boolean selfLigation() {
-        if (! forwardRead.getReferenceName().equals(reverseRead.getReferenceName())) {
-            return false; // reads not on same chromosome, therefore, no self-ligation
-        }
-        if ( (forward().getAlignmentStart() < reverse().getAlignmentStart() &&
+        // The following if statement is true if the reads are circularized
+        return ( (forward().getAlignmentStart() < reverse().getAlignmentStart() &&
                 forward().getReadNegativeStrandFlag() &&
                 (!reverse().getReadNegativeStrandFlag()) )
                 ||
                 (reverse().getAlignmentStart() < forward().getAlignmentStart() &&
                         !forward().getReadNegativeStrandFlag() &&
-                        reverse().getReadNegativeStrandFlag()) ) {
-            errorcodes.add(CIRCULARIZED_READ);
-            forward().setAttribute(BADREAD_ATTRIBUTE, SELF_LIGATION_TAG);
-            reverse().setAttribute(BADREAD_ATTRIBUTE, SELF_LIGATION_TAG);
-            return true;
-        }  else {
-            return false;
-        }
+                        reverse().getReadNegativeStrandFlag()) );
     }
 
 
     public boolean hasValidInsertSize(DigestPair digestPair) {
         int insertSize = getCalculatedInsertSize(digestPair);
         if (insertSize > UPPER_SIZE_THRESHOLD) {
-            errorcodes.add(INSERT_TOO_LONG);
+            QCcodes.add(INSERT_TOO_LONG);
             logger.trace(String.format("Read has insert size of %d which is above the upper trheshold of %d nt", insertSize, UPPER_SIZE_THRESHOLD));
             forward().setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_BIG_TAG);
             reverse().setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_BIG_TAG);
             return false;
         } else if (insertSize < LOWER_SIZE_THRESHOLD) {
-            errorcodes.add(INSERT_TOO_SHORT);
+            QCcodes.add(INSERT_TOO_SHORT);
             forward().setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_SMALL_TAG);
             reverse().setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_SMALL_TAG);
             return false;
@@ -344,7 +340,7 @@ public class ReadPair {
 
     /**
      * Determine if both reads from a paired-end could be uniquely mapped. If so, return true. If not,
-     * add the corresponding enumeration constant from {@link ErrorCode} and return false. There are two
+     * add the corresponding enumeration constant from {@link QCCode} and return false. There are two
      * things that can go wrong -- either one or both reads could not be mapped, or one or both reads were mapped
      * to more than one locus in the genome. The XS attribute is used in bowtie2 to indicate that a read has
      * been multimappd
@@ -354,31 +350,31 @@ public class ReadPair {
     boolean readPairUniquelyMapped() {
         if (forward().getReadUnmappedFlag()) {
             //read 1 could not be aligned
-            errorcodes.add(READ_1_UNMAPPED);
-            errorcodes.add(READPAIR_UNMAPPED);
+            QCcodes.add(READ_1_UNMAPPED);
+            QCcodes.add(READPAIR_UNMAPPED);
             if (reverse().getReadUnmappedFlag()) {
-                errorcodes.add(READ_2_UNMAPPED);
+                QCcodes.add(READ_2_UNMAPPED);
             }
             return false;
         } else if (reverse().getReadUnmappedFlag()) {
            // note read1 must be OK if we get here...
-            errorcodes.add(READ_2_UNMAPPED);
-            errorcodes.add(READPAIR_UNMAPPED);
+            QCcodes.add(READ_2_UNMAPPED);
+            QCcodes.add(READPAIR_UNMAPPED);
             return false;
         } else if (forward().getAttribute("XS") != null) {
             // Now look for multimapped reads.
             // If a read has an XS attribute, then bowtie2 multi-mapped it.
-            errorcodes.add(READ_1_MULTIMAPPED);
-            errorcodes.add(READPAIR_MULTIMAPPED);
+            QCcodes.add(READ_1_MULTIMAPPED);
+            QCcodes.add(READPAIR_MULTIMAPPED);
             if (reverse().getAttribute("XS") != null) {
-                errorcodes.add(READ_2_MULTIMAPPED);
+                QCcodes.add(READ_2_MULTIMAPPED);
             }
-            errorcodes.add(READPAIR_MULTIMAPPED);
+            QCcodes.add(READPAIR_MULTIMAPPED);
             return false;
         } else if (reverse().getAttribute("XS") != null) {
             // note if we are here, read1 was not multimapped
-            errorcodes.add(READ_2_MULTIMAPPED);
-            errorcodes.add(READPAIR_MULTIMAPPED);
+            QCcodes.add(READ_2_MULTIMAPPED);
+            QCcodes.add(READPAIR_MULTIMAPPED);
             return false;
         }
         return true;

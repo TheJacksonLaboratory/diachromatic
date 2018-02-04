@@ -13,7 +13,6 @@ import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.exception.DigestNotFoundException;
 import org.jax.diachromatic.io.Commandline;
-import org.jax.diachromatic.util.Pair;
 
 import java.io.File;
 import java.io.IOException;
@@ -128,7 +127,7 @@ public class SAMPairer {
     /** Count up the number of errors encountered in our reads. THe key is the type of error, and the value is
      * the count over the entire pair of SAM files.
      */
-    private Map<ErrorCode,Integer> errorCounts;
+    private Map<QCCode,Integer> errorCounts;
 
 
     /**
@@ -364,7 +363,7 @@ public class SAMPairer {
     /** The map {@link #errorCounts} is initialize by setting the counts for all elements to zero. */
     private void initializeErrorMap() {
         this.errorCounts=new HashMap<>();
-        for (ErrorCode ec : ErrorCode.values()) {
+        for (QCCode ec : QCCode.values()) {
             errorCounts.put(ec,0);
         }
     }
@@ -373,8 +372,8 @@ public class SAMPairer {
      * Increment the error code for the errors encounted in a read pair.
      * @param errors Set of errors encountered for some read pair.
      */
-    private void updateErrorMap(Set<ErrorCode> errors) {
-        for (ErrorCode ec : errors) {
+    private void updateErrorMap(Set<QCCode> errors) {
+        for (QCCode ec : errors) {
             errorCounts.put(ec,1+errorCounts.get(ec));
         }
     }
