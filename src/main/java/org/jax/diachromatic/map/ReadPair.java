@@ -149,26 +149,52 @@ public class ReadPair {
     }
 
     /**
+     * Analyzes whether both reads are on the same restriction fragment (i.e., {@link Digest} object). If so,
+     * it also analyzes which type of artifact is present -- dangling, self-ligation, or same internal.
+     * @param digestPair The digest pair that corresponds to this read pair
+     * @return true if both reads are located on the same digest
+     */
+    public boolean bothReadsLocatedOnSameRestrictionFragment(DigestPair digestPair) {
+        if (! digestPair.forward().equals(digestPair.reverse())) {
+            return false;
+        }
+        // if we get here, we know both reads are on the same restriction fragment.
+        if (selfLigation()) {
+            errorcodes.add(RELIGATION);
+            forwardRead.setAttribute(BADREAD_ATTRIBUTE, RELIGATION_TAG);
+            reverseRead.setAttribute(BADREAD_ATTRIBUTE, RELIGATION_TAG);
+        } else if (danglingEnd(digestPair.forward())) {
+            forwardRead.setAttribute(BADREAD_ATTRIBUTE, DANGLING_END_TAG);
+            reverseRead.setAttribute(BADREAD_ATTRIBUTE, DANGLING_END_TAG);
+            errorcodes.add(SAME_DANGLING_END);
+        } else {
+            // if we get here, we have reads from the same digest that are not circularized and are not dangling end, so
+            // they must be same_internal
+            setSameInternal();
+        }
+        return true;
+    }
+
+
+
+    /**
      * If ditags are on the same restriction fragment (which MUST be checked before calling this
      * function), but not circularized and if the mapped end of one of the reads is near to the
      * end of a restriction fragment, this is termed a dangling end. Note that we only need to
      * check one Digest since by definition the reads have been found to both map to the same
      * fragment.
-     * @param digestPair The digest pair that corresponds to the two reads of this readpair.
+     * @param digest The digest that corresponds to the two reads of this readpair (same for both).
      * @return
      */
-    boolean danglingEnd(DigestPair digestPair) {
-        if  ( Math.abs(forwardRead.getAlignmentStart() - digestPair.forward().getStartpos()) < DANGLING_THRESHOLD ||
-                Math.abs(forwardRead.getAlignmentStart() - digestPair.forward().getEndpos()) < DANGLING_THRESHOLD ||
-                Math.abs(reverseRead.getAlignmentStart() - digestPair.forward().getStartpos()) < DANGLING_THRESHOLD ||
-                Math.abs(reverseRead.getAlignmentStart() - digestPair.forward().getEndpos()) < DANGLING_THRESHOLD) {
-            forwardRead.setAttribute(BADREAD_ATTRIBUTE, DANGLING_END_TAG);
-            reverseRead.setAttribute(BADREAD_ATTRIBUTE, DANGLING_END_TAG);
-            errorcodes.add(SAME_DANGLING_END);
-            return true;
-        } else {
-            return false;
-        }
+    private boolean danglingEnd(Digest digest) {
+        // if we get here we know the digests are the same; take the forward one arbitrarily
+        int startpos=digest.getStartpos();
+        int endpos=digest.getEndpos();
+
+        return  ( Math.abs(forwardRead.getAlignmentStart() - startpos) < DANGLING_THRESHOLD ||
+                Math.abs(forwardRead.getAlignmentEnd() - endpos) < DANGLING_THRESHOLD ||
+                Math.abs(reverseRead.getAlignmentStart() - startpos) < DANGLING_THRESHOLD ||
+                Math.abs(reverseRead.getAlignmentEnd() - endpos) < DANGLING_THRESHOLD);
     }
 
 
@@ -181,15 +207,8 @@ public class ReadPair {
      * @return
      */
     boolean religation(DigestPair digestPair) {
-        if  ( (Math.abs(digestPair.reverse().getFragmentNumber() - digestPair.forward().getFragmentNumber()) == 1)  &&
-                (forwardRead.getReadNegativeStrandFlag() != reverseRead.getReadNegativeStrandFlag()) ) {
-            errorcodes.add(RELIGATION);
-            forwardRead.setAttribute(BADREAD_ATTRIBUTE, RELIGATION_TAG);
-            reverseRead.setAttribute(BADREAD_ATTRIBUTE, RELIGATION_TAG);
-            return true;
-        } else {
-            return false;
-        }
+        return  (Math.abs(digestPair.reverse().getFragmentNumber() - digestPair.forward().getFragmentNumber()) == 1)  &&
+                (forwardRead.getReadNegativeStrandFlag() != reverseRead.getReadNegativeStrandFlag());
     }
 
     /** This function gets called if we cannot find valid digests for this readpair. */
@@ -200,8 +219,6 @@ public class ReadPair {
     /**
      * This function is called by {@link SAMPairer} if it has determined that the reads are from the same fragment
      * but has ruled out that they are religated or dangling.
-     * TODO refactor, make the from SAMPairer whether the reads are on the same fragment or not and do everything
-     * else internally.
      */
     public void setSameInternal() {
         forwardRead.setAttribute(BADREAD_ATTRIBUTE, SAME_INTERNAL_TAG);
@@ -215,7 +232,7 @@ public class ReadPair {
      * the opposite direction. Vice versa if read2 is before read 1.
      * @return true if this read pair shows self-ligation
      */
-    boolean selfLigation() {
+    private boolean selfLigation() {
         if (! forwardRead.getReferenceName().equals(reverseRead.getReferenceName())) {
             return false; // reads not on same chromosome, therefore, no self-ligation
         }

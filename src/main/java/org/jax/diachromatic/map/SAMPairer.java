@@ -143,22 +143,8 @@ public class SAMPairer {
     private String validBamFileName = "diachromatic.valid.bam";
 
     private String rejectedBamFileName = "diachromatic.rejected.bam";
-    /**
-     * If set to true, rejected readpairs are output to {@link #rejectedBamFileName} .
-     */
+    /**If set to true, rejected readpairs are output to {@link #rejectedBamFileName} .*/
     private final boolean outputRejectedReads;
-    /** Tag to use to mark invalid reads to output to BAM file. */
-    private final static String BADREAD_ATTRIBUTE="YY";
-    /** Tag to mark self ligation/circularization. */
-    private final static String SELF_LIGATION_TAG="SL";
-    /** Tag to mark dangling end. */
-    private final static String DANGLING_END_TAG="DE";
-    /** Tag to same fragment internal reads. */
-    private final static String SAME_INTERNAL_TAG="SI";
-    /** Tag religation reads. */
-    private final static String RELIGATION_TAG="RL";
-    /** Tag contiguous reads. */
-    private final static String CONTIGUOUS_TAG="CT";
 
     /**
      * @param sam1    SAM file for the truncated "forward" reads
@@ -275,17 +261,20 @@ public class SAMPairer {
         }
         //-3. Check if both reads are on the same fragment
         // There are three subclasses of this, all are not valid.
-        if (digestPair.forward().equals(digestPair.reverse())) { // both reads in same restriction fragment.
-            if (readpair.selfLigation()) {
-                return false;
-            } else if (readpair.danglingEnd(digestPair)) {
-                return false;
-            } else {
-                // if we get here, we have reads from the same digest that are not circularized and are not dangling end, so
-                // they must be same_internal
-                readpair.setSameInternal();
-                return false;
-            }
+//        if (digestPair.forward().equals(digestPair.reverse())) { // both reads in same restriction fragment.
+//            if (readpair.selfLigation()) {
+//                return false;
+//            } else if (readpair.danglingEnd(digestPair)) {
+//                return false;
+//            } else {
+//                // if we get here, we have reads from the same digest that are not circularized and are not dangling end, so
+//                // they must be same_internal
+//                readpair.setSameInternal();
+//                return false;
+//            }
+//        }
+        if (readpair.bothReadsLocatedOnSameRestrictionFragment(digestPair)) {
+            return false;
         }
         // If we get here, then the reads do not map to the same restriction fragment.
         //-4. If the reads map to neighboring fragments, then there may be a religation.

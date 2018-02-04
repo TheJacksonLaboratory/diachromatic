@@ -177,20 +177,7 @@ public class SAMPairerTest {
         assertTrue(insertSize>UPPER_SIZE_THRESHOLD);
     }
 
-    /**
-     * We are testing the fourth pair of reads that self-circularizes. The first read
-     * pair is from the same chromosome but does not self-circularize. (by manual inspection).
-     * The second and third pairs have distinct chromosomes and cnnot be tested for self circularization.
-     * @throws DiachromaticException
-     */
-    @Test
-    public void testSelfLigation() throws DiachromaticException {
-        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
-        ReadPair readpair = readpairmap.get("1_uniquelyAlignedRead");
-        assertFalse(readpair.selfLigation());
-        readpair = readpairmap.get("4_selfLigation");//sampairer.getNextPair();// fourth read pair, self-ligation!
-        assertTrue(readpair.selfLigation());
-    }
+
 
     /* The fifth pair shows religation! */
     @Test

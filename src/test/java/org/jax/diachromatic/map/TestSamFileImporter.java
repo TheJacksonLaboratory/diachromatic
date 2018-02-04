@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TestSamFileImporter {
+class TestSamFileImporter {
 
     private final String forwardSamPath;
     private final String reverseSamPath;
@@ -31,29 +31,45 @@ public class TestSamFileImporter {
     /**
      * @return a singleton {@link SAMPairer} object with data from forward.sam and reverse.sam
      */
-    public static Map<String,ReadPair> retrieveReadPairsForTesting() {
+    static Map<String,ReadPair> retrieveReadPairsForTesting() {
         if (sampairer==null || readpairmap==null) {
-            TestSamFileImporter importer=new TestSamFileImporter();
-            importer.inputFile();
-            ReadPair pair;
-            while ((pair = sampairer.getNextPair())!=null) {
-                readpairmap.put(pair.forward().getReadName(),pair);
-                System.err.println(pair.forward().getReadName());
-            }
+            initData();
         }
         return readpairmap;
+    }
+
+
+   static SAMPairer retrieveSAMPairerForTesting() {
+        if (sampairer==null || readpairmap==null) {
+            initData();
+        }
+        return sampairer;
+    }
+
+
+    private static void initData() {
+        TestSamFileImporter importer=new TestSamFileImporter();
+        importer.inputFile();
+        ReadPair pair;
+        while ((pair = sampairer.getNextPair())!=null) {
+            readpairmap.put(pair.forward().getReadName(),pair);
+            System.err.println(pair.forward().getReadName());
+        }
     }
 
 
 
 
 
-    public void inputFile() {
+    private void inputFile() {
         // make fake digests for the reads we will test
         restrictionsite="HindIII";
         digestmap=new HashMap<>();
         List<Digest> digests = makeFakeDigestList("chr1",new Pair<>(221612607,221618800));
         digestmap.put("chr1",digests);
+        // chr7 -- for SRR071233.24017.dangling_ends
+        digests=makeFakeDigestList("chr7",new Pair<>(34161770,34167291)	);
+        digestmap.put("chr7",digests);
         // Note that we put in three contiguous segments, here. This is important for
         // test testContiguous(); if we leave out the middle segment, then the sixth read would
         // mistakenly be classified as religated (the reads are on the two outer Digests of a triplet!).
@@ -89,7 +105,8 @@ public class TestSamFileImporter {
      * @param pos_pair pairs of integers with start and end position of the Digests
      * @return list of "fake" Digest object
      */
-    private List<Digest> makeFakeDigestList(String chrom,Pair<Integer,Integer> ...pos_pair) {
+    @SafeVarargs
+    private final List<Digest> makeFakeDigestList(String chrom,Pair<Integer,Integer> ...pos_pair) {
         List<Digest> dlist = new ArrayList<>();
         for (Pair<Integer,Integer> p : pos_pair) {
             Digest d = makeFakeDigest(chrom,p.first,p.second);
