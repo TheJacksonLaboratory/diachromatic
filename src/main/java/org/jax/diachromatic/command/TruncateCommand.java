@@ -32,7 +32,7 @@ import static org.jax.diachromatic.digest.RestrictionEnzyme.parseRestrictionEnzy
  * </P>
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
- * @version 0.0.2 (2018-01-05)
+ * @version 0.0.3 (2018-01-05)
  */
 public class TruncateCommand extends Command {
     private static final Logger logger = LogManager.getLogger();
@@ -59,6 +59,19 @@ public class TruncateCommand extends Command {
         }
         truncator = new Truncator(outdir,fastaqFile1,fastaqFile2,re,suffix);
     }
+
+    public TruncateCommand (String outdir, String file1, String file2, String enzymeName, String suffix, int threshold) throws DiachromaticException {
+        this.outdir=outdir;
+        this.fastaqFile1=file1;
+        this.fastaqFile2=file2;
+        List<RestrictionEnzyme>  enzymelist = parseRestrictionEnzymes();
+        re=enzymelist.stream().filter(r->r.getName().equalsIgnoreCase(enzymeName)).findFirst().orElse(null);
+        if (re==null) {
+            throw new DiachromaticException(String.format("Could not identify restriction enzyme for \"%s\"",enzymeName));
+        }
+        truncator = new Truncator(outdir,fastaqFile1,fastaqFile2,re,suffix, threshold);
+    }
+
 
     public void execute() {
         logger.trace(String.format("Starting truncate command on files %s and %s",fastaqFile1,fastaqFile2 ));

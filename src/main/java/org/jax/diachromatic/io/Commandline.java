@@ -50,6 +50,7 @@ public class Commandline {
     private String pathToDiachromaticDigestFile = null;
     private String suffix = null;
     private boolean outputRejectedReads = false;
+    private String truncationLengthThreshold=null;
 
     public Commandline(String args[]) {
         final CommandLineParser cmdLineGnuParser = new DefaultParser();
@@ -96,6 +97,9 @@ public class Commandline {
             if (commandLine.hasOption("d")) {
                 this.pathToDiachromaticDigestFile = commandLine.getOptionValue("d");
             }
+            if (commandLine.hasOption("t")) {
+                this.truncationLengthThreshold=commandLine.getOptionValue("t");
+            }
             if (commandLine.hasOption("j")) {
                 outputRejectedReads = true;
             } else {
@@ -134,18 +138,36 @@ public class Commandline {
             } else if (mycommand.equalsIgnoreCase("truncate")) {
                 if (this.outputDirectory == null) {
                     this.outputDirectory = DEFAULT_OUTPUT_DIRECTORY;
-                } else if (this.pathToInputFastq1 == null) {
+                }
+                if (this.pathToInputFastq1 == null) {
                     printUsageSubprogram("-q option required for truncate command", "truncate");
-                } else if (this.pathToInputFastq2 == null) {
+                }
+                if (this.pathToInputFastq2 == null) {
                     printUsageSubprogram("-r option required for truncate command", "truncate");
-                } else if (this.enzyme == null) {
+                }
+                if (this.enzyme == null) {
                     printUsageSubprogram("-e option required for truncate command", "truncate");
                 }
                 if (suffix == null) {
                     suffix = DEFAULT_TRUNCATION_SUFFIX;
                 }
-                //String outdir, String file1, String file2, String enzymeName
-                this.command = new TruncateCommand(outputDirectory, pathToInputFastq1, pathToInputFastq2, enzyme, suffix);
+
+                if (this.truncationLengthThreshold!=null) {
+                    try {
+                        int threshold=Integer.parseInt(truncationLengthThreshold);
+                        this.command = new TruncateCommand(outputDirectory,
+                                pathToInputFastq1,
+                                pathToInputFastq2,
+                                enzyme,
+                                suffix,
+                                threshold);
+                    } catch (NumberFormatException e) {
+                        printUsageSubprogram(String.format("[ERROR] could not parse truncation length threshold \"%s\" (must be an integer)",truncationLengthThreshold),
+                                "truncate");
+                    }
+                } else {
+                    this.command = new TruncateCommand(outputDirectory, pathToInputFastq1, pathToInputFastq2, enzyme, suffix);
+                }
             } else if (mycommand.equalsIgnoreCase("map")) {
                 if (this.bowtiepath == null) {
                     printUsageSubprogram("-b option required for map command", "map");
@@ -191,7 +213,7 @@ public class Commandline {
      *
      * @return Options expected from command-line of GNU form.
      */
-    public static Options constructGnuOptions() {
+    private static Options constructGnuOptions() {
         final Options gnuOptions = new Options();
         gnuOptions.addOption("o", "out", true, "name/path of output file/directory")
                 .addOption("g", "genome", true, "genome directory (with FASTA files)")
@@ -203,6 +225,7 @@ public class Commandline {
                 .addOption("outdir", "outdir", true, "path to output directory")
                 .addOption("q", "q", true, "path to forward FASTQ input file")
                 .addOption("r", "r", true, "path to reverse FASTQ input file")
+                .addOption("t", "truncation-threshold", true, "threshold length to remove reads after truncation (default: 20)")
                 .addOption("j", "bad", false, "output bad (reJected) reads to separated file")
                 .addOption(Option.builder("f1").longOpt("file1").desc("path to fastq file 1").hasArg(true).argName("file1").build())
                 .addOption(Option.builder("f2").longOpt("file2").desc("path to fastq file 2").hasArg(true).argName("file2").build());
@@ -240,12 +263,13 @@ public class Commandline {
     private static void printTruncate(PrintWriter writer) {
         writer.println("truncate:");
         writer.println("\tjava -jar Diachromatic.jar truncate -q <forward.fq.gz> \\");
-        writer.println("\t\t-r <reverse.fq.gz> -e <enzyme> -s <suffix> --outdir <directory>");
+        writer.println("\t\t-r <reverse.fq.gz> -e <enzyme> -s <suffix> --outdir <directory> [-t threshold]");
         writer.println("\t<forward.fq.gz>: path to the forward FASTQ file (may or may not be compressed with gzip)");
         writer.println("\t<reverse.fq.gz>: path to the reverse FASTQ file (may or may not be compressed with gzip)");
         writer.println("\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII)");
         writer.println("\t<suffix>: suffix that will be added to the output truncated FASTQ files");
         writer.println(String.format("\t<outfile>: optional name of output file (Default: \"%s\")", DEFAULT_TRUNCATION_SUFFIX));
+        writer.println("\t<threshold>: threshold length in nucleotides for retaining read after truncation step (default: 20)");
         writer.println();
     }
 
@@ -262,7 +286,7 @@ public class Commandline {
     /**
      * Print usage information to provided OutputStream.
      */
-    public static void printUsage(String message) {
+    private static void printUsage(String message) {
         String version = getVersion();
         final PrintWriter writer = new PrintWriter(System.out);
         writer.println(message);
@@ -282,7 +306,7 @@ public class Commandline {
         System.exit(0);
     }
 
-    public static void printUsageSubprogram(String message, String subprogramname) {
+    private static void printUsageSubprogram(String message, String subprogramname) {
         String version = getVersion();
         final PrintWriter writer = new PrintWriter(System.out);
         writer.println();
