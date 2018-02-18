@@ -48,6 +48,70 @@ public class ReadsOnSameRestrictionFragmentTest {
     }
 
 
+    /**
+     * SRR071233.19593.same_circularised	has these reads
+     * forward: chr15:91_492_809 TGCTGAGCCTAGGAGTGCAGCGTCTGCCTGCCAGAGTCCC
+     * reverse: chr15:91_497_543 AGCTAATCAATAAGAAACTCACCAGGTGCGGTGCCTCAAG
+     * Both reads are on the same digest fragment chr15:91_492_555-91_497_580
+     * Note that the reverse fragment overlaps the end of the digest fragment (it extends two nucleotides
+     * beyond 555-91_497_580, as can be seen in the UCSC browser).
+     * @throws DiachromaticException
+     */
+    @Test
+    public void testSameCircularized1() throws DiachromaticException {
+        ReadPair readpair = readpairmap.get("SRR071233.19593.same_circularised");
+        assertNotNull(readpair);
+        DigestPair digestpair = sampairer.getDigestPair(readpair);
+        boolean sameRestrictionFragment=readpair.bothReadsLocatedOnSameRestrictionFragment(digestpair);
+        assertTrue(sameRestrictionFragment);
+        Set<QCCode> qcCodes=readpair.getErrorCodes();
+
+        assertTrue(qcCodes.contains(QCCode.CIRCULARIZATION_DANGLING));
+    }
+
+    /**
+     * SRR071233.24017.dangling_ends has
+     * forward: chr7	34_167_256 (SAM code 16=reverse strand)
+     * reverse: chr7	34_167_161 (SAM code 0=forward strand)
+     * Both are on the same digest: chr7:34_161_770-34_167_291
+     * These reads both "point to the middle" and thus are not circularized. the forward read overlaps with the
+     * digest. They are therefore same dangling end
+     * @throws DiachromaticException
+     */
+    @Test
+    public void testDangling() throws DiachromaticException {
+        ReadPair readpair = readpairmap.get("SRR071233.24017.dangling_ends");
+        assertNotNull(readpair);
+        DigestPair digestpair = sampairer.getDigestPair(readpair);
+        boolean sameRestrictionFragment=readpair.bothReadsLocatedOnSameRestrictionFragment(digestpair);
+        assertTrue(sameRestrictionFragment);
+        Set<QCCode> qcCodes=readpair.getErrorCodes();
+        for (QCCode q : qcCodes) {
+            System.err.println(q);
+        }
+        assertTrue(qcCodes.contains(QCCode.SAME_DANGLING_END));
+    }
+
+    /**
+     * SRR071233.2213.same_internal
+     * forward: chr6:67_518_942  (SAM code 0=forward strand)
+     * reverse: chr6: 67_519_165 (SAM code 16=reverse strand)
+     * Both have the same digest, chr6:67_509_031-67_520_069
+     * These reads both "point to the middle" and thus are not circularized. They do not overlap with the
+     * digest ends. They are therefore same internal
+     * @throws DiachromaticException
+     */
+    @Test
+    public void testSameInternal() throws DiachromaticException {
+        ReadPair readpair = readpairmap.get("SRR071233.2213.same_internal");
+        assertNotNull(readpair);
+        DigestPair digestpair = sampairer.getDigestPair(readpair);
+        boolean sameRestrictionFragment=readpair.bothReadsLocatedOnSameRestrictionFragment(digestpair);
+        assertTrue(sameRestrictionFragment);
+        Set<QCCode> qcCodes=readpair.getErrorCodes();
+        assertTrue(qcCodes.contains(QCCode.SAME_INTERNAL));
+    }
+
 
     /**
      * We are testing the fourth pair of reads that self-circularizes. The first read

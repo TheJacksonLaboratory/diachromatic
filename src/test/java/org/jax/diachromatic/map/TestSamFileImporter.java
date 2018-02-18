@@ -53,7 +53,7 @@ class TestSamFileImporter {
         ReadPair pair;
         while ((pair = sampairer.getNextPair())!=null) {
             readpairmap.put(pair.forward().getReadName(),pair);
-            System.err.println(pair.forward().getReadName());
+           // System.err.println(pair.forward().getReadName());
         }
     }
 
@@ -67,8 +67,21 @@ class TestSamFileImporter {
         digestmap=new HashMap<>();
         List<Digest> digests = makeFakeDigestList("chr1",new Pair<>(221612607,221618800));
         digestmap.put("chr1",digests);
+        // chr3, for contiguous
+        digests=makeFakeDigestList("chr3",new Pair<>(	23626926,	23631653),
+                new Pair<>(23631654,23631852),
+                new Pair<>(	23631853,	23632444));
+        digestmap.put("chr3",digests);
+
+        digests=makeFakeDigestList("chr5",new Pair<>(	64567944, 64570105	),new Pair<>(64576363,64587599));
+        digestmap.put("chr5",digests);
+
+        digests=makeFakeDigestList("chr6",new Pair<>(67509031,67520069));
+        digestmap.put("chr6",digests);
+
         // chr7 -- for SRR071233.24017.dangling_ends
-        digests=makeFakeDigestList("chr7",new Pair<>(34161770,34167291)	);
+        digests=makeFakeDigestList("chr7",new Pair<>(34161770,34167291),
+                new Pair<>(120595624,120605243), new Pair<>(139940523,139942837)	);
         digestmap.put("chr7",digests);
         // Note that we put in three contiguous segments, here. This is important for
         // test testContiguous(); if we leave out the middle segment, then the sixth read would

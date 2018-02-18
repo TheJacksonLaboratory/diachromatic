@@ -6,7 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Map;
-import java.util.Set;
+
 
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
@@ -40,7 +40,7 @@ public class ReligationAndContiguousTest {
     }
 
 
-    /* The fifth pair shows religation! */
+    /*  religation! */
     @Test
     public void testReligation2() throws DiachromaticException {
 
@@ -59,6 +59,23 @@ public class ReligationAndContiguousTest {
         Assert.assertTrue(readpair.religation(digestpair));
     }
 
+    /** The readpair SRR071233.11333341.contiguous has
+     * forward: chr3	23_631_554 (digest chr3:23_626_926-23_631_653)
+     * reverse: chr3	23_631_974 (digest chr3:23_631_853-23_632_444)
+     * Note that the digests are not contiguous. For this test to pass in our framework with the
+     * fake digests in {@link TestSamFileImporter}, we needed to add the digest that is in between
+     * viz., chr3:23631654-23631852 -- otherwise, this fragment would falsely be classified as
+     * religation.
+     * @throws DiachromaticException
+     */
+    @Test
+    public void testContiguous1() throws DiachromaticException {
+        ReadPair readpair  = readpairmap.get("SRR071233.11333341.contiguous");
+        DigestPair digestpair = sampairer.getDigestPair(readpair);
+        assertTrue(readpair.contiguous());
+        assertFalse(readpair.religation(digestpair));
+
+    }
 
 
 

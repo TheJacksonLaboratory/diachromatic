@@ -26,11 +26,11 @@ public class ReadPair {
     /** A set of Q/C criteria that this read pair did NOT pass. */
     private Set<QCCode> QCcodes;
     /** Largest allowable size of the insert of a read pair.*/
-    static int UPPER_SIZE_THRESHOLD = 1500;
+    private static int UPPER_SIZE_THRESHOLD = 1500;
     /** Smallest allowable size of the insert of a read pair.*/
-    static int LOWER_SIZE_THRESHOLD = 100;
+    private static int LOWER_SIZE_THRESHOLD = 100;
     /**Length threshold in nucleotides for the end of a read being near to a restriction fragment/ligation sequence*/
-    static  int DANGLING_THRESHOLD = 7;
+    private static  int DANGLING_THRESHOLD = 7;
     /** Tag to use to mark invalid reads to output to BAM file. */
     private final static String BADREAD_ATTRIBUTE="YY";
     /** Tag to mark self ligation/circularization. */
@@ -59,11 +59,11 @@ public class ReadPair {
     public static void setUpperSizeThreshold(int threshold) {
         UPPER_SIZE_THRESHOLD = threshold;
     }
-
     public static void setLowerSizeThreshold(int threshold) {
         LOWER_SIZE_THRESHOLD = threshold;
     }
-
+    public static int getUpperSizeThreshold() {return UPPER_SIZE_THRESHOLD; }
+    public static int getLowerSizeThreshold() { return LOWER_SIZE_THRESHOLD;}
 
     SAMRecord forward() {
         return forwardRead;
@@ -125,7 +125,7 @@ public class ReadPair {
      * This function is called if the two reads are on different fragments that are not direct neighbors. If they are located
      * within one expected fragment size, then they are contiguous sequences that were not properly digested.
      * The test demands that the contig size is above the lower threshold and below the upper threshold.
-     * @return
+     * @return true if the read pair corresponds to a contiguous artefact
      */
     boolean contiguous() {
         if (! forwardRead.getReferenceName().equals(reverseRead.getReferenceName())) {
@@ -197,7 +197,7 @@ public class ReadPair {
      * check one Digest since by definition the reads have been found to both map to the same
      * fragment.
      * @param digest The digest that corresponds to the two reads of this readpair (same for both).
-     * @return
+     * @return true if the read pair corresponds to a dangling end artefact
      */
     private boolean danglingEnd(Digest digest) {
         // if we get here we know the digests are the same; take the forward one arbitrarily
@@ -216,8 +216,8 @@ public class ReadPair {
      *  We know the fragments are adjacent because their fragment numbers differ by 1. Recall that
      *  the {@link org.jax.diachromatic.command.DigestCommand} assigns fragments a fragment number so that
      *  adjacent fragments are number i and i+1.
-     * @param digestPair
-     * @return
+     * @param digestPair The digest pair in which the read pair is located
+     * @return true if the readpair corresponds to a religation artefact
      */
     boolean religation(DigestPair digestPair) {
         return  (Math.abs(digestPair.reverse().getFragmentNumber() - digestPair.forward().getFragmentNumber()) == 1)  &&
@@ -253,7 +253,7 @@ public class ReadPair {
         int insertSize = getCalculatedInsertSize(digestPair);
         if (insertSize > UPPER_SIZE_THRESHOLD) {
             QCcodes.add(INSERT_TOO_LONG);
-            logger.trace(String.format("Read has insert size of %d which is above the upper trheshold of %d nt", insertSize, UPPER_SIZE_THRESHOLD));
+           // logger.trace(String.format("Read has insert size of %d which is above the upper trheshold of %d nt", insertSize, UPPER_SIZE_THRESHOLD));
             forward().setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_BIG_TAG);
             reverse().setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_BIG_TAG);
             return false;

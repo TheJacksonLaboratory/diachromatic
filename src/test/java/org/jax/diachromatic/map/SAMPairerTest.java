@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.jax.diachromatic.map.TestSamFileImporter.retrieveReadPairsForTesting;
 import static org.jax.diachromatic.map.TestSamFileImporter.retrieveSAMPairerForTesting;
 import static org.junit.Assert.*;
@@ -140,6 +141,25 @@ public class SAMPairerTest {
         assertFalse(DiTag.isDuplicate(readpair));
         readpair=readpairmap.get("8_validRead1");
 //        assertTrue(DiTag.isDuplicate(readpair));
+    }
+
+
+    /**
+     * SRR071233.221359.valid	should have no Q/C issues
+     * forward	chr5	64567958 (digest: chr5	64567944	64570105)
+     * reverse chr5	64576447 (digest: chr5	64576363	64587599)
+     * @throws DiachromaticException
+     */
+    @Test
+    public void testValid() throws DiachromaticException {
+        ReadPair readpair =readpairmap.get("SRR071233.221359.valid");
+        int THRESHOLD=800;
+        DigestPair digestpair = sampairer.getDigestPair(readpair);
+        int insertSize=readpair.getCalculatedInsertSize(digestpair);
+        assertFalse(insertSize>THRESHOLD);
+        assertFalse(readpair.bothReadsLocatedOnSameRestrictionFragment(digestpair));
+        assertFalse(readpair.contiguous());
+        assertFalse(readpair.religation(digestpair));
     }
 
 
