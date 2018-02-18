@@ -16,7 +16,7 @@ The command to perform in silico digestion is: ::
     $ java -jar Diachromatic.jar digest -g <path> -e <enzyme> [-o <outfile>]
 
 The meaning of the options is
-   * -g <path> The path to the directory with genome FASTA files (one per chromosome; for instance, the genome fasta files downloaded from the UCSC Genome Browser are in this format). The FASTA files need to be unzipped.
+   * -g <path> The path to the genome FASTA file (e.g., hg19,fa for a file with the chromosomes of the Human Genome Build 19).
    * -e <enzyme> The symbol of the restriction enzyme used in the Capture Hi-C experiment.
    * [-o <outfile>] Name and path of the output file. This flag is optional and if it is not passed, the default name of ``diachromaticDigest.txt`` will be used.
 

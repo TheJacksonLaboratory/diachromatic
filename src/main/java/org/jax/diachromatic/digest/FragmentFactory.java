@@ -5,9 +5,8 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jax.diachromatic.Diachromatic;
 import org.jax.diachromatic.exception.DiachromaticException;
-import org.jax.diachromatic.io.FASTAIndexManager;
+import org.jax.diachromatic.io.Faidx;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -36,37 +35,25 @@ import java.util.regex.Pattern;
  */
 public class FragmentFactory {
     private static final Logger logger = LogManager.getLogger();
-    private List<RestrictionEnzyme> restrictionEnzymeList = null;
+    private List<RestrictionEnzyme> restrictionEnzymeList;
     private Map<Integer, RestrictionEnzyme> number2enzyme = null;
     private Map<RestrictionEnzyme, Integer> enzyme2number = null;
-    private List<Fragment> restrictionFragmentList = null;
-    /**
-     * File handle for the output of the restriction fragments.
-     */
+    private List<Fragment> restrictionFragmentList;
+    /** File handle for the output of the restriction fragments. */
     private BufferedWriter out = null;
-    /**
-     * Name of output file. TODO set this dynamically
-     */
-    private String outfilename = "hicupCloneDigest.txt";
-    /**
-     * A counter used to output each 1000 fragment as we go as feedback to the user.
-     */
+    /*** Name of output ("digest") file. */
+    private final String outfilename;
+    /** A counter used to output each 1000 fragment as we go as feedback to the user. */
     private int counter = 1;
-
-    public String getGenomeDirectoryPath() {
-        return genomeFastaFilePath;
-    }
-
     /**
      * Path to the genome FASTA file, e.g., hg19.fa. Note that expect there to be a corresponding index, e.g., hg19.fa.fai,
      * or we will build one.
      */
     private final String genomeFastaFilePath;
-    /**
-     * Header of the output file.
-     */
+    /** Header of the output file. */
     private static final String HEADER = "Chromosome\tFragment_Start_Position\t" +
             "Fragment_End_Position\tFragment_Number\t5'_Restriction_Site\t3'_Restriction_Site";
+
 
     public FragmentFactory(String fastFilePath, String outfile) {
         this.genomeFastaFilePath = fastFilePath;
@@ -77,12 +64,16 @@ public class FragmentFactory {
         restrictionEnzymeList = RestrictionEnzyme.parseRestrictionEnzymes();
     }
 
+    public String getGenomeDirectoryPath() {
+        return genomeFastaFilePath;
+    }
+
 
     /**
      * Produces a digest file starting from a single genome fasta file, e.g., hg19.fa.
      *
-     * @param enzymes
-     * @throws DiachromaticException
+     * @param enzymes Enzymes used for the digestion of the capture Hi-C experiment
+     * @throws DiachromaticException if digestion (in silico) did not work
      */
     public void digestGenome(List<String> enzymes) throws DiachromaticException {
         number2enzyme = new HashMap<>();
@@ -103,7 +94,8 @@ public class FragmentFactory {
         try {
             out = new BufferedWriter(new FileWriter(outfilename));
             out.write(HEADER + "\n");
-            FASTAIndexManager.indexChromosome(this.genomeFastaFilePath);
+            Faidx faidx = new Faidx(this.genomeFastaFilePath);
+            faidx.indexGenome();
             cutGenome(this.genomeFastaFilePath, out);
             out.close();
         } catch (Exception e) {
@@ -124,7 +116,7 @@ public class FragmentFactory {
 
     private void cutGenome(String genomeFasta, BufferedWriter out) throws DiachromaticException {
         logger.trace(String.format("cutting chromosomes %s", genomeFasta));
-        IndexedFastaSequenceFile fastaReader = null;
+        IndexedFastaSequenceFile fastaReader;
         try {
             fastaReader = new IndexedFastaSequenceFile(new File(genomeFasta));
         } catch (Exception e) {
@@ -147,10 +139,9 @@ public class FragmentFactory {
      * @param seqname Name of the chromosome
      * @param sequence Sequence of the chromosome
      * @param out file handle to which we will write the digest file
-     * @throws DiachromaticException
      * @throws IOException
      */
-    private void cutChromosome(String seqname, String sequence, BufferedWriter out) throws DiachromaticException,IOException {
+    private void cutChromosome(String seqname, String sequence, BufferedWriter out) throws IOException {
         ImmutableList.Builder<Fragment> builder = new ImmutableList.Builder<>();
         for (Map.Entry<RestrictionEnzyme, Integer> ent : enzyme2number.entrySet()) {
             int enzymeNumber = ent.getValue();
