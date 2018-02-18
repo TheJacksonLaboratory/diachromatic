@@ -5,7 +5,7 @@
 
     <groupId>org.jax</groupId>
     <artifactId>diachromatic</artifactId>
-    <version>0.1.12</version>
+    <version>0.1.17</version>
     <packaging>jar</packaging>
 
     <name>diachromatic</name>

@@ -10,7 +10,17 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-
+/**
+ * This class performs truncation on paired FASTQ files.
+ * Reads are investigated for the present of a modified restriction site that
+ * remains as a trace of the Capture Hi-C religation protocol. This step is performed
+ * to remove bases that would otherwise prevent a read mapping to the specified
+ * reference genome. The code was adapted from the Perl script of HiCUP.
+ *
+ * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
+ * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
+ * @version 0.1.3 (2018-01-06)
+ */
 public class Truncator {
     private static final Logger logger = LogManager.getLogger();
 
@@ -92,6 +102,9 @@ public class Truncator {
         outputFASTQ2 = String.format("%s%s%s.%s%s", outdir, File.separator, basename2.substring(0, i), outputSuffix, basename2.substring(i));
         logger.trace(String.format("F1 %s \n F2 %s", outputFASTQ1, outputFASTQ2));
     }
+
+    public String getOutputFastqPath_1() { return outputFASTQ1; }
+    public String getOutputFastqPath_2() { return outputFASTQ2; }
 
     /**
      * Parse the two input FASTQ files using a {@link FastqPairParser} object that returns one inputSAMfiles of reads at a time.
