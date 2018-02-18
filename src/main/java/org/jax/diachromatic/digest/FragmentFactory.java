@@ -12,6 +12,7 @@ import org.jax.diachromatic.io.FASTAIndexManager;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,10 +21,6 @@ import java.util.regex.Pattern;
  * Class to perform in silico digestion of genome FASTA files. Note that this class borrows some ideas from VPV
  * but the fragments that we create are slightly different compared to VPV because more information is required
  * in the output file.
- * TODO decide on format. The following is the format of HiCUP. TODO question is whether we want to support the
- * Re2 (used instead of sonication)? Maybe not, because we are going to be using 4-cutters with smaller fragments anyway
- * and thus it is pretty unlikely that anybody will be using a second enzyme to fragment our fragments.
- *
  * <pre>
  * Genome:testgenome       Restriction_Enzyme1:BgIII [A^GATCT]     Restriction_Enzyme2:None        Hicup digester version 0.5.10
  * Chromosome      Fragment_Start_Position Fragment_End_Position   Fragment_Number RE1_Fragment_Number     5'_Restriction_Site     3'_Restriction_Site
@@ -35,67 +32,79 @@ import java.util.regex.Pattern;
  * </pre>
  *
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
- * @version 0.0.2
+ * @version 0.0.3
  */
 public class FragmentFactory {
     private static final Logger logger = LogManager.getLogger();
-    List<RestrictionEnzyme> restrictionEnzymeList=null;
-    Map<Integer,RestrictionEnzyme> number2enzyme =null;
-    Map<RestrictionEnzyme,Integer> enzyme2number=null;
-    List<Fragment> restrictionFragmentList = null;
-    List<String> genomeFilePaths = null;
-    /** File handle for the output of the restriction fragments. */
+    private List<RestrictionEnzyme> restrictionEnzymeList = null;
+    private Map<Integer, RestrictionEnzyme> number2enzyme = null;
+    private Map<RestrictionEnzyme, Integer> enzyme2number = null;
+    private List<Fragment> restrictionFragmentList = null;
+    /**
+     * File handle for the output of the restriction fragments.
+     */
     private BufferedWriter out = null;
-    /** Name of output file. TODO set this dynamically */
-    private String outfilename="hicupCloneDigest.txt";
+    /**
+     * Name of output file. TODO set this dynamically
+     */
+    private String outfilename = "hicupCloneDigest.txt";
+    /**
+     * A counter used to output each 1000 fragment as we go as feedback to the user.
+     */
+    private int counter = 1;
 
     public String getGenomeDirectoryPath() {
-        return genomeDirectoryPath;
+        return genomeFastaFilePath;
     }
 
-    private String genomeDirectoryPath = null;
-    /** Header of the output file. */
-    private static final String HEADER="Chromosome\tFragment_Start_Position\t" +
+    /**
+     * Path to the genome FASTA file, e.g., hg19.fa. Note that expect there to be a corresponding index, e.g., hg19.fa.fai,
+     * or we will build one.
+     */
+    private final String genomeFastaFilePath;
+    /**
+     * Header of the output file.
+     */
+    private static final String HEADER = "Chromosome\tFragment_Start_Position\t" +
             "Fragment_End_Position\tFragment_Number\t5'_Restriction_Site\t3'_Restriction_Site";
 
-
-    public FragmentFactory(String directoryPath, String outfile) {
-        this.genomeDirectoryPath = directoryPath;
-        outfilename=outfile;
-        logger.trace(String.format("FragmentFactory directory=%s",directoryPath));
+    public FragmentFactory(String fastFilePath, String outfile) {
+        this.genomeFastaFilePath = fastFilePath;
+        outfilename = outfile;
+        logger.trace("FragmentFactory will create digest from fasta file={}", fastFilePath);
         restrictionFragmentList = new ArrayList<>();
-        genomeFilePaths = new ArrayList<>();
         // Note restriction enzyme file is in src/main/resources
-        restrictionEnzymeList=RestrictionEnzyme.parseRestrictionEnzymes();
+        restrictionEnzymeList = RestrictionEnzyme.parseRestrictionEnzymes();
     }
 
 
-
-
+    /**
+     * Produces a digest file starting from a single genome fasta file, e.g., hg19.fa.
+     *
+     * @param enzymes
+     * @throws DiachromaticException
+     */
     public void digestGenome(List<String> enzymes) throws DiachromaticException {
-        identifyFASTAfiles();
-        number2enzyme =new HashMap<>();
-        enzyme2number=new HashMap<>();
-        int n=0;
+        number2enzyme = new HashMap<>();
+        enzyme2number = new HashMap<>();
+        int n = 0;
         for (String enzym : enzymes) {
             RestrictionEnzyme re = restrictionEnzymeList.stream().
-                    filter( x ->  enzym.equalsIgnoreCase(x.getName()) ).
+                    filter(x -> enzym.equalsIgnoreCase(x.getName())).
                     findFirst().orElse(null);
-            if (re==null) {
-                throw new DiachromaticException(String.format("Did not recognize restriction enzyme \"%s\"",enzym));
+            if (re == null) {
+                throw new DiachromaticException(String.format("Did not recognize restriction enzyme \"%s\"", enzym));
             } else {
                 n++;
-                number2enzyme.put(n,re);
-                enzyme2number.put(re,n);
+                number2enzyme.put(n, re);
+                enzyme2number.put(re, n);
             }
         }
         try {
             out = new BufferedWriter(new FileWriter(outfilename));
             out.write(HEADER + "\n");
-            for (String path : genomeFilePaths) {
-                FASTAIndexManager.indexChromosome(path);
-                cutChromosome(path, out);
-            }
+            FASTAIndexManager.indexChromosome(this.genomeFastaFilePath);
+            cutGenome(this.genomeFastaFilePath, out);
             out.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -105,98 +114,86 @@ public class FragmentFactory {
     }
 
 
-
-    /** This function will identify FASTA files in the directory {@link #genomeDirectoryPath} by looking for all files
-     * with the suffix {@code .fa}. It will add the absolute path of each file on the local file system to the
-     * list {@link #genomeFilePaths}.
+    /**
+     * Cut an entire genome file.
+     *
+     * @param genomeFasta Path to the genome fasta file, e.g., hg19.fa
+     * @param out         file handle to which we will write the digest file
+     * @throws DiachromaticException if we cannot write the digest file
      */
-    private void identifyFASTAfiles() throws DiachromaticException {
-        File genomeDir = new File(this.genomeDirectoryPath);
-        if (!genomeDir.exists()) {
-            throw new DiachromaticException(String.format("Could not find directory \"%s\" with genome FASTA files", this.genomeDirectoryPath));
-        }
-        if (!genomeDir.isDirectory()) {
-            throw new DiachromaticException(String.format("%s must be a directory with genome FASTA files", this.genomeDirectoryPath));
-        }
-        for (final File fileEntry : genomeDir.listFiles()) {
-            if (fileEntry.isDirectory()) {
-                continue;
-            } else if (!fileEntry.getPath().endsWith(".fa")) {
-                continue;
-            } else {
-                this.genomeFilePaths.add(fileEntry.getAbsolutePath());
-            }
-        }
-    }
 
-
-    public int getGenomeFileCount() {
-        return genomeFilePaths.size();
-    }
-
-    int counter=1;
-
-    private void cutChromosome(String chromosomeFilePath, BufferedWriter out) throws Exception {
-        logger.trace(String.format("cutting chromosomes %s",chromosomeFilePath ));
-        IndexedFastaSequenceFile fastaReader=null;
+    private void cutGenome(String genomeFasta, BufferedWriter out) throws DiachromaticException {
+        logger.trace(String.format("cutting chromosomes %s", genomeFasta));
+        IndexedFastaSequenceFile fastaReader = null;
         try {
-
-
-             fastaReader = new IndexedFastaSequenceFile(new File(chromosomeFilePath));
+            fastaReader = new IndexedFastaSequenceFile(new File(genomeFasta));
         } catch (Exception e) {
-            throw  new DiachromaticException(String.format("Could not create FAI file for %s [%s]",chromosomeFilePath,e.toString()));
+            throw new DiachromaticException(String.format("Could not create FAI file for %s [%s]", genomeFasta, e.toString()));
         }
-        ReferenceSequence refseq = fastaReader.nextSequence();
-        ImmutableList.Builder<Fragment> builder = new ImmutableList.Builder<>();
-        String seqname = refseq.getName();
+        ReferenceSequence refseq;
+        try {
+            while ((refseq = fastaReader.nextSequence()) != null) {
+                String seqname = refseq.getName();
+                String sequence = fastaReader.getSequence(seqname).getBaseString().toUpperCase();
+                cutChromosome(seqname, sequence, out);
+            }
+        } catch (IOException e) {
+            throw new DiachromaticException("Unable to write the digest file: " + e.getMessage());
+        }
+    }
 
-        for (Map.Entry<RestrictionEnzyme,Integer> ent : enzyme2number.entrySet()) {
+    /**
+     * Write the corresponding part of the digest file for one chromosome
+     * @param seqname Name of the chromosome
+     * @param sequence Sequence of the chromosome
+     * @param out file handle to which we will write the digest file
+     * @throws DiachromaticException
+     * @throws IOException
+     */
+    private void cutChromosome(String seqname, String sequence, BufferedWriter out) throws DiachromaticException,IOException {
+        ImmutableList.Builder<Fragment> builder = new ImmutableList.Builder<>();
+        for (Map.Entry<RestrictionEnzyme, Integer> ent : enzyme2number.entrySet()) {
             int enzymeNumber = ent.getValue();
             RestrictionEnzyme enzyme = ent.getKey();
             String cutpat = enzyme.getPlainSite();
             int offset = enzyme.getOffset();
-
             // note fastaReader refers to one-based numbering scheme.
-            String sequence = fastaReader.getSequence(seqname).getBaseString().toUpperCase();//(seqname, genomicPos - maxDistToGenomicPosUp, genomicPos + maxDistToGenomicPosDown).getBaseString().toUpperCase();
             Pattern pattern = Pattern.compile(cutpat);
             Matcher matcher = pattern.matcher(sequence);
-           // ArrayList<Integer> cuttingPositionList = new ArrayList<>();
             /* one-based position of first nucleotide in the entire subsequence returned by fasta reader */
             while (matcher.find()) {
-                // replaces matcher.start() - maxDistToGenomicPosUp + offset;
                 int pos = matcher.start() + offset; /* one-based position of first nucleotide after the restriction enzyme cuts */
-               // logger.trace(String.format("Adding %d to search for %s",pos,cutpat));
-                if (counter%1000==0) {
-                    System.out.println(String.format("Added %d th fragment",counter ));
+                if (++counter % 1000 == 0) {
+                    logger.trace(String.format("Added %d-th fragment", counter));
                 }
-                builder.add(new Fragment(enzymeNumber,pos));
+                builder.add(new Fragment(enzymeNumber, pos));
             }
         }
         ImmutableList<Fragment> fraglist = builder.build();
         fraglist = ImmutableList.sortedCopyOf(fraglist);// todo better way of coding this?
-        String previousCutEnzyme="None";
-        Integer previousCutPosition=0; // start of chromosome
+        String previousCutEnzyme = "None";
+        Integer previousCutPosition = 0; // start of chromosome
         //Header
         //Chromosome      Fragment_Start_Position Fragment_End_Position   Fragment_Number RE1_Fragment_Number     5'_Restriction_Site     3'_Restriction_Site
-        String chromo=seqname;
-        int n=0;
-        for (Fragment f:fraglist) {
+        String chromo = seqname;
+        int n = 0;
+        for (Fragment f : fraglist) {
             out.write(String.format("%s\t%d\t%d\t%d\t%s\t%s\n",
                     chromo,
-                    (previousCutPosition+1),
+                    (previousCutPosition + 1),
                     f.position,
                     (++n),
                     previousCutEnzyme,
                     number2enzyme.get(f.enzymeNumber).getName()));
-            previousCutEnzyme=number2enzyme.get(f.enzymeNumber).getName();
-            previousCutPosition=f.position;
+            previousCutEnzyme = number2enzyme.get(f.enzymeNumber).getName();
+            previousCutPosition = f.position;
         }
         // output last fragment also
         // No cut ("None") at end of chromosome
-        int endpos = refseq.length();
+        int endpos = seqname.length();
         out.write(String.format("%s\t%d\t%d\t%d\t%s\t%s\n",
                 chromo,
-                (previousCutPosition+1),
+                (previousCutPosition + 1),
                 endpos,
                 (++n),
                 previousCutEnzyme,
