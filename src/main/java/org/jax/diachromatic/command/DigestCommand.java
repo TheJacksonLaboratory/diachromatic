@@ -18,7 +18,7 @@ import static org.jax.diachromatic.digest.RestrictionEnzyme.parseRestrictionEnzy
  * entire genome.
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
- * @version 0.0.2 (2018-01-05)
+ * @version 0.0.3 (2018-02-18)
  */
 public class DigestCommand extends Command {
     private static final Logger logger = LogManager.getLogger();

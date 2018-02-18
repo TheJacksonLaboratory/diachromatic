@@ -45,6 +45,8 @@ public class FragmentFactory {
     private final String outfilename;
     /** A counter used to output each 1000 fragment as we go as feedback to the user. */
     private int counter = 1;
+
+    private int n_number_of_digested_chromosomes=0;
     /**
      * Path to the genome FASTA file, e.g., hg19.fa. Note that expect there to be a corresponding index, e.g., hg19.fa.fai,
      * or we will build one.
@@ -106,6 +108,10 @@ public class FragmentFactory {
     }
 
 
+    public int getNumber_of_digested_chromosomes() {
+        return n_number_of_digested_chromosomes;
+    }
+
     /**
      * Cut an entire genome file.
      *
@@ -128,6 +134,8 @@ public class FragmentFactory {
                 String seqname = refseq.getName();
                 String sequence = fastaReader.getSequence(seqname).getBaseString().toUpperCase();
                 cutChromosome(seqname, sequence, out);
+                n_number_of_digested_chromosomes++;
+
             }
         } catch (IOException e) {
             throw new DiachromaticException("Unable to write the digest file: " + e.getMessage());
@@ -181,7 +189,7 @@ public class FragmentFactory {
         }
         // output last fragment also
         // No cut ("None") at end of chromosome
-        int endpos = seqname.length();
+        int endpos = sequence.length();
         out.write(String.format("%s\t%d\t%d\t%d\t%s\t%s\n",
                 chromo,
                 (previousCutPosition + 1),

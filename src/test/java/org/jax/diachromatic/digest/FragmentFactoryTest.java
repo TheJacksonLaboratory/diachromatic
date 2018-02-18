@@ -23,30 +23,16 @@ public class FragmentFactoryTest {
 
     private static String pathToTempFile=null;
 
-    private static String genomeDirectoryPath=null;
     private static FragmentFactory factory=null;
 
     @BeforeClass
     public static void setup() throws IOException {
         ClassLoader classLoader = FragmentFactoryTest.class.getClassLoader();
         String fastaPath = classLoader.getResource("data/chrUn_KI270745v1.fa").getFile();
-        genomeDirectoryPath = classLoader.getResource("data").getFile();
+       // genomeDirectoryPath = classLoader.getResource("data").getFile();
         File tempFile = folder.newFile("file.txt");
         pathToTempFile=tempFile.getAbsolutePath();
-        factory=new FragmentFactory(genomeDirectoryPath, tempFile.getAbsolutePath());
-    }
-
-
-    @Test
-    public void testGetGenomeDirectoryPath() {
-        assertEquals(genomeDirectoryPath,factory.getGenomeDirectoryPath());
-    }
-
-    /** There is exactly one FASTA file in src/test/resources/data */
-    @Test
-    public void testGetGenomeFASTAFileCount() {
-        int expected=1;
-        assertEquals(expected,factory.getGenomeFileCount());
+        factory=new FragmentFactory(fastaPath, tempFile.getAbsolutePath());
     }
 
 
