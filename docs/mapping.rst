@@ -9,7 +9,7 @@ We now align the truncated FASTQ files to the genome. We will start for now with
 the test files from the HiCUP distribution, which are human sequences. We will
 align to the hg37 genome with bowtie 2 (http://bowtie-bio.sourceforge.net/bowtie2/index.shtml).
 
-We download the prebuilt index for the human hg37 genome, H. sapiens, UCSC hg19 (3.5 GB) from the bowtei2 website.
+We download the prebuilt index for the human hg37 genome, H. sapiens, UCSC hg19 (3.5 GB) from the bowtie2 website.
 The index needs to be unzipped. ::
 
 

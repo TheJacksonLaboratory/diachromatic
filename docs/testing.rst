@@ -86,6 +86,35 @@ These can be used in conjunction with the other output files of hicup to identif
 out because of mapping issues or artefacts, as well as read pairs that are ok. We can test most of the diachromatic
 code using a small SAM file that is excerpted from these.
 
+Finding digests for testing
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Note that many of the readpair functions require a Digest object. The following script can help to find the
+positions of the digests, these were used in the makeFakeDigest functions in the test classes
+
+
+    #!/usr/bin/perl -w
+    use strict;
+    use IO::File;
+    my $fname = shift or die "need to pass digest file name";
+    my $chr = shift or die "need to pass chromosome\n";
+    my $pos= shift or die "need to pass position";
+    my $fh=new IO::File("$fname") or die "$!";
+    while (my $line=<$fh>) {
+        my @a=split(m/\t/,$line);
+        my $chrom=$a[0];
+        next if ($chr ne $chrom);
+        my $from =$a[1];
+        my $to=$a[2];
+        if ($pos>($from-100) && $pos < ($to+100)) {
+            print $line;
+            printf("position $pos is %d nucleotides 3' to start and %d nucleotides 5' to end of digest [len=%d]\n",($pos-$from),($to-$pos),($to-$from));
+        }
+    }
+
+
+
+
+
 Test class
 ~~~~~~~~~~
 The main tests of the logic of the Q/C code are in SAMPairerTest. There is currently one pair of sequences

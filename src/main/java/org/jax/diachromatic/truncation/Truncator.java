@@ -36,9 +36,15 @@ public class Truncator {
      */
     private int removedBecauseAtLeastOneReadTooShort;
 
-    private static final int LENGTH_THRESHOLD = 20;
+    private static int LENGTH_THRESHOLD = 20;
 
-
+    /**
+     * @param outdir Output directory
+     * @param inputFASTQforward input FASTQ file for forward reads
+     * @param inputFASTQreverse input FASTQ file for reverse reads
+     * @param re restriction enzyme
+     * @param suffix suffix for the output file
+     */
     public Truncator(String outdir, String inputFASTQforward, String inputFASTQreverse, RestrictionEnzyme re, String suffix) {
         this.outdir = outdir;
         this.fastqFile1 = inputFASTQforward;
@@ -48,6 +54,21 @@ public class Truncator {
         outputSuffix = suffix;
         makeOutdirectoryIfNeeded();
         createOutputNames();
+    }
+
+    /**
+     * This form of the constructor is used if we want to use a length threshold different from the default value
+     * (see {@link #LENGTH_THRESHOLD}).
+     * @param outdir Output directory
+     * @param inputFASTQforward input FASTQ file for forward reads
+     * @param inputFASTQreverse input FASTQ file for reverse reads
+     * @param re restriction enzyme
+     * @param suffix suffix for the output file
+     * @param threshold length threshold for retaining reads after truncation.
+     */
+    public Truncator(String outdir, String inputFASTQforward, String inputFASTQreverse, RestrictionEnzyme re, String suffix, int threshold) {
+        this(outdir,inputFASTQforward,inputFASTQreverse,re,suffix);
+        LENGTH_THRESHOLD=threshold;
     }
 
     private void makeOutdirectoryIfNeeded() {
@@ -103,7 +124,7 @@ public class Truncator {
             out1.close();
             out2.close();
         } catch (IOException e) {
-            logger.fatal(String.format("Error encountered while writing truncated FASTQ files", e.getMessage()));
+            logger.fatal(String.format("Error encountered while writing truncated FASTQ files: %s", e.getMessage()));
             e.printStackTrace();
         }
         logger.trace(String.format("Number of reads processed: %d and Number of forward reads truncated %d (%.2f%%)",
@@ -113,26 +134,16 @@ public class Truncator {
 
     }
 
-
-    /**
-     * Number of bases in which the ligation junction and reference genome correspond before first mismatch
-     * @param ligationSequence
-     * @param re
-     * @return public static int lengthSame(String ligationSequence, RestrictionEnzyme re) {
-
-    }  */
-
-
     /**
      * The ligation sequence in capture Hi-C is the result of cutting DNA with a restriction enzyme, filling in the
      * overhands with biotinylated nucleotides, and performing blunet ended ligation. For examples, HindIII has the
      * following cutting sequence: {@code HindIII A^AGCTT}, thus, it cuts between the first and second nucleotides (both A).
      * The ligation seqeunce will be {@code A + AGCT + AGCT + T = AAGCTAGCTT}.
      *
-     * @param re
+     * @param re restriction enzyme
      * @return
      */
-    public static String fillEnd(RestrictionEnzyme re) {
+    static String fillEnd(RestrictionEnzyme re) {
         String plainsite = re.getPlainSite();
         int offset = re.getOffset();
         int len = plainsite.length();

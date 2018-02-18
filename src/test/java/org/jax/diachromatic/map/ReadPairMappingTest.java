@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -113,18 +114,36 @@ public class ReadPairMappingTest {
     }
 
     /**
+     * We test the first read, {@code 1_uniquelyAlignedRead	0	chr16	31526917	8} and
+     * {@code 1_uniquelyAlignedRead	0	chr16	84175204	42}. Neither of these reads have
+     * the {@code XS:i:0} tag which would indicate multimapping.
+     */
+    @Test
+    public void testUniquelyAlignedReadPair() {
+        ReadPair pair=readpairmap.get("1_uniquelyAlignedRead");
+        assertNotNull(pair);
+        assertTrue(pair.readPairUniquelyMapped());
+    }
+
+    /**
+     * The reads of the readpair {@code 2_multiplyAlignedRead} both have SAM bitfields of 0, but the
+     * reverse read has a flag that indicates it is multimapped: {@code XS:i:0}.
+     * <p>
      * XS:i:<n> Alignment score for the best-scoring alignment found other than the alignment reported.
      * Can be negative. Can be greater than 0 in --local mode (but not in --end-to-end mode).
      * Only present if the SAM record is for an aligned read and more than one alignment was found for the read.
      * Note that, when the read is part of a concordantly-aligned pair, this score could be greater than AS:i.
      * The second read in reversetest.sam has these annotations: AS:i:0	XS:i:0, meaning that we want to filter out
      * this read. The first read should not be filtered out.
+     * </p>
      */
     @Test
-    public void testFilterMultipleAlignment() {
+    public void testMultiplyAlignedReadPair() {
         ReadPair pair=readpairmap.get("2_multiplyAlignedRead");
         assertNotNull(pair);
-        assertTrue(pair.readPairUniquelyMapped());
+        assertFalse(pair.readPairUniquelyMapped());
+        assertFalse(pair.isUnmapped());
+        assertTrue(pair.isMultimapped());
     }
 
 
