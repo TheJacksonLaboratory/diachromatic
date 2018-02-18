@@ -19,7 +19,7 @@ import org.jax.diachromatic.exception.DiachromaticException;
  *
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
- * @version 0.0.2 (2018-01-05)
+ * @version 0.1.3 (2018-02-18)
  */
 public class Commandline {
     private static final Logger logger = LogManager.getLogger();
@@ -67,7 +67,7 @@ public class Commandline {
             commandLine = cmdLineGnuParser.parse(gnuOptions, args);
             String category[] = commandLine.getArgs();
             if (category.length == 0) {
-                printUsage("command missing");
+                printUsage("[ERROR] command missing");
             } else if (category.length > 1) {
                 String cmd = Arrays.stream(category).collect(Collectors.joining("\t"));
                 System.out.println(String.format("%d arguments for command: %s", category.length, cmd));
@@ -76,7 +76,7 @@ public class Commandline {
 
             }
             if (commandLine.getArgs().length < 1) {
-                printUsage("no arguments passed");
+                printUsage("[ERROR] no arguments passed");
                 return;
             }
             if (commandLine.hasOption("g")) {
@@ -119,7 +119,7 @@ public class Commandline {
             }
         } catch (ParseException parseException)  // checked exception
         {
-            String msg = String.format("Could not parse options %s [%s]", clstring, parseException.toString());
+            String msg = String.format("[ERROR] Could not parse options %s [%s]", clstring, parseException.toString());
             printUsage(msg);
         }
         try {
@@ -195,7 +195,7 @@ public class Commandline {
                         pathToDiachromaticDigestFile,
                         outputRejectedReads);
             } else {
-                printUsage(String.format("Did not recognize command: %s", mycommand));
+                printUsage(String.format("[ERROR] Did not recognize command: %s", mycommand));
             }
         } catch (DiachromaticException de) {
             de.printStackTrace();
@@ -276,9 +276,10 @@ public class Commandline {
     private static void printDigest(PrintWriter writer) {
         writer.println("digest:");
         writer.println("\tjava -jar Diachromatic.jar digest -g <path> -e <enzyme> [-o <outfile>]");
-        writer.println("\t<path>: path to a directory containing indexed genome FASTA files");
+        writer.println("\t<path>: path to an indexed genome FASTA file (e.g., hg38.fa with hg38.fa.fai in same directory)");
         writer.println("\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII)");
-        writer.println(String.format("\t<outfile>: optional name of output file (Default: \"%s\")", DEFAULT_DIGEST_FILE_NAME));
+        writer.println(String.format("\t<outfile>: optional name of output file (e.g., hg19HindIIIdigest.txt; Default: \"%s\")",
+                DEFAULT_DIGEST_FILE_NAME));
         writer.println();
     }
 
@@ -289,6 +290,7 @@ public class Commandline {
     private static void printUsage(String message) {
         String version = getVersion();
         final PrintWriter writer = new PrintWriter(System.out);
+        writer.println();
         writer.println(message);
         writer.println();
         //usageFormatter.printUsage(writer, 120, applicationName, options);
