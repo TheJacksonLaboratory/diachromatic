@@ -17,9 +17,9 @@ import static org.jax.diachromatic.digest.RestrictionEnzyme.parseRestrictionEnzy
  * <P>
  *     Valid Hi-C pairs are chimeric reads that are made up of fragments from two different regions of the genome.
  *     With capture Hi-C, a typical valid read pair might comprise a DNA sequence from a promoter and a DNA sequence
- *     from an enhancer that is regulating the promoter. In most cases, the one of the reads of the read paier will map
+ *     from an enhancer that is regulating the promoter. In most cases, the one of the reads of the read pair will map
  *     to a single ligation fragment, and the reverse read will map to another fragment. However, this is not always true
- *     because the Hi-C ligation junction cvan be located within one of the sequenced reads. The truncater attempts to
+ *     because the Hi-C ligation junction can be located within one of the sequenced reads. The truncater attempts to
  *     address this situation (which could lead to the read with the Hi-C junction not being mapped during the mapping
  *     step), buy deleting sequenced that is downstream of the enzyme recognition site. For example, if the forward read
  *     is entirely contained withint one ligation fragment and the reverse read starts in another fragment, leads into the

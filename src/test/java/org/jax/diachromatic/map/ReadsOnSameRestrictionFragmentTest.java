@@ -90,6 +90,7 @@ public class ReadsOnSameRestrictionFragmentTest {
             System.err.println(q);
         }
         assertTrue(qcCodes.contains(QCCode.SAME_DANGLING_END));
+        assertTrue(readpair.hasValidInsertSize(digestpair));
     }
 
     /**

@@ -131,11 +131,6 @@ public class ReadPair {
         if (! forwardRead.getReferenceName().equals(reverseRead.getReferenceName())) {
             return false; // reads not on same chromosome, therefore, not contiguous
         }
-//        logger.trace(String.format("contiguosus check. read1 is %s:%d-%d",readF.getReferenceName(),readF.getAlignmentStart(),readF.getAlignmentEnd()));
-//        logger.trace(String.format("contiguosus check. read2 is %s:%d-%d",readR.getReferenceName(),readR.getAlignmentStart(),readR.getAlignmentEnd()));
-//        logger.trace("LOWER_SIZE_THRESHOLD="+LOWER_SIZE_THRESHOLD);
-//        logger.trace("readR.getAlignmentEnd() - readF.getAlignmentStart()="+(readR.getAlignmentEnd() - readF.getAlignmentStart()));
-//        logger.trace("readF.getAlignmentEnd() - readR.getAlignmentStart()="+(readF.getAlignmentEnd() - readR.getAlignmentStart()));
         int contigsize=Math.max(reverseRead.getAlignmentStart() - forwardRead.getAlignmentStart(),
                 forwardRead.getAlignmentStart() - reverseRead.getAlignmentStart());
         if  (contigsize >  LOWER_SIZE_THRESHOLD && contigsize < UPPER_SIZE_THRESHOLD) {

@@ -3,7 +3,6 @@ package org.jax.diachromatic.truncation;
 import org.jax.diachromatic.digest.RestrictionEnzyme;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
@@ -18,7 +17,7 @@ import java.util.Map;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.assertTrue;
+
 
 /**
  * A test dataset was prepared. There is a suffix on the sequence name that indicates the expected length of the
