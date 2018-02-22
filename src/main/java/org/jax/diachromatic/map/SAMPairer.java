@@ -150,7 +150,11 @@ public class SAMPairer {
     /** Tag to use to mark invalid reads to output to BAM file. */
     private final static String BADREAD_ATTRIBUTE="YY";
     /** Tag to mark self ligation/circularization. */
-    private final static String SELF_LIGATION_TAG="SL";
+    private final static String SELF_LIGATION_TAG="SL"; // obsolete, if we use CD and CI
+    /** Tag to mark circularized dangling ends (subclass of SL) */
+    private final static String CIRCULARIZED_DANGLING_END_TAG="CD";
+    /** Tag to mark circularized internal (subclass of SL) */
+    private final static String CIRCULARIZED_INTERNAL_TAG="CI";
     /** Tag to mark dangling end. */
     private final static String DANGLING_END_TAG="DE";
     /** Tag to same fragment internal reads. */
@@ -228,6 +232,7 @@ public class SAMPairer {
                     continue; // discard this read and go to the next one
                 }
                 // If we get here, then both reads were uniquely mappable.
+                is_valid_2(pair);
                 if (is_valid(pair)) {
                     // set the SAM flags to paired-end
                     if (! DiTag.isDuplicate(pair)) { // check for duplicate reads
@@ -303,7 +308,79 @@ public class SAMPairer {
     }
 
 
+    boolean is_valid_2(ReadPair readpair) throws DiachromaticException {
 
+        DigestPair digestPair = getDigestPair(readpair);
+
+        // check whether we can find restriction digests that match the read pair
+        if (digestPair == null) {
+            readpair.setInvalidDigest();
+            return false;
+        }
+
+        // 1: Determine class for read pair
+        // --------------------------------
+
+        if (digestPair.forward().equals(digestPair.reverse())) {
+            // both reads are mapped to the same fragment
+            if(readpair.isFacingPair())
+            {
+                // reads point inwards
+                if(readpair.readOverlapsCutSite(digestPair)) {
+                    // at least one read overlaps cutting site
+                    // dangling end (DE)
+                    System.out.println("XXX dangling end (DE)");
+                }
+                else {
+                    // no read overlaps cutting site
+                    // same internal (SI)
+                    System.out.println("XXX internal (SI)");
+                }
+            } else {
+                // reads point outwards
+                if(readpair.readOverlapsCutSite(digestPair)) {
+                    // at least one read overlaps cutting site
+                    // circularized dangling end (CD)
+                    System.out.println("XXX circularized dangling end (CD)");
+                }
+                else {
+                    // no read overlaps cutting site
+                    // circularized dangling end (CI)
+                    System.out.println("XXX circularized internal (CI)");
+                }
+            }
+        }
+        else {
+            // reads are mapped to different fragments
+            if(readpair.religation(digestPair)) {
+                // reads are mapped to adjacent fragments
+                // re-ligation (RL)
+                System.out.println("XXX re-ligation (RL)");
+            }
+            else {
+                // reads are mapped to non adjacent fragments
+                if(readpair.contiguous()) {
+                    // reads are located within a distance of an expected fragment size (between upper and lower threshold)
+                    // contigous (CT)
+                    System.out.println("XXX contigous (CT)");
+                }
+                else {
+                    // reads are located in a proper distance
+                    if(!readpair.hasValidInsertSize(digestPair)) {
+                        // insert size is either too big or too small
+                        // wrong size (TS or TB)
+                        System.out.println("XXX wrong size (TS or TB)");
+                    } else {
+                        // pair is valid
+                        System.out.println("XXX pair is valid!");
+                    }
+                }
+            }
+        }
+
+
+        return true;
+    }
 
 
 

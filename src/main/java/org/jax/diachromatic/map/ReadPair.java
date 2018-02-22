@@ -268,8 +268,8 @@ public class ReadPair {
     int getCalculatedInsertSize(DigestPair digestPair) {
         SAMRecord readF = forward();
         SAMRecord readR = reverse();
-        if(!digestPair.forward().equals(digestPair.reverse())) {
-            int distF, distR;
+        int distF, distR;
+        if (!digestPair.forward().equals(digestPair.reverse())) {
             if (readF.getReadNegativeStrandFlag()) { // readF is on the negative strand
                 distF = readF.getAlignmentEnd() - digestPair.forward().getStartpos() + 1;
             } else {
@@ -282,10 +282,26 @@ public class ReadPair {
             }
             return distF + distR;
         } else { // if both reads map to the same restriction fragment
-            int sta=Math.min(Math.min(readF.getAlignmentStart(),readF.getAlignmentEnd()),Math.min(readR.getAlignmentStart(),readR.getAlignmentEnd()));
-            int end=Math.max(Math.max(readF.getAlignmentStart(),readF.getAlignmentEnd()),Math.max(readR.getAlignmentStart(),readR.getAlignmentEnd()));
-            logger.trace("calculated insert size: " + (end-sta+1));
-            return end-sta+1;
+            // Handle size calculation for circularized fragments. Needs to be calculated as above.
+            // If the read mapped to the reverse strand comes before the read mapped to the forward strand, calculate insert size as above
+            int insert_size;
+            logger.trace("Both reads are on the same fragment.");
+
+            if (!readF.getMateNegativeStrandFlag() && readF.getAlignmentStart() > readR.getAlignmentStart()) { // readF is on the positive strand and comes after the other read
+                distF = digestPair.forward().getEndpos() - readF.getAlignmentStart() + 1;
+                distR = readR.getAlignmentEnd() - digestPair.reverse().getStartpos() + 1;
+                insert_size = distF + distR;
+            } else if (readF.getMateNegativeStrandFlag() && readR.getAlignmentStart() > readF.getAlignmentStart()) {
+                distF = readF.getAlignmentEnd() - digestPair.forward().getStartpos() + 1;
+                distR = digestPair.reverse().getEndpos() - readR.getAlignmentStart() + 1;
+                insert_size = distF + distR;
+            } else {
+                int sta = Math.min(Math.min(readF.getAlignmentStart(), readF.getAlignmentEnd()), Math.min(readR.getAlignmentStart(), readR.getAlignmentEnd()));
+                int end = Math.max(Math.max(readF.getAlignmentStart(), readF.getAlignmentEnd()), Math.max(readR.getAlignmentStart(), readR.getAlignmentEnd()));
+                logger.trace("calculated insert size: " + (end - sta + 1));
+                insert_size = end - sta + 1;
+            }
+            return insert_size;
         }
     }
 
@@ -367,6 +383,49 @@ public class ReadPair {
         return true;
     }
 
+    /**
+     * Check the relative orientation of the pair.
+     *
+     * @return true if the reads point to one another.
+     */
+    boolean isFacingPair() {
+        if((!this.forwardRead.getReadNegativeStrandFlag() && this.reverseRead.getReadNegativeStrandFlag() &&  this.forwardRead.getAlignmentStart()<this.reverseRead.getAlignmentEnd())
+           ||
+           (!this.reverseRead.getReadNegativeStrandFlag() && this.forwardRead.getReadNegativeStrandFlag() &&  this.reverseRead.getAlignmentStart()<this.forwardRead.getAlignmentEnd()))
+        {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
 
-
+    /**
+     * Check if at least one of the two reads overlaps the cutting site,
+     * i.e. has a distance of at most DANGLING_THRESHOLD=7.
+     *
+     * @return true if this is the case.
+     */
+    boolean readOverlapsCutSite(DigestPair digestPair) {
+        int fragSta=digestPair.forward().getStartpos();
+        int fragEnd=digestPair.forward().getEndpos();
+        int fwdReadSta=this.forwardRead.getAlignmentStart();
+        int fwdReadEnd=this.forwardRead.getAlignmentEnd();
+        int revReadSta=this.reverseRead.getAlignmentStart();
+        int revReadEnd=this.reverseRead.getAlignmentEnd();
+        if(
+            Math.abs(fragSta-fwdReadSta) < DANGLING_THRESHOLD ||
+            Math.abs(fragSta-fwdReadEnd) < DANGLING_THRESHOLD ||
+            Math.abs(fragSta-revReadSta) < DANGLING_THRESHOLD ||
+            Math.abs(fragSta-revReadEnd) < DANGLING_THRESHOLD ||
+            Math.abs(fragEnd-fwdReadSta) < DANGLING_THRESHOLD ||
+            Math.abs(fragEnd-fwdReadEnd) < DANGLING_THRESHOLD ||
+            Math.abs(fragEnd-revReadSta) < DANGLING_THRESHOLD ||
+            Math.abs(fragEnd-revReadEnd) < DANGLING_THRESHOLD)
+        {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
