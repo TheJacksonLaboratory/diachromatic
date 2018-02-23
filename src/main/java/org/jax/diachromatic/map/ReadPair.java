@@ -4,8 +4,12 @@ package org.jax.diachromatic.map;
 import htsjdk.samtools.SAMRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jax.diachromatic.exception.DiachromaticException;
+import org.jax.diachromatic.exception.DigestNotFoundException;
 
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.jax.diachromatic.map.ErrorCode.*;
@@ -47,6 +51,39 @@ public class ReadPair {
     private final static String INSERT_TOO_BIG_TAG="TB";
     /** Tag for reads with too small size. */
     private final static String INSERT_TOO_SMALL_TAG="TS";
+
+    /**
+     *
+     * ReadPairArtifactType.SELF_LIGATION.getTag() returns "SL"
+     *
+     */
+    private enum ReadPairArtifactType
+    {
+        SELF_LIGATION("SL"),
+        DANGLING_END("DE"),
+        CIRULARIZED_DANGLING("CD"),
+        CIRULARIZED_INTERNAL("CI"),
+        SAME_INTERNAL("SI"),
+        RE_LIGATION("RL"),
+        CONTIGUOUS("CT");
+
+
+        private String tag;
+
+        ReadPairArtifactType(String readPairTypeTag) {
+            this.tag = readPairTypeTag;
+        }
+
+        public String getTag() {
+            return tag;
+        }
+    }
+
+    /**
+     * Key: chromosome; value: a list of {@link Digest} objects on the chromosome.
+     */
+    private Map<String, List<Digest>> digestmap = null;
+    private int n_could_not_assign_to_digest = 0;
 
 
     ReadPair(SAMRecord f, SAMRecord r) {
@@ -427,5 +464,153 @@ public class ReadPair {
         } else {
             return false;
         }
+    }
+
+
+    boolean isValid() throws DiachromaticException {
+
+        DigestPair digestPair = getDigestPair(this);
+
+        // check whether we can find restriction digests that match the read pair
+        if (digestPair == null) {
+            this.setInvalidDigest();
+            return false;
+        }
+
+        // 1: Determine class for read pair
+        // --------------------------------
+
+        if (digestPair.forward().equals(digestPair.reverse())) {
+            // both reads are mapped to the same fragment
+            if(this.isFacingPair())
+            {
+                // reads point inwards
+                if(this.readOverlapsCutSite(digestPair)) {
+                    // at least one read overlaps cutting site
+                    // dangling end (DE)
+                    System.out.println("XXX dangling end (DE)");
+                }
+                else {
+                    // no read overlaps cutting site
+                    // same internal (SI)
+                    System.out.println("XXX internal (SI)");
+                }
+            } else {
+                // reads point outwards
+                if(this.readOverlapsCutSite(digestPair)) {
+                    // at least one read overlaps cutting site
+                    // circularized dangling end (CD)
+                    System.out.println("XXX circularized dangling end (CD)");
+                }
+                else {
+                    // no read overlaps cutting site
+                    // circularized dangling end (CI)
+                    System.out.println("XXX circularized internal (CI)");
+                }
+            }
+        }
+        else {
+            // reads are mapped to different fragments
+            if(this.religation(digestPair)) {
+                // reads are mapped to adjacent fragments
+                // re-ligation (RL)
+                System.out.println("XXX re-ligation (RL)");
+            }
+            else {
+                // reads are mapped to non adjacent fragments
+                if(this.contiguous()) {
+                    // reads are located within a distance of an expected fragment size (between upper and lower threshold)
+                    // contigous (CT)
+                    System.out.println("XXX contigous (CT)");
+                }
+                else {
+                    // reads are located in a proper distance
+                    if(!this.hasValidInsertSize(digestPair)) {
+                        // insert size is either too big or too small
+                        // wrong size (TS or TB)
+                        System.out.println("XXX wrong size (TS or TB)");
+                    } else {
+                        // pair is valid
+                        System.out.println("XXX pair is valid!");
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+
+    /**
+     *
+     * THIS FUNCTION WAS COPIED FROM THE CLASS SAMPairer IN ORDER TO GET THE FUNCTION isValid RUNNING.
+     * IN CLASS SAMPairer THIS FUNCTION IS CALLED BY MULTIPLE TEST FUNCTIONS.
+     * IN THIS CLASS THIS FUNCTION IS NOT YET TESTED.
+     * ONE COULD MOVE THE TESTS TO THE TEST CLASS OF THIS CLASS,
+     * BUT IN THE MID TERM THIS FUNCTION SHOULD BE MOVED TO THE CLASS DigestPair AND BE TESTED THERE.
+     *
+     * Get the restriction fragments ({@link Digest} objects) to which the reads map. TODO do we need a different algorithm
+     * Note this from hicup
+     * Using the terminal ends of a di-tag to position a read on the digested genome could be problematic because
+     * a restiction enzyme may not cut in the same position on both strands (i.e. creates sticky ends). Filling-in
+     * and truncating reads at the Hi-C junction makes this situation even more complex.
+     * To overcome this problem simply the script uses the position 10 bp upstream of the start of each read when
+     * assigning reads to a fragment in the digested genome.
+     *
+     * @param readpair Pair of reads (forward, reverse).
+     * @return the corresponding {@link DigestPair} object.
+     */
+    DigestPair getDigestPair(ReadPair readpair) throws DiachromaticException {
+        String chrom1 = readpair.forward().getReferenceName();
+        int start1 = readpair.forward().getAlignmentStart();
+        int end1 = readpair.forward().getAlignmentEnd();
+        String chrom2 = readpair.reverse().getReferenceName();
+        int start2 = readpair.reverse().getAlignmentStart();
+        int end2 = readpair.reverse().getAlignmentEnd();
+        return getDigestPair(chrom1, start1, end1, chrom2, start2, end2);
+    }
+
+    /**
+     *
+     * THIS FUNCTION WAS COPIED FROM THE CLASS SAMPairer IN ORDER TO GET THE FUNCTION isValid RUNNING.
+     * IN CLASS SAMPairer THIS FUNCTION IS CALLED BY MULTIPLE TEST FUNCTIONS.
+     * IN THIS CLASS THIS FUNCTION IS NOT YET TESTED.
+     * ONE COULD MOVE THE TESTS TO THE TEST CLASS OF THIS CLASS,
+     * BUT IN THE MID TERM THIS FUNCTION SHOULD BE MOVED TO THE CLASS DigestPair AND BE TESTED THERE.
+     *
+     * Using the terminal ends of a di-tag to position a read on the digested genome could be problematic because
+     * a restiction enzyme may not cut in the same position on both strands (i.e. creates sticky ends). Filling-in
+     * and truncating reads at the Hi-C junction makes this situation even more complex.
+     * To overcome this problem we use the position 10 bp upstream of the start of each read when
+     * assigning reads to a fragment in the digested genome. This approach was adopted from the HiCup script.
+     *
+     * @return
+     */
+    DigestPair getDigestPair(String chrom1, int start1, int end1, String chrom2, int start2, int end2) throws DiachromaticException {
+        final int OFFSET=10;
+        List<Digest> list = digestmap.get(chrom1);
+        if (list == null) {
+            n_could_not_assign_to_digest++; // should never happen
+            throw new DigestNotFoundException(String.format("Could not retrieve digest list for chromosome %s", chrom1));
+        }
+        int pos1=start1+OFFSET; // strand does not matter here.
+        Digest d1 = list.stream().filter(digest -> (digest.getStartpos() <= pos1 && pos1 <= digest.getEndpos())).findFirst().orElse(null);
+        if (d1 == null) {
+            n_could_not_assign_to_digest++; // should never happen
+            throw new DigestNotFoundException(String.format("Could not identify digest for read 1 at %s:%d-%d", chrom1, start1, end1));
+        }
+        list = digestmap.get(chrom2);
+        if (list == null) {
+            n_could_not_assign_to_digest++; // should never happen
+            throw new DigestNotFoundException(String.format("Could not retrieve digest list for chromosome %s", chrom2));
+        }
+        int pos2=start2+OFFSET;
+        Digest d2 = list.stream().filter(digest -> (digest.getStartpos() <= pos2 && pos2 <= digest.getEndpos())).findFirst().orElse(null);
+        if (d2 == null) {
+            n_could_not_assign_to_digest++; // should never happen
+            throw new DigestNotFoundException(String.format("Could not identify digest for read 2 at %s:%d-%d", chrom2, start2, end2));
+        }
+
+        return new DigestPair(d1, d2);
+
     }
 }
