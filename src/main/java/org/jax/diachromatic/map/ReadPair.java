@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.exception.DigestNotFoundException;
 
+import java.awt.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -37,40 +38,40 @@ public class ReadPair {
     static  int DANGLING_THRESHOLD = 7;
     /** Tag to use to mark invalid reads to output to BAM file. */
     private final static String BADREAD_ATTRIBUTE="YY";
-    /** Tag to mark self ligation/circularization. */
-    private final static String SELF_LIGATION_TAG="SL";
-    /** Tag to mark dangling end. */
-    private final static String DANGLING_END_TAG="DE";
-    /** Tag to same fragment internal reads. */
-    private final static String SAME_INTERNAL_TAG="SI";
-    /** Tag religation reads. */
-    private final static String RELIGATION_TAG="RL";
-    /** Tag contiguous reads. */
-    private final static String CONTIGUOUS_TAG="CT";
-    /** Tag for reads with too high size. */
-    private final static String INSERT_TOO_BIG_TAG="TB";
-    /** Tag for reads with too small size. */
-    private final static String INSERT_TOO_SMALL_TAG="TS";
+    /** Set false, if read pair is an artifact. */
+    private boolean isValid=false;
+    /** A read pair belongs to one of the following categories: SL, DE, CD, CI, SI, RL, TS, TB, VP. */
+    private String categoryTag="NA";
+    /** Insert size */
+    private int insertSize;
+
+    /**
+     * Each read pair maps either to one or two fragments.
+     *
+     * What is digestPair, if both reads were mapped to the same fragment?
+     */
+    private DigestPair digestPair;
 
     /**
      *
-     * ReadPairArtifactType.SELF_LIGATION.getTag() returns "SL"
+     * Use as follows: readPairCategory.SELF_LIGATION.getTag() returns "SL"
      *
      */
-    private enum ReadPairArtifactType
+    private enum readPairCategory
     {
-        SELF_LIGATION("SL"),
         DANGLING_END("DE"),
         CIRULARIZED_DANGLING("CD"),
         CIRULARIZED_INTERNAL("CI"),
         SAME_INTERNAL("SI"),
         RE_LIGATION("RL"),
-        CONTIGUOUS("CT");
-
+        CONTIGUOUS("CT"),
+        INSERT_TOO_SMALL("TS"),
+        INSERT_TOO_BIG("TB"),
+        VALID_PAIR("VP");
 
         private String tag;
 
-        ReadPairArtifactType(String readPairTypeTag) {
+        readPairCategory(String readPairTypeTag) {
             this.tag = readPairTypeTag;
         }
 
@@ -83,13 +84,51 @@ public class ReadPair {
      * Key: chromosome; value: a list of {@link Digest} objects on the chromosome.
      */
     private Map<String, List<Digest>> digestmap = null;
+
     private int n_could_not_assign_to_digest = 0;
 
 
-    ReadPair(SAMRecord f, SAMRecord r) {
+    ReadPair(SAMRecord f, SAMRecord r, Map<String, List<Digest>> digestmap) throws DiachromaticException {
         forwardRead = f;
         reverseRead = r;
         errorcodes = new HashSet<>();
+        this.digestmap=digestmap;
+
+        this.digestPair = getDigestPair(this);
+        // check whether we can find restriction digests that match the read pair
+        if (this.digestPair == null) {
+            this.setInvalidDigest();
+        }
+
+        // categorize ReadPair
+        this.categorizeReadPair();
+        if(!this.isValid) {
+            this.forwardRead.setAttribute(BADREAD_ATTRIBUTE, this.categoryTag);
+            this.reverseRead.setAttribute(BADREAD_ATTRIBUTE, this.categoryTag);
+        }
+
+
+        // set insert size (calculation of the insert size depends on the category)
+
+
+    }
+
+    /**
+     * Mark this read pair as valid.
+     */
+    private void setValid() {
+        this.isValid=true;
+    }
+
+    /**
+     * Check if read pair as valid.
+     */
+    public boolean  isValid() {
+        return this.isValid;
+    }
+
+    private void setCategoryTag(String categoryTag) {
+        this.categoryTag=categoryTag;
     }
 
     // static methods to adjust threshold
@@ -164,20 +203,13 @@ public class ReadPair {
      * The test demands that the contig size is above the lower threshold and below the upper threshold.
      * @return
      */
-    boolean contiguous() {
+    boolean isContiguous() {
         if (! forwardRead.getReferenceName().equals(reverseRead.getReferenceName())) {
             return false; // reads not on same chromosome, therefore, not contiguous
         }
-//        logger.trace(String.format("contiguosus check. read1 is %s:%d-%d",readF.getReferenceName(),readF.getAlignmentStart(),readF.getAlignmentEnd()));
-//        logger.trace(String.format("contiguosus check. read2 is %s:%d-%d",readR.getReferenceName(),readR.getAlignmentStart(),readR.getAlignmentEnd()));
-//        logger.trace("LOWER_SIZE_THRESHOLD="+LOWER_SIZE_THRESHOLD);
-//        logger.trace("readR.getAlignmentEnd() - readF.getAlignmentStart()="+(readR.getAlignmentEnd() - readF.getAlignmentStart()));
-//        logger.trace("readF.getAlignmentEnd() - readR.getAlignmentStart()="+(readF.getAlignmentEnd() - readR.getAlignmentStart()));
         int contigsize=Math.max(reverseRead.getAlignmentStart() - forwardRead.getAlignmentStart(),
                 forwardRead.getAlignmentStart() - reverseRead.getAlignmentStart());
         if  (contigsize >  LOWER_SIZE_THRESHOLD && contigsize < UPPER_SIZE_THRESHOLD) {
-            forwardRead.setAttribute(BADREAD_ATTRIBUTE, CONTIGUOUS_TAG);
-            reverseRead.setAttribute(BADREAD_ATTRIBUTE, CONTIGUOUS_TAG);
             errorcodes.add(CONTIGUOUS);
             return true;
         } else {
@@ -199,8 +231,6 @@ public class ReadPair {
                 Math.abs(forwardRead.getAlignmentStart() - digestPair.forward().getEndpos()) < DANGLING_THRESHOLD ||
                 Math.abs(reverseRead.getAlignmentStart() - digestPair.forward().getStartpos()) < DANGLING_THRESHOLD ||
                 Math.abs(reverseRead.getAlignmentStart() - digestPair.forward().getEndpos()) < DANGLING_THRESHOLD) {
-            forwardRead.setAttribute(BADREAD_ATTRIBUTE, DANGLING_END_TAG);
-            reverseRead.setAttribute(BADREAD_ATTRIBUTE, DANGLING_END_TAG);
             errorcodes.add(SAME_DANGLING_END);
             return true;
         } else {
@@ -221,8 +251,6 @@ public class ReadPair {
         if  ( (Math.abs(digestPair.reverse().getFragmentNumber() - digestPair.forward().getFragmentNumber()) == 1)  &&
                 (forwardRead.getReadNegativeStrandFlag() != reverseRead.getReadNegativeStrandFlag()) ) {
             errorcodes.add(RELIGATION);
-            forwardRead.setAttribute(BADREAD_ATTRIBUTE, RELIGATION_TAG);
-            reverseRead.setAttribute(BADREAD_ATTRIBUTE, RELIGATION_TAG);
             return true;
         } else {
             return false;
@@ -232,18 +260,6 @@ public class ReadPair {
     /** This function gets called if we cannot find valid digests for this readpair. */
     void setInvalidDigest() {
         errorcodes.add(COULD_NOT_ASSIGN_TO_DIGEST);
-    }
-
-    /**
-     * This function is called by {@link SAMPairer} if it has determined that the reads are from the same fragment
-     * but has ruled out that they are religated or dangling.
-     * TODO refactor, make the from SAMPairer whether the reads are on the same fragment or not and do everything
-     * else internally.
-     */
-    public void setSameInternal() {
-        forwardRead.setAttribute(BADREAD_ATTRIBUTE, SAME_INTERNAL_TAG);
-        reverseRead.setAttribute(BADREAD_ATTRIBUTE, SAME_INTERNAL_TAG);
-        errorcodes.add(SAME_INTERNAL);
     }
 
     /**
@@ -264,33 +280,37 @@ public class ReadPair {
                         !forward().getReadNegativeStrandFlag() &&
                         reverse().getReadNegativeStrandFlag()) ) {
             errorcodes.add(CIRCULARIZED_READ);
-            forward().setAttribute(BADREAD_ATTRIBUTE, SELF_LIGATION_TAG);
-            reverse().setAttribute(BADREAD_ATTRIBUTE, SELF_LIGATION_TAG);
             return true;
         }  else {
             return false;
         }
     }
 
+    /**
+     * Check if insert size is too small.
+     */
+     private boolean hasTooSmallInsertSize() {
+         int insertSize = getCalculatedInsertSize(this.digestPair);
+         if (insertSize < LOWER_SIZE_THRESHOLD) {
+             return true;
+         }
+         else {
+             return false;
+         }
+     }
 
-    public boolean hasValidInsertSize(DigestPair digestPair) {
-        int insertSize = getCalculatedInsertSize(digestPair);
-        if (insertSize > UPPER_SIZE_THRESHOLD) {
-            errorcodes.add(INSERT_TOO_LONG);
-            logger.trace(String.format("Read has insert size of %d which is above the upper trheshold of %d nt", insertSize, UPPER_SIZE_THRESHOLD));
-            forward().setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_BIG_TAG);
-            reverse().setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_BIG_TAG);
-            return false;
-        } else if (insertSize < LOWER_SIZE_THRESHOLD) {
-            errorcodes.add(INSERT_TOO_SHORT);
-            forward().setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_SMALL_TAG);
-            reverse().setAttribute(BADREAD_ATTRIBUTE, INSERT_TOO_SMALL_TAG);
-            return false;
-        } else {
+    /**
+     * Check if insert size is too big.
+     */
+    private boolean hasTooBigInsertSize() {
+        int insertSize = getCalculatedInsertSize(this.digestPair);
+        if (UPPER_SIZE_THRESHOLD < insertSize) {
             return true;
         }
+        else {
+            return false;
+        }
     }
-
 
 
     /**
@@ -443,9 +463,9 @@ public class ReadPair {
      *
      * @return true if this is the case.
      */
-    boolean readOverlapsCutSite(DigestPair digestPair) {
-        int fragSta=digestPair.forward().getStartpos();
-        int fragEnd=digestPair.forward().getEndpos();
+    boolean readOverlapsCutSite() {
+        int fragSta=this.digestPair.forward().getStartpos();
+        int fragEnd=this.digestPair.forward().getEndpos();
         int fwdReadSta=this.forwardRead.getAlignmentStart();
         int fwdReadEnd=this.forwardRead.getAlignmentEnd();
         int revReadSta=this.reverseRead.getAlignmentStart();
@@ -467,76 +487,63 @@ public class ReadPair {
     }
 
 
-    boolean isValid() throws DiachromaticException {
+    private void categorizeReadPair() throws DiachromaticException {
 
-        DigestPair digestPair = getDigestPair(this);
+        // 1: Determine category for read pair
+        // -----------------------------------
 
-        // check whether we can find restriction digests that match the read pair
-        if (digestPair == null) {
-            this.setInvalidDigest();
-            return false;
-        }
-
-        // 1: Determine class for read pair
-        // --------------------------------
-
-        if (digestPair.forward().equals(digestPair.reverse())) {
+        if (this.digestPair.forward().equals(this.digestPair.reverse())) {
             // both reads are mapped to the same fragment
             if(this.isFacingPair())
             {
                 // reads point inwards
-                if(this.readOverlapsCutSite(digestPair)) {
+                if(this.readOverlapsCutSite()) {
                     // at least one read overlaps cutting site
-                    // dangling end (DE)
-                    System.out.println("XXX dangling end (DE)");
+                    setCategoryTag(readPairCategory.DANGLING_END.getTag());
                 }
                 else {
                     // no read overlaps cutting site
-                    // same internal (SI)
-                    System.out.println("XXX internal (SI)");
+                    setCategoryTag(readPairCategory.SAME_INTERNAL.getTag());
                 }
             } else {
                 // reads point outwards
-                if(this.readOverlapsCutSite(digestPair)) {
+                if(this.readOverlapsCutSite()) {
                     // at least one read overlaps cutting site
-                    // circularized dangling end (CD)
-                    System.out.println("XXX circularized dangling end (CD)");
+                    setCategoryTag(readPairCategory.CIRULARIZED_DANGLING.getTag());
                 }
                 else {
                     // no read overlaps cutting site
-                    // circularized dangling end (CI)
-                    System.out.println("XXX circularized internal (CI)");
+                    setCategoryTag(readPairCategory.CIRULARIZED_INTERNAL.getTag());
                 }
             }
         }
         else {
             // reads are mapped to different fragments
-            if(this.religation(digestPair)) {
+            if(this.religation(this.digestPair)) {
                 // reads are mapped to adjacent fragments
-                // re-ligation (RL)
-                System.out.println("XXX re-ligation (RL)");
+                setCategoryTag(readPairCategory.RE_LIGATION.getTag());
             }
             else {
                 // reads are mapped to non adjacent fragments
-                if(this.contiguous()) {
+                if(this.isContiguous()) {
                     // reads are located within a distance of an expected fragment size (between upper and lower threshold)
-                    // contigous (CT)
-                    System.out.println("XXX contigous (CT)");
+                    setCategoryTag(readPairCategory.CONTIGUOUS.getTag());
                 }
                 else {
                     // reads are located in a proper distance
-                    if(!this.hasValidInsertSize(digestPair)) {
-                        // insert size is either too big or too small
-                        // wrong size (TS or TB)
-                        System.out.println("XXX wrong size (TS or TB)");
+                    if(this.hasTooSmallInsertSize()) {
+                        setCategoryTag(readPairCategory.INSERT_TOO_SMALL.getTag());
+                    }
+                    else if(this.hasTooBigInsertSize()) {
+                        setCategoryTag(readPairCategory.INSERT_TOO_BIG.getTag());
                     } else {
-                        // pair is valid
-                        System.out.println("XXX pair is valid!");
+                        // read pair has correct insert size
+                        setCategoryTag(readPairCategory.VALID_PAIR.getTag());
+                        this.setValid();
                     }
                 }
             }
         }
-        return true;
     }
 
 

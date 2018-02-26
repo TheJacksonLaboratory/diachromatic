@@ -148,21 +148,6 @@ public class SAMPairer {
      */
     private final boolean outputRejectedReads;
     /** Tag to use to mark invalid reads to output to BAM file. */
-    private final static String BADREAD_ATTRIBUTE="YY";
-    /** Tag to mark self ligation/circularization. */
-    private final static String SELF_LIGATION_TAG="SL"; // obsolete, if we use CD and CI
-    /** Tag to mark circularized dangling ends (subclass of SL) */
-    private final static String CIRCULARIZED_DANGLING_END_TAG="CD";
-    /** Tag to mark circularized internal (subclass of SL) */
-    private final static String CIRCULARIZED_INTERNAL_TAG="CI";
-    /** Tag to mark dangling end. */
-    private final static String DANGLING_END_TAG="DE";
-    /** Tag to same fragment internal reads. */
-    private final static String SAME_INTERNAL_TAG="SI";
-    /** Tag religation reads. */
-    private final static String RELIGATION_TAG="RL";
-    /** Tag contiguous reads. */
-    private final static String CONTIGUOUS_TAG="CT";
 
     /**
      * @param sam1    SAM file for the truncated "forward" reads
@@ -189,11 +174,11 @@ public class SAMPairer {
      *
      * @return A {@link ReadPair}, i.e., a pair of SAMRecord objects representing the forward and the reverse reads.
      */
-    ReadPair getNextPair() {
+    ReadPair getNextPair() throws DiachromaticException {
         if (it1.hasNext() && it2.hasNext()) {
             SAMRecord record1 = it1.next();
             SAMRecord record2 = it2.next();
-            return new ReadPair(record1, record2);
+            return new ReadPair(record1, record2, digestmap);
         } else {
             return null;
         }
@@ -205,7 +190,7 @@ public class SAMPairer {
      * Input the pair of truncated SAM files.
      * As a side effect, write invalid reads to {@link #rejectedBamFileName}.
      */
-    public void inputSAMfiles() throws IOException {
+    public void inputSAMfiles() throws IOException, DiachromaticException {
 
         SAMFileHeader header = reader1.getFileHeader();
         String programGroupId = "@PG\tID:Diachromatic\tPN:Diachromatic\tVN:" + VERSION;
@@ -223,35 +208,31 @@ public class SAMPairer {
         ReadPair pair;
         while ((pair = getNextPair())!= null) {
             n_total++;
-            try {
-                // first check whether both reads were mapped.
-                if (pair.readPairUniquelyMapped()) {
-                    pair.pairReads();
+            // first check whether both reads were mapped.
+            if (pair.readPairUniquelyMapped()) {
+                pair.pairReads();
+            } else {
+                updateErrorMap(pair.getErrorCodes());
+                continue; // discard this read and go to the next one
+            }
+            // If we get here, then both reads were uniquely mappable.
+            pair.isValid();
+            if(pair.isValid()){
+                // set the SAM flags to paired-end
+                if (! DiTag.isDuplicate(pair)) { // check for duplicate reads
+                    validReadsWriter.addAlignment(pair.forward());
+                    validReadsWriter.addAlignment(pair.reverse());
                 } else {
-                    updateErrorMap(pair.getErrorCodes());
-                    continue; // discard this read and go to the next one
+                    n_duplicate++;
                 }
-                // If we get here, then both reads were uniquely mappable.
-                pair.isValid();
-                if (is_valid(pair)) {
-                    // set the SAM flags to paired-end
-                    if (! DiTag.isDuplicate(pair)) { // check for duplicate reads
-                        validReadsWriter.addAlignment(pair.forward());
-                        validReadsWriter.addAlignment(pair.reverse());
-                    } else {
-                        n_duplicate++;
-                    }
-                    n_good++;
-                } else {
-                    updateErrorMap(pair.getErrorCodes());
-                    if (outputRejectedReads) {
-                        rejectedReadsWriter.addAlignment(pair.forward());
-                        rejectedReadsWriter.addAlignment(pair.reverse());
-                    }
-                    // discard this read and go to the next one
+                n_good++;
+            } else {
+                updateErrorMap(pair.getErrorCodes());
+                if (outputRejectedReads) {
+                    rejectedReadsWriter.addAlignment(pair.forward());
+                    rejectedReadsWriter.addAlignment(pair.reverse());
                 }
-            } catch (DiachromaticException e) {
-                logger.error(e.getMessage()); // todo refactor
+                // discard this read and go to the next one
             }
         }
         validReadsWriter.close();
@@ -261,51 +242,6 @@ public class SAMPairer {
     }
 
 
-
-
-    /**
-     * Decide if a candidate readpair (pair of SAMRecord objects) is valid according to the rules for capture Hi-C
-     * @return true if the read is valid
-     */
-    boolean is_valid(ReadPair readpair) throws DiachromaticException {
-        //-1. check whether we can find restriction digests that match the read pair.
-        DigestPair digestPair = getDigestPair(readpair);
-        if (digestPair == null) {
-            readpair.setInvalidDigest();
-            return false;
-        }
-        //-2. Check that calculated insert size is valid
-        if (! readpair.hasValidInsertSize(digestPair)) {
-            return false;
-        }
-        //-3. Check if both reads are on the same fragment
-        // There are three subclasses of this, all are not valid.
-        if (digestPair.forward().equals(digestPair.reverse())) { // both reads in same restriction fragment.
-            if (readpair.selfLigation()) {
-                return false;
-            } else if (readpair.danglingEnd(digestPair)) {
-                return false;
-            } else {
-                // if we get here, we have reads from the same digest that are not circularized and are not dangling end, so
-                // they must be same_internal
-                readpair.setSameInternal();
-                return false;
-            }
-        }
-        // If we get here, then the reads do not map to the same restriction fragment.
-        //-4. If the reads map to neighboring fragments, then there may be a religation.
-        if (readpair.religation(digestPair)) {
-            return false;
-        }
-        //-5. If we get here, we are on different fragments and the two fragments are not direct neighbors. If they are located
-        // within one expected fragment size, then they are contiguous sequences that were not properly digested
-        if (readpair.contiguous()) {
-            return false;
-        }
-
-        // when we get here, we have ruled out artefacts
-        return true;
-    }
 
     /**
      * Get the restriction fragments ({@link Digest} objects) to which the reads map. TODO do we need a different algorithm

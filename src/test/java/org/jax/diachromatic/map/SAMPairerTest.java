@@ -34,7 +34,7 @@ public class SAMPairerTest {
     private static final boolean outputRejectedReads=false;
 
     @BeforeClass
-    public  static void init() {
+    public  static void init() throws DiachromaticException {
         ClassLoader classLoader = SAMPairerTest.class.getClassLoader();
         sam1 = classLoader.getResource("data/sam/forwardtest.sam").getFile();
         sam2 = classLoader.getResource("data/sam/reversetest.sam").getFile();
@@ -213,16 +213,16 @@ public class SAMPairerTest {
 
     /** The sixth read pair is contiguous (by manual inspection) */
     @Test
-    public void testContiguous() throws DiachromaticException {
+    public void testIsContiguous() throws DiachromaticException {
         ReadPair readpair  = readpairmap.get("1_uniquelyAlignedRead");
-        assertFalse(readpair.contiguous());
+        assertFalse(readpair.isContiguous());
         readpair = readpairmap.get("5_religation"); //5 -- note readpair 5 was on adjacent fragments and
         // thus is religation and not contiguous!
         DigestPair digestpair = sampairer.getDigestPair(readpair);
         assertTrue(readpair.religation(digestpair));
         //assertFalse(sampairer.contiguous(readpair))
         readpair = readpairmap.get("6_contiguous");//sampairer.getNextPair(); //6-- contiguous but not religated (not on adjacent digests)!
-        assertTrue(readpair.contiguous());
+        assertTrue(readpair.isContiguous());
         digestpair = sampairer.getDigestPair(readpair);
         assertFalse(readpair.religation(digestpair));
     }
