@@ -207,16 +207,31 @@ public class SAMPairer {
 
         ReadPair pair;
         while ((pair = getNextPair())!= null) {
+
             n_total++;
-            // first check whether both reads were mapped.
-            if (pair.readPairUniquelyMapped()) {
-                pair.pairReads();
-            } else {
-                updateErrorMap(pair.getErrorCodes());
-                continue; // discard this read and go to the next one
-            }
-            // If we get here, then both reads were uniquely mappable.
-            pair.isValid();
+
+            // first check whether both reads were mapped
+            if(pair.isUnMappedR1()) {n_unmapped_read1++;}
+            if(pair.isUnMappedR2()) {n_unmapped_read2++;}
+            if(pair.isMultiMappedR1()) {n_multimapped_read1++;}
+            if(pair.isMultiMappedR2()) {n_multimapped_read2++;}
+
+            // both reads were uniquely mapped, otherwise continue
+            if(!pair.isValid()) {updateErrorMap(pair.getErrorCodes()); continue;}
+
+            System.out.println("XXX" + pair.getCategoryTag());
+
+            // count category
+            if(pair.getCategoryTag().equals("DE")) {n_same_dangling_end++;} // DANGLING_END
+            if(pair.getCategoryTag().equals("CD")) {n_same_dangling_end++;} // CIRULARIZED_DANGLING
+            if(pair.getCategoryTag().equals("CI")) {n_same_dangling_end++;} // CIRULARIZED_INTERNAL
+            if(pair.getCategoryTag().equals("SI")) {n_same_internal++;} // SAME_INTERNAL
+            if(pair.getCategoryTag().equals("RL")) {n_same_dangling_end++;} // RE_LIGATION
+            if(pair.getCategoryTag().equals("SI")) {n_same_dangling_end++;} // SAME_INTERNAL
+            if(pair.getCategoryTag().equals("CT")) {n_contiguous++;}        // CONTIGUOUS
+            if(pair.getCategoryTag().equals("TS")) {n_same_dangling_end++;} // INSERT_TOO_SMALL
+            if(pair.getCategoryTag().equals("TB")) {n_same_dangling_end++;} // INSERT_TOO_BIG
+
             if(pair.isValid()){
                 // set the SAM flags to paired-end
                 if (! DiTag.isDuplicate(pair)) { // check for duplicate reads

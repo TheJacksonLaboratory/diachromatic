@@ -25,9 +25,9 @@ import static org.jax.diachromatic.map.ErrorCode.*;
 public class ReadPair {
     private static final Logger logger = LogManager.getLogger();
     /** First (forward) read in a read pair.*/
-    private final SAMRecord forwardRead;
+    private final SAMRecord R1;
     /** Second (reverse) read in a read pair.*/
-    private final SAMRecord reverseRead;
+    private final SAMRecord R2;
     /** A set of Q/C criteria that this read pair did NOT pass. */
     private Set<ErrorCode> errorcodes;
     /** Largest allowable size of the insert of a read pair.*/
@@ -45,6 +45,45 @@ public class ReadPair {
     /** Insert size */
     private int insertSize;
 
+    private boolean unmapped_read1;
+    private boolean unmapped_read2;
+
+    public boolean isUnMappedR1() {
+        if(unmapped_read1) {
+            return true;
+        } else { return false;}
+    }
+
+    public boolean isUnMappedR2() {
+        if(unmapped_read2) {
+            return true;
+        } else { return false;}
+    }
+
+    private boolean multimapped_read1;
+    private boolean multimapped_read2;
+
+    public boolean isMultiMappedR1() {
+        if(multimapped_read1) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean isMultiMappedR2() {
+        if(multimapped_read2) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private boolean isPaired=true;
+    public boolean isPaired() {
+        return this.isPaired;
+    }
+
     /**
      * Each read pair maps either to one or two fragments.
      *
@@ -54,15 +93,18 @@ public class ReadPair {
 
     /**
      *
+     * If both reads of the pair were mapped uniquely,
+     * the pair must belong to one of the categories.
+     *
      * Use as follows: readPairCategory.SELF_LIGATION.getTag() returns "SL"
      *
      */
     private enum readPairCategory
     {
+        SAME_INTERNAL("SI"),
         DANGLING_END("DE"),
         CIRULARIZED_DANGLING("CD"),
         CIRULARIZED_INTERNAL("CI"),
-        SAME_INTERNAL("SI"),
         RE_LIGATION("RL"),
         CONTIGUOUS("CT"),
         INSERT_TOO_SMALL("TS"),
@@ -89,13 +131,43 @@ public class ReadPair {
 
 
     ReadPair(SAMRecord f, SAMRecord r, Map<String, List<Digest>> digestmap) throws DiachromaticException {
-        forwardRead = f;
-        reverseRead = r;
+
+        R1 = f;
+        R2 = r;
+
         errorcodes = new HashSet<>();
         this.digestmap=digestmap;
 
-        this.digestPair = getDigestPair(this);
+        // check if both reads could be mapped
+        unmapped_read1=false; unmapped_read2=false; multimapped_read1=false; multimapped_read2=false;
+        if(R1.getReadUnmappedFlag()) {
+            unmapped_read1=true;
+            this.isPaired=false;
+        }
+        if(R2.getReadUnmappedFlag()) {
+            unmapped_read2=true;
+            this.isPaired=false;
+        }
+        // check if both reads could be uniquely mapped
+        if(R1.getAttribute("XS") != null) {
+            multimapped_read1=true;
+            this.isPaired=false;
+        }
+        if(R2.getAttribute("XS") != null) {
+            multimapped_read2=true;
+            this.isPaired=false;
+        }
+
+        System.out.println("YYY" + this.isPaired);
+
+
+        // pair reads, if both reads could be mapped uniquely
+        if(this.isPaired()) {
+            this.pairReads();
+        }
+
         // check whether we can find restriction digests that match the read pair
+        this.digestPair = getDigestPair(this);
         if (this.digestPair == null) {
             this.setInvalidDigest();
         }
@@ -103,10 +175,9 @@ public class ReadPair {
         // categorize ReadPair
         this.categorizeReadPair();
         if(!this.isValid) {
-            this.forwardRead.setAttribute(BADREAD_ATTRIBUTE, this.categoryTag);
-            this.reverseRead.setAttribute(BADREAD_ATTRIBUTE, this.categoryTag);
+            this.R1.setAttribute(BADREAD_ATTRIBUTE, this.categoryTag);
+            this.R2.setAttribute(BADREAD_ATTRIBUTE, this.categoryTag);
         }
-
 
         // set insert size (calculation of the insert size depends on the category)
 
@@ -114,14 +185,14 @@ public class ReadPair {
     }
 
     /**
-     * Mark this read pair as valid.
+     * Mark this read pair as valid with:
      */
     private void setValid() {
         this.isValid=true;
     }
 
     /**
-     * Check if read pair as valid.
+     * Check if read pair as valid with:
      */
     public boolean  isValid() {
         return this.isValid;
@@ -129,6 +200,9 @@ public class ReadPair {
 
     private void setCategoryTag(String categoryTag) {
         this.categoryTag=categoryTag;
+    }
+    public String getCategoryTag() {
+        return this.categoryTag;
     }
 
     // static methods to adjust threshold
@@ -142,11 +216,11 @@ public class ReadPair {
 
 
     SAMRecord forward() {
-        return forwardRead;
+        return R1;
     }
 
     SAMRecord reverse() {
-        return reverseRead;
+        return R2;
     }
 
     Set<ErrorCode> getErrorCodes() {
@@ -170,25 +244,25 @@ public class ReadPair {
      * or {@code FAR} and sets the {@code CT} tag accordingly.
      */
     public void characterizeReadSeparation(DigestPair digestPair) {
-        if (!forwardRead.getReferenceName().equals(reverseRead.getReferenceName())) {
+        if (!R1.getReferenceName().equals(R2.getReferenceName())) {
             // identify ditags on different chromosomes
-            forwardRead.setAttribute("CT", "TRANS");
-            reverseRead.setAttribute("CT", "TRANS");
+            R1.setAttribute("CT", "TRANS");
+            R2.setAttribute("CT", "TRANS");
             return;
         }
         // maximum possible insert size is used for determining distance of separation between fragments
         int max_possible_insert_size = digestPair.getMaximumPossibleInsertSize();
         // calculate the effective size of the insert depending on whether read 1 is mapped upstream of read 2 or vice versa
-        int effective_size = forwardRead.getAlignmentStart() < reverseRead.getAlignmentStart() ?
+        int effective_size = R1.getAlignmentStart() < R2.getAlignmentStart() ?
                 digestPair.reverse().getEndpos() - digestPair.forward().getStartpos() - max_possible_insert_size :
                 digestPair.forward().getEndpos() - digestPair.reverse().getStartpos() - max_possible_insert_size;
         // decide whether the reads are close or far.
         if (effective_size > 10_000) {
-            forwardRead.setAttribute("CT", "FAR");
-            reverseRead.setAttribute("CT", "FAR");
+            R1.setAttribute("CT", "FAR");
+            R2.setAttribute("CT", "FAR");
         } else {
-            forwardRead.setAttribute("CT", "CLOSE");
-            reverseRead.setAttribute("CT", "CLOSE");
+            R1.setAttribute("CT", "CLOSE");
+            R2.setAttribute("CT", "CLOSE");
         }
     }
 
@@ -204,11 +278,11 @@ public class ReadPair {
      * @return
      */
     boolean isContiguous() {
-        if (! forwardRead.getReferenceName().equals(reverseRead.getReferenceName())) {
+        if (! R1.getReferenceName().equals(R2.getReferenceName())) {
             return false; // reads not on same chromosome, therefore, not contiguous
         }
-        int contigsize=Math.max(reverseRead.getAlignmentStart() - forwardRead.getAlignmentStart(),
-                forwardRead.getAlignmentStart() - reverseRead.getAlignmentStart());
+        int contigsize=Math.max(R2.getAlignmentStart() - R1.getAlignmentStart(),
+                R1.getAlignmentStart() - R2.getAlignmentStart());
         if  (contigsize >  LOWER_SIZE_THRESHOLD && contigsize < UPPER_SIZE_THRESHOLD) {
             errorcodes.add(CONTIGUOUS);
             return true;
@@ -227,10 +301,10 @@ public class ReadPair {
      * @return
      */
     boolean danglingEnd(DigestPair digestPair) {
-        if  ( Math.abs(forwardRead.getAlignmentStart() - digestPair.forward().getStartpos()) < DANGLING_THRESHOLD ||
-                Math.abs(forwardRead.getAlignmentStart() - digestPair.forward().getEndpos()) < DANGLING_THRESHOLD ||
-                Math.abs(reverseRead.getAlignmentStart() - digestPair.forward().getStartpos()) < DANGLING_THRESHOLD ||
-                Math.abs(reverseRead.getAlignmentStart() - digestPair.forward().getEndpos()) < DANGLING_THRESHOLD) {
+        if  ( Math.abs(R1.getAlignmentStart() - digestPair.forward().getStartpos()) < DANGLING_THRESHOLD ||
+                Math.abs(R1.getAlignmentStart() - digestPair.forward().getEndpos()) < DANGLING_THRESHOLD ||
+                Math.abs(R2.getAlignmentStart() - digestPair.forward().getStartpos()) < DANGLING_THRESHOLD ||
+                Math.abs(R2.getAlignmentStart() - digestPair.forward().getEndpos()) < DANGLING_THRESHOLD) {
             errorcodes.add(SAME_DANGLING_END);
             return true;
         } else {
@@ -249,7 +323,7 @@ public class ReadPair {
      */
     boolean religation(DigestPair digestPair) {
         if  ( (Math.abs(digestPair.reverse().getFragmentNumber() - digestPair.forward().getFragmentNumber()) == 1)  &&
-                (forwardRead.getReadNegativeStrandFlag() != reverseRead.getReadNegativeStrandFlag()) ) {
+                (R1.getReadNegativeStrandFlag() != R2.getReadNegativeStrandFlag()) ) {
             errorcodes.add(RELIGATION);
             return true;
         } else {
@@ -269,7 +343,7 @@ public class ReadPair {
      * @return true if this read pair shows self-ligation
      */
     boolean selfLigation() {
-        if (! forwardRead.getReferenceName().equals(reverseRead.getReferenceName())) {
+        if (! R1.getReferenceName().equals(R2.getReferenceName())) {
             return false; // reads not on same chromosome, therefore, no self-ligation
         }
         if ( (forward().getAlignmentStart() < reverse().getAlignmentStart() &&
@@ -403,7 +477,7 @@ public class ReadPair {
      * add the corresponding enumeration constant from {@link ErrorCode} and return false. There are two
      * things that can go wrong -- either one or both reads could not be mapped, or one or both reads were mapped
      * to more than one locus in the genome. The XS attribute is used in bowtie2 to indicate that a read has
-     * been multimappd
+     * been multimapped.
      *
      * @return true if both reads could be uniquely mapped.
      */
@@ -440,15 +514,24 @@ public class ReadPair {
         return true;
     }
 
+    boolean readIsUnmapped() {
+
+        return true;
+    }
+
+
+
+
+
     /**
      * Check the relative orientation of the pair.
      *
      * @return true if the reads point to one another.
      */
     boolean isFacingPair() {
-        if((!this.forwardRead.getReadNegativeStrandFlag() && this.reverseRead.getReadNegativeStrandFlag() &&  this.forwardRead.getAlignmentStart()<this.reverseRead.getAlignmentEnd())
+        if((!this.R1.getReadNegativeStrandFlag() && this.R2.getReadNegativeStrandFlag() &&  this.R1.getAlignmentStart()<this.R2.getAlignmentEnd())
            ||
-           (!this.reverseRead.getReadNegativeStrandFlag() && this.forwardRead.getReadNegativeStrandFlag() &&  this.reverseRead.getAlignmentStart()<this.forwardRead.getAlignmentEnd()))
+           (!this.R2.getReadNegativeStrandFlag() && this.R1.getReadNegativeStrandFlag() &&  this.R2.getAlignmentStart()<this.R1.getAlignmentEnd()))
         {
             return true;
         }
@@ -466,10 +549,10 @@ public class ReadPair {
     boolean readOverlapsCutSite() {
         int fragSta=this.digestPair.forward().getStartpos();
         int fragEnd=this.digestPair.forward().getEndpos();
-        int fwdReadSta=this.forwardRead.getAlignmentStart();
-        int fwdReadEnd=this.forwardRead.getAlignmentEnd();
-        int revReadSta=this.reverseRead.getAlignmentStart();
-        int revReadEnd=this.reverseRead.getAlignmentEnd();
+        int fwdReadSta=this.R1.getAlignmentStart();
+        int fwdReadEnd=this.R1.getAlignmentEnd();
+        int revReadSta=this.R2.getAlignmentStart();
+        int revReadEnd=this.R2.getAlignmentEnd();
         if(
             Math.abs(fragSta-fwdReadSta) < DANGLING_THRESHOLD ||
             Math.abs(fragSta-fwdReadEnd) < DANGLING_THRESHOLD ||
