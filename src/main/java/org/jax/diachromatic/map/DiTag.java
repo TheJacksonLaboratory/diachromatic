@@ -118,7 +118,7 @@ public class DiTag {
         } else {
              ditag = new DiTag(tag2,tag1);
         }
-        logger.trace(String.format("ditag %s",ditag.chrom1));
+        //logger.trace(String.format("ditag %s",ditag.chrom1));
         if (ditagset.contains(ditag))  {
             return true; // we have already seen this readpair, it is a duplicate.
         } else {

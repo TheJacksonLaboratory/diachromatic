@@ -55,18 +55,18 @@ public class Bowtie2Runner {
      * @throws DiachromaticException
      */
     public void run() throws DiachromaticException {
-        String args[]=new String[11];
+        String args[]=new String[10];
         args[0]=pathToBowtie2;
         args[1]="--very-sensitive";
-        args[2]="--no-unal";
-        args[3]="-p";
-        args[4]="2";
-        args[5]="--reorder"; // keep same order of records as in FASTQ
-        args[6]="-x";
-        args[7]=pathToBowtieIndex;
-        args[8]=pathToInputFastq; // Input FASTQ file (just one!)
-        args[9]="-S";
-        args[10]=outname;// output name
+        //args[2]="--no-unal";
+        args[2]="-p";
+        args[3]="2";
+        args[4]="--reorder"; // keep same order of records as in FASTQ
+        args[5]="-x";
+        args[6]=pathToBowtieIndex;
+        args[7]=pathToInputFastq; // Input FASTQ file (just one!)
+        args[8]="-S";
+        args[9]=outname;// output name
 
 
         String btcomd= Arrays.stream(args).collect(Collectors.joining(" "));

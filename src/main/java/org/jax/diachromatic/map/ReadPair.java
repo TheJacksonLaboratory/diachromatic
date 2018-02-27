@@ -16,34 +16,74 @@ import java.util.Set;
 import static org.jax.diachromatic.map.ErrorCode.*;
 
 /**
- * This class represents a pair: one forward and one reverse read.
+ * This class represents a pair of reads R1 and R2 of an illumina paired-end run.
+ *
+ * For Hi-C a pair is believed to be valid, i.e. it has emerged from a DNA-DNA interaction,
+ * if it fulfills the following criteria:
+ * <ul>
+ *    <li> Both reads were mapped uniquely to the genome. </li>
+ *    <li> The pair does not show characteristics of known Hi-C artifacts including: </li>
+ *    <ul>
+ *        <li> <b>Same internal</b> - Both reads were mapped to the same restriction fragment. The 3' ends of the reads face one another and no read overlaps a cutting site. </li>
+ *        <li> <b>Same dangling end</b> - Both reads were mapped to the same restriction fragment. The 3' ends of the reads face one another and at least one read overlaps a cutting site. </li>
+ *        <li> Same circularized alias self-ligation  - Both reads were mapped to the same restriction fragment and the 5' ends of the reads face one another. This category can be further subdivided into </li>
+ *        <ul>
+ *            <li> <b>Same circularized internal</b> - No read overlaps a cutting site.
+ *            <li> Same circularized dangling - At least read overlaps a cutting site.
+ *        </ul>
+ *        <li> Re-ligation - Reads map to adjacent restriction fragments. </li>
+ *        <li> Contiguous - Reads map to different fragments that are not direct neighbors. But the distance between the reads is within one expected fragment size. </li>
+ *        <li> Wrong size - The calculated length of the fragment (di-tag length) is not within the limits set by the size-selection step in the experimental protocol. </li>
+ *        <ul>
+ *            <li> Too small - Di-tag length is smaller than a given lower threshold. </li>
+ *            <li> Too big - Di-tag length is bigger than a given lower threshold. </li>
+ *        </ul>
+ *    </ul>
+ * </ul>
+ *
+ * The insert size or di-tag length must be calculated differently for artifacts and valid pairs.
+ * For artifacts the insert size is the distance between the outermost ends of mapped reads,
+ * whereas for valid pairs it is the sum of the two distances from the 5' ends of mapped reads to the next occurrence of a cutting site.
+ *
+ * This class provides all required fields and functions to assign each pair of reads (R1,R2) unambiguously to one of the categories,
+ * given a map of restriction fragments ({@link Digest}) for each and the two SAMRecords of the pair.
+ *
+ * The categorization is done upon initialization.
  *
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
  * @version 0.1.3 (2018-01-06)
  */
 public class ReadPair {
+
     private static final Logger logger = LogManager.getLogger();
+
+    /** A set of Q/C criteria that this read pair did NOT pass. */
+    private Set<ErrorCode> errorcodes;
+
     /** First (forward) read in a read pair.*/
     private final SAMRecord R1;
     /** Second (reverse) read in a read pair.*/
     private final SAMRecord R2;
-    /** A set of Q/C criteria that this read pair did NOT pass. */
-    private Set<ErrorCode> errorcodes;
-    /** Largest allowable size of the insert of a read pair.*/
-    static int UPPER_SIZE_THRESHOLD = 1500;
+
     /** Smallest allowable size of the insert of a read pair.*/
-    static int LOWER_SIZE_THRESHOLD = 100;
+    static int LOWER_SIZE_THRESHOLD = 150;
+
+    /** Largest allowable size of the insert of a read pair.*/
+    static int UPPER_SIZE_THRESHOLD = 800;
+
     /**Length threshold in nucleotides for the end of a read being near to a restriction fragment/ligation sequence*/
     static  int DANGLING_THRESHOLD = 7;
+
     /** Tag to use to mark invalid reads to output to BAM file. */
     private final static String BADREAD_ATTRIBUTE="YY";
+
     /** Set false, if read pair is an artifact. */
     private boolean isValid=false;
-    /** A read pair belongs to one of the following categories: SL, DE, CD, CI, SI, RL, TS, TB, VP. */
+
+    /** A read pair belongs to one of the following categories: SL, DE, CD, CI, SI, RL, TS, TL, VP. */
     private String categoryTag="NA";
-    /** Insert size */
-    private int insertSize;
+
 
     private boolean unmapped_read1;
     private boolean unmapped_read2;
@@ -108,7 +148,7 @@ public class ReadPair {
         RE_LIGATION("RL"),
         CONTIGUOUS("CT"),
         INSERT_TOO_SMALL("TS"),
-        INSERT_TOO_BIG("TB"),
+        INSERT_TOO_LONG("TL"),
         VALID_PAIR("VP");
 
         private String tag;
@@ -141,11 +181,13 @@ public class ReadPair {
         // check if both reads could be mapped
         unmapped_read1=false; unmapped_read2=false; multimapped_read1=false; multimapped_read2=false;
         if(R1.getReadUnmappedFlag()) {
+            //logger.trace("Unmapped!");
             unmapped_read1=true;
             this.isPaired=false;
         }
         if(R2.getReadUnmappedFlag()) {
             unmapped_read2=true;
+
             this.isPaired=false;
         }
         // check if both reads could be uniquely mapped
@@ -158,30 +200,27 @@ public class ReadPair {
             this.isPaired=false;
         }
 
-        System.out.println("YYY" + this.isPaired);
+        if(this.isPaired) {
 
-
-        // pair reads, if both reads could be mapped uniquely
-        if(this.isPaired()) {
+            // pair reads, if both reads could be mapped uniquely
             this.pairReads();
+
+            // check whether we can find restriction digests that match the read pair
+            this.digestPair = getDigestPair(this);
+            if (this.digestPair == null) {
+                logger.trace("invalidDigest");
+                this.setInvalidDigest();
+            }
+
+            // categorize ReadPair
+            this.categorizeReadPair();
+            if(!this.isValid) {
+                this.R1.setAttribute(BADREAD_ATTRIBUTE, this.categoryTag);
+                this.R2.setAttribute(BADREAD_ATTRIBUTE, this.categoryTag);
+            }
+
+            // calculate insert sizes
         }
-
-        // check whether we can find restriction digests that match the read pair
-        this.digestPair = getDigestPair(this);
-        if (this.digestPair == null) {
-            this.setInvalidDigest();
-        }
-
-        // categorize ReadPair
-        this.categorizeReadPair();
-        if(!this.isValid) {
-            this.R1.setAttribute(BADREAD_ATTRIBUTE, this.categoryTag);
-            this.R2.setAttribute(BADREAD_ATTRIBUTE, this.categoryTag);
-        }
-
-        // set insert size (calculation of the insert size depends on the category)
-
-
     }
 
     /**
@@ -283,7 +322,7 @@ public class ReadPair {
         }
         int contigsize=Math.max(R2.getAlignmentStart() - R1.getAlignmentStart(),
                 R1.getAlignmentStart() - R2.getAlignmentStart());
-        if  (contigsize >  LOWER_SIZE_THRESHOLD && contigsize < UPPER_SIZE_THRESHOLD) {
+        if  (contigsize >  LOWER_SIZE_THRESHOLD && contigsize < UPPER_SIZE_THRESHOLD) {  // TODO: Does this make sense?
             errorcodes.add(CONTIGUOUS);
             return true;
         } else {
@@ -618,7 +657,7 @@ public class ReadPair {
                         setCategoryTag(readPairCategory.INSERT_TOO_SMALL.getTag());
                     }
                     else if(this.hasTooBigInsertSize()) {
-                        setCategoryTag(readPairCategory.INSERT_TOO_BIG.getTag());
+                        setCategoryTag(readPairCategory.INSERT_TOO_LONG.getTag());
                     } else {
                         // read pair has correct insert size
                         setCategoryTag(readPairCategory.VALID_PAIR.getTag());

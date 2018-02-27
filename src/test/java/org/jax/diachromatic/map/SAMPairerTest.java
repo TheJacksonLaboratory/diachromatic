@@ -25,7 +25,7 @@ public class SAMPairerTest {
     private static String sam1;
     private static String sam2;
 
-    /** We will; use this to keep track of the read pairs from the test files forwardtest and reverse test.
+    /** We will; use this to keep track of the read pairs from the test files forward test and reverse test.
      * Note that we have labeled the read pairs in those file to make them easy find for these tests.
      */
     private static Map<String,ReadPair> readpairmap;
@@ -238,12 +238,15 @@ public class SAMPairerTest {
         assertTrue(insertSize>THRESHOLD);
     }
 
+
     /** The insert of the seventh read pair is above threshold of 800. */
     @Test
     public void testSetSamFlagsForCorrectPair() throws DiachromaticException {
         ReadPair readpair =readpairmap.get("7_validRead1");
         SamBitflagFilter.debugDisplayBitflag(readpair.forward().getFlags());
         // before we pair, the flags are set only to zero.
+        readpair.forward().setFlags(0);
+        readpair.reverse().setFlags(0);
         assertEquals(0,readpair.forward().getFlags());
         assertEquals(0,readpair.reverse().getFlags());
         readpair.pairReads();
@@ -251,6 +254,7 @@ public class SAMPairerTest {
         assertEquals(131,readpair.reverse().getFlags());
         SamBitflagFilter.debugDisplayBitflag(readpair.forward().getFlags());
     }
+
 
     //TODO CHECK THIS TEST
     @Test

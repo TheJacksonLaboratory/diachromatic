@@ -59,7 +59,7 @@ public class SAMPairer {
     /**
      * Number of pairs with 1 or 2 unmapped reads (these pairs are discarded from further analysis).
      */
-    private int n_unmapped_pair = 0;
+    private int n_paired = 0;
     /**
      * Number of forward reads that were multimapped (had an XS tag)
      */
@@ -74,25 +74,18 @@ public class SAMPairer {
     private int n_multimappedPair = 0;
 
     private int n_could_not_assign_to_digest = 0;
-    /** Number of readpairs whose insert was found to have a size above the threshold defined  in {@link ReadPair}.*/
-    private int n_insert_too_long = 0;
-    /** Number of readpairs whose insert was found to have a size below the threshold defined  in {@link ReadPair}.*/
-    private int n_insert_too_short = 0;
-    /**
-     * Number of circularized reads, a type of artefact where the ends of one fragment ligate with each other.
-     */
-    private int n_circularized_read = 0;
-    /**
-     * Number of dangling end reads, a type of artefact where one end of the read is internal and the other is at the
-     * end of a restriction fragment.
-     */
-    private int n_same_dangling_end = 0;
+
+    /** Number of read pairs whose insert was found to have a size above the threshold defined  in {@link ReadPair}.*/
 
     private int n_same_internal = 0;
-
+    private int n_same_dangling_end = 0;
+    private int n_same_circularized_internal = 0;
+    private int n_same_circularized_dangling = 0;
     private int n_religation = 0;
-
     private int n_contiguous = 0;
+    private int n_insert_too_short = 0;
+    private int n_insert_too_long = 0;
+    private int n_valid_pairs =0;
 
     private int n_duplicate=0;
     /** Number of reads that pass all quality filters.*/
@@ -215,22 +208,23 @@ public class SAMPairer {
             if(pair.isUnMappedR2()) {n_unmapped_read2++;}
             if(pair.isMultiMappedR1()) {n_multimapped_read1++;}
             if(pair.isMultiMappedR2()) {n_multimapped_read2++;}
+            if(pair.isPaired()) {n_paired++;}
+            
+
+            // count categories of pairs
+            if(pair.getCategoryTag().equals("SI")) {n_same_internal++;}
+            if(pair.getCategoryTag().equals("DE")) {n_same_dangling_end++;}
+            if(pair.getCategoryTag().equals("CI")) {n_same_circularized_internal++;}
+            if(pair.getCategoryTag().equals("CD")) {n_same_circularized_dangling++;}
+            if(pair.getCategoryTag().equals("RL")) {n_religation++;}
+            if(pair.getCategoryTag().equals("CT")) {n_contiguous++;}
+            if(pair.getCategoryTag().equals("TS")) {n_insert_too_short++;}
+            if(pair.getCategoryTag().equals("TL")) {n_insert_too_long++;}
+            if(pair.getCategoryTag().equals("VP")) {n_valid_pairs++;}
 
             // both reads were uniquely mapped, otherwise continue
-            if(!pair.isValid()) {updateErrorMap(pair.getErrorCodes()); continue;}
+            if(!pair.isPaired()) {updateErrorMap(pair.getErrorCodes()); continue;}
 
-            System.out.println("XXX" + pair.getCategoryTag());
-
-            // count category
-            if(pair.getCategoryTag().equals("DE")) {n_same_dangling_end++;} // DANGLING_END
-            if(pair.getCategoryTag().equals("CD")) {n_same_dangling_end++;} // CIRULARIZED_DANGLING
-            if(pair.getCategoryTag().equals("CI")) {n_same_dangling_end++;} // CIRULARIZED_INTERNAL
-            if(pair.getCategoryTag().equals("SI")) {n_same_internal++;} // SAME_INTERNAL
-            if(pair.getCategoryTag().equals("RL")) {n_same_dangling_end++;} // RE_LIGATION
-            if(pair.getCategoryTag().equals("SI")) {n_same_dangling_end++;} // SAME_INTERNAL
-            if(pair.getCategoryTag().equals("CT")) {n_contiguous++;}        // CONTIGUOUS
-            if(pair.getCategoryTag().equals("TS")) {n_same_dangling_end++;} // INSERT_TOO_SMALL
-            if(pair.getCategoryTag().equals("TB")) {n_same_dangling_end++;} // INSERT_TOO_BIG
 
             if(pair.isValid()){
                 // set the SAM flags to paired-end
@@ -338,26 +332,28 @@ public class SAMPairer {
 
 
     public void printStatistics() {
+
         logger.trace(String.format("n_total pairs=%d\n", n_total));
+
         logger.trace(String.format("n_unmapped_read1=%d", n_unmapped_read1));
-        logger.trace(String.format("n_unmapped_read2=%d", n_unmapped_read2));
-        logger.trace(String.format("n_unmapped_pair=%d (%.1f%%)", n_unmapped_pair, (100.0 * n_unmapped_pair / n_total)));
+        logger.trace(String.format("n_unmapped_read2=%d\n", n_unmapped_read2));
 
         logger.trace(String.format("n_multimapped_read1=%d", n_multimapped_read1));
-        logger.trace(String.format("n_multimapped_read2=%d", n_multimapped_read2));
-        logger.trace(String.format("n_multimappedPair=%d (%.1f%%)", n_multimappedPair, (100.0 * n_multimappedPair / n_total)));
-        logger.trace(String.format("n_could_not_assign_to_digest=%d (%.1f%%)", n_could_not_assign_to_digest, (100.0 * n_could_not_assign_to_digest / n_total)));
-        logger.trace(String.format("n_insert_too_long=%d  (%.1f%%)", n_insert_too_long, (100.0 * n_insert_too_long / n_total)));
-        logger.trace(String.format("n_insert_too_short=%d  (%.1f%%)", n_insert_too_short, (100.0 * n_insert_too_short / n_total)));
-        logger.trace(String.format("n_circularized_read=%d", n_circularized_read));
-        logger.trace(String.format("n_same_dangling_end=%d", n_same_dangling_end));
+        logger.trace(String.format("n_multimapped_read2=%d\n", n_multimapped_read2));
+
+        logger.trace(String.format("n_paired=%d (%.1f%%)\n", n_paired, (100.0 * n_paired / n_total)));
+
+        logger.trace(String.format("n_could_not_assign_to_digest=%d (%.1f%%)\n", n_could_not_assign_to_digest, (100.0 * n_could_not_assign_to_digest / n_total)));
+
         logger.trace(String.format("n_same_internal=%d", n_same_internal));
+        logger.trace(String.format("n_same_dangling_end=%d", n_same_dangling_end));
+        logger.trace(String.format("n_same_circularized_read=%d", n_same_circularized_internal+n_same_circularized_dangling));
         logger.trace(String.format("n_religation=%d", n_religation));
-        logger.trace(String.format("n_contiguous=%d", n_contiguous));
-        logger.trace(String.format("n_good=%d (%.1f%%)", n_good, (100.0 * n_good / n_total)));
+        logger.trace(String.format("n_contiguous=%d\n", n_contiguous));
 
+        logger.trace(String.format("n_insert_too_long=%d  (%.1f%%)", n_insert_too_long, (100.0 * n_insert_too_long / n_total)));
+        logger.trace(String.format("n_insert_too_short=%d  (%.1f%%)\n", n_insert_too_short, (100.0 * n_insert_too_short / n_total)));
 
+        logger.trace(String.format("n_valid_pairs=%d (%.1f%%)", n_valid_pairs, (100.0 * n_valid_pairs / n_total)));
     }
-
-
 }
