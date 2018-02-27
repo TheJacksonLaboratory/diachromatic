@@ -169,6 +169,8 @@ public class ReadPair {
 
     private int n_could_not_assign_to_digest = 0;
 
+    /* Constructor */
+    /*-------------*/
 
     ReadPair(SAMRecord f, SAMRecord r, Map<String, List<Digest>> digestmap) throws DiachromaticException {
 
@@ -219,7 +221,10 @@ public class ReadPair {
                 this.R2.setAttribute(BADREAD_ATTRIBUTE, this.categoryTag);
             }
 
-            // calculate insert sizes
+            // calculate insert sizes (di-tag length)
+            if(this.isValid) {
+                logger.trace("Insert size of valid pair:" + this.getCalculatedInsertSize(digestPair) + "\t" + R1.getReadNegativeStrandFlag() + "\t" + R2.getReadNegativeStrandFlag());
+            }
         }
     }
 
@@ -427,12 +432,12 @@ public class ReadPair {
 
 
     /**
-     * Mapped reads always "point towards" the ligation sequence. We can infer that the actualy (physical) size of the
+     * Mapped reads always "point towards" the ligation sequence. We can infer that the actually (physical) size of the
      * insert goes from the 5' end of a read to the ligation sequence (for each read of the ditag). We calculate this
      * size and will filter out reads whose size is substantially above what we expect given the reported experimental
      * size selection step
      *
-     * @param digestPair  The digest pair that corresponds to this readpair.
+     * @param digestPair  The digest pair that corresponds to this read pair.
      * @return the insert size of chimeric read.
      */
     int getCalculatedInsertSize(DigestPair digestPair) {
@@ -473,6 +478,30 @@ public class ReadPair {
             }
             return insert_size;
         }
+    }
+
+    /**
+     * The insert size has to be calculated differently for valid pairs and other pairs.
+     * This function will produce reasonable results for valid pairs only.
+     *
+     * @return Insert size for valid pairs.
+     */
+    int getInsertSizeOfValidPairs() {
+        int insert_size=0;
+        int distR1, distR2;
+        if(this.isValid) {
+            if (R1.getReadNegativeStrandFlag()) {
+                // R1 is on the negative and R2 on the positive strand
+                distR1 = R1.getAlignmentEnd() - digestPair.forward().getStartpos() + 1;
+                distR2 = digestPair.reverse().getEndpos() - R2.getAlignmentStart() + 1;
+            } else {
+                // R2 is on the negative and R1 on the positive strand
+                distR1 = digestPair.forward().getEndpos() - R1.getAlignmentStart() + 1;
+                distR2 = R2.getAlignmentEnd() - digestPair.reverse().getStartpos() + 1;
+            }
+            insert_size=distR1+distR2;
+        }
+        return insert_size;
     }
 
 
