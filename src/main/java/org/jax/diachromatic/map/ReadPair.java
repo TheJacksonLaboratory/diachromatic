@@ -2,6 +2,7 @@ package org.jax.diachromatic.map;
 
 
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamPairUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.exception.DiachromaticException;
@@ -149,7 +150,8 @@ public class ReadPair {
         CONTIGUOUS("CT"),
         INSERT_TOO_SMALL("TS"),
         INSERT_TOO_LONG("TL"),
-        VALID_PAIR("VP");
+        VALID_PAIR("VP"),
+        NOT_AVAILABLE("NA");
 
         private String tag;
 
@@ -223,7 +225,7 @@ public class ReadPair {
 
             // calculate insert sizes (di-tag length)
             if(this.isValid) {
-                logger.trace("Insert size of valid pair:" + this.getCalculatedInsertSize(digestPair) + "\t" + R1.getReadNegativeStrandFlag() + "\t" + R2.getReadNegativeStrandFlag());
+                //logger.trace("Insert size of valid pair:" + this.getCalculatedInsertSize(digestPair) + "\t" + R1.getReadNegativeStrandFlag() + "\t" + R2.getReadNegativeStrandFlag());
             }
         }
     }
@@ -582,24 +584,19 @@ public class ReadPair {
         return true;
     }
 
-    boolean readIsUnmapped() {
 
-        return true;
-    }
-
-
-
+    /* Helper functions for relative orientation of pairs */
 
 
     /**
-     * Check the relative orientation of the pair.
+     * Check the relative orientation of the pair: -> <-.
      *
      * @return true if the reads point to one another.
      */
-    boolean isFacingPair() {
-        if((!this.R1.getReadNegativeStrandFlag() && this.R2.getReadNegativeStrandFlag() &&  this.R1.getAlignmentStart()<this.R2.getAlignmentEnd())
+    public boolean isInwardFacing() {
+        if((!this.R1.getReadNegativeStrandFlag() && this.R2.getReadNegativeStrandFlag() && this.R1.getAlignmentStart()<this.R2.getAlignmentEnd()) // F1R2
            ||
-           (!this.R2.getReadNegativeStrandFlag() && this.R1.getReadNegativeStrandFlag() &&  this.R2.getAlignmentStart()<this.R1.getAlignmentEnd()))
+           (!this.R2.getReadNegativeStrandFlag() && this.R1.getReadNegativeStrandFlag() && this.R2.getAlignmentStart()<this.R1.getAlignmentEnd()))  // F2R1
         {
             return true;
         }
@@ -607,6 +604,62 @@ public class ReadPair {
             return false;
         }
     }
+
+    /**
+     *
+     *
+     * @return F1F2, F2F1, R1R2, R2R1, F1R2, F2R1, R2F1, R1F2
+     */
+    public String getRelativeOrientationTag() {
+
+        String tag="NA";
+
+        if(R1.getReadNegativeStrandFlag()==R2.getReadNegativeStrandFlag()){
+            // both reads map to the same strand
+            if(!R1.getReadNegativeStrandFlag()) {
+                // both reads map to the forward strand
+                if(R1.getAlignmentStart()<=R2.getAlignmentStart()) {
+                    // R1 proceeds R2
+                    tag="F1F2";
+                } else {
+                    // R2 proceeds R1
+                    tag="F2F1";
+                }
+            } else {
+                // both reads map to the reverse strand
+                if(R1.getAlignmentEnd()<=R2.getAlignmentEnd()) {
+                    // R1 proceeds R2
+                    tag="R1R2";
+                } else {
+                    // R2 proceeds R1
+                    tag="R2R1";
+                }
+            }
+        } else {
+            // reads map to different strands
+            if(!R1.getReadNegativeStrandFlag()) {
+                // R1 is mapped to the forward and R2 to the reverse strand
+                if(R1.getAlignmentStart()<=R2.getAlignmentEnd()) {
+                    // R1 proceeds R2
+                    tag="F1R2"; // innie
+                } else {
+                    // R2 proceeds R1
+                    tag="R2F1"; //outie
+                }
+            } else {
+                // R1 is mapped to the reverse and R2 to the forward strand
+                if(R1.getAlignmentEnd()<=R2.getAlignmentStart()) {
+                    // R1 proceeds R2
+                    tag="R1F2"; // outie
+                } else {
+                    tag="F2R1"; // innie
+                }
+            }
+        }
+
+        return tag;
+    }
+
 
     /**
      * Check if at least one of the two reads overlaps the cutting site,
@@ -645,7 +698,7 @@ public class ReadPair {
 
         if (this.digestPair.forward().equals(this.digestPair.reverse())) {
             // both reads are mapped to the same fragment
-            if(this.isFacingPair())
+            if(this.isInwardFacing())
             {
                 // reads point inwards
                 if(this.readOverlapsCutSite()) {

@@ -86,6 +86,20 @@ public class SAMPairer {
     private int n_insert_too_short = 0;
     private int n_insert_too_long = 0;
     private int n_valid_pairs =0;
+    private int n_not_categorized=0;
+
+    /* count variables for different orientations of read pairs */
+
+    private int n_F1F2 = 0;
+    private int n_F2F1 = 0;
+    private int n_R1R2 = 0;
+    private int n_R2R1 = 0;
+    private int n_F1R2 = 0;
+    private int n_R1F2 = 0;
+    private int n_R2F1 = 0;
+    private int n_F2R1 = 0;
+
+
 
     private int n_duplicate=0;
     /** Number of reads that pass all quality filters.*/
@@ -212,18 +226,32 @@ public class SAMPairer {
             
 
             // count categories of pairs
-            if(pair.getCategoryTag().equals("SI")) {n_same_internal++;}
-            if(pair.getCategoryTag().equals("DE")) {n_same_dangling_end++;}
-            if(pair.getCategoryTag().equals("CI")) {n_same_circularized_internal++;}
-            if(pair.getCategoryTag().equals("CD")) {n_same_circularized_dangling++;}
-            if(pair.getCategoryTag().equals("RL")) {n_religation++;}
-            if(pair.getCategoryTag().equals("CT")) {n_contiguous++;}
-            if(pair.getCategoryTag().equals("TS")) {n_insert_too_short++;}
-            if(pair.getCategoryTag().equals("TL")) {n_insert_too_long++;}
-            if(pair.getCategoryTag().equals("VP")) {n_valid_pairs++;}
+            if(pair.isPaired()) {
+                if(pair.getCategoryTag().equals("SI")) {n_same_internal++;}
+                if(pair.getCategoryTag().equals("DE")) {n_same_dangling_end++;}
+                if(pair.getCategoryTag().equals("CI")) {n_same_circularized_internal++;}
+                if(pair.getCategoryTag().equals("CD")) {n_same_circularized_dangling++;}
+                if(pair.getCategoryTag().equals("RL")) {n_religation++;}
+                if(pair.getCategoryTag().equals("CT")) {n_contiguous++;}
+                if(pair.getCategoryTag().equals("TS")) {n_insert_too_short++;}
+                if(pair.getCategoryTag().equals("TL")) {n_insert_too_long++;}
+                if(pair.getCategoryTag().equals("VP")) {n_valid_pairs++;}
+                if(pair.getCategoryTag().equals("NA")) {n_not_categorized++;}
+            }
 
             // both reads were uniquely mapped, otherwise continue
             if(!pair.isPaired()) {updateErrorMap(pair.getErrorCodes()); continue;}
+
+            if(pair.isValid() || !pair.isValid()) {
+                if(pair.getRelativeOrientationTag().equals("F1F2")) {n_F1F2++;}
+                if(pair.getRelativeOrientationTag().equals("F2F1")) {n_F2F1++;}
+                if(pair.getRelativeOrientationTag().equals("R1R2")) {n_R1R2++;}
+                if(pair.getRelativeOrientationTag().equals("R2R1")) {n_R2R1++;}
+                if(pair.getRelativeOrientationTag().equals("F1R2")) {n_F1R2++;}
+                if(pair.getRelativeOrientationTag().equals("R2F1")) {n_R2F1++;}
+                if(pair.getRelativeOrientationTag().equals("F2R1")) {n_F2R1++;}
+                if(pair.getRelativeOrientationTag().equals("R1F2")) {n_R1F2++;}
+            }
 
 
             if(pair.isValid()){
@@ -350,10 +378,27 @@ public class SAMPairer {
         logger.trace(String.format("n_same_circularized_read=%d", n_same_circularized_internal+n_same_circularized_dangling));
         logger.trace(String.format("n_religation=%d", n_religation));
         logger.trace(String.format("n_contiguous=%d\n", n_contiguous));
+        logger.trace(String.format("n_not_categorized=%d\n", n_not_categorized));
 
         logger.trace(String.format("n_insert_too_long=%d  (%.1f%%)", n_insert_too_long, (100.0 * n_insert_too_long / n_total)));
         logger.trace(String.format("n_insert_too_short=%d  (%.1f%%)\n", n_insert_too_short, (100.0 * n_insert_too_short / n_total)));
 
         logger.trace(String.format("n_valid_pairs=%d (%.1f%%)", n_valid_pairs, (100.0 * n_valid_pairs / n_total)));
+        logger.trace("");
+        logger.trace("Total number of pairs: " + (n_same_internal+n_same_dangling_end+n_same_circularized_internal+n_same_circularized_dangling+n_religation+n_contiguous+n_insert_too_long+n_insert_too_short+n_valid_pairs));
+
+        logger.trace("");
+        logger.trace("Distribution of pair orientations (all pairs):");
+        logger.trace("n_F1F2" + "\t" + n_F1F2);
+        logger.trace("n_F2F1" + "\t" +  n_F2F1);
+        logger.trace("n_R1R2" + "\t" +  n_R1R2);
+        logger.trace("n_R2R1" + "\t" +  n_R2R1);
+        logger.trace("n_F1R2" + "\t" +  n_F1R2);
+        logger.trace("n_R2F1" + "\t" +  n_R2F1);
+        logger.trace("n_F2R1" + "\t" +  n_F2R1);
+        logger.trace("n_R1F2" + "\t" +  n_R1F2);
+        logger.trace("");
+
+
     }
 }
