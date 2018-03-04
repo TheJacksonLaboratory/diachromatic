@@ -59,7 +59,7 @@ public class SAMPairer {
     /**
      * Number of pairs with 1 or 2 unmapped reads (these pairs are discarded from further analysis).
      */
-    private int n_unmapped_pair = 0;
+    private int n_paired = 0;
     /**
      * Number of forward reads that were multimapped (had an XS tag)
      */
@@ -74,25 +74,32 @@ public class SAMPairer {
     private int n_multimappedPair = 0;
 
     private int n_could_not_assign_to_digest = 0;
-    /** Number of readpairs whose insert was found to have a size above the threshold defined  in {@link ReadPair}.*/
-    private int n_insert_too_long = 0;
-    /** Number of readpairs whose insert was found to have a size below the threshold defined  in {@link ReadPair}.*/
-    private int n_insert_too_short = 0;
-    /**
-     * Number of circularized reads, a type of artefact where the ends of one fragment ligate with each other.
-     */
-    private int n_circularized_read = 0;
-    /**
-     * Number of dangling end reads, a type of artefact where one end of the read is internal and the other is at the
-     * end of a restriction fragment.
-     */
-    private int n_same_dangling_end = 0;
+
+    /** Number of read pairs whose insert was found to have a size above the threshold defined  in {@link ReadPair}.*/
 
     private int n_same_internal = 0;
-
+    private int n_same_dangling_end = 0;
+    private int n_same_circularized_internal = 0;
+    private int n_same_circularized_dangling = 0;
     private int n_religation = 0;
-
     private int n_contiguous = 0;
+    private int n_insert_too_short = 0;
+    private int n_insert_too_long = 0;
+    private int n_valid_pairs =0;
+    private int n_not_categorized=0;
+
+    /* count variables for different orientations of read pairs */
+
+    private int n_F1F2 = 0;
+    private int n_F2F1 = 0;
+    private int n_R1R2 = 0;
+    private int n_R2R1 = 0;
+    private int n_F1R2 = 0;
+    private int n_R1F2 = 0;
+    private int n_R2F1 = 0;
+    private int n_F2R1 = 0;
+
+
 
     private int n_duplicate=0;
     /** Number of reads that pass all quality filters.*/
@@ -148,17 +155,6 @@ public class SAMPairer {
      */
     private final boolean outputRejectedReads;
     /** Tag to use to mark invalid reads to output to BAM file. */
-    private final static String BADREAD_ATTRIBUTE="YY";
-    /** Tag to mark self ligation/circularization. */
-    private final static String SELF_LIGATION_TAG="SL";
-    /** Tag to mark dangling end. */
-    private final static String DANGLING_END_TAG="DE";
-    /** Tag to same fragment internal reads. */
-    private final static String SAME_INTERNAL_TAG="SI";
-    /** Tag religation reads. */
-    private final static String RELIGATION_TAG="RL";
-    /** Tag contiguous reads. */
-    private final static String CONTIGUOUS_TAG="CT";
 
     /**
      * @param sam1    SAM file for the truncated "forward" reads
@@ -185,11 +181,11 @@ public class SAMPairer {
      *
      * @return A {@link ReadPair}, i.e., a pair of SAMRecord objects representing the forward and the reverse reads.
      */
-    ReadPair getNextPair() {
+    ReadPair getNextPair() throws DiachromaticException {
         if (it1.hasNext() && it2.hasNext()) {
             SAMRecord record1 = it1.next();
             SAMRecord record2 = it2.next();
-            return new ReadPair(record1, record2);
+            return new ReadPair(record1, record2, digestmap);
         } else {
             return null;
         }
@@ -201,7 +197,7 @@ public class SAMPairer {
      * Input the pair of truncated SAM files.
      * As a side effect, write invalid reads to {@link #rejectedBamFileName}.
      */
-    public void inputSAMfiles() throws IOException {
+    public void inputSAMfiles() throws IOException, DiachromaticException {
 
         SAMFileHeader header = reader1.getFileHeader();
         String programGroupId = "@PG\tID:Diachromatic\tPN:Diachromatic\tVN:" + VERSION;
@@ -218,35 +214,62 @@ public class SAMPairer {
 
         ReadPair pair;
         while ((pair = getNextPair())!= null) {
+
             n_total++;
-            try {
-                // first check whether both reads were mapped.
-                if (pair.readPairUniquelyMapped()) {
-                    pair.pairReads();
+
+            // first check whether both reads were mapped
+            if(pair.isUnMappedR1()) {n_unmapped_read1++;}
+            if(pair.isUnMappedR2()) {n_unmapped_read2++;}
+            if(pair.isMultiMappedR1()) {n_multimapped_read1++;}
+            if(pair.isMultiMappedR2()) {n_multimapped_read2++;}
+            if(pair.isPaired()) {n_paired++;}
+            
+
+            // count categories of pairs
+            if(pair.isPaired()) {
+                if(pair.getCategoryTag().equals("SI")) {n_same_internal++;}
+                if(pair.getCategoryTag().equals("DE")) {n_same_dangling_end++;}
+                if(pair.getCategoryTag().equals("CI")) {n_same_circularized_internal++;}
+                if(pair.getCategoryTag().equals("CD")) {n_same_circularized_dangling++;}
+                if(pair.getCategoryTag().equals("RL")) {n_religation++;}
+                if(pair.getCategoryTag().equals("CT")) {n_contiguous++;}
+                if(pair.getCategoryTag().equals("TS")) {n_insert_too_short++;}
+                if(pair.getCategoryTag().equals("TL")) {n_insert_too_long++;}
+                if(pair.getCategoryTag().equals("VP")) {n_valid_pairs++;}
+                if(pair.getCategoryTag().equals("NA")) {n_not_categorized++;}
+            }
+
+            // both reads were uniquely mapped, otherwise continue
+            if(!pair.isPaired()) {updateErrorMap(pair.getErrorCodes()); continue;}
+
+            if(pair.isValid() || !pair.isValid()) {
+                if(pair.getRelativeOrientationTag().equals("F1F2")) {n_F1F2++;}
+                if(pair.getRelativeOrientationTag().equals("F2F1")) {n_F2F1++;}
+                if(pair.getRelativeOrientationTag().equals("R1R2")) {n_R1R2++;}
+                if(pair.getRelativeOrientationTag().equals("R2R1")) {n_R2R1++;}
+                if(pair.getRelativeOrientationTag().equals("F1R2")) {n_F1R2++;}
+                if(pair.getRelativeOrientationTag().equals("R2F1")) {n_R2F1++;}
+                if(pair.getRelativeOrientationTag().equals("F2R1")) {n_F2R1++;}
+                if(pair.getRelativeOrientationTag().equals("R1F2")) {n_R1F2++;}
+            }
+
+
+            if(pair.isValid()){
+                // set the SAM flags to paired-end
+                if (! DiTag.isDuplicate(pair)) { // check for duplicate reads
+                    validReadsWriter.addAlignment(pair.forward());
+                    validReadsWriter.addAlignment(pair.reverse());
                 } else {
-                    updateErrorMap(pair.getErrorCodes());
-                    continue; // discard this read and go to the next one
+                    n_duplicate++;
                 }
-                // If we get here, then both reads were uniquely mappable.
-                if (is_valid(pair)) {
-                    // set the SAM flags to paired-end
-                    if (! DiTag.isDuplicate(pair)) { // check for duplicate reads
-                        validReadsWriter.addAlignment(pair.forward());
-                        validReadsWriter.addAlignment(pair.reverse());
-                    } else {
-                        n_duplicate++;
-                    }
-                    n_good++;
-                } else {
-                    updateErrorMap(pair.getErrorCodes());
-                    if (outputRejectedReads) {
-                        rejectedReadsWriter.addAlignment(pair.forward());
-                        rejectedReadsWriter.addAlignment(pair.reverse());
-                    }
-                    // discard this read and go to the next one
+                n_good++;
+            } else {
+                updateErrorMap(pair.getErrorCodes());
+                if (outputRejectedReads) {
+                    rejectedReadsWriter.addAlignment(pair.forward());
+                    rejectedReadsWriter.addAlignment(pair.reverse());
                 }
-            } catch (DiachromaticException e) {
-                logger.error(e.getMessage()); // todo refactor
+                // discard this read and go to the next one
             }
         }
         validReadsWriter.close();
@@ -254,61 +277,6 @@ public class SAMPairer {
             rejectedReadsWriter.close();
         }
     }
-
-
-
-
-    /**
-     * Decide if a candidate readpair (pair of SAMRecord objects) is valid according to the rules for capture Hi-C
-     * @return true if the read is valid
-     */
-    boolean is_valid(ReadPair readpair) throws DiachromaticException {
-        //-1. check whether we can find restriction digests that match the read pair.
-        DigestPair digestPair = getDigestPair(readpair);
-        if (digestPair == null) {
-            readpair.setInvalidDigest();
-            return false;
-        }
-        //-2. Check that calculated insert size is valid
-        if (! readpair.hasValidInsertSize(digestPair)) {
-            return false;
-        }
-        //-3. Check if both reads are on the same fragment
-        // There are three subclasses of this, all are not valid.
-        if (digestPair.forward().equals(digestPair.reverse())) { // both reads in same restriction fragment.
-            if (readpair.selfLigation()) {
-                return false;
-            } else if (readpair.danglingEnd(digestPair)) {
-                return false;
-            } else {
-                // if we get here, we have reads from the same digest that are not circularized and are not dangling end, so
-                // they must be same_internal
-                readpair.setSameInternal();
-                return false;
-            }
-        }
-        // If we get here, then the reads do not map to the same restriction fragment.
-        //-4. If the reads map to neighboring fragments, then there may be a religation.
-        if (readpair.religation(digestPair)) {
-            return false;
-        }
-        //-5. If we get here, we are on different fragments and the two fragments are not direct neighbors. If they are located
-        // within one expected fragment size, then they are contiguous sequences that were not properly digested
-        if (readpair.contiguous()) {
-            return false;
-        }
-
-        // when we get here, we have ruled out artefacts
-        return true;
-    }
-
-
-
-
-
-
-
-
 
 
 
@@ -392,26 +360,45 @@ public class SAMPairer {
 
 
     public void printStatistics() {
+
         logger.trace(String.format("n_total pairs=%d\n", n_total));
+
         logger.trace(String.format("n_unmapped_read1=%d", n_unmapped_read1));
-        logger.trace(String.format("n_unmapped_read2=%d", n_unmapped_read2));
-        logger.trace(String.format("n_unmapped_pair=%d (%.1f%%)", n_unmapped_pair, (100.0 * n_unmapped_pair / n_total)));
+        logger.trace(String.format("n_unmapped_read2=%d\n", n_unmapped_read2));
 
         logger.trace(String.format("n_multimapped_read1=%d", n_multimapped_read1));
-        logger.trace(String.format("n_multimapped_read2=%d", n_multimapped_read2));
-        logger.trace(String.format("n_multimappedPair=%d (%.1f%%)", n_multimappedPair, (100.0 * n_multimappedPair / n_total)));
-        logger.trace(String.format("n_could_not_assign_to_digest=%d (%.1f%%)", n_could_not_assign_to_digest, (100.0 * n_could_not_assign_to_digest / n_total)));
-        logger.trace(String.format("n_insert_too_long=%d  (%.1f%%)", n_insert_too_long, (100.0 * n_insert_too_long / n_total)));
-        logger.trace(String.format("n_insert_too_short=%d  (%.1f%%)", n_insert_too_short, (100.0 * n_insert_too_short / n_total)));
-        logger.trace(String.format("n_circularized_read=%d", n_circularized_read));
-        logger.trace(String.format("n_same_dangling_end=%d", n_same_dangling_end));
+        logger.trace(String.format("n_multimapped_read2=%d\n", n_multimapped_read2));
+
+        logger.trace(String.format("n_paired=%d (%.1f%%)\n", n_paired, (100.0 * n_paired / n_total)));
+
+        logger.trace(String.format("n_could_not_assign_to_digest=%d (%.1f%%)\n", n_could_not_assign_to_digest, (100.0 * n_could_not_assign_to_digest / n_total)));
+
         logger.trace(String.format("n_same_internal=%d", n_same_internal));
+        logger.trace(String.format("n_same_dangling_end=%d", n_same_dangling_end));
+        logger.trace(String.format("n_same_circularized_read=%d", n_same_circularized_internal+n_same_circularized_dangling));
         logger.trace(String.format("n_religation=%d", n_religation));
-        logger.trace(String.format("n_contiguous=%d", n_contiguous));
-        logger.trace(String.format("n_good=%d (%.1f%%)", n_good, (100.0 * n_good / n_total)));
+        logger.trace(String.format("n_contiguous=%d\n", n_contiguous));
+        logger.trace(String.format("n_not_categorized=%d\n", n_not_categorized));
+
+        logger.trace(String.format("n_insert_too_long=%d  (%.1f%%)", n_insert_too_long, (100.0 * n_insert_too_long / n_total)));
+        logger.trace(String.format("n_insert_too_short=%d  (%.1f%%)\n", n_insert_too_short, (100.0 * n_insert_too_short / n_total)));
+
+        logger.trace(String.format("n_valid_pairs=%d (%.1f%%)", n_valid_pairs, (100.0 * n_valid_pairs / n_total)));
+        logger.trace("");
+        logger.trace("Total number of pairs: " + (n_same_internal+n_same_dangling_end+n_same_circularized_internal+n_same_circularized_dangling+n_religation+n_contiguous+n_insert_too_long+n_insert_too_short+n_valid_pairs));
+
+        logger.trace("");
+        logger.trace("Distribution of pair orientations (all pairs):");
+        logger.trace("n_F1F2" + "\t" + n_F1F2);
+        logger.trace("n_F2F1" + "\t" +  n_F2F1);
+        logger.trace("n_R1R2" + "\t" +  n_R1R2);
+        logger.trace("n_R2R1" + "\t" +  n_R2R1);
+        logger.trace("n_F1R2" + "\t" +  n_F1R2);
+        logger.trace("n_R2F1" + "\t" +  n_R2F1);
+        logger.trace("n_F2R1" + "\t" +  n_F2R1);
+        logger.trace("n_R1F2" + "\t" +  n_R1F2);
+        logger.trace("");
 
 
     }
-
-
 }

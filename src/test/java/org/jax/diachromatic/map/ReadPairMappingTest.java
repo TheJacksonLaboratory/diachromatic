@@ -1,6 +1,7 @@
 package org.jax.diachromatic.map;
 
 
+import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.util.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -35,7 +36,7 @@ public class ReadPairMappingTest {
     private static final boolean outputRejectedReads=false;
 
     @BeforeClass
-    public  static void init() {
+    public  static void init() throws DiachromaticException {
         ClassLoader classLoader = SAMPairerTest.class.getClassLoader();
         sam1 = classLoader.getResource("data/sam/forwardtest.sam").getFile();
         sam2 = classLoader.getResource("data/sam/reversetest.sam").getFile();

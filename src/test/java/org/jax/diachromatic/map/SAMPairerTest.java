@@ -25,7 +25,7 @@ public class SAMPairerTest {
     private static String sam1;
     private static String sam2;
 
-    /** We will; use this to keep track of the read pairs from the test files forwardtest and reverse test.
+    /** We will; use this to keep track of the read pairs from the test files forward test and reverse test.
      * Note that we have labeled the read pairs in those file to make them easy find for these tests.
      */
     private static Map<String,ReadPair> readpairmap;
@@ -34,7 +34,7 @@ public class SAMPairerTest {
     private static final boolean outputRejectedReads=false;
 
     @BeforeClass
-    public  static void init() {
+    public  static void init() throws DiachromaticException {
         ClassLoader classLoader = SAMPairerTest.class.getClassLoader();
         sam1 = classLoader.getResource("data/sam/forwardtest.sam").getFile();
         sam2 = classLoader.getResource("data/sam/reversetest.sam").getFile();
@@ -213,16 +213,16 @@ public class SAMPairerTest {
 
     /** The sixth read pair is contiguous (by manual inspection) */
     @Test
-    public void testContiguous() throws DiachromaticException {
+    public void testIsContiguous() throws DiachromaticException {
         ReadPair readpair  = readpairmap.get("1_uniquelyAlignedRead");
-        assertFalse(readpair.contiguous());
+        assertFalse(readpair.isContiguous());
         readpair = readpairmap.get("5_religation"); //5 -- note readpair 5 was on adjacent fragments and
         // thus is religation and not contiguous!
         DigestPair digestpair = sampairer.getDigestPair(readpair);
         assertTrue(readpair.religation(digestpair));
         //assertFalse(sampairer.contiguous(readpair))
         readpair = readpairmap.get("6_contiguous");//sampairer.getNextPair(); //6-- contiguous but not religated (not on adjacent digests)!
-        assertTrue(readpair.contiguous());
+        assertTrue(readpair.isContiguous());
         digestpair = sampairer.getDigestPair(readpair);
         assertFalse(readpair.religation(digestpair));
     }
@@ -238,12 +238,15 @@ public class SAMPairerTest {
         assertTrue(insertSize>THRESHOLD);
     }
 
+
     /** The insert of the seventh read pair is above threshold of 800. */
     @Test
     public void testSetSamFlagsForCorrectPair() throws DiachromaticException {
         ReadPair readpair =readpairmap.get("7_validRead1");
         SamBitflagFilter.debugDisplayBitflag(readpair.forward().getFlags());
         // before we pair, the flags are set only to zero.
+        readpair.forward().setFlags(0);
+        readpair.reverse().setFlags(0);
         assertEquals(0,readpair.forward().getFlags());
         assertEquals(0,readpair.reverse().getFlags());
         readpair.pairReads();
@@ -251,6 +254,7 @@ public class SAMPairerTest {
         assertEquals(131,readpair.reverse().getFlags());
         SamBitflagFilter.debugDisplayBitflag(readpair.forward().getFlags());
     }
+
 
     //TODO CHECK THIS TEST
     @Test
