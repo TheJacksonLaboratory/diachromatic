@@ -70,3 +70,10 @@ and the first entry is correct.
 
 
 
+
+Data for Poisson regression scheme
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+We are extending the table to include data that we will use for the Poisson-regression based normalization scheme.
+
+
+
