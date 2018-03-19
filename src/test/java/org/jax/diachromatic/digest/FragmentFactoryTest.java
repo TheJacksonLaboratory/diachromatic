@@ -33,7 +33,8 @@ public class FragmentFactoryTest {
         genomeDirectoryPath = classLoader.getResource("data").getFile();
         File tempFile = folder.newFile("file.txt");
         pathToTempFile=tempFile.getAbsolutePath();
-        factory=new FragmentFactory(genomeDirectoryPath, tempFile.getAbsolutePath());
+        int marginsize=250;
+        factory=new FragmentFactory(genomeDirectoryPath, tempFile.getAbsolutePath(),marginsize);
     }
 
 
@@ -91,7 +92,7 @@ public class FragmentFactoryTest {
         }
         // input the temporary file and check the results
         BufferedReader br = new BufferedReader(new FileReader(pathToTempFile));
-        String line=null;
+        String line;
         List<String> lineList=new ArrayList<>();
         while ((line=br.readLine())!=null) {
             lineList.add(line);
@@ -160,7 +161,7 @@ public class FragmentFactoryTest {
      * @return true if data in A matches the other parameters, otherwise false.
      */
     private boolean testline(String[] A, String chrom, String start, String end, String nr, String enz1, String enz2) {
-        if (A.length!=6) return false;
+        if (A.length<6) return false;
         return (A[0].equals(chrom) &&
         A[1].equals(start) &&
         A[2].equals(end) &&

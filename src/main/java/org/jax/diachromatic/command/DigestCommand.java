@@ -27,10 +27,12 @@ public class DigestCommand extends Command {
     /** Name of output file with list of restriction fragments.*/
     private final String outfilename;
     /** Restriction enzyme that will be used to digest the genome. */
-    private RestrictionEnzyme enzyme=null;
+    private final RestrictionEnzyme enzyme;
+    /** size of margin of fragments used for calculating GC and repeat content. */
+    private final int marginSize;
 
 
-    public DigestCommand(String genomeDir,String enzymeName, String outputFile) {
+    public DigestCommand(String genomeDir,String enzymeName, String outputFile, int msize) {
         List<RestrictionEnzyme>  enzymelist = parseRestrictionEnzymes();
         this.enzyme=enzymelist.stream().filter(r->r.getName().equalsIgnoreCase(enzymeName)).findFirst().orElse(null);
         if (enzyme==null) {
@@ -39,10 +41,11 @@ public class DigestCommand extends Command {
         }
         genomeDirectoryPath=genomeDir;
         outfilename=outputFile;
+        this.marginSize=msize;
     }
 
     public void execute() {
-        FragmentFactory factory=new FragmentFactory(genomeDirectoryPath,outfilename);
+        FragmentFactory factory=new FragmentFactory(genomeDirectoryPath,outfilename,marginSize);
         try {
             List<String> enzymes=new ArrayList<>();
             enzymes.add(this.enzyme.getName());

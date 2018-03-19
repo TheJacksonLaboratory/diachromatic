@@ -28,6 +28,8 @@ public class Commandline {
     private final static String DEFAULT_TRUNCATION_SUFFIX="truncated";
 
     private final static String DEFAULT_OUTPUT_BAM_NAME="diachromatic-processed";
+    /** Default size of margin of fragments used for calculating GC and repeat content. */
+    private final static int DEFAULT_MARGIN_SIZE=250;
 
 
     private String genomeDirectory=null;
@@ -42,11 +44,12 @@ public class Commandline {
     private String pathToDiachromaticDigestFile=null;
     private String suffix=null;
     private boolean outputRejectedReads=false;
+    private int marginsize;
 
     public Commandline(String args[]) {
         final CommandLineParser cmdLineGnuParser = new DefaultParser();
 
-        final Options gnuOptions = constructGnuOptions();
+        final Options gnuOptions = constructOptions();
         org.apache.commons.cli.CommandLine commandLine;
 
         String mycommand = null;
@@ -71,31 +74,41 @@ public class Commandline {
                 printUsage("no arguments passed");
                 return;
             }
-            if (commandLine.hasOption("g")) {
-                this.genomeDirectory=commandLine.getOptionValue("g");
-            }
-            if (commandLine.hasOption("o")) {
-                this.outputFilePath=commandLine.getOptionValue("o");
-            }
-            if (commandLine.hasOption("outdir")) {
-                outputDirectory=commandLine.getOptionValue("outdir");
-            }
-            if (commandLine.hasOption("e")) {
-                this.enzyme=commandLine.getOptionValue("e");
-            }
             if (commandLine.hasOption("b")) {
                 this.bowtiepath=commandLine.getOptionValue("b");
             }
             if (commandLine.hasOption("d")) {
                 this.pathToDiachromaticDigestFile=commandLine.getOptionValue("d");
             }
-            if (commandLine.hasOption("b")) {
+            if (commandLine.hasOption("e")) {
+                this.enzyme=commandLine.getOptionValue("e");
+            }
+            if (commandLine.hasOption("g")) {
+                this.genomeDirectory=commandLine.getOptionValue("g");
+            }
+            if (commandLine.hasOption("i")) {
+                this.pathToBowtieIndex=commandLine.getOptionValue("i");
+            }
+            if (commandLine.hasOption("j")) {
                 outputRejectedReads=true;
             } else {
                 outputRejectedReads=false;
             }
-            if (commandLine.hasOption("i")) {
-                this.pathToBowtieIndex=commandLine.getOptionValue("i");
+            if (commandLine.hasOption("m")) {
+                String m = commandLine.getOptionValue("m");
+                try {
+                    this.marginsize = Integer.parseInt(m);
+                } catch (NumberFormatException e) {
+                    printUsage("[ERROR] -m option requires integer value. You passed \""+m+"\"");
+                }
+            } else {
+                this.marginsize=DEFAULT_MARGIN_SIZE;
+            }
+            if (commandLine.hasOption("o")) {
+                this.outputFilePath=commandLine.getOptionValue("o");
+            }
+            if (commandLine.hasOption("outdir")) {
+                outputDirectory=commandLine.getOptionValue("outdir");
             }
             if (commandLine.hasOption("q")) {
                 this.pathToInputFastq1 =commandLine.getOptionValue("q");
@@ -123,7 +136,7 @@ public class Commandline {
                 if (this.outputFilePath == null) {
                     outputFilePath=DEFAULT_DIGEST_FILE_NAME;
                 }
-                this.command = new DigestCommand(this.genomeDirectory, enzyme,this.outputFilePath);
+                this.command = new DigestCommand(this.genomeDirectory, enzyme,this.outputFilePath,this.marginsize);
 
             } else if (mycommand.equalsIgnoreCase("truncate")) {
                 if (this.outputDirectory == null) {
@@ -185,26 +198,27 @@ public class Commandline {
      *
      * @return Options expected from command-line of GNU form.
      */
-    public static Options constructGnuOptions()
+    private static Options constructOptions()
     {
-        final Options gnuOptions = new Options();
-        gnuOptions.addOption("o", "out", true, "name/path of output file/directory")
-                .addOption("g", "genome", true, "genome directory (with FASTA files)")
-                .addOption("e", "enzyme", true, "restriction enzyme name")
-                .addOption("b", "bowtie", true, "path to bowtie2")
+        final Options options = new Options();
+        options.addOption("b", "bowtie", true, "path to bowtie2")
                 .addOption("d", "digest", true, "path to diachromatic digest file")
-                .addOption("s", "suffix", true, "suffix for output filenames")
+                .addOption("e", "enzyme", true, "restriction enzyme name")
+                .addOption("g", "genome", true, "genome directory (with FASTA files)")
                 .addOption("i", "bowtieindex", true, "path to bowtie2 index")
-                .addOption("outdir", "outdir", true, "path to output directory")
+                .addOption("j", "bad", false, "output bad (reJected) reads to separated file")
+                .addOption("m","margin", true,"margin size for calculating GC and repeat content (default: 250 bp)")
+                .addOption("o", "out", true, "name/path of output file/directory")
                 .addOption("q", "q", true, "path to forward FASTQ input file")
                 .addOption("r", "r", true, "path to reverse FASTQ input file")
-                .addOption("j", "bad", false, "output bad (reJected) reads to separated file")
-        .addOption( Option.builder( "f1" ).longOpt("file1").desc("path to fastq file 1").hasArg(true).argName("file1").build())
-         .addOption( Option.builder( "f2" ).longOpt("file2").desc("path to fastq file 2").hasArg(true).argName("file2").build());
-        return gnuOptions;
+                .addOption("s", "suffix", true, "suffix for output filenames")
+                .addOption("outdir", "outdir", true, "path to output directory")
+                .addOption( Option.builder( "f1" ).longOpt("file1").desc("path to fastq file 1").hasArg(true).argName("file1").build())
+                .addOption( Option.builder( "f2" ).longOpt("file2").desc("path to fastq file 2").hasArg(true).argName("file2").build());
+        return options;
     }
 
-    public static String getVersion() {
+    private static String getVersion() {
         String version="0.0.0";// default, should be overwritten by the following.
         try {
             Package p = Commandline.class.getPackage();
@@ -218,18 +232,13 @@ public class Commandline {
     /**
      * Print usage information to provided OutputStream.
      */
-    public static void printUsage(String message)
+    private static void printUsage(String message)
     {
-
 
         String version=getVersion();
         final PrintWriter writer = new PrintWriter(System.out);
-       // final HelpFormatter usageFormatter = new HelpFormatter();
-       // final String applicationName="java -jar diachromatic.jar command";
-       // final Options options=constructGnuOptions();
         writer.println(message);
         writer.println();
-        //usageFormatter.printUsage(writer, 120, applicationName, options);
         writer.println("Program: Diachromatic (Analysis of Differential Capture Hi-C Interactions)");
         writer.println("Version: "+version);
         writer.println();
@@ -238,9 +247,10 @@ public class Commandline {
         writer.println("Available commands:");
         writer.println();
         writer.println("digest:");
-        writer.println("\tjava -jar Diachromatic.jar digest -g <path> -e <enzyme> [-o <outfile>]");
+        writer.println("\tjava -jar Diachromatic.jar digest -g <path> -e <enzyme> [-m <margin>] [-o <outfile>]");
         writer.println("\t<path>: path to a directory containing indexed genome FASTA files");
         writer.println("\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII)");
+        writer.println("\t<margin>: margin size in basepairs (Default: 250)");
         writer.println(String.format("\t<outfile>: optional name of output file (Default: \"%s\")",DEFAULT_DIGEST_FILE_NAME));
         writer.println();
         writer.println("truncate:");
