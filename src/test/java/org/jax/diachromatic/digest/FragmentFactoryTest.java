@@ -23,32 +23,26 @@ public class FragmentFactoryTest {
 
     private static String pathToTempFile=null;
 
-    private static String genomeDirectoryPath=null;
+    private static String genomeFastaFilePath =null;
     private static FragmentFactory factory=null;
 
     @BeforeClass
     public static void setup() throws IOException {
         ClassLoader classLoader = FragmentFactoryTest.class.getClassLoader();
-        String fastaPath = classLoader.getResource("data/chrUn_KI270745v1.fa").getFile();
-        genomeDirectoryPath = classLoader.getResource("data").getFile();
+        genomeFastaFilePath = classLoader.getResource("data/chrUn_KI270745v1.fa").getFile();
         File tempFile = folder.newFile("file.txt");
         pathToTempFile=tempFile.getAbsolutePath();
         int marginsize=250;
-        factory=new FragmentFactory(genomeDirectoryPath, tempFile.getAbsolutePath(),marginsize);
+        factory=new FragmentFactory(genomeFastaFilePath, tempFile.getAbsolutePath(),marginsize);
     }
 
 
     @Test
     public void testGetGenomeDirectoryPath() {
-        assertEquals(genomeDirectoryPath,factory.getGenomeDirectoryPath());
+        assertEquals(genomeFastaFilePath,factory.getGenomeFastaFilePath());
     }
 
-    /** There is exactly one FASTA file in src/test/resources/data */
-    @Test
-    public void testGetGenomeFASTAFileCount() {
-        int expected=1;
-        assertEquals(expected,factory.getGenomeFileCount());
-    }
+
 
 
     /** We will test cutting our test file chrUn_KI270745v1.fa

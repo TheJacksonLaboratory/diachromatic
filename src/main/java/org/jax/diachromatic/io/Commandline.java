@@ -31,8 +31,8 @@ public class Commandline {
     /** Default size of margin of fragments used for calculating GC and repeat content. */
     private final static int DEFAULT_MARGIN_SIZE=250;
 
-
-    private String genomeDirectory=null;
+    /** Absolute path to the combined genome fasta file (which will be indexed only if necessary). */
+    private String genomeFastaFile=null;
     private String outputFilePath=null;
     private String outputDirectory=null;
     private String enzyme=null;
@@ -84,7 +84,7 @@ public class Commandline {
                 this.enzyme=commandLine.getOptionValue("e");
             }
             if (commandLine.hasOption("g")) {
-                this.genomeDirectory=commandLine.getOptionValue("g");
+                this.genomeFastaFile=commandLine.getOptionValue("g");
             }
             if (commandLine.hasOption("i")) {
                 this.pathToBowtieIndex=commandLine.getOptionValue("i");
@@ -127,7 +127,7 @@ public class Commandline {
         }
         try {
             if (mycommand.equals("digest")) {
-                if (this.genomeDirectory == null) {
+                if (this.genomeFastaFile == null) {
                     printUsage("-g option required for digest command");
                 }
                 if (this.enzyme==null) {
@@ -136,7 +136,7 @@ public class Commandline {
                 if (this.outputFilePath == null) {
                     outputFilePath=DEFAULT_DIGEST_FILE_NAME;
                 }
-                this.command = new DigestCommand(this.genomeDirectory, enzyme,this.outputFilePath,this.marginsize);
+                this.command = new DigestCommand(this.genomeFastaFile, enzyme,this.outputFilePath,this.marginsize);
 
             } else if (mycommand.equalsIgnoreCase("truncate")) {
                 if (this.outputDirectory == null) {
@@ -204,7 +204,7 @@ public class Commandline {
         options.addOption("b", "bowtie", true, "path to bowtie2")
                 .addOption("d", "digest", true, "path to diachromatic digest file")
                 .addOption("e", "enzyme", true, "restriction enzyme name")
-                .addOption("g", "genome", true, "genome directory (with FASTA files)")
+                .addOption("g", "genome", true, "path to genome FASTA file (with all chromosomes)")
                 .addOption("i", "bowtieindex", true, "path to bowtie2 index")
                 .addOption("j", "bad", false, "output bad (reJected) reads to separated file")
                 .addOption("m","margin", true,"margin size for calculating GC and repeat content (default: 250 bp)")
@@ -218,7 +218,7 @@ public class Commandline {
         return options;
     }
 
-    private static String getVersion() {
+    public static String getVersion() {
         String version="0.0.0";// default, should be overwritten by the following.
         try {
             Package p = Commandline.class.getPackage();

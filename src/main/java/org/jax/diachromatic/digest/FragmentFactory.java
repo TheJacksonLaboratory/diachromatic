@@ -5,13 +5,13 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jax.diachromatic.Diachromatic;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.io.FASTAIndexManager;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,8 +50,8 @@ public class FragmentFactory {
     private Map<Integer,RestrictionEnzyme> number2enzyme;
     /** key: name of enzyme; value: index of enzyme (Note: usually, we just have one enzyme!). Symmetrical with {@link #number2enzyme}).*/
     private Map<RestrictionEnzyme,Integer> enzyme2number;
-    /** Paths to the chromosome file or files. */
-    private List<String> genomeFilePaths = null;
+    /** Path to the combined FASTA file with all (or all canonical) chromosomes. */
+    private final String genomeFastaFilePath;
     /** File handle for the output of the restriction fragments. */
     private BufferedWriter out = null;
     /** size of margin of fragments used for calculating GC and repeat content. */
@@ -60,28 +60,33 @@ public class FragmentFactory {
     private final String outfilename;
 
 
-
-    private final String genomeDirectoryPath;
     /** Header of the output file. */
     private static final String HEADER="Chromosome\tFragment_Start_Position\t" +
             "Fragment_End_Position\tFragment_Number\t5'_Restriction_Site\t3'_Restriction_Site";
 
-
-    public FragmentFactory(String directoryPath, String outfile, int msize) {
-        this.genomeDirectoryPath = directoryPath;
+    /**
+     *
+     * @param genomeFastaFile path to the combined FASTA file with all (or all canonical) chromosomes.
+     * @param outfile name of output file
+     * @param msize margin size (which is used to calculate GC and repeat content)
+     */
+    public FragmentFactory(String genomeFastaFile, String outfile, int msize) {
+        this.genomeFastaFilePath=genomeFastaFile;
         outfilename=outfile;
-        logger.trace(String.format("FragmentFactory directory=%s",directoryPath));
-        genomeFilePaths = new ArrayList<>();
+        logger.trace(String.format("FragmentFactory directory=%s",genomeFastaFile));
+        //genomeFilePaths = new ArrayList<>();
         // Note restriction enzyme file is in src/main/resources
         restrictionEnzymeList=RestrictionEnzyme.parseRestrictionEnzymes();
         marginSize=msize;
     }
 
-
-
+    /** @return the path of the multi-chromosome, single FASTA file used to calculate the digest. */
+    String getGenomeFastaFilePath() {
+        return genomeFastaFilePath;
+    }
 
     public void digestGenome(List<String> enzymes) throws DiachromaticException {
-        identifyFASTAfiles();
+
         number2enzyme =new HashMap<>();
         enzyme2number=new HashMap<>();
         int n=0;
@@ -100,10 +105,8 @@ public class FragmentFactory {
         try {
             out = new BufferedWriter(new FileWriter(outfilename));
             out.write(HEADER + "\n");
-            for (String path : genomeFilePaths) {
-                FASTAIndexManager.indexChromosome(path);
-                cutChromosome(path, out);
-            }
+            FASTAIndexManager.indexChromosome(this.genomeFastaFilePath);
+            cutChromosomes(this.genomeFastaFilePath, out);
             out.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -112,68 +115,71 @@ public class FragmentFactory {
 
     }
 
-    final String getGenomeDirectoryPath() {
-        return genomeDirectoryPath;
-    }
 
 
-    /** This function will identify FASTA files in the directory {@link #genomeDirectoryPath} by looking for all files
+    /** This function will identify FASTA files in the directory #genomeDirectoryPath by looking for all files
      * with the suffix {@code .fa}. It will add the absolute path of each file on the local file system to the
-     * list {@link #genomeFilePaths}.
+     * list genomeFilePaths
      */
-    private void identifyFASTAfiles() throws DiachromaticException {
-        File genomeDir = new File(this.genomeDirectoryPath);
-        if (!genomeDir.exists()) {
-            throw new DiachromaticException(String.format("Could not find directory \"%s\" with genome FASTA files", this.genomeDirectoryPath));
-        }
-        if (!genomeDir.isDirectory()) {
-            throw new DiachromaticException(String.format("%s must be a directory with genome FASTA files", this.genomeDirectoryPath));
-        }
-        for (final File fileEntry : genomeDir.listFiles()) {
-            if (fileEntry.isDirectory()) {
-                continue;
-            } else if (!fileEntry.getPath().endsWith(".fa")) {
-                continue;
-            } else {
-                this.genomeFilePaths.add(fileEntry.getAbsolutePath());
-            }
-        }
-    }
+//    private void identifyFASTAfiles() throws DiachromaticException {
+//        File genomeDir = new File(this.genomeDirectoryPath);
+//        if (!genomeDir.exists()) {
+//            throw new DiachromaticException(String.format("Could not find directory \"%s\" with genome FASTA files", this.genomeDirectoryPath));
+//        }
+//        if (!genomeDir.isDirectory()) {
+//            throw new DiachromaticException(String.format("%s must be a directory with genome FASTA files", this.genomeDirectoryPath));
+//        }
+//        for (final File fileEntry : genomeDir.listFiles()) {
+//            if (fileEntry.isDirectory()) {
+//                continue;
+//            } else if (!fileEntry.getPath().endsWith(".fa")) {
+//                continue;
+//            } else {
+//                this.genomeFilePaths.add(fileEntry.getAbsolutePath());
+//            }
+//        }
+//    }
 
-
-    int getGenomeFileCount() {
-        return genomeFilePaths.size();
-    }
+//
+//    int getGenomeFileCount() {
+//        return genomeFilePaths.size();
+//    }
 
     private int counter=1;
 
-    private void cutChromosome(String chromosomeFilePath, BufferedWriter out) throws Exception {
+    private void cutChromosomes(String chromosomeFilePath, BufferedWriter out) throws Exception {
         logger.trace(String.format("cutting chromosomes %s",chromosomeFilePath ));
         IndexedFastaSequenceFile fastaReader;
         try {
              fastaReader = new IndexedFastaSequenceFile(new File(chromosomeFilePath));
         } catch (Exception e) {
-            throw  new DiachromaticException(String.format("Could not create FAI file for %s [%s]",chromosomeFilePath,e.toString()));
+            throw  new DiachromaticException(String.format("Could not find FAI file for %s [%s]",chromosomeFilePath,e.toString()));
         }
-        ReferenceSequence refseq = fastaReader.nextSequence();
-        ImmutableList.Builder<Fragment> builder = new ImmutableList.Builder<>();
-        String seqname = refseq.getName();
-        // note fastaReader refers to one-based numbering scheme.
-        String sequence = fastaReader.getSequence(seqname).getBaseString().toUpperCase();//(seqname, genomicPos - maxDistToGenomicPosUp, genomicPos + maxDistToGenomicPosDown).getBaseString().toUpperCase();
 
+        ReferenceSequence refseq;
+        while ((refseq=fastaReader.nextSequence())!=null) {
+            String seqname = refseq.getName();
+            // note fastaReader refers to one-based numbering scheme.
+            String sequence = fastaReader.getSequence(seqname).getBaseString();
+            //ReferenceSequence refseq = fastaReader.nextSequence();
+            logger.trace(String.format("Cutting %s (length %d)",seqname,sequence.length() ));
+            cutOneChromosome(seqname, sequence);
+        }
+
+    }
+
+    private void cutOneChromosome(String seqname,String sequence) throws IOException {
+        ImmutableList.Builder<Fragment> builder = new ImmutableList.Builder<>();
         for (Map.Entry<RestrictionEnzyme,Integer> ent : enzyme2number.entrySet()) {
             int enzymeNumber = ent.getValue();
             RestrictionEnzyme enzyme = ent.getKey();
             String cutpat = enzyme.getPlainSite();
             int offset = enzyme.getOffset();
-
-                Pattern pattern = Pattern.compile(cutpat);
+            Pattern pattern = Pattern.compile(cutpat,Pattern.CASE_INSENSITIVE);
             Matcher matcher = pattern.matcher(sequence);
             /* one-based position of first nucleotide in the entire subsequence returned by fasta reader */
             while (matcher.find()) {
-                // replaces matcher.start() - maxDistToGenomicPosUp + offset;
                 int pos = matcher.start() + offset; /* one-based position of first nucleotide after the restriction enzyme cuts */
-               // logger.trace(String.format("Adding %d to search for %s",pos,cutpat));
                 if (counter%1000==0) {
                     System.out.println(String.format("Added %d th fragment",counter ));
                 }
@@ -209,16 +215,25 @@ public class FragmentFactory {
         }
         // output last fragment also
         // No cut ("None") at end of chromosome
-        int endpos = refseq.length();
-        out.write(String.format("%s\t%d\t%d\t%d\t%s\t%s\n",
+        int endpos = sequence.length();
+        int startpos= (previousCutPosition+1);
+        // Note: to get subsequence, decrement startpos by one to get zero-based numbering
+        // leave endpos as is--it is one past the end in zero-based numbering.
+        String subsequence=sequence.substring(startpos-1,endpos);
+        Result result = getGcAndRepeat(subsequence);
+        out.write(String.format("%s\t%d\t%d\t%d\t%s\t%s\t%d\t%.3f\t%.3f\n",
                 chromo,
                 (previousCutPosition+1),
                 endpos,
                 (++n),
                 previousCutEnzyme,
-                "None"));
-
+                "None",
+                result.getLen(),
+                result.getGc(),
+                result.getRepeat()));
     }
+
+
 
     static class Result {
         private int len;

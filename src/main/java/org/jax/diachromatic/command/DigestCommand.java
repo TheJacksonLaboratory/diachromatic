@@ -18,12 +18,12 @@ import static org.jax.diachromatic.digest.RestrictionEnzyme.parseRestrictionEnzy
  * entire genome.
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
- * @version 0.0.2 (2018-01-05)
+ * @version 0.0.3 (2018-03-19)
  */
 public class DigestCommand extends Command {
     private static final Logger logger = LogManager.getLogger();
     /** Name of the directory with genome FASTA files and FASTA index (fai) files. */
-    private final String genomeDirectoryPath;
+    private final String genomeFastaFilePath;
     /** Name of output file with list of restriction fragments.*/
     private final String outfilename;
     /** Restriction enzyme that will be used to digest the genome. */
@@ -31,21 +31,26 @@ public class DigestCommand extends Command {
     /** size of margin of fragments used for calculating GC and repeat content. */
     private final int marginSize;
 
-
-    public DigestCommand(String genomeDir,String enzymeName, String outputFile, int msize) {
+    /**
+     *
+     * @param genomeFile path to the combined FASTA file with all (or all canonical) chromosomes.
+     * @param enzymeName name of the enzyme used for digestion (e.g., DpnII)
+     * @param outputFile name of output file
+     * @param msize margin size (which is used to calculate GC and repeat content)
+     */
+    public DigestCommand(String genomeFile,String enzymeName, String outputFile, int msize) throws DiachromaticException {
         List<RestrictionEnzyme>  enzymelist = parseRestrictionEnzymes();
         this.enzyme=enzymelist.stream().filter(r->r.getName().equalsIgnoreCase(enzymeName)).findFirst().orElse(null);
         if (enzyme==null) {
-            logger.fatal(String.format("Could not find restriction enzyme \"%s\". Please correct this and try again",enzymeName ));
-            System.exit(1); // todo exception
+            throw new DiachromaticException(String.format("Could not find restriction enzyme \"%s\". Please correct this and try again",enzymeName ));
         }
-        genomeDirectoryPath=genomeDir;
+        genomeFastaFilePath =genomeFile;
         outfilename=outputFile;
         this.marginSize=msize;
     }
 
     public void execute() {
-        FragmentFactory factory=new FragmentFactory(genomeDirectoryPath,outfilename,marginSize);
+        FragmentFactory factory=new FragmentFactory(genomeFastaFilePath,outfilename,marginSize);
         try {
             List<String> enzymes=new ArrayList<>();
             enzymes.add(this.enzyme.getName());
