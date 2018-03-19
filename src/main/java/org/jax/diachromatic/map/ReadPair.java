@@ -171,10 +171,14 @@ public class ReadPair {
 
     private int n_could_not_assign_to_digest = 0;
 
-    /* Constructor */
-    /*-------------*/
-
-    ReadPair(SAMRecord f, SAMRecord r, Map<String, List<Digest>> digestmap) throws DiachromaticException {
+    /** Constructor
+     *
+     * @param f forward read
+     * @param r reverse read
+     * @param digestmap a map of all digests
+     * @throws DiachromaticException
+     */
+       ReadPair(SAMRecord f, SAMRecord r, Map<String, List<Digest>> digestmap) throws DiachromaticException {
 
         R1 = f;
         R2 = r;
@@ -191,7 +195,6 @@ public class ReadPair {
         }
         if(R2.getReadUnmappedFlag()) {
             unmapped_read2=true;
-
             this.isPaired=false;
         }
         // check if both reads could be uniquely mapped

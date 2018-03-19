@@ -154,7 +154,6 @@ public class SAMPairer {
      * If set to true, rejected readpairs are output to {@link #rejectedBamFileName} .
      */
     private final boolean outputRejectedReads;
-    /** Tag to use to mark invalid reads to output to BAM file. */
 
     /**
      * @param sam1    SAM file for the truncated "forward" reads
@@ -194,15 +193,24 @@ public class SAMPairer {
 
 
     /**
-     * Input the pair of truncated SAM files.
+     * Input the pair of truncated SAM files. We will add the PG groups of both
+     * SAM files to the header of the output file, and also add a line about the Diachromatic processing.
      * As a side effect, write invalid reads to {@link #rejectedBamFileName}.
      */
     public void inputSAMfiles() throws IOException, DiachromaticException {
 
         SAMFileHeader header = reader1.getFileHeader();
+        SAMFileHeader header2 = reader2.getFileHeader();
+        // first add program records from the reverse SAM file
+        List<SAMProgramRecord> pgList = header2.getProgramRecords();
+        for (SAMProgramRecord spr : pgList) {
+            header.addProgramRecord(spr);
+        }
+        // now add the new program record from Diachromatic
         String programGroupId = "@PG\tID:Diachromatic\tPN:Diachromatic\tVN:" + VERSION;
         SAMProgramRecord programRecord = new SAMProgramRecord(programGroupId);
         header.addProgramRecord(programRecord);
+        // we are good to go with this SAMFileHeader
 
         // init BAM outfile
         boolean presorted = false;
@@ -309,7 +317,7 @@ public class SAMPairer {
      * To overcome this problem we use the position 10 bp upstream of the start of each read when
      * assigning reads to a fragment in the digested genome. This approach was adopted from the HiCup script.
      *
-     * @return
+     * @return a {@link DigestPair} obejct representing two digests
      */
     DigestPair getDigestPair(String chrom1, int start1, int end1, String chrom2, int start2, int end2) throws DiachromaticException {
         final int OFFSET=10;
