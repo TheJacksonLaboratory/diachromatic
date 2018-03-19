@@ -1,6 +1,5 @@
 package org.jax.diachromatic.digest;
 
-import com.sun.org.apache.regexp.internal.RE;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -69,7 +68,7 @@ public class RestrictionEnzyme implements Serializable {
         InputStream is = classLoader.getResourceAsStream("data/enzymelist.tab");
         try {
             BufferedReader br = new BufferedReader(new InputStreamReader(is));
-            String line=null;
+            String line;
             while ((line=br.readLine())!=null) {
                 if (line.startsWith("#"))
                     continue; // comment
@@ -83,11 +82,11 @@ public class RestrictionEnzyme implements Serializable {
             }
             br.close();
         } catch (IOException e) {
-            logger.fatal(String.format("Could not read restriction enzymes from stream"));
+            logger.fatal("Could not read restriction enzymes from stream");
             logger.fatal(e);
             System.exit(1);
         }
-        logger.trace(String.format("Got " + reList.size() + " enzyme definitions."));
+        logger.trace(String.format("Got %d enzyme definitions.", reList.size()));
         return reList;
     }
 
