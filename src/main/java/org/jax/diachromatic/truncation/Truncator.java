@@ -4,6 +4,7 @@ package org.jax.diachromatic.truncation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.digest.RestrictionEnzyme;
+import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.util.Pair;
 
 import java.io.BufferedWriter;
@@ -54,10 +55,8 @@ public class Truncator {
         File f = new File(outdir);
         if (f.exists() && f.isFile()) {
             logger.error(String.format("Cannot make output directory called %s because a file of the same name exists", outdir));
-        } else if (f.exists()) {
-            return; // directory already there
-        } else {
-            f.mkdir();
+        } else if (! f.exists()) {
+            f.mkdir(); // only make directory if necessary.
         }
     }
 
@@ -77,21 +76,20 @@ public class Truncator {
      * For each inputSAMfiles of reads, if one or both of the reads was truncated to the extent that the remaining read is too
      * short, then skip the read inputSAMfiles. Write out each read of valid pairs to separate output files.
      */
-    public void parseFASTQ() {
-        FastQRecord.setLigationSequence(filledEndSequence);
-        FastQRecord.setRestrictionSequence(renzyme.getPlainSite());
+    public void parseFASTQ() throws DiachromaticException {
+        PotentiallyTruncatedFastQRecord.setLigationSequence(filledEndSequence);
+        PotentiallyTruncatedFastQRecord.setRestrictionSequence(renzyme.getPlainSite());
         FastqPairParser parser = new FastqPairParser(fastqFile1, fastqFile2, filledEndSequence);
         removedBecauseAtLeastOneReadTooShort = 0;
         try {
             BufferedWriter out1 = new BufferedWriter(new FileWriter(outputFASTQ1));
             BufferedWriter out2 = new BufferedWriter(new FileWriter(outputFASTQ2));
             while (parser.hasNextPair()) {
-                Pair<FastQRecord, FastQRecord> pair = parser.getNextPair();
+                Pair<PotentiallyTruncatedFastQRecord, PotentiallyTruncatedFastQRecord> pair = parser.getNextPair();
                 if (pair.first.getLen() < LENGTH_THRESHOLD) {
                     if (pair.second.getLen() < LENGTH_THRESHOLD) read2tooShort++;
                     read1tooShort++;
                     removedBecauseAtLeastOneReadTooShort++;
-                    continue;
                 } else if (pair.second.getLen() < LENGTH_THRESHOLD) {
                     read2tooShort++;
                     removedBecauseAtLeastOneReadTooShort++;
@@ -103,7 +101,7 @@ public class Truncator {
             out1.close();
             out2.close();
         } catch (IOException e) {
-            logger.fatal(String.format("Error encountered while writing truncated FASTQ files", e.getMessage()));
+            logger.fatal(String.format("Error encountered while writing truncated FASTQ files: %s", e.getMessage()));
             e.printStackTrace();
         }
         logger.trace(String.format("Number of reads processed: %d and Number of forward reads truncated %d (%.2f%%)",
@@ -115,24 +113,15 @@ public class Truncator {
 
 
     /**
-     * Number of bases in which the ligation junction and reference genome correspond before first mismatch
-     * @param ligationSequence
-     * @param re
-     * @return public static int lengthSame(String ligationSequence, RestrictionEnzyme re) {
-
-    }  */
-
-
-    /**
      * The ligation sequence in capture Hi-C is the result of cutting DNA with a restriction enzyme, filling in the
      * overhands with biotinylated nucleotides, and performing blunet ended ligation. For examples, HindIII has the
      * following cutting sequence: {@code HindIII A^AGCTT}, thus, it cuts between the first and second nucleotides (both A).
      * The ligation seqeunce will be {@code A + AGCT + AGCT + T = AAGCTAGCTT}.
      *
-     * @param re
-     * @return
+     * @param re restriction enzyme
+     * @return a string representing the filled-in ligation sequence
      */
-    public static String fillEnd(RestrictionEnzyme re) {
+    static String fillEnd(RestrictionEnzyme re) {
         String plainsite = re.getPlainSite();
         int offset = re.getOffset();
         int len = plainsite.length();

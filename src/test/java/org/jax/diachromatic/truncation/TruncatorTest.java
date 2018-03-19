@@ -1,13 +1,10 @@
 package org.jax.diachromatic.truncation;
 
 import org.jax.diachromatic.digest.RestrictionEnzyme;
+import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.util.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -130,16 +127,16 @@ public class TruncatorTest {
     int test2.fastq
      */
     @Test
-    public void testTruncationCount() {
+    public void testTruncationCount() throws DiachromaticException{
         RestrictionEnzyme hindIII = new RestrictionEnzyme("HindIII","A^AGCTT");
         String ligationSequence = Truncator.fillEnd(hindIII);
-        FastQRecord.setLigationSequence(ligationSequence);
-        FastQRecord.setRestrictionSequence(hindIII.getPlainSite());
+        PotentiallyTruncatedFastQRecord.setLigationSequence(ligationSequence);
+        PotentiallyTruncatedFastQRecord.setRestrictionSequence(hindIII.getPlainSite());
         parser=new FastqPairParser(fastq_1,fastq_2,ligationSequence);
         while (parser.hasNextPair()) {
-            Pair<FastQRecord, FastQRecord> pair = parser.getNextPair();
-            FastQRecord fqr1=pair.first;
-            FastQRecord fqr2=pair.second;
+            Pair<PotentiallyTruncatedFastQRecord, PotentiallyTruncatedFastQRecord> pair = parser.getNextPair();
+            PotentiallyTruncatedFastQRecord fqr1=pair.first;
+            PotentiallyTruncatedFastQRecord fqr2=pair.second;
         }
         assertEquals(3,parser.getReadOneTruncated());
         assertEquals(0,parser.getReadTwoTruncated());
@@ -152,16 +149,16 @@ public class TruncatorTest {
        int test2.fastq
         */
     @Test
-    public void testReadsProcessed() {
+    public void testReadsProcessed() throws DiachromaticException {
         RestrictionEnzyme hindIII = new RestrictionEnzyme("HindIII","A^AGCTT");
         String ligationSequence = Truncator.fillEnd(hindIII);
-        FastQRecord.setLigationSequence(ligationSequence);
-        FastQRecord.setRestrictionSequence(hindIII.getPlainSite());
+        PotentiallyTruncatedFastQRecord.setLigationSequence(ligationSequence);
+        PotentiallyTruncatedFastQRecord.setRestrictionSequence(hindIII.getPlainSite());
         parser=new FastqPairParser(fastq_1,fastq_2,ligationSequence);
         while (parser.hasNextPair()) {
-            Pair<FastQRecord, FastQRecord> pair = parser.getNextPair();
-            FastQRecord fqr1=pair.first;
-            FastQRecord fqr2=pair.second;
+            Pair<PotentiallyTruncatedFastQRecord, PotentiallyTruncatedFastQRecord> pair = parser.getNextPair();
+            PotentiallyTruncatedFastQRecord fqr1=pair.first;
+            PotentiallyTruncatedFastQRecord fqr2=pair.second;
         }
         assertEquals(12,parser.getnReadsProcessed());
     }

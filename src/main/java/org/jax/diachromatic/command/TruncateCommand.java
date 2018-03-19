@@ -2,6 +2,7 @@ package org.jax.diachromatic.command;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jax.diachromatic.Diachromatic;
 import org.jax.diachromatic.digest.RestrictionEnzyme;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.truncation.Truncator;
@@ -44,7 +45,7 @@ public class TruncateCommand extends Command {
     private String truncatedFastaqFile1=null;
     private String truncatedFastaqFile2=null;
 
-    Truncator truncator = null;
+    private Truncator truncator = null;
 
     private RestrictionEnzyme re=null;
 
@@ -62,7 +63,11 @@ public class TruncateCommand extends Command {
 
     public void execute() {
         logger.trace(String.format("Starting truncate command on files %s and %s",fastaqFile1,fastaqFile2 ));
-        truncator.parseFASTQ();
+        try {
+            truncator.parseFASTQ();
+        } catch (DiachromaticException e) {
+            logger.fatal("Error encountered while truncating FASTQ reads: ",e);
+        }
     }
 
     @Override
