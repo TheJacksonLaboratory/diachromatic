@@ -36,7 +36,7 @@ The output file has the following format.
 +================+==========+=========+========+==========+==========+
 | chrUn_gl000243 | 1        |  1816   | 1      | None     | HindIII  |
 +----------------+----------+---------+--------+----------+----------+
-| chrUn_gl000243 | 1817     |   4040  |   2    | HindIII  | HindIII  |
+| chrUn_gl000243 | 1817     |   4040  | 2      | HindIII  | HindIII  |
 +----------------+----------+---------+--------+----------+----------+
 | chrUn_gl000243 | 4041     | 10052   | 3      | HindIII  | HindIII  |
 +----------------+----------+---------+--------+----------+----------+
@@ -51,8 +51,6 @@ the ``map`` step of the Diachromatic pipeline.
 
 
 
-
-**ToDo** offer option to restrict to canonical chromosomes.
 
 **To Do** Check whether the first entry is correct for DpnII (not shown now). If I run the truncate command with DpnII I get
 

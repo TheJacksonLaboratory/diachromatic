@@ -14,32 +14,17 @@ import java.util.Map;
 /**
  * The purpose of this class is to encapsulate the FASTA Indexer in a Task.
  * @author Peter Robinson
- * @version 0.2.1 (2017-11-11)
+ * @version 0.2.2 (2018-03-19)
  */
 public class FASTAIndexManager {
     private static final Logger logger = LogManager.getLogger();
     /** Path to the directory where we will download and decompress the genome file. */
-    List<String> chromosomeFilePaths=null;
-
-    private ProgressBar pbar;
+    private List<String> chromosomeFilePaths=null;
 
 
     public FASTAIndexManager(List<String> paths) {
         chromosomeFilePaths=paths;
-        pbar = new ProgressBar(0,paths.size());
     }
-
-
-//    public String getContigName(File file) {
-//        String name=file.getName();
-//        int i=name.indexOf(".fa");
-//        if (i>0)
-//            return name.substring(0,i);
-//        else
-//            return name;
-//    }
-
-
 
     public static void indexChromosome(String path) throws Exception {
         if (fastaFAIalreadyExists(path)) {
@@ -57,57 +42,6 @@ public class FASTAIndexManager {
             throw new Exception(e.getMessage());
         }
     }
-
-
-
-//    /** Create FAI indices for all FASTA files (only if needed).
-//     * It is packaged as a Task to allow concurrency*/
-//    public void indexChromosomes() throws Exception {
-//        int i=0;
-//        if (chromosomeFilePaths.size()==0) {
-//            logger.error("No chromosome files found");
-//            return;
-//        }
-//        pbar.print(0);
-//        for (String path : chromosomeFilePaths) {
-//            logger.trace("Indexing chromosome "+ path);
-//            File chromosomeFile = new File(path);
-//            String contigname=null;
-//            if (chromosomeFile.isDirectory()) {
-//                continue;
-////            } else if (chromosomeFile.getName().contains("random")) {
-////                continue; /* skip random contigs! */
-//            } else if (!chromosomeFile.getPath().endsWith(".fa")) {
-//                continue;
-//            } else if (fastaFAIalreadyExists(chromosomeFile.getAbsolutePath())) {
-//                continue;
-//            } else {
-//                /* if we get here, we have a FASTA file ending with ".fa" that has not yet been indexed */
-//                try {
-//                    logger.trace("Indexing chromosome "+chromosomeFile.getAbsolutePath());
-//                    FASTAIndexer indexer=new FASTAIndexer(chromosomeFile.getAbsolutePath());
-//                    pbar.print(++i);
-//                    indexer.createFASTAindex();
-//                    indexer.writeFASTAIndex();
-//
-//
-//                } catch (IOException e) {
-//                    logger.error("Error encountered while indexing FASTA files");
-//                    logger.error(e,e);
-//                    pbar.print(0);
-//                    throw new Exception(e.getMessage());
-//                }
-//                logger.trace("Adding map entry: "+contigname+": "+chromosomeFile.getAbsolutePath());
-//
-//            }
-//        }
-//        pbar.finish();
-//        return;
-//    }
-
-
-
-
 
     /** Return true if the FASTA index is found already -- no need to repeat! */
     private static boolean fastaFAIalreadyExists(String path) {
