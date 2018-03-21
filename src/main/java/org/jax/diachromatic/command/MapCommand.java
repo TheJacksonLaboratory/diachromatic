@@ -15,7 +15,7 @@ import java.util.Map;
  * mapped reads.
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
- * @version 0.0.2 (2018-01-05)
+ * @version 0.0.3 (2018-03-20)
  */
 public class MapCommand extends Command {
     private static final Logger logger = LogManager.getLogger();
@@ -60,10 +60,8 @@ public class MapCommand extends Command {
             SAMPairer pairer = new SAMPairer(outname1,outname2,digestmap,outputRejectedReads);
             pairer.inputSAMfiles();
             pairer.printStatistics();
-        } catch (DiachromaticException e){
+        } catch (DiachromaticException | IOException e){
             e.printStackTrace();
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
         }
 
     }

@@ -86,6 +86,7 @@ public class SAMPairerTest {
      * @param pos_pair pairs of integers with start and end position of the Digests
      * @return list of "fake" Digest object
      */
+    @SafeVarargs
     private static List<Digest> makeFakeDigestList(String chrom,Pair<Integer,Integer> ...pos_pair) {
         List<Digest> dlist = new ArrayList<>();
         for (Pair<Integer,Integer> p : pos_pair) {
@@ -97,9 +98,9 @@ public class SAMPairerTest {
 
     /**
      *
-     * @param chr
-     * @param topos
-     * @param frompos
+     * @param chr chromosome
+     * @param topos start position of digest
+     * @param frompos end position of digest
      * @return one fake {@link Digest} object (See {@link #makeFakeDigestList(String, Pair[])}).
      */
     private static Digest makeFakeDigest(String chr, int frompos, int topos) {
@@ -116,36 +117,8 @@ public class SAMPairerTest {
 
 
 
-    /**
-     * An exception should be thrown if we look at a position that has no Digest.
-     * @throws DiachromaticException
-     */
-    @Test(expected = DigestNotFoundException.class)
-    public void testDigestNotFound() throws DiachromaticException{
-        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
-        DigestPair pair = sampairer.getDigestPair("crazyChromosome1", 1, 2, "wrongChromosome2", 3, 4);
-    }
 
 
-    @Test
-    public void testDigestFound1() throws DiachromaticException {
-        // we should find a digest for chr1	221618744 and for chr18	71915472
-        // note the reads are 40bp long
-        int READLEN=40;
-        DigestPair pair = sampairer.getDigestPair("chr1",221618744,(221618744+READLEN),
-                "chr18",71915472,(71915472 + READLEN));
-        assertNotNull(pair);
-    }
-
-    @Test
-    public void testDigestFound2() throws DiachromaticException {
-        // we should find a digest for chr11 92316468 and for chr17	22262669
-        int READLEN=40;
-        //sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
-        DigestPair pair = sampairer.getDigestPair("chr11",	92316468,(92316468+READLEN),
-                "chr17",	22262669,(22262669+READLEN));
-        assertNotNull(pair);
-    }
 
     /**
      * We are testing the third pair of reads, which was extracted from the file
@@ -162,19 +135,25 @@ public class SAMPairerTest {
         sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
         ReadPair readpair =readpairmap.get("1_uniquelyAlignedRead");
         assertNotNull(readpair);
-        DigestPair digestpair = sampairer.getDigestPair(readpair);
-        int insertSize=  readpair.getCalculatedInsertSize(digestpair);
-        assertFalse(insertSize<LOWER_SIZE_THRESHOLD);
-        assertFalse(insertSize>UPPER_SIZE_THRESHOLD);
-        readpair = readpairmap.get("2_multiplyAlignedRead");
-        digestpair = sampairer.getDigestPair(readpair);
-        insertSize=  readpair.getCalculatedInsertSize(digestpair);
+        int insertSize=  readpair.getCalculatedInsertSize();
         assertFalse(insertSize<LOWER_SIZE_THRESHOLD);
         assertFalse(insertSize>UPPER_SIZE_THRESHOLD);
         readpair = readpairmap.get("3_tooBig");
-        digestpair = sampairer.getDigestPair(readpair);
-        insertSize=  readpair.getCalculatedInsertSize(digestpair);
+        insertSize=  readpair.getCalculatedInsertSize();
         assertTrue(insertSize>UPPER_SIZE_THRESHOLD);
+    }
+
+    /** This should throw an exception because we cannot calculate the insert size for a multimapped read. */
+    @Test(expected =DiachromaticException.class)
+    public void testFragmentToLargeException() throws DiachromaticException {
+        int UPPER_SIZE_THRESHOLD=800;
+        int LOWER_SIZE_THRESHOLD=150;
+        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
+        ReadPair readpair = readpairmap.get("2_multiplyAlignedRead");
+        assertNotNull(readpair);
+        int insertSize=  readpair.getCalculatedInsertSize();
+        assertFalse(insertSize<LOWER_SIZE_THRESHOLD);
+        assertFalse(insertSize>UPPER_SIZE_THRESHOLD);
     }
 
     /**
@@ -197,18 +176,15 @@ public class SAMPairerTest {
     public void testReligation() throws DiachromaticException {
 
         ReadPair readpair  = readpairmap.get("1_uniquelyAlignedRead");
-        DigestPair digestpair = sampairer.getDigestPair(readpair);
-        assertFalse(readpair.religation(digestpair));
+        assertFalse(readpair.religation());
         readpair = readpairmap.get("4_selfLigation");// fourth read pair, self-ligation--not religation
-        digestpair = sampairer.getDigestPair(readpair);
-        assertFalse(readpair.religation(digestpair));
+        assertFalse(readpair.religation());
         //chr13	31421583	31425191
         //chr13	31425192	31425873
         readpair = readpairmap.get("5_religation");// 5. religation!
         assertEquals(readpair.forward().getReferenceName(),"chr13");// check we have right read!
         assertEquals(readpair.reverse().getReferenceName(),"chr13");// check we have right read!
-        digestpair = sampairer.getDigestPair(readpair);
-        assertTrue(readpair.religation(digestpair));
+        assertTrue(readpair.religation());
     }
 
     /** The sixth read pair is contiguous (by manual inspection) */
@@ -218,13 +194,11 @@ public class SAMPairerTest {
         assertFalse(readpair.isContiguous());
         readpair = readpairmap.get("5_religation"); //5 -- note readpair 5 was on adjacent fragments and
         // thus is religation and not contiguous!
-        DigestPair digestpair = sampairer.getDigestPair(readpair);
-        assertTrue(readpair.religation(digestpair));
+        assertTrue(readpair.religation());
         //assertFalse(sampairer.contiguous(readpair))
         readpair = readpairmap.get("6_contiguous");//sampairer.getNextPair(); //6-- contiguous but not religated (not on adjacent digests)!
         assertTrue(readpair.isContiguous());
-        digestpair = sampairer.getDigestPair(readpair);
-        assertFalse(readpair.religation(digestpair));
+        assertFalse(readpair.religation());
     }
 
     /** The insert of the third read pair is above threshold of 800. */
@@ -232,8 +206,7 @@ public class SAMPairerTest {
     public void testInsertTooLarge() throws DiachromaticException {
         int THRESHOLD=800;
         ReadPair readpair  = readpairmap.get("3_tooBig");//1
-        DigestPair digestpair = sampairer.getDigestPair(readpair);
-        int insertSize=readpair.getCalculatedInsertSize(digestpair);
+        int insertSize=readpair.getCalculatedInsertSize();
         //System.err.println("insert size = " + insertSize); 3823
         assertTrue(insertSize>THRESHOLD);
     }

@@ -81,9 +81,9 @@ public class DiTag {
     /**
      * See explanation for {@link Tag}. We compare the order of two {@link Tag} objects with this function
      * prior to combining a pair of {@link Tag}'s into a {@link DiTag}.
-     * @param t1
-     * @param t2
-     * @return
+     * @param t1 tag 1
+     * @param t2 tag 2
+     * @return comparison based on chromosome, strand, and sonication start
      */
     public static int compare(Tag t1, Tag t2)
     {
