@@ -7,6 +7,7 @@ import org.jax.diachromatic.digest.FragmentFactory;
 import org.jax.diachromatic.digest.RestrictionEnzyme;
 import org.jax.diachromatic.exception.DiachromaticException;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,7 +46,14 @@ public class DigestCommand extends Command {
             throw new DiachromaticException(String.format("Could not find restriction enzyme \"%s\". Please correct this and try again",enzymeName ));
         }
         genomeFastaFilePath =genomeFile;
-        outfilename=outputFile;
+        if (outputFile.equalsIgnoreCase("default")) {
+            String genome=(new File(genomeFile)).getName();
+            int i = genome.indexOf(".");
+            if (i>0) genome=genome.substring(0,i);
+            outfilename=String.format("%s_%s_digest.tsv",genome,enzymeName );
+        } else {
+            outfilename = outputFile;
+        }
         this.marginSize=msize;
     }
 

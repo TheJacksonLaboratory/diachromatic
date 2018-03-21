@@ -49,15 +49,15 @@ public class Digest {
         return chromosome;
     }
 
-    public int getStartpos() {
+    int getStartpos() {
         return startpos;
     }
 
-    public int getEndpos() {
+    int getEndpos() {
         return endpos;
     }
 
-    public int getFragmentNumber() {
+    int getFragmentNumber() {
         return fragmentNumber;
     }
 
@@ -77,8 +77,8 @@ public class Digest {
 
     /** Note -- by the way these objects are created in this program, it is sufficient to check whether
      * the chromosome and the start position are equal in order to know whether the objects are equal.
-     * @param o
-     * @return
+     * @param o the Object being compared with this.
+     * @return true if o and this are equal
      */
     @Override
     public boolean equals(Object o) {
@@ -93,7 +93,7 @@ public class Digest {
     /**
      * Parse in the digest file (see {@link org.jax.diachromatic.digest.FragmentFactory} for details on file format).
      * The map has the chromosome as a key and a list of {@link Digest} objects on the chromosome as the value
-     * @param digestFilePath
+     * @param digestFilePath path to the digest file created by {@link org.jax.diachromatic.command.DigestCommand}.
      * @return
      */
     public static Map<String,List<Digest>> readDigests(String digestFilePath) {
@@ -101,23 +101,23 @@ public class Digest {
         try {
             File f = new File(digestFilePath);
             if (! f.exists()) {
-                logger.error(String.format("Could not find digest file at ", f.getAbsolutePath() ));
+                logger.error(String.format("Could not find digest file at %s", f.getAbsolutePath() ));
                 System.exit(1);
             }
 
             BufferedReader br = new BufferedReader(new FileReader(digestFilePath));
-            String line=null;
+            String line;
             while ((line=br.readLine())!=null) {
                 //System.out.println(line);
                 if (line.startsWith("Chromosome")) continue; // the header line
                 String fields[] = line.split("\t");
-                if (fields.length!= 6) {
-                    logger.fatal(String.format("Malformed line with %d fields (required: 6): %s",fields.length,line ));
+                if (fields.length< 6) {
+                    logger.fatal(String.format("Malformed line with %d fields (required: at least 6): %s",fields.length,line ));
                     System.exit(1); // todo throw exception
                 }
                 Digest dig = new Digest(fields);
                 String chrom = dig.getChromosome();
-                List<Digest> dlist=null;
+                List<Digest> dlist;
                 if (map.containsKey(chrom)) {
                     dlist=map.get(chrom);
                 } else {

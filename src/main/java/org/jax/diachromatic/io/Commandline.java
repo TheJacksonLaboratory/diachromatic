@@ -21,7 +21,7 @@ public class Commandline {
 
     private Command command=null;
     /** The default name of the file that is produced by the {@code digest} command. */
-    private final static String DEFAULT_DIGEST_FILE_NAME="diachromaticDigest.txt";
+    private final static String DEFAULT_DIGEST_FILE_NAME="default";
 
     private final static String DEFAULT_OUTPUT_DIRECTORY="results";
 
@@ -44,6 +44,7 @@ public class Commandline {
     private String pathToDiachromaticDigestFile=null;
     private String suffix=null;
     private boolean outputRejectedReads=false;
+    private boolean doHelp=false;
     private int marginsize;
 
     public Commandline(String args[]) {
@@ -86,6 +87,9 @@ public class Commandline {
             if (commandLine.hasOption("g")) {
                 this.genomeFastaFile=commandLine.getOptionValue("g");
             }
+            if (commandLine.hasOption("h")) {
+                this.doHelp=true;
+            }
             if (commandLine.hasOption("i")) {
                 this.pathToBowtieIndex=commandLine.getOptionValue("i");
             }
@@ -125,13 +129,21 @@ public class Commandline {
             String msg = String.format("Could not parse options %s [%s]",clstring, parseException.toString());
            printUsage(msg );
         }
+        if (doHelp ) {
+            switch (mycommand) {
+                case "digest": printHelpHeader(); printDigestHelp(true); break;
+                case "truncate": printHelpHeader(); printTruncateHelp(true); break;
+                case "map": printHelpHeader(); printMapHelp(true); break;
+            }
+            System.exit(1);
+        }
         try {
             if (mycommand.equals("digest")) {
                 if (this.genomeFastaFile == null) {
-                    printUsage("-g option required for digest command");
+                    printDigestHelp("-g option required for digest command");
                 }
                 if (this.enzyme==null) {
-                    printUsage("-e option required for digest command");
+                    printDigestHelp("-e option required for digest command");
                 }
                 if (this.outputFilePath == null) {
                     outputFilePath=DEFAULT_DIGEST_FILE_NAME;
@@ -142,11 +154,11 @@ public class Commandline {
                 if (this.outputDirectory == null) {
                     this.outputDirectory=DEFAULT_OUTPUT_DIRECTORY;
                 } else if (this.pathToInputFastq1 == null) {
-                    printUsage("-q option required for truncate command");
+                    printTruncateHelp("-q option required for truncate command");
                 } else if (this.pathToInputFastq2 == null) {
-                    printUsage("-r option required for truncate command");
+                    printTruncateHelp("-r option required for truncate command");
                 } else if (this.enzyme == null) {
-                    printUsage("-e option required for truncate command");
+                    printTruncateHelp("-e option required for truncate command");
                 }
                 if (suffix==null) {
                     suffix=DEFAULT_TRUNCATION_SUFFIX;
@@ -155,22 +167,22 @@ public class Commandline {
                 this.command = new TruncateCommand(outputDirectory, pathToInputFastq1, pathToInputFastq2, enzyme,suffix);
             } else if (mycommand.equalsIgnoreCase("map")) {
                 if (this.bowtiepath==null) {
-                    printUsage("-b option required for map command");
+                    printMapHelp("-b option required for map command");
                 }
                 if (this.pathToBowtieIndex==null) {
-                    printUsage("-i option (bowtie index) required for map command");
+                    printMapHelp("-i option (bowtie index) required for map command");
                 }
                 if (this.pathToInputFastq1 ==null) {
-                    printUsage("-q option (FASTQ 1) required for map command");
+                    printMapHelp("-q option (FASTQ 1) required for map command");
                 }
                 if (this.pathToInputFastq2 ==null) {
-                    printUsage("-r option (FASTQ 2) required for map command");
+                    printMapHelp("-r option (FASTQ 2) required for map command");
                 }
                 if (this.outputFilePath==null) {
                     outputFilePath=DEFAULT_OUTPUT_BAM_NAME;
                 }
                 if (pathToDiachromaticDigestFile==null) {
-                    printUsage("-d option required for map command");
+                    printMapHelp("-d option required for map command");
                 }
                 this.command=new MapCommand(bowtiepath,
                         pathToBowtieIndex,
@@ -205,6 +217,7 @@ public class Commandline {
                 .addOption("d", "digest", true, "path to diachromatic digest file")
                 .addOption("e", "enzyme", true, "restriction enzyme name")
                 .addOption("g", "genome", true, "path to genome FASTA file (with all chromosomes)")
+                .addOption("h", "help", false, "shows help for current command")
                 .addOption("i", "bowtieindex", true, "path to bowtie2 index")
                 .addOption("j", "bad", false, "output bad (reJected) reads to separated file")
                 .addOption("m","margin", true,"margin size for calculating GC and repeat content (default: 250 bp)")
@@ -229,53 +242,104 @@ public class Commandline {
         return version;
     }
 
+
+    private static void printDigestHelp(String message) {
+        System.out.println("\n"+ message + "\n");
+        printDigestHelp(true);
+        System.out.println();
+        System.exit(0);
+    }
+
+    private static void printDigestHelp(boolean specific) {
+
+        if (specific) {
+            System.out.println("Command and options for digest function");
+            System.out.println("\tdigest creates an in silico digest of the genome that is need in later steps of the analysis");
+        }
+
+        System.out.println("digest:\n" +
+            "\tjava -jar Diachromatic.jar digest -g <path> -e <enzyme> [-m <margin>] [-o <outfile>]\n" +
+            "\t\t<path>: path to a directory containing indexed genome FASTA files\n" +
+            "\t\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII)\n" +
+            "\t\t<margin>: margin size in basepairs (Default: 250)\n" +
+            "\t\t<outfile>: outfile name (Default: genome_enzyme_digest.tsv)\n" +
+            String.format("\t\t<outfile>: optional name of output file (Default: \"%s\")",DEFAULT_DIGEST_FILE_NAME));
+    }
+
+    private static void printTruncateHelp(String message) {
+        System.out.println("\n"+ message + "\n");
+        printTruncateHelp(true);
+        System.out.println();
+        System.exit(0);
+    }
+
+    private static void printTruncateHelp(boolean specific) {
+        if (specific) {
+            System.out.println("Command and options for truncate function");
+            System.out.println("\ttruncate searches for Hi-C religation sequences and truncates reads accordingly");
+        }
+        System.out.println("truncate:\n" +
+             "\tjava -jar Diachromatic.jar truncate -q <forward.fq.gz> \\ \n"+
+            "\t\t\t-r <reverse.fq.gz> -e <enzyme> -s <suffix> --outdir <directory>\n"+
+                "\t\t<forward.fq.gz>: path to the forward FASTQ file (may or may not be compressed with gzip)\n"+
+        "\t\t<reverse.fq.gz>: path to the reverse FASTQ file (may or may not be compressed with gzip)\n"+
+        "\t\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII)\n"+
+        "\t\t<suffix>: suffix that will be added to the output truncated FASTQ files\n"+
+        String.format("\t\t<outfile>: optional name of output file (Default: \"%s\")",DEFAULT_TRUNCATION_SUFFIX));
+    }
+
+    private static void printMapHelp(String message) {
+        System.out.println("\n"+ message + "\n");
+        printMapHelp(true);
+        System.out.println();
+        System.exit(0);
+    }
+
+
+    private static void printMapHelp(boolean specific) {
+        if (specific) {
+            System.out.println("Command and options for map function");
+            System.out.println("\tmap map uses bowtie2 to map reads and then performs Q/C and repairing.");
+        }
+        System.out.println("map:\n" +
+        "\tjava -jar Diachromatic.jar map -b <bowtie2> -i <bowtie2-index> \\ \n" +
+        "\t\t\t-q <forward.truncated.fq.gz> -r <reverse.truncated.fq.gz> \\ \n" +
+        "\t\t\t-d <digest> [-o <outfile>] [-b]\n" +
+        "\t\t<bowtie2>: path to bowtie2 executable\n" +
+        "\t\t<bowtie2-index>: path to bowtie2 index for digested genome\n" +
+        "\t\t<forward.truncated.fq.gz>: path to the truncated forward FASTQ file\n" +
+        "\t\t<reverse.truncated.fq.gz>: path to the truncated reverse FASTQ file\n" +
+        "\t\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII)\n" +
+        "\t\t<digest>: path to the digest file produced by the digest command\n" +
+        String.format("\t\t<outfile>: optional name of output file (Default: \"%s.bam\")",DEFAULT_OUTPUT_BAM_NAME));
+        System.out.println("\t\t-b: output rejected reads to file (false if no -b option passed)");
+    }
+
+    private static void printHelpHeader() {
+        String version=getVersion();
+        System.out.println();
+        System.out.println("Diachromatic (Analysis of Differential Capture Hi-C Interactions)\n"+
+                "Version: "+version + "\n\n");
+    }
+
+
+
     /**
      * Print usage information to provided OutputStream.
      */
     private static void printUsage(String message)
     {
+        printHelpHeader();
+        System.out.println(message + "\n\n"+
+        "Usage: java -jar Diachromatic.jar <command> [options]\n\n"+
+        "Available commands:\n\n");
 
-        String version=getVersion();
-        final PrintWriter writer = new PrintWriter(System.out);
-        writer.println(message);
-        writer.println();
-        writer.println("Program: Diachromatic (Analysis of Differential Capture Hi-C Interactions)");
-        writer.println("Version: "+version);
-        writer.println();
-        writer.println("Usage: java -jar Diachromatic.jar <command> [options]");
-        writer.println();
-        writer.println("Available commands:");
-        writer.println();
-        writer.println("digest:");
-        writer.println("\tjava -jar Diachromatic.jar digest -g <path> -e <enzyme> [-m <margin>] [-o <outfile>]");
-        writer.println("\t<path>: path to a directory containing indexed genome FASTA files");
-        writer.println("\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII)");
-        writer.println("\t<margin>: margin size in basepairs (Default: 250)");
-        writer.println(String.format("\t<outfile>: optional name of output file (Default: \"%s\")",DEFAULT_DIGEST_FILE_NAME));
-        writer.println();
-        writer.println("truncate:");
-        writer.println("\tjava -jar Diachromatic.jar truncate -q <forward.fq.gz> \\");
-        writer.println("\t\t-r <reverse.fq.gz> -e <enzyme> -s <suffix> --outdir <directory>");
-        writer.println("\t<forward.fq.gz>: path to the forward FASTQ file (may or may not be compressed with gzip)");
-        writer.println("\t<reverse.fq.gz>: path to the reverse FASTQ file (may or may not be compressed with gzip)");
-        writer.println("\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII)");
-        writer.println("\t<suffix>: suffix that will be added to the output truncated FASTQ files");
-        writer.println(String.format("\t<outfile>: optional name of output file (Default: \"%s\")",DEFAULT_TRUNCATION_SUFFIX));
-        writer.println();
-        writer.println("map:");
-        writer.println("\tjava -jar Diachromatic.jar map -b <bowtie2> -i <bowtie2-index> \\");
-        writer.println("\t\t-q <forward.truncated.fq.gz> -r <reverse.truncated.fq.gz> \\");
-        writer.println("\t\t-d <digest> [-o <outfile>] [-b]");
-        writer.println("\t<bowtie2>: path to bowtie2 executable");
-        writer.println("\t<bowtie2-index>: path to bowtie2 index for digested genome");
-        writer.println("\t<forward.truncated.fq.gz>: path to the truncated forward FASTQ file");
-        writer.println("\t<reverse.truncated.fq.gz>: path to the truncated reverse FASTQ file");
-        writer.println("\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII)");
-        writer.println("\t<digest>: path to the digest file produced by the digest command");
-        writer.println(String.format("\t<outfile>: optional name of output file (Default: \"%s.bam\")",DEFAULT_OUTPUT_BAM_NAME));
-        writer.println("\t-b: output rejected reads to file (false if no -b option passed)");
-        writer.println();
-        writer.close();
+        printDigestHelp(false);
+        System.out.println();
+        printTruncateHelp(false);
+        System.out.println();
+        printMapHelp(false);
+        System.out.println();
         System.exit(0);
     }
 
