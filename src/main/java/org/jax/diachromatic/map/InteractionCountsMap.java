@@ -120,10 +120,9 @@ public class InteractionCountsMap {
     public String incrementFragPair(Integer condition_num, String refID_1, Integer fragStaPos_1, String refID_2, Integer fragStaPos_2) {
 
         if(refID_1.compareTo(refID_2)==0 && fragStaPos_1==fragStaPos_2) {
-            logger.warn("Interaction is within the same fragment. This should never happen (same internal artifact).");
+            logger.warn("Interaction is within the same fragment. This should never happen for a valid pair (same internal artifact).");
             // TODO: Add proper error handling.
         }
-
 
         // generate unique key
         String hashKey = getHashKey(refID_1, fragStaPos_1, refID_2, fragStaPos_2);
@@ -173,9 +172,9 @@ public class InteractionCountsMap {
      * @return Current number of interactions for given fragment pair and condition.
      */
     public Integer getInteractionNumForKeyAndCondition(String hashKey, Integer condition_id) {
-        Integer interNum = interaction_counts_map.get(hashKey).get(condition_id);
+        Integer interNum = this.interaction_counts_map.get(hashKey).get(condition_id);
         return interNum;
-        // TODO: Throws NullPointerException for some reasons.
+        // TODO: Throws NullPointerException for some reasons. Check testGetInteractionNumForKeyAndCondition().
     }
 }
 

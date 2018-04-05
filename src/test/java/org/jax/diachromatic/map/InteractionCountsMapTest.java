@@ -25,11 +25,11 @@ public class InteractionCountsMapTest {
         String uniqueKey=testInteractionCountsMap2c.incrementFragPair(0,"chr1",23, "chr3", 77);
         assertEquals(uniqueKey,"chr1:23:chr3:77");
         uniqueKey=testInteractionCountsMap2c.incrementFragPair(0,"chr3",23, "chr1", 77);
-        assertEquals(uniqueKey,"chr1:23:chr3:77");
+        assertEquals(uniqueKey,"chr3:23:chr1:77");
         uniqueKey=testInteractionCountsMap2c.incrementFragPair(0,"chr3",77, "chr1", 23);
         assertEquals(uniqueKey,"chr1:23:chr3:77");
         uniqueKey=testInteractionCountsMap2c.incrementFragPair(0,"chr1",77, "chr3", 23);
-        assertEquals(uniqueKey,"chr1:23:chr3:77");
+        assertEquals(uniqueKey,"chr3:23:chr1:77");
     }
 
     @Test
@@ -66,5 +66,21 @@ public class InteractionCountsMapTest {
         assertEquals(8,testInteractionCountsMap5c.getCurrentTotalNumberOfInteractions().intValue());
         testInteractionCountsMap5c.incrementFragPair(2,"chr2",99, "chr1", 23);
         assertEquals(9,testInteractionCountsMap5c.getCurrentTotalNumberOfInteractions().intValue());
+    }
+
+    @Test
+    public void testGetInteractionNumForKeyAndCondition() {
+        testInteractionCountsMap5c.incrementFragPair(0,"chr1",77, "chr1", 23);
+        testInteractionCountsMap5c.incrementFragPair(0,"chr1",77, "chr1", 23);
+        testInteractionCountsMap5c.incrementFragPair(0,"chr1",77, "chr1", 23);
+        testInteractionCountsMap5c.incrementFragPair(1,"chr2",99, "chr1", 23);
+        testInteractionCountsMap5c.incrementFragPair(1,"chr2",99, "chr1", 23);
+        testInteractionCountsMap5c.incrementFragPair(1,"chr2",99, "chr1", 23);
+        testInteractionCountsMap5c.incrementFragPair(2,"chr2",99, "chr1", 23);
+        testInteractionCountsMap5c.incrementFragPair(2,"chr2",99, "chr1", 23);
+        testInteractionCountsMap5c.incrementFragPair(2,"chr2",99, "chr1", 23);
+        testInteractionCountsMap5c.printInteractionCountsMap();
+        System.out.println(testInteractionCountsMap5c.getInteractionNumForKeyAndCondition("chr1:23:chr1:77", 0));
+
     }
 }
