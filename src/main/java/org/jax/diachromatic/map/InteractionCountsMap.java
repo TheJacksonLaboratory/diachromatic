@@ -6,11 +6,11 @@ import org.apache.logging.log4j.Logger;
 import java.util.*;
 
 /**
- * This class is intended for couting read pairs between interacting fragments.
- * for more than one condition.
+ * This class is intended for counting read pairs between interacting fragments
+ * for one or more than one conditions.
  *
- * In essence this is a java HasMap with the fragment IDs as key and integer
- * arrays as values, but it has additional attributes that takes into account
+ * In essence this is a java HasMap with keys assembled from the coordinates of the interacting fragments
+ * and arrays that contain the numbers of interactions, but it has additional features that takes into account
  * more specific requirements.
  *
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
@@ -60,6 +60,7 @@ public class InteractionCountsMap {
     /**
      * The interaction matrix is symmetric. To ensure that both fields of a given interaction are
      * counted together, the fragment with the smaller starting position comes always first.
+     * This function assembles the key accordingly.
      *
      * @param refID_1 Name of the reference sequence to which the first read of the pair is mapped, usually the name of a chromosome, e.g. chr1.
      * @param fragStaPos_1 Starting position of the fragment to which the first read is mapped.
@@ -86,14 +87,7 @@ public class InteractionCountsMap {
         }
 
         // construct and return key
-        key += smallerRefID;
-        key += ":";
-        key += smallerFragPos;
-        key += ":";
-        key += largerRefID;
-        key += ":";
-        key += largerFragPos;
-
+        key += smallerRefID; key += ":"; key += smallerFragPos; key += ":"; key += largerRefID; key += ":"; key += largerFragPos;
         return key;
     }
 
@@ -147,6 +141,7 @@ public class InteractionCountsMap {
     /**
      *
      * @return Current total number of interactions for all conditions.
+     *
      */
     public Integer getCurrentTotalNumberOfInteractions() {
         return this.interaction_count;
@@ -177,5 +172,3 @@ public class InteractionCountsMap {
         // TODO: Throws NullPointerException for some reasons. Check testGetInteractionNumForKeyAndCondition().
     }
 }
-
-

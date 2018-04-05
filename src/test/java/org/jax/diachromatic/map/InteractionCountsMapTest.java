@@ -20,6 +20,11 @@ public class InteractionCountsMapTest {
         testInteractionCountsMap5c = new InteractionCountsMap(5);
     }
 
+    /**
+     * Test if keys are properly assembled. The fragment with the smaller coordinate comes always first.
+     *
+     * @throws Exception
+     */
     @Test
     public void testUniqueKeys_IncrementFragPair() throws Exception {
         String uniqueKey=testInteractionCountsMap2c.incrementFragPair(0,"chr1",23, "chr3", 77);
@@ -32,6 +37,7 @@ public class InteractionCountsMapTest {
         assertEquals(uniqueKey,"chr3:23:chr1:77");
     }
 
+
     @Test
     public void testIncrementFragPair() throws Exception {
         String uniqueKey=testInteractionCountsMap5c.incrementFragPair(0,"chr1",23, "chr3", 77);
@@ -43,6 +49,8 @@ public class InteractionCountsMapTest {
         uniqueKey=testInteractionCountsMap5c.incrementFragPair(2,"chr3",77, "chr1", 23);
         uniqueKey=testInteractionCountsMap5c.incrementFragPair(2,"chr1",77, "chr1", 23);
         testInteractionCountsMap5c.printInteractionCountsMap();
+        // TODO: Solve problem with NullPointerException when trying to access individual interaction counts (see also testGetInteractionNumForKeyAndCondition).
+        // TODO: Add assertEquals as soon as the problem is solved.
     }
 
     @Test
@@ -51,6 +59,11 @@ public class InteractionCountsMapTest {
         // TODO: Add proper exception handling and test.
     }
 
+    /**
+     * Test if total number of interactions is counted correctly.
+     *
+     * @throws Exception
+     */
     @Test
     public void testGetCurrentTotalNumberOfInteractions() throws Exception {
         testInteractionCountsMap5c.incrementFragPair(0,"chr1",77, "chr1", 23);
@@ -68,8 +81,11 @@ public class InteractionCountsMapTest {
         assertEquals(9,testInteractionCountsMap5c.getCurrentTotalNumberOfInteractions().intValue());
     }
 
+    /**
+     * Test auxiliary function for testing that will will return the number of interactions for a given key and condition.
+     */
     @Test
-    public void testGetInteractionNumForKeyAndCondition() {
+    public void testGetInteractionNumForKeyAndCondition() throws Exception{
         testInteractionCountsMap5c.incrementFragPair(0,"chr1",77, "chr1", 23);
         testInteractionCountsMap5c.incrementFragPair(0,"chr1",77, "chr1", 23);
         testInteractionCountsMap5c.incrementFragPair(0,"chr1",77, "chr1", 23);
