@@ -1,5 +1,8 @@
 package org.jax.diachromatic.map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.*;
 
 /**
@@ -15,17 +18,18 @@ import java.util.*;
  * @version 0.0.1 (2018-04-04)
  */
 public class InteractionCountsMap {
+    private static final Logger logger = LogManager.getLogger();
 
     // fields
     // ------
 
     /**
-     * Number of conditions
+     * Total number of conditions
      */
     private Integer number_of_conditions;
 
     /**
-     * Hash for counting interactions
+     * Hash map for counting interactions
      */
     private HashMap<String,List<Integer>> interaction_counts_map = null;
 
@@ -33,6 +37,11 @@ public class InteractionCountsMap {
      * Number of interacting fragments
      */
     private Integer number_of_interacting_fragments;
+
+    /**
+     * Total current number of interactions for all conditions
+     */
+    private Integer interaction_count=0;
 
 
     // constructor
@@ -48,36 +57,43 @@ public class InteractionCountsMap {
     // private methods
     // ---------------
 
-    String getHashKey(String refID_1, Integer fragNum_1, String refID_2, Integer fragNum_2){
+    /**
+     * The interaction matrix is symmetric. To ensure that both fields of a given interaction are
+     * counted together, the fragment with the smaller starting position comes always first.
+     *
+     * @param refID_1 Name of the reference sequence to which the first read of the pair is mapped, usually the name of a chromosome, e.g. chr1.
+     * @param fragStaPos_1 Starting position of the fragment to which the first read is mapped.
+     * @param refID_1 Name of the reference sequence to which the second read of the pair is mapped, usually the name of a chromosome, e.g. chr1.
+     * @param fragStaPos_1 Starting position of the fragment to which the second read is mapped.
+     *
+     * @return Unique key for the given coordinates.
+     */
+    String getHashKey(String refID_1, Integer fragStaPos_1, String refID_2, Integer fragStaPos_2){
 
         String key="";
         String smallerRefID;
-        String smallerFragNum;
+        String smallerFragPos;
         String largerRefID;
-        String largerFragNum;
+        String largerFragPos;
 
-        // lexicographically smaller reference ID first
-        if(refID_1.compareTo(refID_2) <= 0) {
+        // fragment with the smaller starting position comes always first
+        if(fragStaPos_1 < fragStaPos_2) {
             smallerRefID=refID_1;largerRefID=refID_2;
+            smallerFragPos=fragStaPos_1.toString();largerFragPos=fragStaPos_2.toString();
         } else {
             smallerRefID=refID_2;largerRefID=refID_1;
-        }
-
-        // numerically smaller fragment number first
-        if(fragNum_1 < fragNum_2) {
-            smallerFragNum=fragNum_1.toString();largerFragNum=fragNum_2.toString();
-        } else {
-            smallerFragNum=fragNum_2.toString();largerFragNum=fragNum_1.toString();
+            smallerFragPos=fragStaPos_2.toString();largerFragPos=fragStaPos_1.toString();
         }
 
         // construct and return key
         key += smallerRefID;
         key += ":";
-        key += smallerFragNum;
+        key += smallerFragPos;
         key += ":";
         key += largerRefID;
         key += ":";
-        key += largerFragNum;
+        key += largerFragPos;
+
         return key;
     }
 
@@ -86,15 +102,31 @@ public class InteractionCountsMap {
     // --------------
 
     /**
-     * This is the main interface of this class.
+     * This function is the main interface of this class.
      *
-     * It returns the key for the incremented interaction.
+     * It takes as input:
+     *
+     * @param condition_num Identifier for the condition to be incremented.
+     * @param refID_1 Name of the reference sequence to which the first read of the pair is mapped, usually the name of a chromosome, e.g. chr1.
+     * @param fragStaPos_1 Starting position of the fragment to which the first read is mapped.
+     * @param refID_1 Name of the reference sequence to which the second read of the pair is mapped, usually the name of a chromosome, e.g. chr1.
+     * @param fragStaPos_1 Starting position of the fragment to which the second read is mapped.
+     *
+     * @throws Exception TODO: Add proper error handling for interactions within the same fragment. This should never happen (same internal artifact).
+     *
+     * @return The key for the incremented interaction is returned.
      *
      */
-    public String incrementFragPair(Integer condition_num, String refID_1, Integer fragNum_1, String refID_2, Integer fragNum_2) {
+    public String incrementFragPair(Integer condition_num, String refID_1, Integer fragStaPos_1, String refID_2, Integer fragStaPos_2) {
+
+        if(refID_1.compareTo(refID_2)==0 && fragStaPos_1==fragStaPos_2) {
+            logger.warn("Interaction is within the same fragment. This should never happen (same internal artifact).");
+            // TODO: Add proper error handling.
+        }
+
 
         // generate unique key
-        String hashKey = getHashKey(refID_1, fragNum_1, refID_2, fragNum_2);
+        String hashKey = getHashKey(refID_1, fragStaPos_1, refID_2, fragStaPos_2);
 
         // check if hashKey exists
         if(!interaction_counts_map.containsKey(hashKey)) {
@@ -108,7 +140,17 @@ public class InteractionCountsMap {
 
         // either way, increment associated array at corresponding position
         interaction_counts_map.get(hashKey).set(condition_num, interaction_counts_map.get(hashKey).get(condition_num)+1);
+        interaction_count++;
+
         return hashKey;
+    }
+
+    /**
+     *
+     * @return Current total number of interactions for all conditions.
+     */
+    public Integer getCurrentTotalNumberOfInteractions() {
+        return this.interaction_count;
     }
 
     public void printInteractionCountsMap() {
@@ -121,4 +163,20 @@ public class InteractionCountsMap {
             it.remove(); // avoids a ConcurrentModificationException
         }
     }
+
+    /**
+     * This function is primarily for testing and therefore it's public.
+     *
+     * @param hashKey
+     * @param condition_id
+     *
+     * @return Current number of interactions for given fragment pair and condition.
+     */
+    public Integer getInteractionNumForKeyAndCondition(String hashKey, Integer condition_id) {
+        Integer interNum = interaction_counts_map.get(hashKey).get(condition_id);
+        return interNum;
+        // TODO: Throws NullPointerException for some reasons.
+    }
 }
+
+

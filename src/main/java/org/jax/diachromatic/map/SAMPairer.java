@@ -204,7 +204,7 @@ public class SAMPairer {
         // first add program records from the reverse SAM file
         List<SAMProgramRecord> pgList = header2.getProgramRecords();
         for (SAMProgramRecord spr : pgList) {
-            header.addProgramRecord(spr);
+            //header.addProgramRecord(spr);
         }
         // now add the new program record from Diachromatic
         String programGroupId = "@PG\tID:Diachromatic\tPN:Diachromatic\tVN:" + VERSION;
@@ -219,6 +219,8 @@ public class SAMPairer {
             this.rejectedReadsWriter = new SAMFileWriterFactory().makeBAMWriter(header, presorted, new File(rejectedBamFileName));
         }
         final ProgressLogger pl = new ProgressLogger(log, 1000000);
+
+        InteractionCountsMap interactionMap = new InteractionCountsMap(1);
 
         ReadPair pair;
         while ((pair = getNextPair())!= null) {
@@ -271,6 +273,10 @@ public class SAMPairer {
                     n_duplicate++;
                 }
                 n_good++;
+
+                // count interaction
+                interactionMap.incrementFragPair(0, pair.forward().getReferenceName(), pair.getForwardDigestStart(),pair.reverse().getReferenceName(), pair.getReverseDigestStart());
+
             } else {
                 updateErrorMap(pair.getErrorCodes());
                 if (outputRejectedReads) {
@@ -280,6 +286,7 @@ public class SAMPairer {
                 // discard this read and go to the next one
             }
         }
+        interactionMap.printInteractionCountsMap();
         validReadsWriter.close();
         if(outputRejectedReads) {
             rejectedReadsWriter.close();

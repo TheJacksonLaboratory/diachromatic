@@ -35,12 +35,36 @@ public class InteractionCountsMapTest {
     @Test
     public void testIncrementFragPair() throws Exception {
         String uniqueKey=testInteractionCountsMap5c.incrementFragPair(0,"chr1",23, "chr3", 77);
+        uniqueKey=testInteractionCountsMap5c.incrementFragPair(0,"chr1",23, "chr3", 77);
+        uniqueKey=testInteractionCountsMap5c.incrementFragPair(0,"chr1",23, "chr3", 77);
+        uniqueKey=testInteractionCountsMap5c.incrementFragPair(1,"chr3",23, "chr1", 77);
+        uniqueKey=testInteractionCountsMap5c.incrementFragPair(1,"chr3",23, "chr1", 77);
         uniqueKey=testInteractionCountsMap5c.incrementFragPair(1,"chr3",23, "chr1", 77);
         uniqueKey=testInteractionCountsMap5c.incrementFragPair(2,"chr3",77, "chr1", 23);
         uniqueKey=testInteractionCountsMap5c.incrementFragPair(2,"chr1",77, "chr1", 23);
-        uniqueKey=testInteractionCountsMap5c.incrementFragPair(2,"chr1",77, "chr1", 77);
         testInteractionCountsMap5c.printInteractionCountsMap();
+    }
 
+    @Test
+    public void testSameFragmentInteractionException() throws Exception {
+        testInteractionCountsMap5c.incrementFragPair(2,"chr1",77, "chr1", 77);
+        // TODO: Add proper exception handling and test.
+    }
 
+    @Test
+    public void testGetCurrentTotalNumberOfInteractions() throws Exception {
+        testInteractionCountsMap5c.incrementFragPair(0,"chr1",77, "chr1", 23);
+        testInteractionCountsMap5c.incrementFragPair(0,"chr1",77, "chr1", 23);
+        testInteractionCountsMap5c.incrementFragPair(0,"chr1",77, "chr1", 23);
+        testInteractionCountsMap5c.incrementFragPair(1,"chr2",99, "chr1", 23);
+        testInteractionCountsMap5c.incrementFragPair(1,"chr2",99, "chr1", 23);
+        testInteractionCountsMap5c.incrementFragPair(1,"chr2",99, "chr1", 23);
+        assertEquals(6,testInteractionCountsMap5c.getCurrentTotalNumberOfInteractions().intValue());
+        testInteractionCountsMap5c.incrementFragPair(2,"chr2",99, "chr1", 23);
+        assertEquals(7,testInteractionCountsMap5c.getCurrentTotalNumberOfInteractions().intValue());
+        testInteractionCountsMap5c.incrementFragPair(2,"chr2",99, "chr1", 23);
+        assertEquals(8,testInteractionCountsMap5c.getCurrentTotalNumberOfInteractions().intValue());
+        testInteractionCountsMap5c.incrementFragPair(2,"chr2",99, "chr1", 23);
+        assertEquals(9,testInteractionCountsMap5c.getCurrentTotalNumberOfInteractions().intValue());
     }
 }

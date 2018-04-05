@@ -800,4 +800,12 @@ public class ReadPair {
         return new DigestPair(d1, d2);
 
     }
+
+    public Integer getForwardDigestStart() {
+        return this.digestPair.forward().getStartpos();
+    }
+
+    public Integer getReverseDigestStart() {
+        return this.digestPair.reverse().getStartpos();
+    }
 }
