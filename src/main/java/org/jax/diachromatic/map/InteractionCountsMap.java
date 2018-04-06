@@ -3,14 +3,17 @@ package org.jax.diachromatic.map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import org.jax.diachromatic.exception.DiachromaticException;
+import org.jax.diachromatic.exception.IncrementSameInternalInteraction;
+
 import java.util.*;
 
 /**
  * This class is intended for counting read pairs between interacting fragments
- * for one or more than one conditions.
+ * for one or more conditions.
  *
  * In essence this is a java HasMap with keys assembled from the coordinates of the interacting fragments
- * and arrays that contain the numbers of interactions, but it has additional features that takes into account
+ * and Integer arrays that contain the numbers of interactions, but it has additional features that take into account
  * more specific requirements.
  *
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
@@ -19,6 +22,7 @@ import java.util.*;
  */
 public class InteractionCountsMap {
     private static final Logger logger = LogManager.getLogger();
+
 
     // fields
     // ------
@@ -60,7 +64,7 @@ public class InteractionCountsMap {
     /**
      * The interaction matrix is symmetric. To ensure that both fields of a given interaction are
      * counted together, the fragment with the smaller starting position comes always first.
-     * This function assembles the key accordingly.
+     * This method assembles the key accordingly.
      *
      * @param refID_1 Name of the reference sequence to which the first read of the pair is mapped, usually the name of a chromosome, e.g. chr1.
      * @param fragStaPos_1 Starting position of the fragment to which the first read is mapped.
@@ -96,7 +100,7 @@ public class InteractionCountsMap {
     // --------------
 
     /**
-     * This function is the main interface of this class.
+     * This method is the main interface of this class.
      *
      * It takes as input:
      *
@@ -106,35 +110,39 @@ public class InteractionCountsMap {
      * @param refID_1 Name of the reference sequence to which the second read of the pair is mapped, usually the name of a chromosome, e.g. chr1.
      * @param fragStaPos_1 Starting position of the fragment to which the second read is mapped.
      *
-     * @throws Exception TODO: Add proper error handling for interactions within the same fragment. This should never happen (same internal artifact).
+     * @throws IncrementSameInternalInteraction
      *
      * @return The key for the incremented interaction is returned.
      *
      */
-    public String incrementFragPair(Integer condition_num, String refID_1, Integer fragStaPos_1, String refID_2, Integer fragStaPos_2) {
-
-        if(refID_1.compareTo(refID_2)==0 && fragStaPos_1==fragStaPos_2) {
-            logger.warn("Interaction is within the same fragment. This should never happen for a valid pair (same internal artifact).");
-            // TODO: Add proper error handling.
-        }
+    public String incrementFragPair(Integer condition_num, String refID_1, Integer fragStaPos_1, String refID_2, Integer fragStaPos_2) throws IncrementSameInternalInteraction{
 
         // generate unique key
         String hashKey = getHashKey(refID_1, fragStaPos_1, refID_2, fragStaPos_2);
 
-        // check if hashKey exists
-        if(!interaction_counts_map.containsKey(hashKey)) {
+        try {
 
-            // if not, init ArrayList of length that equals the total number of conditions with zero
-            Integer[] integers = new Integer[number_of_conditions];
-            Arrays.fill(integers, 0);
-            List<Integer> newList = Arrays.asList(integers);
-            interaction_counts_map.put(hashKey, newList);
+            if(refID_1.compareTo(refID_2)==0 && fragStaPos_1==fragStaPos_2) {
+                throw new IncrementSameInternalInteraction();
+            }
+
+           // check if hashKey exists
+            if(!interaction_counts_map.containsKey(hashKey)) {
+
+                // if not, init ArrayList of length that equals the total number of conditions with zero
+                Integer[] integers = new Integer[number_of_conditions];
+                Arrays.fill(integers, 0);
+                List<Integer> newList = Arrays.asList(integers);
+                interaction_counts_map.put(hashKey, newList);
+            }
+
+            // either way, increment associated array at corresponding position
+            interaction_counts_map.get(hashKey).set(condition_num, interaction_counts_map.get(hashKey).get(condition_num)+1);
+            interaction_count++;
         }
-
-        // either way, increment associated array at corresponding position
-        interaction_counts_map.get(hashKey).set(condition_num, interaction_counts_map.get(hashKey).get(condition_num)+1);
-        interaction_count++;
-
+        catch (IncrementSameInternalInteraction e) {
+            logger.warn("IncrementSameInternalInteraction occured. Interaction is within the same fragment.");
+        }
         return hashKey;
     }
 
@@ -147,6 +155,13 @@ public class InteractionCountsMap {
         return this.interaction_count;
     }
 
+    /**
+     * This method prints all interaction to the screen. Each row corresponds to one interaction.
+     *
+     * TODO: Find common formats such as ibed of CHICAGO and format output accordingly.
+     * TODO: Find more information, e.g. here: http://regulatorygenomicsgroup.org/wp-content/uploads/Chicago_vignette.html#output-files
+     *
+     */
     public void printInteractionCountsMap() {
 
         Iterator it = interaction_counts_map.entrySet().iterator();
@@ -154,12 +169,11 @@ public class InteractionCountsMap {
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();
             System.out.println(pair.getKey() + " = " + pair.getValue());
-            it.remove(); // avoids a ConcurrentModificationException
         }
     }
 
     /**
-     * This function is primarily for testing and therefore it's public.
+     * This method is primarily for testing and therefore it's public.
      *
      * @param hashKey
      * @param condition_id
@@ -167,8 +181,8 @@ public class InteractionCountsMap {
      * @return Current number of interactions for given fragment pair and condition.
      */
     public Integer getInteractionNumForKeyAndCondition(String hashKey, Integer condition_id) {
-        Integer interNum = this.interaction_counts_map.get(hashKey).get(condition_id);
+        Integer interNum = interaction_counts_map.get(hashKey).get(condition_id);
         return interNum;
-        // TODO: Throws NullPointerException for some reasons. Check testGetInteractionNumForKeyAndCondition().
     }
+
 }
