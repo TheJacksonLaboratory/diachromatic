@@ -801,11 +801,9 @@ public class ReadPair {
 
     }
 
-    public Integer getForwardDigestStart() {
-        return this.digestPair.forward().getStartpos();
-    }
+    public Integer getForwardDigestStart() {return this.digestPair.forward().getStartpos();}
+    public Integer getForwardDigestEnd() {return this.digestPair.forward().getEndpos();}
 
-    public Integer getReverseDigestStart() {
-        return this.digestPair.reverse().getStartpos();
-    }
+    public Integer getReverseDigestStart() {return this.digestPair.reverse().getStartpos();}
+    public Integer getReverseDigestEnd() {return this.digestPair.reverse().getEndpos();}
 }

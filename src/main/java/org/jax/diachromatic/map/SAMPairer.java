@@ -275,8 +275,13 @@ public class SAMPairer {
                 n_good++;
 
                 // count interaction
-                interactionMap.incrementFragPair(0, pair.forward().getReferenceName(), pair.getForwardDigestStart(),pair.reverse().getReferenceName(), pair.getReverseDigestStart());
-
+                interactionMap.incrementFragPair(0,
+                        pair.forward().getReferenceName(),
+                        pair.getForwardDigestStart(),
+                        pair.getForwardDigestEnd(),
+                        pair.reverse().getReferenceName(),
+                        pair.getReverseDigestStart(),
+                        pair.getReverseDigestEnd());
             } else {
                 updateErrorMap(pair.getErrorCodes());
                 if (outputRejectedReads) {
@@ -286,7 +291,7 @@ public class SAMPairer {
                 // discard this read and go to the next one
             }
         }
-        interactionMap.printInteractionCountsMap();
+        //interactionMap.printInteractionCountsMap();
         validReadsWriter.close();
         if(outputRejectedReads) {
             rejectedReadsWriter.close();
