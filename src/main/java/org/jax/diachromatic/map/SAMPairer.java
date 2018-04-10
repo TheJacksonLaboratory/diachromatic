@@ -291,7 +291,7 @@ public class SAMPairer {
                 // discard this read and go to the next one
             }
         }
-        //interactionMap.printInteractionCountsMap();
+        interactionMap.printInteractionCountsMapAsCountTable();
         validReadsWriter.close();
         if(outputRejectedReads) {
             rejectedReadsWriter.close();

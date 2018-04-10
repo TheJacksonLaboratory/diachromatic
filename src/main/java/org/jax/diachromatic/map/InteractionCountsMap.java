@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 
 import org.jax.diachromatic.exception.IncrementSameInternalInteractionException;
 
+import javax.rmi.CORBA.Util;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
@@ -73,8 +74,10 @@ public class InteractionCountsMap {
      *
      * @param refID_1 Name of the reference sequence to which the first read of the pair is mapped, usually the name of a chromosome, e.g. chr1.
      * @param fragStaPos_1 Starting position of the fragment to which the first read is mapped.
-     * @param refID_1 Name of the reference sequence to which the second read of the pair is mapped, usually the name of a chromosome, e.g. chr1.
-     * @param fragStaPos_1 Starting position of the fragment to which the second read is mapped.
+     * @param fragEndPos_1 Last position of the fragment to which the first read is mapped.
+     * @param refID_2 Name of the reference sequence to which the second read of the pair is mapped, usually the name of a chromosome, e.g. chr1.
+     * @param fragStaPos_2 Starting position of the fragment to which the second read is mapped.
+     * @param fragEndPos_2 Last position of the fragment to which the first read is mapped.
      *
      * @return Unique key for the given coordinates.
      */
@@ -171,14 +174,13 @@ public class InteractionCountsMap {
     }
 
     /**
-     * This function takes an object of class InteractionCountsMap and writes one tab delimited text file
-     * format to disk. Each row corresponds to a pair of interacting fragments.
+     * This function writes one tab delimited text file format to disk.
+     * Each row corresponds to a pair of interacting fragments.
      * The first six fields contain the coordinates of the two interacting fragments.
      * All following fields contain the number of read pairs observed for the given fragment pair
-     * under the individual conditions.
+     * for individual conditions.
      *
      * TODO: Include information about active/inactive fragments as soon as this information is available.
-     *
      *
      */
     public void printInteractionCountsMapAsCountTable() throws FileNotFoundException {
@@ -215,6 +217,43 @@ public class InteractionCountsMap {
             printStream.print("\n");
         }
     }
+
+    /**
+     * This function writes one tab delimited text file format to disk.
+     * Each row corresponds to a restriction fragment that contains at least
+     * one read of a valid pair for at least one condition.
+     * The first three fields contain the coordinates of the interacting fragment.
+     * All following fields contain the number of reads (that are part of a valid pair)
+     * that are mapped to the fragment for individual conditions.
+     *
+     */
+    public void printFragmentInteractionCountsMapAsCountTable() throws FileNotFoundException {
+
+        // sort hash keys lexicographically
+        Collection<String> keySet = interaction_counts_map.keySet();
+        List sortedKeyList = new ArrayList(keySet);
+        Collections.sort(sortedKeyList);
+
+        String[] tmp = String.valueOf(sortedKeyList.get(0)).split(";");
+        String prev_frag=tmp[0];
+        System.out.println(prev_frag);
+        for(int i=1; i<sortedKeyList.size(); i++) {
+            String pairKey = String.valueOf(sortedKeyList.get(i));
+            tmp = pairKey.split(";");
+            String curr_frag = tmp[0];
+            System.out.print(curr_frag + "\t");
+            for(int j = 0; j<number_of_conditions;j++) {
+                System.out.print("\t" + interaction_counts_map.get(pairKey).get(j));
+            }
+            System.out.print("\n");
+        }
+
+
+
+
+    }
+
+
 
     /**
      * This method is primarily for testing and therefore it's public.

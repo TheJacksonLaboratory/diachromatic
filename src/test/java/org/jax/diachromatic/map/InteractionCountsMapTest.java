@@ -125,4 +125,27 @@ public class InteractionCountsMapTest {
         testInteractionCountsMap5c.printInteractionCountsMapAsCountTable();
     }
 
+    @Test
+    public void testPrintFragmentInteractionCountsMapAsCountTable() throws FileNotFoundException, IncrementSameInternalInteractionException {
+        InteractionCountsMap testInteractionCountsMapTmp = new InteractionCountsMap(5);
+        testInteractionCountsMapTmp.incrementFragPair(0, "chr1", 77, 87,"chr1", 23, 33);
+        testInteractionCountsMapTmp.incrementFragPair(0, "chr1", 77, 87,"chr1", 23, 33);
+        testInteractionCountsMapTmp.incrementFragPair(0, "chr1", 77, 87,"chr1", 23, 33);
+        testInteractionCountsMapTmp.incrementFragPair(1, "chr2", 99, 109,"chr1", 23, 33);
+        testInteractionCountsMapTmp.incrementFragPair(1, "chr2", 99, 109, "chr1", 23, 33);
+        testInteractionCountsMapTmp.incrementFragPair(1, "chr2", 99, 109, "chr1", 23, 33);
+        testInteractionCountsMapTmp.incrementFragPair(2, "chr2", 99, 109,"chr1", 23, 33);
+        testInteractionCountsMapTmp.incrementFragPair(2, "chr2", 99, 109,"chr1", 23, 33);
+        testInteractionCountsMapTmp.incrementFragPair(2, "chr2", 99, 109,"chr1", 23, 33);
+        testInteractionCountsMapTmp.incrementFragPair(2, "chr21", 99, 109,"chr11", 23, 33);
+        testInteractionCountsMapTmp.incrementFragPair(2, "chr11", 23, 33,"chr11", 99, 109);
+        testInteractionCountsMapTmp.incrementFragPair(2, "chr11", 23, 33,"chr11", 99, 109);
+        testInteractionCountsMapTmp.incrementFragPair(2, "chr4", 23, 33,"chr5", 99, 109);
+        testInteractionCountsMapTmp.incrementFragPair(2, "chr5", 23, 33,"chr4", 99, 109);
+
+        testInteractionCountsMapTmp.printFragmentInteractionCountsMapAsCountTable();
+    }
+
+
+
 }
