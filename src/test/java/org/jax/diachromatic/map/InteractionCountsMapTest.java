@@ -1,10 +1,7 @@
 package org.jax.diachromatic.map;
 
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMRecord;
 import org.jax.diachromatic.exception.IncrementSameInternalInteractionException;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.FileNotFoundException;
@@ -58,23 +55,23 @@ public class InteractionCountsMapTest {
         uniqueKey = testInteractionCountsMapTmp.incrementFragPair(1, "chr3", 23,33,"chr1", 77,87);
         uniqueKey = testInteractionCountsMapTmp.incrementFragPair(2, "chr3", 77,87,"chr1", 23,33);
         uniqueKey = testInteractionCountsMapTmp.incrementFragPair(2, "chr1", 77,87,"chr1", 23,33);
-        assertEquals(0, testInteractionCountsMapTmp.getInteractionNumForKeyAndCondition("chr1:23-33;chr1:77-87", 0).intValue());
-        assertEquals(0, testInteractionCountsMapTmp.getInteractionNumForKeyAndCondition("chr1:23-33;chr1:77-87", 1).intValue());
-        assertEquals(1, testInteractionCountsMapTmp.getInteractionNumForKeyAndCondition("chr1:23-33;chr1:77-87", 2).intValue());
-        assertEquals(0, testInteractionCountsMapTmp.getInteractionNumForKeyAndCondition("chr1:23-33;chr1:77-87", 3).intValue());
-        assertEquals(0, testInteractionCountsMapTmp.getInteractionNumForKeyAndCondition("chr1:23-33;chr1:77-87", 4).intValue());
+        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33;chr1:77-87", 0).intValue());
+        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33;chr1:77-87", 1).intValue());
+        assertEquals(1, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33;chr1:77-87", 2).intValue());
+        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33;chr1:77-87", 3).intValue());
+        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33;chr1:77-87", 4).intValue());
 
-        assertEquals(3, testInteractionCountsMap5c.getInteractionNumForKeyAndCondition("chr1:23-33;chr3:77-87", 0).intValue());
-        assertEquals(0, testInteractionCountsMap5c.getInteractionNumForKeyAndCondition("chr1:23-33;chr3:77-87", 1).intValue());
-        assertEquals(1, testInteractionCountsMap5c.getInteractionNumForKeyAndCondition("chr1:23-33;chr3:77-87", 2).intValue());
-        assertEquals(0, testInteractionCountsMap5c.getInteractionNumForKeyAndCondition("chr1:23-33;chr3:77-87", 3).intValue());
-        assertEquals(0, testInteractionCountsMap5c.getInteractionNumForKeyAndCondition("chr1:23-33;chr3:77-87", 4).intValue());
+        assertEquals(3, testInteractionCountsMap5c.getNumberOfInteractionsForKeyAndCondition("chr1:23-33;chr3:77-87", 0).intValue());
+        assertEquals(0, testInteractionCountsMap5c.getNumberOfInteractionsForKeyAndCondition("chr1:23-33;chr3:77-87", 1).intValue());
+        assertEquals(1, testInteractionCountsMap5c.getNumberOfInteractionsForKeyAndCondition("chr1:23-33;chr3:77-87", 2).intValue());
+        assertEquals(0, testInteractionCountsMap5c.getNumberOfInteractionsForKeyAndCondition("chr1:23-33;chr3:77-87", 3).intValue());
+        assertEquals(0, testInteractionCountsMap5c.getNumberOfInteractionsForKeyAndCondition("chr1:23-33;chr3:77-87", 4).intValue());
 
-        assertEquals(0, testInteractionCountsMap5c.getInteractionNumForKeyAndCondition("chr3:23-33;chr1:77-87", 0).intValue());
-        assertEquals(3, testInteractionCountsMap5c.getInteractionNumForKeyAndCondition("chr3:23-33;chr1:77-87", 1).intValue());
-        assertEquals(0, testInteractionCountsMap5c.getInteractionNumForKeyAndCondition("chr3:23-33;chr1:77-87", 2).intValue());
-        assertEquals(0, testInteractionCountsMap5c.getInteractionNumForKeyAndCondition("chr3:23-33;chr1:77-87", 3).intValue());
-        assertEquals(0, testInteractionCountsMap5c.getInteractionNumForKeyAndCondition("chr3:23-33;chr1:77-87", 4).intValue());
+        assertEquals(0, testInteractionCountsMap5c.getNumberOfInteractionsForKeyAndCondition("chr3:23-33;chr1:77-87", 0).intValue());
+        assertEquals(3, testInteractionCountsMap5c.getNumberOfInteractionsForKeyAndCondition("chr3:23-33;chr1:77-87", 1).intValue());
+        assertEquals(0, testInteractionCountsMap5c.getNumberOfInteractionsForKeyAndCondition("chr3:23-33;chr1:77-87", 2).intValue());
+        assertEquals(0, testInteractionCountsMap5c.getNumberOfInteractionsForKeyAndCondition("chr3:23-33;chr1:77-87", 3).intValue());
+        assertEquals(0, testInteractionCountsMap5c.getNumberOfInteractionsForKeyAndCondition("chr3:23-33;chr1:77-87", 4).intValue());
         testInteractionCountsMap5c.printInteractionCountsMapAsCountTable();
     }
 
@@ -95,7 +92,7 @@ public class InteractionCountsMapTest {
      * @throws Exception
      */
     @Test
-    public void testGetCurrentTotalNumberOfInteractions() throws IncrementSameInternalInteractionException {
+    public void testGetTotalNumberOfInteractionsForCondition() throws IncrementSameInternalInteractionException {
         InteractionCountsMap testInteractionCountsMapTmp = new InteractionCountsMap(5);
         testInteractionCountsMapTmp.incrementFragPair(0, "chr1", 77, 87,"chr1", 23, 33);
         testInteractionCountsMapTmp.incrementFragPair(0, "chr1", 77, 87,"chr1", 23, 33);
@@ -103,13 +100,11 @@ public class InteractionCountsMapTest {
         testInteractionCountsMapTmp.incrementFragPair(1, "chr2", 99, 109,"chr1", 23, 33);
         testInteractionCountsMapTmp.incrementFragPair(1, "chr2", 99, 109, "chr1", 23, 33);
         testInteractionCountsMapTmp.incrementFragPair(1, "chr2", 99, 109, "chr1", 23, 33);
-        assertEquals(6, testInteractionCountsMapTmp.getCurrentTotalNumberOfInteractions().intValue());
         testInteractionCountsMapTmp.incrementFragPair(2, "chr2", 99, 109,"chr1", 23, 33);
-        assertEquals(7, testInteractionCountsMapTmp.getCurrentTotalNumberOfInteractions().intValue());
         testInteractionCountsMapTmp.incrementFragPair(2, "chr2", 99, 109,"chr1", 23, 33);
-        assertEquals(8, testInteractionCountsMapTmp.getCurrentTotalNumberOfInteractions().intValue());
-        testInteractionCountsMapTmp.incrementFragPair(2, "chr2", 99, 109,"chr1", 23, 33);
-        assertEquals(9, testInteractionCountsMapTmp.getCurrentTotalNumberOfInteractions().intValue());
+        assertEquals(3, testInteractionCountsMapTmp.getTotalNumberOfInteractionsForCondition(0).intValue());
+        assertEquals(3, testInteractionCountsMapTmp.getTotalNumberOfInteractionsForCondition(1).intValue());
+        assertEquals(2, testInteractionCountsMapTmp.getTotalNumberOfInteractionsForCondition(2).intValue());
     }
 
     @Test
@@ -125,27 +120,36 @@ public class InteractionCountsMapTest {
         testInteractionCountsMap5c.printInteractionCountsMapAsCountTable();
     }
 
+    /**
+     * Test if the numbers of reads at interacting fragments are derived correctly from interaction counts.
+     *
+     * @throws FileNotFoundException
+     * @throws IncrementSameInternalInteractionException
+     */
     @Test
-    public void testPrintFragmentInteractionCountsMapAsCountTable() throws FileNotFoundException, IncrementSameInternalInteractionException {
+    public void testDeriveReadCountsAtInteractingFragments() throws FileNotFoundException, IncrementSameInternalInteractionException {
+
         InteractionCountsMap testInteractionCountsMapTmp = new InteractionCountsMap(5);
-        testInteractionCountsMapTmp.incrementFragPair(0, "chr1", 77, 87,"chr1", 23, 33);
-        testInteractionCountsMapTmp.incrementFragPair(0, "chr1", 77, 87,"chr1", 23, 33);
-        testInteractionCountsMapTmp.incrementFragPair(0, "chr1", 77, 87,"chr1", 23, 33);
-        testInteractionCountsMapTmp.incrementFragPair(1, "chr2", 99, 109,"chr1", 23, 33);
-        testInteractionCountsMapTmp.incrementFragPair(1, "chr2", 99, 109, "chr1", 23, 33);
-        testInteractionCountsMapTmp.incrementFragPair(1, "chr2", 99, 109, "chr1", 23, 33);
-        testInteractionCountsMapTmp.incrementFragPair(2, "chr2", 99, 109,"chr1", 23, 33);
-        testInteractionCountsMapTmp.incrementFragPair(2, "chr2", 99, 109,"chr1", 23, 33);
-        testInteractionCountsMapTmp.incrementFragPair(2, "chr2", 99, 109,"chr1", 23, 33);
-        testInteractionCountsMapTmp.incrementFragPair(2, "chr21", 99, 109,"chr11", 23, 33);
-        testInteractionCountsMapTmp.incrementFragPair(2, "chr11", 23, 33,"chr11", 99, 109);
-        testInteractionCountsMapTmp.incrementFragPair(2, "chr11", 23, 33,"chr11", 99, 109);
-        testInteractionCountsMapTmp.incrementFragPair(2, "chr4", 23, 33,"chr5", 99, 109);
-        testInteractionCountsMapTmp.incrementFragPair(2, "chr5", 23, 33,"chr4", 99, 109);
+
+        testInteractionCountsMapTmp.incrementFragPair(0, "chr1", 10, 20,"chr1", 40, 50);
+        testInteractionCountsMapTmp.incrementFragPair(0, "chr1", 10, 20,"chr1", 70, 80);
+        testInteractionCountsMapTmp.incrementFragPair(0, "chr1", 10, 20,"chr1", 90, 100);
+        testInteractionCountsMapTmp.incrementFragPair(0, "chr1", 90, 100,"chr1", 110, 120);
+        testInteractionCountsMapTmp.incrementFragPair(0, "chr1", 90, 100,"chr1", 110, 120);
+        testInteractionCountsMapTmp.incrementFragPair(0, "chr1", 90, 100,"chr1", 110, 120);
+
+        testInteractionCountsMapTmp.deriveReadCountsAtInteractingFragments();
+
+        assertEquals(4,testInteractionCountsMapTmp.getNumberOfReadsAtInteractingFragmentForKeyAndCondition("chr1:90-100",0).intValue());
+        assertEquals(1,testInteractionCountsMapTmp.getNumberOfReadsAtInteractingFragmentForKeyAndCondition("chr1:40-50",0).intValue());
+        assertEquals(1,testInteractionCountsMapTmp.getNumberOfReadsAtInteractingFragmentForKeyAndCondition("chr1:70-80",0).intValue());
+        assertEquals(3,testInteractionCountsMapTmp.getNumberOfReadsAtInteractingFragmentForKeyAndCondition("chr1:110-120",0).intValue());
+        assertEquals(3,testInteractionCountsMapTmp.getNumberOfReadsAtInteractingFragmentForKeyAndCondition("chr1:10-20",0).intValue());
 
         testInteractionCountsMapTmp.printFragmentInteractionCountsMapAsCountTable();
+        testInteractionCountsMapTmp.printInteractionCountsMapAsCountTable();
+
+        System.out.println("TotalNumberOfInteractionsForCondition: " + testInteractionCountsMapTmp.getTotalNumberOfInteractionsForCondition(0));
+        System.out.println("TotalNumberOfInteractingFragmentsForCondition: " + testInteractionCountsMapTmp.getTotalNumberOfInteractingFragmentsForCondition(0));
     }
-
-
-
 }
