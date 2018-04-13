@@ -34,16 +34,20 @@ public class MapCommand extends Command {
     /** Path to the genome digest file produced by {@link org.jax.diachromatic.command.DigestCommand}.*/
     private String digestFile=null;
 
+    /** Path to BED file containing the coordinates of active digests {@link org.jax.diachromatic.command.DigestCommand}.*/
+    private String activeDigestsFile=null;
+
     private final boolean outputRejectedReads;
 
-    public MapCommand(String bowtie, String btIndexPath, String inputFastqPath1,String inputFastqPath2, String outnam, String digest,
+    public MapCommand(String bowtiepath, String bowtie, String btIndexPath, String inputFastqPath1, String inputFastqPath2, String outnam, String digest, String activeDigests,
                       boolean outputRejected) {
-        bowtiepath=bowtie;
+        this.bowtiepath =bowtie;
         pathToBowtieIndex=btIndexPath;
         pathToInputFastq1 =inputFastqPath1;
         pathToInputFastq2 =inputFastqPath2;
         outname=outnam;
         digestFile=digest;
+        activeDigestsFile=activeDigests;
         outputRejectedReads=outputRejected;
     }
 
@@ -51,7 +55,7 @@ public class MapCommand extends Command {
         String outname1="tempoutname1.sam";
         String outname2="tempoutname2.sam";
         logger.trace(String.format("About to read digests from %s",digestFile ));
-        Map<String,List<Digest>> digestmap = Digest.readDigests(digestFile);
+        Map<String,List<Digest>> digestmap = Digest.readDigests(digestFile, activeDigestsFile);
         try {
             Bowtie2Runner runner = new Bowtie2Runner(bowtiepath,pathToBowtieIndex, pathToInputFastq1,outname1);
             runner.run();

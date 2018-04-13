@@ -42,6 +42,7 @@ public class Commandline {
     private String pathToInputFastq1 =null;
     private String pathToInputFastq2 =null;
     private String pathToDiachromaticDigestFile=null;
+    private String pathToActiveDigestsFile=null;
     private String suffix=null;
     private boolean outputRejectedReads=false;
     private boolean doHelp=false;
@@ -80,6 +81,9 @@ public class Commandline {
             }
             if (commandLine.hasOption("d")) {
                 this.pathToDiachromaticDigestFile=commandLine.getOptionValue("d");
+            }
+            if (commandLine.hasOption("a")) {
+                this.pathToActiveDigestsFile=commandLine.getOptionValue("a");
             }
             if (commandLine.hasOption("e")) {
                 this.enzyme=commandLine.getOptionValue("e");
@@ -190,6 +194,7 @@ public class Commandline {
                         pathToInputFastq2,
                         outputFilePath,
                         pathToDiachromaticDigestFile,
+                        pathToActiveDigestsFile,
                         outputRejectedReads);
             } else {
                 printUsage(String.format("Did not recognize command: %s", mycommand));
@@ -215,6 +220,7 @@ public class Commandline {
         final Options options = new Options();
         options.addOption("b", "bowtie", true, "path to bowtie2")
                 .addOption("d", "digest", true, "path to diachromatic digest file")
+                .addOption("a", "active-digests", true, "path to BED file with active digests")
                 .addOption("e", "enzyme", true, "restriction enzyme name")
                 .addOption("g", "genome", true, "path to genome FASTA file (with all chromosomes)")
                 .addOption("h", "help", false, "shows help for current command")
@@ -305,12 +311,14 @@ public class Commandline {
         "\tjava -jar Diachromatic.jar map -b <bowtie2> -i <bowtie2-index> \\ \n" +
         "\t\t\t-q <forward.truncated.fq.gz> -r <reverse.truncated.fq.gz> \\ \n" +
         "\t\t\t-d <digest> [-o <outfile>] [-b]\n" +
+        "\t\t\t[-a <active-digests>] [-o <outfile>] [-b]\n" +
         "\t\t<bowtie2>: path to bowtie2 executable\n" +
         "\t\t<bowtie2-index>: path to bowtie2 index for digested genome\n" +
         "\t\t<forward.truncated.fq.gz>: path to the truncated forward FASTQ file\n" +
         "\t\t<reverse.truncated.fq.gz>: path to the truncated reverse FASTQ file\n" +
         "\t\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII)\n" +
         "\t\t<digest>: path to the digest file produced by the digest command\n" +
+        "\t\t<active-digests>: path to a BED file with the coordinates of active digests\n" +
         String.format("\t\t<outfile>: optional name of output file (Default: \"%s.bam\")",DEFAULT_OUTPUT_BAM_NAME));
         System.out.println("\t\t-b: output rejected reads to file (false if no -b option passed)");
     }

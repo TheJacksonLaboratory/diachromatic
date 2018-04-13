@@ -7,10 +7,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * A class to represent a restriction fragment resulting from an in silico digestion of the genome.
@@ -33,6 +30,16 @@ public class Digest {
 
     private String threePrimeRestrictionSite;
 
+    private boolean active = false;
+
+    /**
+     * Set that contains coordinate keys for all active fragments.
+     *
+     * Keys have the form: chr:sta:end
+     *
+     */
+    private static Set<String> activeDigests;
+
 
     public Digest(String[] fields) {
         chromosome=fields[0];
@@ -41,7 +48,6 @@ public class Digest {
         fragmentNumber=Integer.parseInt(fields[3]);
         fivePrimeRestrictionSite=fields[4];
         threePrimeRestrictionSite=fields[5];
-
     }
 
 
@@ -75,6 +81,10 @@ public class Digest {
     }
 
 
+    private void setActice() {
+        this.active=true;
+    }
+
     /** Note -- by the way these objects are created in this program, it is sufficient to check whether
      * the chromosome and the start position are equal in order to know whether the objects are equal.
      * @param o the Object being compared with this.
@@ -96,13 +106,37 @@ public class Digest {
      * @param digestFilePath path to the digest file created by {@link org.jax.diachromatic.command.DigestCommand}.
      * @return
      */
-    public static Map<String,List<Digest>> readDigests(String digestFilePath) {
+    public static Map<String,List<Digest>> readDigests(String digestFilePath, String activeDigestsFile) {
         Map<String,List<Digest>> map = new HashMap<>();
         try {
             File f = new File(digestFilePath);
             if (! f.exists()) {
                 logger.error(String.format("Could not find digest file at %s", f.getAbsolutePath() ));
                 System.exit(1);
+            }
+
+            File af = new File(activeDigestsFile);
+            if (! af.exists()) {
+                logger.trace(String.format("No file for active digests available. Will set all digests to inactive."));
+            }
+            else {
+                logger.trace(String.format("File for active digests available. Reading file..."));
+                BufferedReader br = new BufferedReader(new FileReader(activeDigestsFile));
+                String line;
+                while ((line=br.readLine())!=null) {
+                    String fields[] = line.split("\t");
+                    if (fields.length < 3) {
+                        logger.fatal(String.format("Malformed line with %d fields (required: at least 3): %s",fields.length,line ));
+                        System.exit(1); // TODO: Add proper exception handling
+                    }
+                    String key=fields[0];
+                    key += ":";
+                    key += fields[1];
+                    key += "-";
+                    key += fields[2];
+                    activeDigests.add(key);
+                }
+
             }
 
             BufferedReader br = new BufferedReader(new FileReader(digestFilePath));
@@ -117,12 +151,23 @@ public class Digest {
                 }
                 Digest dig = new Digest(fields);
                 String chrom = dig.getChromosome();
+
                 List<Digest> dlist;
                 if (map.containsKey(chrom)) {
                     dlist=map.get(chrom);
                 } else {
                     dlist=new ArrayList<>();
                     map.put(chrom,dlist);
+                }
+
+                // check if digest is active
+                String key = dig.getChromosome();
+                key += ":";
+                key += dig.getStartpos();
+                key += "-";
+                key += dig.getEndpos();
+                if(activeDigests.contains(key)) {
+                    dig.setActice();
                 }
                 dlist.add(dig);
             }
