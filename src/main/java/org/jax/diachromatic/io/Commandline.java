@@ -188,7 +188,8 @@ public class Commandline {
                 if (pathToDiachromaticDigestFile==null) {
                     printMapHelp("-d option required for map command");
                 }
-                this.command=new MapCommand(bowtiepath,
+                this.command=new MapCommand(
+                        bowtiepath,
                         pathToBowtieIndex,
                         pathToInputFastq1,
                         pathToInputFastq2,

@@ -39,7 +39,7 @@ public class MapCommand extends Command {
 
     private final boolean outputRejectedReads;
 
-    public MapCommand(String bowtiepath, String bowtie, String btIndexPath, String inputFastqPath1, String inputFastqPath2, String outnam, String digest, String activeDigests,
+    public MapCommand(String bowtie, String btIndexPath, String inputFastqPath1, String inputFastqPath2, String outnam, String digest, String activeDigests,
                       boolean outputRejected) {
         this.bowtiepath =bowtie;
         pathToBowtieIndex=btIndexPath;
