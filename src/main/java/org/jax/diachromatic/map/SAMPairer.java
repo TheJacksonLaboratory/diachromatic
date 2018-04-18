@@ -279,9 +279,11 @@ public class SAMPairer {
                         pair.forward().getReferenceName(),
                         pair.getForwardDigestStart(),
                         pair.getForwardDigestEnd(),
+                        pair.forwardDigestIsActive(),
                         pair.reverse().getReferenceName(),
                         pair.getReverseDigestStart(),
-                        pair.getReverseDigestEnd());
+                        pair.getReverseDigestEnd(),
+                        pair.reverseDigestIsActive());
             } else {
                 updateErrorMap(pair.getErrorCodes());
                 if (outputRejectedReads) {

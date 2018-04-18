@@ -32,14 +32,6 @@ public class Digest {
 
     private boolean active = false;
 
-    /**
-     * Set that contains coordinate keys for all active fragments.
-     *
-     * Keys have the form: chr:sta:end
-     *
-     */
-    private static Set<String> activeDigests;
-
 
     public Digest(String[] fields) {
         chromosome=fields[0];
@@ -85,6 +77,10 @@ public class Digest {
         this.active=true;
     }
 
+    public boolean isActive() {
+        return this.active;
+    }
+
     /** Note -- by the way these objects are created in this program, it is sufficient to check whether
      * the chromosome and the start position are equal in order to know whether the objects are equal.
      * @param o the Object being compared with this.
@@ -109,6 +105,9 @@ public class Digest {
     public static Map<String,List<Digest>> readDigests(String digestFilePath, String activeDigestsFile) {
         Map<String,List<Digest>> map = new HashMap<>();
         try {
+
+            Set<String> activeDigests = new HashSet<>();
+
             File f = new File(digestFilePath);
             if (! f.exists()) {
                 logger.error(String.format("Could not find digest file at %s", f.getAbsolutePath() ));
@@ -139,7 +138,6 @@ public class Digest {
                         activeDigests.add(key);
                     }
                 }
-
             }
 
             BufferedReader br = new BufferedReader(new FileReader(digestFilePath));

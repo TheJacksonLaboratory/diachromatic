@@ -105,35 +105,42 @@ public class InteractionCountsMap {
      *
      * @return Unique key for the given coordinates of a fragment pair.
      */
-    String getHashKey(String refID_1, Integer fragStaPos_1, Integer fragEndPos_1, String refID_2, Integer fragStaPos_2, Integer fragEndPos_2){
+    String getHashKey(String refID_1, Integer fragStaPos_1, Integer fragEndPos_1, boolean fragActive_1, String refID_2, Integer fragStaPos_2, Integer fragEndPos_2, boolean fragActive_2){
 
         String key="";
         String smallerRefID;
         String smallerFragStaPos;
         String smallerFragEndPos;
+        String smallerActivationState;
         String largerRefID;
         String largerFragStaPos;
         String largerFragEndPos;
+        String largerActivationState;
 
         // fragment with the smaller starting position comes always first
         if(fragStaPos_1 < fragStaPos_2) {
             smallerRefID=refID_1;
             smallerFragStaPos=fragStaPos_1.toString();
             smallerFragEndPos=fragEndPos_1.toString();
+            if(fragActive_1) {smallerActivationState="A";} else {smallerActivationState="I";}
             largerRefID=refID_2;
             largerFragStaPos=fragStaPos_2.toString();
             largerFragEndPos=fragEndPos_2.toString();
+            if(fragActive_2) {largerActivationState="A";} else {largerActivationState="I";}
+
         } else {
             smallerRefID=refID_2;
             smallerFragStaPos=fragStaPos_2.toString();
             smallerFragEndPos=fragEndPos_2.toString();
+            if(fragActive_2) {smallerActivationState="A";} else {smallerActivationState="I";}
             largerRefID=refID_1;
             largerFragStaPos=fragStaPos_1.toString();
             largerFragEndPos=fragEndPos_1.toString();
+            if(fragActive_1) {largerActivationState="A";} else {largerActivationState="I";}
         }
 
         // construct and return key
-        key += smallerRefID; key += ":"; key += smallerFragStaPos; key += "-"; key += smallerFragEndPos; key += ";"; key += largerRefID; key += ":"; key += largerFragStaPos; key += "-"; key += largerFragEndPos;
+        key += smallerRefID; key += ":"; key += smallerFragStaPos; key += "-"; key += smallerFragEndPos; key += ":" ; key += smallerActivationState; key += ";"; key += largerRefID; key += ":"; key += largerFragStaPos; key += "-"; key += largerFragEndPos;key += ":" ; key += largerActivationState;
         return key;
     }
 
@@ -155,11 +162,13 @@ public class InteractionCountsMap {
      *
      * @return The key for the incremented interaction is returned.
      *
+     * TODO: Try to pass the corresponding two digests to this function instead of the long list of arguments.
+     *
      */
-    public String incrementFragPair(Integer condition_num, String refID_1, Integer fragStaPos_1, Integer fragEndPos_1, String refID_2, Integer fragStaPos_2, Integer fragEndPos_2) throws IncrementSameInternalInteractionException {
+    public String incrementFragPair(Integer condition_num, String refID_1, Integer fragStaPos_1, Integer fragEndPos_1, boolean fragActive_1, String refID_2, Integer fragStaPos_2, Integer fragEndPos_2, boolean fragActive_2) throws IncrementSameInternalInteractionException {
 
         // generate unique key
-        String hashKey = getHashKey(refID_1, fragStaPos_1, fragEndPos_1, refID_2, fragStaPos_2, fragEndPos_2);
+        String hashKey = getHashKey(refID_1, fragStaPos_1, fragEndPos_1, fragActive_1, refID_2, fragStaPos_2, fragEndPos_2, fragActive_2);
 
         try {
 
@@ -231,15 +240,17 @@ public class InteractionCountsMap {
             String[] tmp2 = tmp1[1].split("-");
             String fragStaPos_1 = tmp2[0];
             String fragEndPos_1 = tmp2[1];
+            String fragActivationState_1 = tmp1[2];
 
             tmp1 = frags[1].split(":");
             String refID_2 = tmp1[0];
             tmp2 = tmp1[1].split("-");
             String fragStaPos_2 = tmp2[0];
             String fragEndPos_2 = tmp2[1];
+            String fragActivationState_2 = tmp1[2];
 
-            printStream.print(refID_1 + "\t" + fragStaPos_1 + "\t" + fragEndPos_1 + "\t");
-            printStream.print(refID_2 + "\t" + fragStaPos_2 + "\t" + fragEndPos_2);
+            printStream.print(refID_1 + "\t" + fragStaPos_1 + "\t" + fragEndPos_1 + "\t" + fragActivationState_1 + "\t");
+            printStream.print(refID_2 + "\t" + fragStaPos_2 + "\t" + fragEndPos_2 + "\t" + fragActivationState_2);
 
             for(int i=0; i<number_of_conditions; i++) {
                 printStream.print("\t");
@@ -310,7 +321,7 @@ public class InteractionCountsMap {
             String hashKey = pair.getKey().toString();
             String[] tmp = hashKey.split(":");
             String[] tmp2 = tmp[1].split("-");
-             printStream.print(tmp[0] + "\t" + tmp2[0] + "\t" + tmp2[1]);
+             printStream.print(tmp[0] + "\t" + tmp2[0] + "\t" + tmp2[1] + "\t" + tmp[2]);
             for(int j = 0; j<number_of_conditions; j++) {
                 printStream.print("\t" + fragment_interaction_counts_map.get(hashKey).get(j));
             }
