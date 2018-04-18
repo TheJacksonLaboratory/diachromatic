@@ -298,6 +298,9 @@ public class InteractionCountsMap {
      */
     public void printFragmentInteractionCountsMapAsCountTable() throws FileNotFoundException {
 
+        // derive counts
+        this.deriveReadCountsAtInteractingFragments();
+
         // create file for output
         PrintStream printStream = new PrintStream(new FileOutputStream(interactingFragmentsCountsTableFileName));
 

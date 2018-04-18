@@ -115,12 +115,13 @@ public class Digest {
                 System.exit(1);
             }
 
-            File af = new File(activeDigestsFile);
-            if (! af.exists()) {
+            if (activeDigestsFile == null) {
                 logger.trace(String.format("No file for active digests available. Will set all digests to inactive."));
             }
             else {
                 logger.trace(String.format("File for active digests available. Reading file..."));
+
+                File af = new File(activeDigestsFile);
                 BufferedReader br = new BufferedReader(new FileReader(activeDigestsFile));
                 String line;
                 while ((line=br.readLine())!=null) {
@@ -134,7 +135,9 @@ public class Digest {
                     key += fields[1];
                     key += "-";
                     key += fields[2];
-                    activeDigests.add(key);
+                    if(activeDigestsFile != null) {
+                        activeDigests.add(key);
+                    }
                 }
 
             }
@@ -166,7 +169,7 @@ public class Digest {
                 key += dig.getStartpos();
                 key += "-";
                 key += dig.getEndpos();
-                if(activeDigests.contains(key)) {
+                if(activeDigestsFile != null && activeDigests.contains(key)) {
                     dig.setActice();
                 }
                 dlist.add(dig);
