@@ -382,7 +382,9 @@ public class SAMPairer {
         logger.trace("\t" + "Total number of interacting fragments: " + interactionMap.getTotalNumberOfInteractingFragmentsForCondition(0));
         logger.trace("\t" + "Number of active interacting fragments: " + interactionMap.getTotalNumberOfActiveInteractingFragmentsForCondition(0));
         logger.trace("");
-        logger.trace("\t" + "Target Enrichment Coefficient (TEC): " + String.format("(%.2f%%)", interactionMap.getTargetEnrichmentCoefficientForCondition(0)));
+        logger.trace("\t" + "Enrichment Coefficients:");
+        logger.trace("\t\t" + "Target Enrichment Coefficient (TEC): " + String.format("(%.2f%%)", 100*interactionMap.getTargetEnrichmentCoefficientForCondition(0)));
+        logger.trace("\t\t" + "Valid Interaction Enrichment Coefficient (VIEC): " + String.format("(%.2f%%)", 100.0*n_valid_pairs/n_paired));
         logger.trace("");
 
     }

@@ -251,8 +251,6 @@ public class InteractionCountsMap {
                 Arrays.fill(integers, 0);
                 List<Integer> newList = Arrays.asList(integers);
                 interaction_counts_map.put(hashKey, newList);
-                logger.trace(hashKey);
-
             }
 
             // either way, increment associated array at corresponding position
