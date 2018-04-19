@@ -75,6 +75,9 @@ public class SAMPairer {
 
     private int n_could_not_assign_to_digest = 0;
 
+
+
+
     /** Number of read pairs whose insert was found to have a size above the threshold defined  in {@link ReadPair}.*/
 
     private int n_same_internal = 0;
@@ -156,6 +159,11 @@ public class SAMPairer {
     private final boolean outputRejectedReads;
 
     /**
+     * Stores counts about interactions
+     */
+    InteractionCountsMap interactionMap;
+
+    /**
      * @param sam1    SAM file for the truncated "forward" reads
      * @param sam2    SAM file for the truncated "reverse" reads
      * @param digests see {@link #digestmap}.
@@ -220,7 +228,7 @@ public class SAMPairer {
         }
         final ProgressLogger pl = new ProgressLogger(log, 1000000);
 
-        InteractionCountsMap interactionMap = new InteractionCountsMap(1);
+        interactionMap = new InteractionCountsMap(1);
 
         ReadPair pair;
         while ((pair = getNextPair())!= null) {
@@ -362,6 +370,19 @@ public class SAMPairer {
         logger.trace("n_F2R1" + "\t" +  n_F2R1);
         logger.trace("n_R1F2" + "\t" +  n_R1F2);
         logger.trace("");
+
+        logger.trace("");
+        logger.trace("Summary statistics about interactions between active and inactive fragments:");
+        logger.trace("");
+        logger.trace("\t" + "Total number of interactions: " + interactionMap.getTotalNumberOfInteractionsForCondition(0));
+        logger.trace("\t" + "Number of interactions between active fragments: " + interactionMap.getNumberOfInteractionsBetweenActiveFragmentsForCondition(0));
+        logger.trace("\t" + "Number of interactions between inactive fragments: " + interactionMap.getNumberOfInteractionsBetweenInactiveFragmentsForCondition(0));
+        logger.trace("\t" + "Number of interactions between active and inactive fragments: " + interactionMap.getNumberOfInteractionsBetweenActiveAndInactiveFragmentsForCondition(0));
+
+        logger.trace("");
+        logger.trace("\t" + "Total number of interacting fragments: " + interactionMap.getTotalNumberOfInteractingFragmentsForCondition(0));
+        logger.trace("\t" + "Number of active interacting fragments: " + interactionMap.getTotalNumberOfActiveInteractingFragmentsForCondition(0));
+
 
 
     }

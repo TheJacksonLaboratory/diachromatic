@@ -98,8 +98,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.1329206"
-     inkscape:cx="397.04111"
-     inkscape:cy="372.04724"
+     inkscape:cx="383.35966"
+     inkscape:cy="370.28189"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -570,7 +570,7 @@
          x="670.98553"
          y="457.43915"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:11.25px;font-family:sans-serif;-inkscape-font-specification:sans-serif"
-         id="tspan4524">6 unique read pairs</tspan><tspan
+         id="tspan4524">7 unique read pairs</tspan><tspan
          sodipodi:role="line"
          x="670.98553"
          y="471.50165"
@@ -971,7 +971,7 @@
          sodipodi:role="line"
          id="tspan4465"
          x="660"
-         y="472.36221"></tspan><tspan
+         y="472.36221" /><tspan
          sodipodi:role="line"
          x="660"
          y="494.23721"
@@ -1144,5 +1144,28 @@
    id="tspan4713">A</tspan> means active and <tspan
    style="-inkscape-font-specification:monospace;font-family:monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal"
    id="tspan4711">I</tspan> inactive.</tspan></text>
+    <path
+       sodipodi:open="true"
+       d="m 121.64099,636.41286 a 52.279324,52.278805 0 0 1 52.22124,-52.18431 52.279324,52.278805 0 0 1 52.3369,52.06831"
+       sodipodi:end="6.2791595"
+       sodipodi:start="3.1433996"
+       sodipodi:ry="52.278805"
+       sodipodi:rx="52.279324"
+       sodipodi:cy="636.50732"
+       sodipodi:cx="173.92023"
+       sodipodi:type="arc"
+       id="path8297-3"
+       style="opacity:1;fill:none;fill-opacity:1;stroke:#969696;stroke-width:1;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    <text
+       sodipodi:linespacing="125%"
+       id="text8991-6"
+       y="596.78412"
+       x="165.1626"
+       style="font-style:normal;font-weight:normal;font-size:10px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       xml:space="preserve"><tspan
+         y="596.78412"
+         x="165.1626"
+         id="tspan8993-7"
+         sodipodi:role="line">RP7</tspan></text>
   </g>
 </svg>

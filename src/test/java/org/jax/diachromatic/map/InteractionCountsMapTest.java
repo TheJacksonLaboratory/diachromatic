@@ -94,16 +94,21 @@ public class InteractionCountsMapTest {
     @Test
     public void testGetTotalNumberOfInteractionsForCondition() throws IncrementSameInternalInteractionException {
         InteractionCountsMap testInteractionCountsMapTmp = new InteractionCountsMap(5);
+        // three read pairs -> one interaction
         testInteractionCountsMapTmp.incrementFragPair(0, "chr1", 77, 87,false,"chr1", 23, 33,false);
         testInteractionCountsMapTmp.incrementFragPair(0, "chr1", 77, 87,false,"chr1", 23, 33,false);
         testInteractionCountsMapTmp.incrementFragPair(0, "chr1", 77, 87,false,"chr1", 23, 33,false);
+        // three read pairs -> one interaction
         testInteractionCountsMapTmp.incrementFragPair(1, "chr2", 99, 109,false,"chr1", 23, 33,false);
         testInteractionCountsMapTmp.incrementFragPair(1, "chr2", 99, 109,false, "chr1", 23, 33,false);
         testInteractionCountsMapTmp.incrementFragPair(1, "chr2", 99, 109,false, "chr1", 23, 33,false);
+        // three read pairs -> two interactions
         testInteractionCountsMapTmp.incrementFragPair(2, "chr2", 99, 109,false,"chr1", 23, 33,false);
         testInteractionCountsMapTmp.incrementFragPair(2, "chr2", 99, 109,false,"chr1", 23, 33,false);
-        assertEquals(3, testInteractionCountsMapTmp.getTotalNumberOfInteractionsForCondition(0).intValue());
-        assertEquals(3, testInteractionCountsMapTmp.getTotalNumberOfInteractionsForCondition(1).intValue());
+        testInteractionCountsMapTmp.incrementFragPair(2, "chr2", 199, 1109,false,"chr1", 163, 173,false);
+
+        assertEquals(1, testInteractionCountsMapTmp.getTotalNumberOfInteractionsForCondition(0).intValue());
+        assertEquals(1, testInteractionCountsMapTmp.getTotalNumberOfInteractionsForCondition(1).intValue());
         assertEquals(2, testInteractionCountsMapTmp.getTotalNumberOfInteractionsForCondition(2).intValue());
     }
 
