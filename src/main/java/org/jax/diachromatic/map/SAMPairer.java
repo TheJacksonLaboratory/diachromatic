@@ -378,12 +378,12 @@ public class SAMPairer {
         logger.trace("\t" + "Number of interactions between active fragments: " + interactionMap.getNumberOfInteractionsBetweenActiveFragmentsForCondition(0));
         logger.trace("\t" + "Number of interactions between inactive fragments: " + interactionMap.getNumberOfInteractionsBetweenInactiveFragmentsForCondition(0));
         logger.trace("\t" + "Number of interactions between active and inactive fragments: " + interactionMap.getNumberOfInteractionsBetweenActiveAndInactiveFragmentsForCondition(0));
-
         logger.trace("");
         logger.trace("\t" + "Total number of interacting fragments: " + interactionMap.getTotalNumberOfInteractingFragmentsForCondition(0));
         logger.trace("\t" + "Number of active interacting fragments: " + interactionMap.getTotalNumberOfActiveInteractingFragmentsForCondition(0));
-
-
+        logger.trace("");
+        logger.trace("\t" + "Target Enrichment Coefficient (TEC): " + String.format("(%.2f%%)", interactionMap.getTargetEnrichmentCoefficientForCondition(0)));
+        logger.trace("");
 
     }
 }

@@ -43,6 +43,16 @@ public class InteractionCountsMap {
     private Integer number_of_conditions;
 
     /**
+     * Count reads within active fragments
+     */
+    private Integer[] read_count = null;
+
+    /**
+     * Count reads within active fragments
+     */
+    private Integer[] active_read_count = null;
+
+    /**
      * Total current number of interactions for each condition
      */
     private Integer[] interaction_count = null;
@@ -121,6 +131,12 @@ public class InteractionCountsMap {
 
         this.active_interacting_fragment_count = new Integer[number_of_conditions];
         Arrays.fill(active_interacting_fragment_count, 0);
+
+        this.active_read_count = new Integer[number_of_conditions];
+        Arrays.fill(active_read_count, 0);
+
+        this.read_count = new Integer[number_of_conditions];
+        Arrays.fill(read_count, 0);
     }
 
 
@@ -215,6 +231,12 @@ public class InteractionCountsMap {
         // generate unique key
         String hashKey = getHashKey(refID_1, fragStaPos_1, fragEndPos_1, fragActive_1, refID_2, fragStaPos_2, fragEndPos_2, fragActive_2);
 
+        // count reads in active fragments
+        if(fragActive_1) {active_read_count[condition_num]++;}
+        if(fragActive_2) {active_read_count[condition_num]++;}
+        read_count[condition_num]=read_count[condition_num]+2;
+
+
         try {
 
             if(refID_1.compareTo(refID_2)==0 && fragStaPos_1==fragStaPos_2) {
@@ -247,7 +269,6 @@ public class InteractionCountsMap {
                 } else {
                     active_inactive_interaction_count[condition_num]++;
                 }
-
             }
         }
         catch (IncrementSameInternalInteractionException e) {
@@ -261,8 +282,8 @@ public class InteractionCountsMap {
      * @return Total number of interactions for a given condition.
      *
      */
-    public Integer getTotalNumberOfInteractionsForCondition(Integer condition_num) {
-        return this.interaction_count[condition_num];
+    public Integer getTotalNumberOfInteractionsForCondition(Integer condition) {
+        return this.interaction_count[condition];
     }
 
     /**
@@ -270,8 +291,8 @@ public class InteractionCountsMap {
      * @return Total number of interactions between two active fragments for a given condition.
      *
      */
-    public Integer getNumberOfInteractionsBetweenActiveFragmentsForCondition(Integer condition_num) {
-        return this.active_active_interaction_count[condition_num];
+    public Integer getNumberOfInteractionsBetweenActiveFragmentsForCondition(Integer condition) {
+        return this.active_active_interaction_count[condition];
     }
 
     /**
@@ -279,8 +300,8 @@ public class InteractionCountsMap {
      * @return Total number of interactions between two active fragments for a given condition.
      *
      */
-    public Integer getNumberOfInteractionsBetweenInactiveFragmentsForCondition(Integer condition_num) {
-        return this.inactive_inactive_interaction_count[condition_num];
+    public Integer getNumberOfInteractionsBetweenInactiveFragmentsForCondition(Integer condition) {
+        return this.inactive_inactive_interaction_count[condition];
     }
 
     /**
@@ -288,8 +309,8 @@ public class InteractionCountsMap {
      * @return Total number of interactions between active and inactive fragments for a given condition (both direction).
      *
      */
-    public Integer getNumberOfInteractionsBetweenActiveAndInactiveFragmentsForCondition(Integer condition_num) {
-        return this.active_inactive_interaction_count[condition_num];
+    public Integer getNumberOfInteractionsBetweenActiveAndInactiveFragmentsForCondition(Integer condition) {
+        return this.active_inactive_interaction_count[condition];
     }
 
     /**
@@ -297,8 +318,8 @@ public class InteractionCountsMap {
      * @return Total number of interacting fragments for a given condition.
      *
      */
-    public Integer getTotalNumberOfInteractingFragmentsForCondition(Integer condition_num) {
-        return this.interacting_fragment_count[condition_num];
+    public Integer getTotalNumberOfInteractingFragmentsForCondition(Integer condition) {
+        return this.interacting_fragment_count[condition];
     }
 
     /**
@@ -306,8 +327,12 @@ public class InteractionCountsMap {
      * @return Total number of active interacting fragments for a given condition.
      *
      */
-    public Integer getTotalNumberOfActiveInteractingFragmentsForCondition(Integer condition_num) {
-        return this.active_interacting_fragment_count[condition_num];
+    public Integer getTotalNumberOfActiveInteractingFragmentsForCondition(Integer condition) {
+        return this.active_interacting_fragment_count[condition];
+    }
+
+    public double getTargetEnrichmentCoefficientForCondition(Integer condition) {
+        return active_read_count[condition]/read_count[condition].doubleValue();
     }
 
     /**
