@@ -35,7 +35,9 @@ public class Truncator {
     /**
      * Read 1 or read 2 or both were too short after truncation, leading to the removal of the affected read inputSAMfiles.
      */
-    private int removedBecauseAtLeastOneReadTooShort;
+    private int NumOfPairsRemovedBecauseAtLeastOneReadTooShort;
+    private int removedBecauseRead1TooShort;
+    private int removedBecauseRead2TooShort;
 
     private static final int LENGTH_THRESHOLD = 20;
 
@@ -80,19 +82,22 @@ public class Truncator {
         PotentiallyTruncatedFastQRecord.setLigationSequence(filledEndSequence);
         PotentiallyTruncatedFastQRecord.setRestrictionSequence(renzyme.getPlainSite());
         FastqPairParser parser = new FastqPairParser(fastqFile1, fastqFile2, filledEndSequence);
-        removedBecauseAtLeastOneReadTooShort = 0;
+        NumOfPairsRemovedBecauseAtLeastOneReadTooShort = 0;
+        removedBecauseRead1TooShort = 0;
+        removedBecauseRead2TooShort = 0;
         try {
             BufferedWriter out1 = new BufferedWriter(new FileWriter(outputFASTQ1));
             BufferedWriter out2 = new BufferedWriter(new FileWriter(outputFASTQ2));
             while (parser.hasNextPair()) {
                 Pair<PotentiallyTruncatedFastQRecord, PotentiallyTruncatedFastQRecord> pair = parser.getNextPair();
-                if (pair.first.getLen() < LENGTH_THRESHOLD) {
-                    if (pair.second.getLen() < LENGTH_THRESHOLD) read2tooShort++;
+                if (pair.first.getLen() < LENGTH_THRESHOLD-1) {
                     read1tooShort++;
-                    removedBecauseAtLeastOneReadTooShort++;
-                } else if (pair.second.getLen() < LENGTH_THRESHOLD) {
+                    NumOfPairsRemovedBecauseAtLeastOneReadTooShort++;
+                    removedBecauseRead1TooShort++;
+                } else if (pair.second.getLen() < LENGTH_THRESHOLD-1) {
                     read2tooShort++;
-                    removedBecauseAtLeastOneReadTooShort++;
+                    NumOfPairsRemovedBecauseAtLeastOneReadTooShort++;
+                    removedBecauseRead2TooShort++;
                 } else {
                     pair.first.writeToStream(out1);
                     pair.second.writeToStream(out2);
@@ -104,11 +109,19 @@ public class Truncator {
             logger.fatal(String.format("Error encountered while writing truncated FASTQ files: %s", e.getMessage()));
             e.printStackTrace();
         }
-        logger.trace(String.format("Number of reads processed: %d and Number of forward reads truncated %d (%.2f%%)",
-                parser.getnReadsProcessed(), parser.getReadOneTruncated(),
+        logger.trace(String.format("Number of pairs processed: %d",
+                parser.getnReadsProcessed()));
+        logger.trace(String.format("Number of truncated forward reads: %d (%.2f%%)",
+                parser.getReadOneTruncated(),
                 100.0 * parser.getReadOneTruncated() / parser.getnReadsProcessed()));
-        logger.trace(String.format("removed b/c too short %d", removedBecauseAtLeastOneReadTooShort));
-
+        logger.trace(String.format("Number of truncated reverse reads: %d (%.2f%%)",
+                parser.getReadTwoTruncated(),
+                100.0 * parser.getReadOneTruncated() / parser.getnReadsProcessed()));
+        logger.trace(String.format("Number of too short removed forward reads (<%d): %d", LENGTH_THRESHOLD, removedBecauseRead1TooShort));
+        logger.trace(String.format("Number of too short removed reverse reads (<%d): %d", LENGTH_THRESHOLD, removedBecauseRead2TooShort));
+        logger.trace(String.format("Number of removed pairs (at least one read too short): %d (%.2f%%)",
+                NumOfPairsRemovedBecauseAtLeastOneReadTooShort,
+                100.0 * NumOfPairsRemovedBecauseAtLeastOneReadTooShort / parser.getnReadsProcessed()));
     }
 
 
