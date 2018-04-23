@@ -27,6 +27,8 @@ public class Commandline {
 
     private final static String DEFAULT_TRUNCATION_SUFFIX="truncated";
 
+    private final static String DEFAULT_TRUNCATION_PREFIX="prefix";
+
     private final static String DEFAULT_OUTPUT_BAM_NAME="diachromatic-processed";
     /** Default size of margin of fragments used for calculating GC and repeat content. */
     private final static int DEFAULT_MARGIN_SIZE=250;
@@ -44,6 +46,7 @@ public class Commandline {
     private String pathToDiachromaticDigestFile=null;
     private String pathToActiveDigestsFile=null;
     private String suffix=null;
+    private String outprefix=null;
     private boolean outputRejectedReads=false;
     private boolean doHelp=false;
     private int marginsize;
@@ -127,6 +130,9 @@ public class Commandline {
             if (commandLine.hasOption("s")) {
                 this.suffix=commandLine.getOptionValue("s");
             }
+            if (commandLine.hasOption("outprefix")) {
+                this.outprefix=commandLine.getOptionValue("outprefix");
+            }
         }
         catch (ParseException parseException)  // checked exception
         {
@@ -167,8 +173,11 @@ public class Commandline {
                 if (suffix==null) {
                     suffix=DEFAULT_TRUNCATION_SUFFIX;
                 }
+                if (outprefix==null) {
+                    outprefix=DEFAULT_TRUNCATION_PREFIX;
+                }
                 //String outdir, String file1, String file2, String enzymeName
-                this.command = new TruncateCommand(outputDirectory, pathToInputFastq1, pathToInputFastq2, enzyme,suffix);
+                this.command = new TruncateCommand(outputDirectory, pathToInputFastq1, pathToInputFastq2, enzyme, suffix, outprefix);
             } else if (mycommand.equalsIgnoreCase("map")) {
                 if (this.bowtiepath==null) {
                     printMapHelp("-b option required for map command");
@@ -233,6 +242,7 @@ public class Commandline {
                 .addOption("r", "r", true, "path to reverse FASTQ input file")
                 .addOption("s", "suffix", true, "suffix for output filenames")
                 .addOption("outdir", "outdir", true, "path to output directory")
+                .addOption("outprefix", "outprefix", true, "outprefix for files in output directory")
                 .addOption( Option.builder( "f1" ).longOpt("file1").desc("path to fastq file 1").hasArg(true).argName("file1").build())
                 .addOption( Option.builder( "f2" ).longOpt("file2").desc("path to fastq file 2").hasArg(true).argName("file2").build());
         return options;
@@ -287,12 +297,14 @@ public class Commandline {
         }
         System.out.println("truncate:\n" +
              "\tjava -jar Diachromatic.jar truncate -q <forward.fq.gz> \\ \n"+
-            "\t\t\t-r <reverse.fq.gz> -e <enzyme> -s <suffix> --outdir <directory>\n"+
+            "\t\t\t-r <reverse.fq.gz> -e <enzyme> -s <suffix> -outdir <directory> -outprefix <filename_prefix>\n\n"+
                 "\t\t<forward.fq.gz>: path to the forward FASTQ file (may or may not be compressed with gzip)\n"+
         "\t\t<reverse.fq.gz>: path to the reverse FASTQ file (may or may not be compressed with gzip)\n"+
         "\t\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII)\n"+
-        "\t\t<suffix>: suffix that will be added to the output truncated FASTQ files\n"+
-        String.format("\t\t<outfile>: optional name of output file (Default: \"%s\")",DEFAULT_TRUNCATION_SUFFIX));
+        "\t\t<suffix>: suffix that will be added to the output truncated FASTQ files (Default: " + DEFAULT_TRUNCATION_SUFFIX + ")\n"+
+        "\t\t<directory>: directory containing the output of the truncate command (Default: " + DEFAULT_OUTPUT_DIRECTORY + ")\n"+
+        "\t\t<filename_prefix>: prefix for all generated files in output directory (Default: " + DEFAULT_TRUNCATION_PREFIX + ")\n");
+        //String.format("\t\t<outfile>: optional name of output file (Default: \"%s\")",DEFAULT_TRUNCATION_SUFFIX));
     }
 
     private static void printMapHelp(String message) {

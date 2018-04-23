@@ -16,6 +16,7 @@ public class Truncator {
     private static final Logger logger = LogManager.getLogger();
 
     private final String outdir;
+    private final String outprefix;
     private final String fastqFile1;
     private final String fastqFile2;
     private final RestrictionEnzyme renzyme;
@@ -27,22 +28,22 @@ public class Truncator {
     /**
      * Read 1 was too short after truncation, leading to the removal of the affected read inputSAMfiles.
      */
-    private int read1tooShort = 0;
+    private int removedBecauseRead1TooShort;
     /**
      * Read 2 was too short after truncation, leading to the removal of the affected read inputSAMfiles.
      */
-    private int read2tooShort;
+    private int removedBecauseRead2TooShort;
     /**
      * Read 1 or read 2 or both were too short after truncation, leading to the removal of the affected read inputSAMfiles.
      */
     private int NumOfPairsRemovedBecauseAtLeastOneReadTooShort;
-    private int removedBecauseRead1TooShort;
-    private int removedBecauseRead2TooShort;
-
-    private static final int LENGTH_THRESHOLD = 20;
 
 
-    public Truncator(String outdir, String inputFASTQforward, String inputFASTQreverse, RestrictionEnzyme re, String suffix) {
+    private static final int LENGTH_THRESHOLD = 19; // using 18 the same results as for HiCUP are obtained
+
+
+    public Truncator(String outdir, String inputFASTQforward, String inputFASTQreverse, RestrictionEnzyme re, String suffix, String outprefix) {
+        this.outprefix=outprefix;
         this.outdir = outdir;
         this.fastqFile1 = inputFASTQforward;
         this.fastqFile2 = inputFASTQreverse;
@@ -66,10 +67,10 @@ public class Truncator {
     private void createOutputNames() {
         String basename1 = (new File(fastqFile1)).getName();
         int i = basename1.lastIndexOf(".");
-        outputFASTQ1 = String.format("%s%s%s.%s%s", outdir, File.separator, basename1.substring(0, i), outputSuffix, basename1.substring(i));
+        outputFASTQ1 = String.format("%s%s%s.%s.%s%s", outdir, File.separator, outprefix, basename1.substring(0, i), outputSuffix, basename1.substring(i));
         String basename2 = (new File(fastqFile2)).getName();
         i = basename2.lastIndexOf(".");
-        outputFASTQ2 = String.format("%s%s%s.%s%s", outdir, File.separator, basename2.substring(0, i), outputSuffix, basename2.substring(i));
+        outputFASTQ2 = String.format("%s%s%s.%s.%s%s", outdir, File.separator, outprefix, basename2.substring(0, i), outputSuffix, basename2.substring(i));
         logger.trace(String.format("F1 %s \n F2 %s", outputFASTQ1, outputFASTQ2));
     }
 
@@ -90,12 +91,10 @@ public class Truncator {
             BufferedWriter out2 = new BufferedWriter(new FileWriter(outputFASTQ2));
             while (parser.hasNextPair()) {
                 Pair<PotentiallyTruncatedFastQRecord, PotentiallyTruncatedFastQRecord> pair = parser.getNextPair();
-                if (pair.first.getLen() < LENGTH_THRESHOLD-1) {
-                    read1tooShort++;
+                if (pair.first.getLen() < LENGTH_THRESHOLD) {
                     NumOfPairsRemovedBecauseAtLeastOneReadTooShort++;
                     removedBecauseRead1TooShort++;
-                } else if (pair.second.getLen() < LENGTH_THRESHOLD-1) {
-                    read2tooShort++;
+                } else if (pair.second.getLen() < LENGTH_THRESHOLD) {
                     NumOfPairsRemovedBecauseAtLeastOneReadTooShort++;
                     removedBecauseRead2TooShort++;
                 } else {
