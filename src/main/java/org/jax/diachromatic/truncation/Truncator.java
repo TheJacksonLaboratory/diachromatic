@@ -22,6 +22,8 @@ public class Truncator {
     private final RestrictionEnzyme renzyme;
     private final String filledEndSequence;
 
+    private boolean compress_output;
+
     private final String outputSuffix;
 
     private String outputFASTQ1, outputFASTQ2;
@@ -63,14 +65,13 @@ public class Truncator {
         }
     }
 
-
     private void createOutputNames() {
         String basename1 = (new File(fastqFile1)).getName();
-        int i = basename1.lastIndexOf(".");
-        outputFASTQ1 = String.format("%s%s%s.%s.%s%s", outdir, File.separator, outprefix, basename1.substring(0, i), outputSuffix, basename1.substring(i));
+        int i = basename1.indexOf(".");
+        outputFASTQ1 = String.format("%s%s%s.%s.%s%s", outdir, File.separator, outprefix, basename1.substring(0,i), outputSuffix, ".fastq");
         String basename2 = (new File(fastqFile2)).getName();
-        i = basename2.lastIndexOf(".");
-        outputFASTQ2 = String.format("%s%s%s.%s.%s%s", outdir, File.separator, outprefix, basename2.substring(0, i), outputSuffix, basename2.substring(i));
+        i = basename1.indexOf(".");
+        outputFASTQ2 = String.format("%s%s%s.%s.%s%s", outdir, File.separator, outprefix, basename2.substring(0,i), outputSuffix, ".fastq");
         logger.trace(String.format("F1 %s \n F2 %s", outputFASTQ1, outputFASTQ2));
     }
 
