@@ -7,10 +7,8 @@ import org.jax.diachromatic.digest.RestrictionEnzyme;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.util.Pair;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.util.zip.GZIPOutputStream;
 
 public class Truncator {
     private static final Logger logger = LogManager.getLogger();
@@ -68,10 +66,10 @@ public class Truncator {
     private void createOutputNames() {
         String basename1 = (new File(fastqFile1)).getName();
         int i = basename1.indexOf(".");
-        outputFASTQ1 = String.format("%s%s%s.%s.%s%s", outdir, File.separator, outprefix, basename1.substring(0,i), outputSuffix, ".fastq");
+        outputFASTQ1 = String.format("%s%s%s.%s.%s%s", outdir, File.separator, outprefix, basename1.substring(0,i), outputSuffix, ".fastq.gz");
         String basename2 = (new File(fastqFile2)).getName();
         i = basename1.indexOf(".");
-        outputFASTQ2 = String.format("%s%s%s.%s.%s%s", outdir, File.separator, outprefix, basename2.substring(0,i), outputSuffix, ".fastq");
+        outputFASTQ2 = String.format("%s%s%s.%s.%s%s", outdir, File.separator, outprefix, basename2.substring(0,i), outputSuffix, ".fastq.gz");
         logger.trace(String.format("F1 %s \n F2 %s", outputFASTQ1, outputFASTQ2));
     }
 
@@ -82,15 +80,16 @@ public class Truncator {
      */
     public void parseFASTQ() throws DiachromaticException {
         PotentiallyTruncatedFastQRecord.setLigationSequence(filledEndSequence);
-        //System.out.println(renzyme.getLabel() + "\t" + renzyme.getName() + "\t" + renzyme.getPlainSite() + "\t" + renzyme.getSite() + "\t" + filledEndSequence);
         PotentiallyTruncatedFastQRecord.setRestrictionSequence(renzyme.getPlainSite());
         FastqPairParser parser = new FastqPairParser(fastqFile1, fastqFile2, filledEndSequence);
         NumOfPairsRemovedBecauseAtLeastOneReadTooShort = 0;
         removedBecauseRead1TooShort = 0;
         removedBecauseRead2TooShort = 0;
         try {
-            BufferedWriter out1 = new BufferedWriter(new FileWriter(outputFASTQ1));
-            BufferedWriter out2 = new BufferedWriter(new FileWriter(outputFASTQ2));
+
+            BufferedWriter out1 = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outputFASTQ1))));
+            BufferedWriter out2 = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outputFASTQ2))));
+
             while (parser.hasNextPair()) {
                 Pair<PotentiallyTruncatedFastQRecord, PotentiallyTruncatedFastQRecord> pair = parser.getNextPair();
                 if (pair.first.getLen() < LENGTH_THRESHOLD) {
