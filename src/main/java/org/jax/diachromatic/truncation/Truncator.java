@@ -92,15 +92,19 @@ public class Truncator {
 
             while (parser.hasNextPair()) {
                 Pair<PotentiallyTruncatedFastQRecord, PotentiallyTruncatedFastQRecord> pair = parser.getNextPair();
+
                 if (pair.first.getLen() < LENGTH_THRESHOLD) {
-                    NumOfPairsRemovedBecauseAtLeastOneReadTooShort++;
                     removedBecauseRead1TooShort++;
-                } else if (pair.second.getLen() < LENGTH_THRESHOLD) {
-                    NumOfPairsRemovedBecauseAtLeastOneReadTooShort++;
+                }
+                if (pair.second.getLen() < LENGTH_THRESHOLD) {
                     removedBecauseRead2TooShort++;
-                } else {
+                }
+                if((pair.first.getLen() < LENGTH_THRESHOLD)||(pair.second.getLen() < LENGTH_THRESHOLD)) {
                     pair.first.writeToStream(out1);
                     pair.second.writeToStream(out2);
+                }
+                else {
+                    NumOfPairsRemovedBecauseAtLeastOneReadTooShort++;
                 }
             }
             out1.close();
@@ -161,7 +165,5 @@ public class Truncator {
 
             return String.format("%s%s%s%s", fivePrimeFlank, fillIn, fillIn, threePrimeFlank);
         }
-
     }
-
 }
