@@ -81,6 +81,7 @@ public class Truncator {
      */
     public void parseFASTQ() throws DiachromaticException {
         PotentiallyTruncatedFastQRecord.setLigationSequence(filledEndSequence);
+        //System.out.println(renzyme.getLabel() + "\t" + renzyme.getName() + "\t" + renzyme.getPlainSite() + "\t" + renzyme.getSite() + "\t" + filledEndSequence);
         PotentiallyTruncatedFastQRecord.setRestrictionSequence(renzyme.getPlainSite());
         FastqPairParser parser = new FastqPairParser(fastqFile1, fastqFile2, filledEndSequence);
         NumOfPairsRemovedBecauseAtLeastOneReadTooShort = 0;
@@ -140,7 +141,7 @@ public class Truncator {
 
         if (offset == 0) {
             // this means the enzyme cuts right before the recognition site, e.g., DpnII (5'-^GATC-3')
-            return String.format("%s%s", plainsite, plainsite);
+            return String.format("%s", plainsite);
         } else if (offset == len) {
             // this means the enzyme cuts right after the recognition site, e.g., NlaIII (5'-CATG^-3')
             return String.format("%s%s", plainsite, plainsite);
