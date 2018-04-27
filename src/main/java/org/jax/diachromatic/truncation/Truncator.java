@@ -85,6 +85,7 @@ public class Truncator {
         NumOfPairsRemovedBecauseAtLeastOneReadTooShort = 0;
         removedBecauseRead1TooShort = 0;
         removedBecauseRead2TooShort = 0;
+        logger.trace("filledEndSequence:" + filledEndSequence + "\trenzyme:" + renzyme.getSite() +  renzyme.getPlainSite() + "\n");
         try {
 
             BufferedWriter out1 = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outputFASTQ1))));
@@ -146,6 +147,7 @@ public class Truncator {
         if (offset == 0) {
             // this means the enzyme cuts right before the recognition site, e.g., DpnII (5'-^GATC-3')
             return String.format("%s", plainsite);
+
         } else if (offset == len) {
             // this means the enzyme cuts right after the recognition site, e.g., NlaIII (5'-CATG^-3')
             return String.format("%s%s", plainsite, plainsite);

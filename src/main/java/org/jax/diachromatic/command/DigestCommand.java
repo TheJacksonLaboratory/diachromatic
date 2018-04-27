@@ -48,7 +48,7 @@ public class DigestCommand extends Command {
         genomeFastaFilePath =genomeFile;
         if (outputFile.equalsIgnoreCase("default")) {
             String genome=(new File(genomeFile)).getName();
-            int i = genome.indexOf(".");
+            int i = genome.indexOf("."); // this is nice if the FASTA file has an appropriate name e.g. hg19.fa, but not if the name is e.g. genome.fa
             if (i>0) genome=genome.substring(0,i);
             outfilename=String.format("%s_%s_digest.tsv",genome,enzymeName );
         } else {

@@ -275,12 +275,12 @@ public class Commandline {
         }
 
         System.out.println("digest:\n" +
-            "\tjava -jar Diachromatic.jar digest -g <path> -e <enzyme> [-m <margin>] [-o <outfile>]\n" +
-            "\t\t<path>: path to a directory containing indexed genome FASTA files\n" +
+            "\tjava -jar Diachromatic.jar digest -g <path> -e <enzyme> [-o <outfile>] [-m <margin>]\n\n" +
+
+            "\t\t<path>: path to a directory containing indexed genome FASTA files (e.g. genomes/hg19.fa)\n" +
             "\t\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII)\n" +
-            "\t\t<margin>: margin size in basepairs (Default: 250)\n" +
-            "\t\t<outfile>: outfile name (Default: genome_enzyme_digest.tsv)\n" +
-            String.format("\t\t<outfile>: optional name of output file (Default: \"%s\")",DEFAULT_DIGEST_FILE_NAME));
+            "\t\t<margin>: margin size in basepairs ? (Default: 250)\n" +
+            "\t\t<outfile>: optional name of output file (Default: <genome>_<enzyme>_digest.tsv)\n\n");
     }
 
     private static void printTruncateHelp(String message) {
@@ -323,17 +323,17 @@ public class Commandline {
         System.out.println("map:\n" +
         "\tjava -jar Diachromatic.jar map -b <bowtie2> -i <bowtie2-index> \\ \n" +
         "\t\t\t-q <forward.truncated.fq.gz> -r <reverse.truncated.fq.gz> \\ \n" +
-        "\t\t\t-d <digest> [-o <outfile>] [-b]\n" +
+        "\t\t\t-d <digest> [-o <outfile>] [-b <output-rejected>]\n\n" +
         "\t\t\t[-a <active-digests>] [-o <outfile>] [-b]\n" +
         "\t\t<bowtie2>: path to bowtie2 executable\n" +
         "\t\t<bowtie2-index>: path to bowtie2 index for digested genome\n" +
-        "\t\t<forward.truncated.fq.gz>: path to the truncated forward FASTQ file\n" +
-        "\t\t<reverse.truncated.fq.gz>: path to the truncated reverse FASTQ file\n" +
+        "\t\t<forward.truncated.fq.gz>: path to the truncated forward gzipped FASTQ file\n" +
+        "\t\t<reverse.truncated.fq.gz>: path to the truncated reverse gzipped FASTQ file\n" +
         "\t\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII)\n" +
         "\t\t<digest>: path to the digest file produced by the digest command\n" +
         "\t\t<active-digests>: path to a BED file with the coordinates of active digests\n" +
         String.format("\t\t<outfile>: optional name of output file (Default: \"%s.bam\")",DEFAULT_OUTPUT_BAM_NAME));
-        System.out.println("\t\t-b: output rejected reads to file (false if no -b option passed)");
+        System.out.println("\t\t<output-rejected>: output rejected reads to file (false if no -b option passed)\n");
     }
 
     private static void printHelpHeader() {

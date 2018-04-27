@@ -240,6 +240,7 @@ public class SAMPairer {
             if(pair.isUnMappedR2()) {n_unmapped_read2++;}
             if(pair.isMultiMappedR1()) {n_multimapped_read1++;}
             if(pair.isMultiMappedR2()) {n_multimapped_read2++;}
+            if(pair.isMultiMappedR1()||pair.isMultiMappedR2()) {n_multimappedPair++;}
             if(pair.isPaired()) {n_paired++;}
             
 
@@ -340,6 +341,8 @@ public class SAMPairer {
 
         logger.trace(String.format("n_multimapped_read1=%d", n_multimapped_read1));
         logger.trace(String.format("n_multimapped_read2=%d\n", n_multimapped_read2));
+        logger.trace(String.format("n_multimappedPair=%d\n", n_multimappedPair));
+
 
         logger.trace(String.format("n_paired=%d (%.1f%%)\n", n_paired, (100.0 * n_paired / n_total)));
 
