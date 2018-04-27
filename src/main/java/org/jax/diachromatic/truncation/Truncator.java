@@ -100,7 +100,7 @@ public class Truncator {
                 if (pair.second.getLen() < LENGTH_THRESHOLD) {
                     removedBecauseRead2TooShort++;
                 }
-                if((pair.first.getLen() < LENGTH_THRESHOLD)||(pair.second.getLen() < LENGTH_THRESHOLD)) {
+                if((LENGTH_THRESHOLD) < pair.first.getLen() && (LENGTH_THRESHOLD < pair.second.getLen())) {
                     pair.first.writeToStream(out1);
                     pair.second.writeToStream(out2);
                 }
