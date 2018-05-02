@@ -72,7 +72,7 @@ public class ReadPairMappingTest {
         digests=makeFakeDigestList("chr18",new Pair<>(71910154,71919237));
         digestmap.put("chr18",digests);
         readpairmap = new HashMap<>();
-        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
+        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads,"results","prefix");
         ReadPair pair;
         while ((pair = sampairer.getNextPair())!=null) {
             readpairmap.put(pair.forward().getReadName(),pair);

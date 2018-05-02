@@ -70,7 +70,9 @@ public class SAMPairerTest {
         digests=makeFakeDigestList("chr18",new Pair<>(71910154,71919237));
         digestmap.put("chr18",digests);
         readpairmap = new HashMap<>();
-        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
+        String outdir = "results";
+        String outprefix = "results";
+        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads,outdir, outprefix);
         ReadPair pair;
         while ((pair = sampairer.getNextPair())!=null) {
             readpairmap.put(pair.forward().getReadName(),pair);
@@ -132,7 +134,7 @@ public class SAMPairerTest {
     public void testFragmentToLarge() throws DiachromaticException {
         int UPPER_SIZE_THRESHOLD=800;
         int LOWER_SIZE_THRESHOLD=150;
-        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
+        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads,"results", "prefix");
         ReadPair readpair =readpairmap.get("1_uniquelyAlignedRead");
         assertNotNull(readpair);
         int insertSize=  readpair.getCalculatedInsertSize();
@@ -148,7 +150,7 @@ public class SAMPairerTest {
     public void testFragmentToLargeException() throws DiachromaticException {
         int UPPER_SIZE_THRESHOLD=800;
         int LOWER_SIZE_THRESHOLD=150;
-        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
+        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads,"results", "prefix");
         ReadPair readpair = readpairmap.get("2_multiplyAlignedRead");
         assertNotNull(readpair);
         int insertSize=  readpair.getCalculatedInsertSize();
@@ -164,7 +166,7 @@ public class SAMPairerTest {
      */
     @Test
     public void testSelfLigation() throws DiachromaticException {
-        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
+        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads,"results", "prefix");
         ReadPair readpair = readpairmap.get("1_uniquelyAlignedRead");
         assertFalse(readpair.selfLigation());
         readpair = readpairmap.get("4_selfLigation");//sampairer.getNextPair();// fourth read pair, self-ligation!

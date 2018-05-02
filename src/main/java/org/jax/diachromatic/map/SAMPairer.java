@@ -33,45 +33,59 @@ import java.util.*;
 public class SAMPairer {
     private static final Logger logger = LogManager.getLogger();
     private static final htsjdk.samtools.util.Log log = Log.getInstance(SAMPairer.class);
+
+    private final String outdir;
+    private final String outprefix;
+
     /**
      * Version of diachromatic. This is initialized within the command line class on the basis of the program
      * version given in the pom.xml file. A default number of zero is given in case initialization doesnt work.
      */
     private static String VERSION = "0.0";
+
     /**
      * Path to the SAMfile representing the forward read of a paired end experiment. The SAM files should have been
      * processed with the truncate command of this package
      */
     private String samPath1;
+
     /**
      * Path to the SAMfile representing the reverse read of a paired end experiment. The SAM files should have been
      * processed with the truncate command of this package
      */
     private String samPath2;
+
     /**
      * Number of unmapped forward reads (SAM flag==4)
      */
     private int n_unmapped_read1 = 0;
+
     /**
      * Number of unmapped reverse reads (Note: SAM flag is also 4, because the reverse reads are mapped as single-end reads).
      */
     private int n_unmapped_read2 = 0;
+
     /**
      * Number of pairs with 1 or 2 unmapped reads (these pairs are discarded from further analysis).
      */
     private int n_paired = 0;
+
     /**
      * Number of forward reads that were multimapped (had an XS tag)
      */
     private int n_multimapped_read1 = 0;
+
     /**
      * Number of reverse reads that were multimapped (had an XS tag)
      */
     private int n_multimapped_read2 = 0;
+
     /**
      * Number of  read pairs where one or two reads were multimapped (had an XS tag)
      */
     private int n_multimappedPair = 0;
+
+    private String outputBAMvalid, outputBAMrejected;
 
     private int n_could_not_assign_to_digest = 0;
 
@@ -168,7 +182,9 @@ public class SAMPairer {
      * @param sam2    SAM file for the truncated "reverse" reads
      * @param digests see {@link #digestmap}.
      */
-    public SAMPairer(String sam1, String sam2, Map<String, List<Digest>> digests, boolean outputRejected) {
+    public SAMPairer(String sam1, String sam2, Map<String, List<Digest>> digests, boolean outputRejected, String outdir, String outprefix) {
+        this.outdir = outdir;
+        this.outprefix = outprefix;
         samPath1 = sam1;
         samPath2 = sam2;
         reader1 = SamReaderFactory.makeDefault().open(new File(samPath1));
@@ -179,6 +195,7 @@ public class SAMPairer {
         outputRejectedReads = outputRejected;
         VERSION = Commandline.getVersion();
         initializeErrorMap();
+        createOutputNames();
     }
 
     /**
@@ -222,9 +239,9 @@ public class SAMPairer {
 
         // init BAM outfile
         boolean presorted = false;
-        this.validReadsWriter = new SAMFileWriterFactory().makeBAMWriter(header, presorted, new File(validBamFileName));
+        this.validReadsWriter = new SAMFileWriterFactory().makeBAMWriter(header, presorted, new File(outputBAMvalid));
         if(outputRejectedReads) {
-            this.rejectedReadsWriter = new SAMFileWriterFactory().makeBAMWriter(header, presorted, new File(rejectedBamFileName));
+            this.rejectedReadsWriter = new SAMFileWriterFactory().makeBAMWriter(header, presorted, new File(outputBAMrejected));
         }
         final ProgressLogger pl = new ProgressLogger(log, 1000000);
 
@@ -390,5 +407,10 @@ public class SAMPairer {
         logger.trace("\t\t" + "Valid Interaction Enrichment Coefficient (VIEC): " + String.format("(%.2f%%)", 100.0*n_valid_pairs/n_paired));
         logger.trace("");
 
+    }
+
+    private void createOutputNames() {
+        outputBAMvalid = String.format("%s%s%s.%s", outdir, File.separator, outprefix, "valid_pairs.mapped.bam");
+        outputBAMrejected = String.format("%s%s%s.%s", outdir, File.separator, outprefix, "rejected_pairs.mapped.bam");
     }
 }

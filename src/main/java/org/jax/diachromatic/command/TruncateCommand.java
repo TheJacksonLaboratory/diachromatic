@@ -37,22 +37,13 @@ import static org.jax.diachromatic.digest.RestrictionEnzyme.parseRestrictionEnzy
  */
 public class TruncateCommand extends Command {
     private static final Logger logger = LogManager.getLogger();
-    private final String outdir;
 
     private final String fastaqFile1;
     private final String fastaqFile2;
-
-    private String truncatedFastaqFile1=null;
-    private String truncatedFastaqFile2=null;
-
     private Truncator truncator = null;
-
-    private RestrictionEnzyme re=null;
+    private RestrictionEnzyme re = null;
 
     public TruncateCommand (String file1, String file2, String enzymeName, String outdir, String outprefix) throws DiachromaticException {
-        System.out.println(outdir);
-        System.out.println(outprefix);
-        this.outdir=outdir;
         this.fastaqFile1=file1;
         this.fastaqFile2=file2;
         List<RestrictionEnzyme>  enzymelist = parseRestrictionEnzymes();
@@ -64,11 +55,11 @@ public class TruncateCommand extends Command {
     }
 
     public void execute() {
-        logger.trace(String.format("Starting truncate command on files %s and %s",fastaqFile1,fastaqFile2 ));
+        logger.trace(String.format("Starting truncate command on files %s and %s",fastaqFile1,fastaqFile2));
         try {
             truncator.parseFASTQ();
         } catch (DiachromaticException e) {
-            logger.fatal("Error encountered while truncating FASTQ reads: ",e);
+            logger.fatal("Error encountered while truncating FASTQ reads: ", e);
         }
     }
 

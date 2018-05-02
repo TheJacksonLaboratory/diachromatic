@@ -25,39 +25,45 @@ public class Commandline {
     private static final Logger logger = LogManager.getLogger();
 
     private Command command=null;
+
     /** The default name of the file that is produced by the {@code digest} command. */
-    private final static String DEFAULT_DIGEST_FILE_NAME="default";
+    private final static String DEFAULT_DIGEST_FILE_NAME="default"; // digestion and fasta indexing will be moved to GOPHER
+    /** Default size of margin of fragments used for calculating GC and repeat content. */
+    private final static int DEFAULT_MARGIN_SIZE=250; // also GC and repeat content will be calculated within GOPHER
+    /** Absolute path to the combined genome fasta file (which will be indexed only if necessary). */
+    private String genomeFastaFile=null; // only needed for digestion
 
     private final static String DEFAULT_OUTPUT_DIRECTORY="results";
     private final static String DEFAULT_FILENAME_PREFIX="prefix";
 
 
-    private final static String DEFAULT_TRUNCATION_SUFFIX="truncated";
-    private final static String DEFAULT_MAPPING_SUFFIX="mapped";
-    
-
-
-
-    private final static String DEFAULT_OUTPUT_BAM_NAME="diachromatic-processed";
-    /** Default size of margin of fragments used for calculating GC and repeat content. */
-    private final static int DEFAULT_MARGIN_SIZE=250;
-
-    /** Absolute path to the combined genome fasta file (which will be indexed only if necessary). */
-    private String genomeFastaFile=null;
-    private String outputFilePath=null;
-    private String outputDirectory=DEFAULT_OUTPUT_DIRECTORY;
     private String enzyme=null;
+
+
+    private String pathToInputFastq1 = null;
+    private String pathToInputFastq2 = null;
+
+
+    /**
+     * general fields
+     */
+    private boolean doHelp=false;
+    private String outputFilePath=null;
+    private String filenamePrefix=DEFAULT_FILENAME_PREFIX;
+    private String outputDirectory=DEFAULT_OUTPUT_DIRECTORY;
+
+    /**
+     * map specific fields
+     */
+    private boolean outputRejectedReads=false;
     /** path to the bowtie2 executable. */
     private String bowtiepath=null;
-    private String pathToBowtieIndex=null;
-    private String pathToInputFastq1 =null;
-    private String pathToInputFastq2 =null;
+    private int marginsize;
+    private final static String DEFAULT_OUTPUT_BAM_NAME="diachromatic-processed";
     private String pathToDiachromaticDigestFile=null;
     private String pathToActiveDigestsFile=null;
-    private String outprefix=null;
-    private boolean outputRejectedReads=false;
-    private boolean doHelp=false;
-    private int marginsize;
+    private String pathToBowtieIndex=null;
+
 
     public Commandline(String args[]) {
         final CommandLineParser cmdLineGnuParser = new DefaultParser();
@@ -136,8 +142,8 @@ public class Commandline {
             if (commandLine.hasOption("r")) {
                 this.pathToInputFastq2 =commandLine.getOptionValue("r");
             }
-            if (commandLine.hasOption("outprefix")) {
-                this.outprefix=commandLine.getOptionValue("outprefix");
+            if (commandLine.hasOption("filenamePrefix")) {
+                this.filenamePrefix=commandLine.getOptionValue("filenamePrefix");
             }
 
             // create directory for output in any case
@@ -179,28 +185,28 @@ public class Commandline {
                 } else if (this.enzyme == null) {
                     printTruncateHelp("-e option required for truncate command");
                 }
-                if (outprefix==null) {
-                    outprefix=DEFAULT_FILENAME_PREFIX;
+                if (filenamePrefix==null) {
+                    filenamePrefix=DEFAULT_FILENAME_PREFIX;
                 }
                 //String outdir, String file1, String file2, String enzymeName
-                this.command = new TruncateCommand(pathToInputFastq1, pathToInputFastq2, enzyme, outputDirectory, outprefix);
+                this.command = new TruncateCommand(pathToInputFastq1, pathToInputFastq2, enzyme, outputDirectory, filenamePrefix);
             } else if (mycommand.equalsIgnoreCase("map")) {
-                if (this.bowtiepath==null) {
+                if (this.bowtiepath == null) {
                     printMapHelp("-b option required for map command");
                 }
-                if (this.pathToBowtieIndex==null) {
+                if (this.pathToBowtieIndex == null) {
                     printMapHelp("-i option (bowtie index) required for map command");
                 }
-                if (this.pathToInputFastq1 ==null) {
+                if (this.pathToInputFastq1 == null) {
                     printMapHelp("-q option (FASTQ 1) required for map command");
                 }
-                if (this.pathToInputFastq2 ==null) {
+                if (this.pathToInputFastq2 == null) {
                     printMapHelp("-r option (FASTQ 2) required for map command");
                 }
-                if (this.outputFilePath==null) {
-                    outputFilePath=DEFAULT_OUTPUT_BAM_NAME;
+                if (this.outputFilePath == null) {
+                    outputFilePath=DEFAULT_OUTPUT_BAM_NAME; //replace this with prefix and outdir
                 }
-                if (pathToDiachromaticDigestFile==null) {
+                if (pathToDiachromaticDigestFile == null) {
                     printMapHelp("-d option required for map command");
                 }
                 this.command=new MapCommand(
@@ -211,7 +217,9 @@ public class Commandline {
                         outputFilePath,
                         pathToDiachromaticDigestFile,
                         pathToActiveDigestsFile,
-                        outputRejectedReads);
+                        outputRejectedReads,
+                        outputDirectory,
+                        filenamePrefix);
             } else {
                 printUsage(String.format("Did not recognize command: %s", mycommand));
             }
@@ -327,7 +335,7 @@ public class Commandline {
         System.out.println("map:\n" +
         "\tjava -jar Diachromatic.jar map -b <bowtie2> -i <bowtie2-index> \\ \n" +
         "\t\t\t-q <forward.truncated.fq.gz> -r <reverse.truncated.fq.gz> \\ \n" +
-        "\t\t\t-d <digest> [-o <outfile>] [-b <output-rejected>]\n\n" +
+        "\t\t\t-d <digest> [-o <outfile>] [-j <output-rejected>]\n\n" +
         "\t\t\t[-a <active-digests>] [-o <outfile>] [-b]\n" +
         "\t\t<bowtie2>: path to bowtie2 executable\n" +
         "\t\t<bowtie2-index>: path to bowtie2 index for digested genome\n" +
@@ -337,7 +345,7 @@ public class Commandline {
         "\t\t<digest>: path to the digest file produced by the digest command\n" +
         "\t\t<active-digests>: path to a BED file with the coordinates of active digests\n" +
         String.format("\t\t<outfile>: optional name of output file (Default: \"%s.bam\")",DEFAULT_OUTPUT_BAM_NAME));
-        System.out.println("\t\t<output-rejected>: output rejected reads to file (false if no -b option passed)\n");
+        System.out.println("\t\t<output-rejected>: output rejected reads to file)\n");
     }
 
     private static void printHelpHeader() {
