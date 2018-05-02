@@ -22,8 +22,6 @@ public class Truncator {
 
     private boolean compress_output;
 
-    private final String outputSuffix;
-
     private String outputFASTQ1, outputFASTQ2;
     /**
      * Read 1 was too short after truncation, leading to the removal of the affected read inputSAMfiles.
@@ -39,37 +37,28 @@ public class Truncator {
     private int NumOfPairsRemovedBecauseAtLeastOneReadTooShort;
 
 
-    private static final int LENGTH_THRESHOLD = 19; // using 18 the same results as for HiCUP are obtained
+    private static final int LENGTH_THRESHOLD = 19; // using 19 the same results as for HiCUP are obtained
 
 
-    public Truncator(String outdir, String inputFASTQforward, String inputFASTQreverse, RestrictionEnzyme re, String suffix, String outprefix) {
-        this.outprefix=outprefix;
-        this.outdir = outdir;
+    public Truncator(String inputFASTQforward, String inputFASTQreverse, RestrictionEnzyme re, String outdir, String outprefix) {
         this.fastqFile1 = inputFASTQforward;
         this.fastqFile2 = inputFASTQreverse;
         this.renzyme = re;
+        this.outdir = outdir;
+        this.outprefix = outprefix;
         filledEndSequence = fillEnd(renzyme);
-        outputSuffix = suffix;
-        makeOutdirectoryIfNeeded();
         createOutputNames();
     }
 
-    private void makeOutdirectoryIfNeeded() {
-        File f = new File(outdir);
-        if (f.exists() && f.isFile()) {
-            logger.error(String.format("Cannot make output directory called %s because a file of the same name exists", outdir));
-        } else if (! f.exists()) {
-            f.mkdir(); // only make directory if necessary.
-        }
-    }
-
     private void createOutputNames() {
+
         String basename1 = (new File(fastqFile1)).getName();
-        int i = basename1.indexOf(".");
-        outputFASTQ1 = String.format("%s%s%s.%s.%s%s", outdir, File.separator, outprefix, basename1.substring(0,i), outputSuffix, ".fastq.gz");
+        basename1 = basename1.substring(0,basename1.indexOf("."));
+        outputFASTQ1 = String.format("%s%s%s.%s.%s", outdir, File.separator, outprefix, basename1, ".truncated.fastq.gz");
+
         String basename2 = (new File(fastqFile2)).getName();
-        i = basename1.indexOf(".");
-        outputFASTQ2 = String.format("%s%s%s.%s.%s%s", outdir, File.separator, outprefix, basename2.substring(0,i), outputSuffix, ".fastq.gz");
+        basename2 = basename2.substring(0,basename2.indexOf("."));
+        outputFASTQ2 = String.format("%s%s%s.%s.%s", outdir, File.separator, outprefix, basename2, ".truncated.fastq.gz");
         logger.trace(String.format("F1 %s \n F2 %s", outputFASTQ1, outputFASTQ2));
     }
 
