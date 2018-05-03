@@ -1,10 +1,9 @@
-package org.jax.diachromatic.map;
+package org.jax.diachromatic.align;
 
 
 import htsjdk.samtools.SAMRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jax.diachromatic.Diachromatic;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.exception.DigestNotFoundException;
 
@@ -13,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.jax.diachromatic.map.ErrorCode.*;
+import static org.jax.diachromatic.align.ErrorCode.*;
 
 /**
  * This class represents a pair of reads R1 and R2 of an illumina paired-end run.
@@ -31,8 +30,8 @@ import static org.jax.diachromatic.map.ErrorCode.*;
  * <li> <b>Same circularized internal</b> - No read overlaps a cutting site.
  * <li> <b>Same circularized dangling</b> - At least read overlaps a cutting site.
  * </ul>
- * <li> <b>Re-ligation</b> - Reads map to adjacent restriction fragments. </li>
- * <li> <b>Contiguous</b> - Reads map to different fragments that are not direct neighbors. But the distance between the reads is within one expected fragment size. </li>
+ * <li> <b>Re-ligation</b> - Reads align to adjacent restriction fragments. </li>
+ * <li> <b>Contiguous</b> - Reads align to different fragments that are not direct neighbors. But the distance between the reads is within one expected fragment size. </li>
  * <li> <b>Wrong size</b> - The calculated length of the fragment (di-tag length) is not within the limits set by the size-selection step in the experimental protocol. </li>
  * <ul>
  * <li> <b>Too small</b> - Di-tag length is smaller than a given lower threshold. </li>
@@ -46,7 +45,7 @@ import static org.jax.diachromatic.map.ErrorCode.*;
  * whereas for valid pairs it is the sum of the two distances from the 5' ends of mapped reads to the next occurrence of a cutting site.
  * <p>
  * This class provides all required fields and functions to assign each pair of reads (R1,R2) unambiguously to one of the categories,
- * given a map of restriction fragments ({@link Digest}) for each and the two SAMRecords of the pair.
+ * given a align of restriction fragments ({@link Digest}) for each and the two SAMRecords of the pair.
  * <p>
  * The categorization is done upon initialization.
  *
@@ -186,7 +185,7 @@ public class ReadPair {
      *
      * @param f         forward read
      * @param r         reverse read
-     * @param digestmap a map of all digests
+     * @param digestmap a align of all digests
      * @throws DiachromaticException
      */
     ReadPair(SAMRecord f, SAMRecord r, Map<String, List<Digest>> digestmap) throws DiachromaticException {
@@ -337,7 +336,7 @@ public class ReadPair {
      * <From: Wingett S et al. HiCUP: pipeline for mapping and processing Hi-C data. F1000Research 2015, 4:1310>
      * The Hi-C protocol does not prevent entirely two adjacent restriction fragments re-ligating,
      * but HiCUP discards such di-tags since they provide no useful three-dimensional proximity information.
-     * Similarly, multiple fragments could re-ligate forming a contig, but here paired reads will not map to
+     * Similarly, multiple fragments could re-ligate forming a contig, but here paired reads will not align to
      * adjacent genomic restriction fragments
      * This function is called if the two reads are on different fragments that are not direct neighbors. If they are located
      * within one expected fragment size, then they are contiguous sequences that were not properly digested.
@@ -363,7 +362,7 @@ public class ReadPair {
      * If ditags are on the same restriction fragment (which MUST be checked before calling this
      * function), but not circularized and if the mapped end of one of the reads is near to the
      * end of a restriction fragment, this is termed a dangling end. Note that we only need to
-     * check one Digest since by definition the reads have been found to both map to the same
+     * check one Digest since by definition the reads have been found to both align to the same
      * fragment.
      *
      * @return true if the two reads of on the same restriction frag with a dangling end (artefact!)
@@ -460,7 +459,7 @@ public class ReadPair {
         SAMRecord readF = forward();
         SAMRecord readR = reverse();
         int distF, distR;
-        if (digestPair==null) throw new DiachromaticException("Cannot calculate insert size with null digest map (e.g., un/multimapped read");
+        if (digestPair==null) throw new DiachromaticException("Cannot calculate insert size with null digest align (e.g., un/multimapped read");
         if (!digestPair.forward().equals(digestPair.reverse())) {
             if (readF.getReadNegativeStrandFlag()) { // readF is on the negative strand
                 distF = readF.getAlignmentEnd() - digestPair.forward().getStartpos() + 1;
@@ -473,7 +472,7 @@ public class ReadPair {
                 distR = digestPair.reverse().getEndpos() - readR.getAlignmentStart() + 1;
             }
             return distF + distR;
-        } else { // if both reads map to the same restriction fragment
+        } else { // if both reads align to the same restriction fragment
             // Handle size calculation for circularized fragments. Needs to be calculated as above.
             // If the read mapped to the reverse strand comes before the read mapped to the forward strand, calculate insert size as above
             int insert_size;
@@ -624,9 +623,9 @@ public class ReadPair {
         String tag = "NA";
 
         if (R1.getReadNegativeStrandFlag() == R2.getReadNegativeStrandFlag()) {
-            // both reads map to the same strand
+            // both reads align to the same strand
             if (!R1.getReadNegativeStrandFlag()) {
-                // both reads map to the forward strand
+                // both reads align to the forward strand
                 if (R1.getAlignmentStart() <= R2.getAlignmentStart()) {
                     // R1 proceeds R2
                     tag = "F1F2";
@@ -635,7 +634,7 @@ public class ReadPair {
                     tag = "F2F1";
                 }
             } else {
-                // both reads map to the reverse strand
+                // both reads align to the reverse strand
                 if (R1.getAlignmentEnd() <= R2.getAlignmentEnd()) {
                     // R1 proceeds R2
                     tag = "R1R2";
@@ -645,7 +644,7 @@ public class ReadPair {
                 }
             }
         } else {
-            // reads map to different strands
+            // reads align to different strands
             if (!R1.getReadNegativeStrandFlag()) {
                 // R1 is mapped to the forward and R2 to the reverse strand
                 if (R1.getAlignmentStart() <= R2.getAlignmentEnd()) {
@@ -749,13 +748,13 @@ public class ReadPair {
 
 
     /**
-     * THIS FUNCTION WAS COPIED FROM THE CLASS SAMPairer IN ORDER TO GET THE FUNCTION isValid RUNNING.
-     * IN CLASS SAMPairer THIS FUNCTION IS CALLED BY MULTIPLE TEST FUNCTIONS.
+     * THIS FUNCTION WAS COPIED FROM THE CLASS Aligner IN ORDER TO GET THE FUNCTION isValid RUNNING.
+     * IN CLASS Aligner THIS FUNCTION IS CALLED BY MULTIPLE TEST FUNCTIONS.
      * IN THIS CLASS THIS FUNCTION IS NOT YET TESTED.
      * ONE COULD MOVE THE TESTS TO THE TEST CLASS OF THIS CLASS,
      * BUT IN THE MID TERM THIS FUNCTION SHOULD BE MOVED TO THE CLASS DigestPair AND BE TESTED THERE.
      * <p>
-     * Get the restriction fragments ({@link Digest} objects) to which the reads map. TODO do we need a different algorithm
+     * Get the restriction fragments ({@link Digest} objects) to which the reads align. TODO do we need a different algorithm
      * Note this from hicup
      * Using the terminal ends of a di-tag to position a read on the digested genome could be problematic because
      * a restiction enzyme may not cut in the same position on both strands (i.e. creates sticky ends). Filling-in

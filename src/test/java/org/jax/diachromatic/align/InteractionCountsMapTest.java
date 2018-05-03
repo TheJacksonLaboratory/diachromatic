@@ -1,4 +1,4 @@
-package org.jax.diachromatic.map;
+package org.jax.diachromatic.align;
 
 import org.jax.diachromatic.exception.IncrementSameInternalInteractionException;
 import org.junit.BeforeClass;
@@ -72,7 +72,7 @@ public class InteractionCountsMapTest {
         assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr3:23-33:I;chr1:77-87:I", 2).intValue());
         assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr3:23-33:I;chr1:77-87:I", 3).intValue());
         assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr3:23-33:I;chr1:77-87:I", 4).intValue());
-        testInteractionCountsMap5c.printInteractionCountsMapAsCountTable();
+        testInteractionCountsMap5c.printInteractionCountsMapAsCountTable("test2");
     }
 
     /**
@@ -122,7 +122,7 @@ public class InteractionCountsMapTest {
         uniqueKey = testInteractionCountsMap5c.incrementFragPair(1, "chr3", 23,33,false,"chr1", 77,87,false);
         uniqueKey = testInteractionCountsMap5c.incrementFragPair(2, "chr3", 77,87,false,"chr1", 23,33,false);
         uniqueKey = testInteractionCountsMap5c.incrementFragPair(2, "chr1", 77,87,false,"chr1", 23,33,false);
-        testInteractionCountsMap5c.printInteractionCountsMapAsCountTable();
+        testInteractionCountsMap5c.printInteractionCountsMapAsCountTable("test");
     }
 
     /**
@@ -151,8 +151,8 @@ public class InteractionCountsMapTest {
         assertEquals(3,testInteractionCountsMapTmp.getNumberOfReadsAtInteractingFragmentForKeyAndCondition("chr1:110-120:I",0).intValue());
         assertEquals(3,testInteractionCountsMapTmp.getNumberOfReadsAtInteractingFragmentForKeyAndCondition("chr1:10-20:I",0).intValue());
 
-        testInteractionCountsMapTmp.printFragmentInteractionCountsMapAsCountTable();
-        testInteractionCountsMapTmp.printInteractionCountsMapAsCountTable();
+        testInteractionCountsMapTmp.printFragmentInteractionCountsMapAsCountTable("test3.tsv");
+        testInteractionCountsMapTmp.printInteractionCountsMapAsCountTable("test4.tsv");
 
         System.out.println("TotalNumberOfInteractionsForCondition: " + testInteractionCountsMapTmp.getTotalNumberOfInteractionsForCondition(0));
         System.out.println("TotalNumberOfInteractingFragmentsForCondition: " + testInteractionCountsMapTmp.getTotalNumberOfInteractingFragmentsForCondition(0));

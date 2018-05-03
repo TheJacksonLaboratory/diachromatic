@@ -1,4 +1,4 @@
-package org.jax.diachromatic.map;
+package org.jax.diachromatic.align;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -13,8 +13,6 @@ import java.util.zip.GZIPOutputStream;
 public class Truncator {
     private static final Logger logger = LogManager.getLogger();
 
-    private final String outdir;
-    private final String outprefix;
     private final String fastqFile1;
     private final String fastqFile2;
     private final RestrictionEnzyme renzyme;
@@ -40,25 +38,23 @@ public class Truncator {
     private static final int LENGTH_THRESHOLD = 19; // using 19 the same results as for HiCUP are obtained
 
 
-    public Truncator(String inputFASTQforward, String inputFASTQreverse, RestrictionEnzyme re, String outdir, String outprefix) {
+    public Truncator(String inputFASTQforward, String inputFASTQreverse, RestrictionEnzyme re, String outputPathPrefix) {
         this.fastqFile1 = inputFASTQforward;
         this.fastqFile2 = inputFASTQreverse;
         this.renzyme = re;
-        this.outdir = outdir;
-        this.outprefix = outprefix;
         filledEndSequence = fillEnd(renzyme);
-        createOutputNames();
+        createOutputNames(outputPathPrefix);
     }
 
-    private void createOutputNames() {
+    private void createOutputNames(String outputPathPrefix) {
 
         String basename1 = (new File(fastqFile1)).getName();
         basename1 = basename1.substring(0,basename1.indexOf("."));
-        outputFASTQ1 = String.format("%s%s%s.%s.%s", outdir, File.separator, outprefix, basename1, "truncated.fastq.gz");
+        outputFASTQ1 = String.format("%s.%s.%s", outputPathPrefix, basename1, "truncated.fastq.gz");
 
         String basename2 = (new File(fastqFile2)).getName();
         basename2 = basename2.substring(0,basename2.indexOf("."));
-        outputFASTQ2 = String.format("%s%s%s.%s.%s", outdir, File.separator, outprefix, basename2, "truncated.fastq.gz");
+        outputFASTQ2 = String.format("%s.%s.%s", outputPathPrefix, basename2, "truncated.fastq.gz");
         logger.trace(String.format("F1 %s \n F2 %s", outputFASTQ1, outputFASTQ2));
     }
 

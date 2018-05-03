@@ -1,4 +1,4 @@
-package org.jax.diachromatic.map;
+package org.jax.diachromatic.align;
 
 
 import org.jax.diachromatic.exception.DiachromaticException;
@@ -16,14 +16,14 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * This class is designed to test specifically the ability of the classes {@link SAMPairer} and
+ * This class is designed to test specifically the ability of the classes {@link Aligner} and
  * {@link ReadPair} to determine whether reads are uniquely mapped, unmapped, or multimapped.
  */
 public class ReadPairMappingTest {
     private static int digestcounter=0;
     private static String restrictionsite=null;
     private static Map<String,List<Digest>> digestmap;
-    private static SAMPairer sampairer;
+    private static Aligner sampairer;
     private static String sam1;
     private static String sam2;
 
@@ -37,7 +37,7 @@ public class ReadPairMappingTest {
 
     @BeforeClass
     public  static void init() throws DiachromaticException {
-        ClassLoader classLoader = SAMPairerTest.class.getClassLoader();
+        ClassLoader classLoader = MapPairsTest.class.getClassLoader();
         sam1 = classLoader.getResource("data/sam/forwardtest.sam").getFile();
         sam2 = classLoader.getResource("data/sam/reversetest.sam").getFile();
         // make fake digests for the reads we will test
@@ -72,7 +72,7 @@ public class ReadPairMappingTest {
         digests=makeFakeDigestList("chr18",new Pair<>(71910154,71919237));
         digestmap.put("chr18",digests);
         readpairmap = new HashMap<>();
-        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads,"results","prefix");
+        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test5");
         ReadPair pair;
         while ((pair = sampairer.getNextPair())!=null) {
             readpairmap.put(pair.forward().getReadName(),pair);
@@ -81,7 +81,7 @@ public class ReadPairMappingTest {
     }
 
     /**
-     * We require a digest list for the {@link SAMPairer} constructor. We make a "fake" digest list for
+     * We require a digest list for the {@link Aligner} constructor. We make a "fake" digest list for
      * simplicity that will allow us to perform testing of various functionalities.
      * @param chrom
      * @param pos_pair

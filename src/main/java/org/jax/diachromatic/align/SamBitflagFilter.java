@@ -1,8 +1,8 @@
-package org.jax.diachromatic.map;
+package org.jax.diachromatic.align;
 
 /**
  * This class provides a set of static functions to perform SAM format bitflag filtering
- * for reads that did not map or had other problems.
+ * for reads that did not align or had other problems.
  */
 public class SamBitflagFilter {
     /* multiple segments, e.g., a read inputSAMfiles. The bit is set if the read is part of a paired end inputSAMfiles. */

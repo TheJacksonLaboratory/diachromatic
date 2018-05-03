@@ -1,4 +1,4 @@
-package org.jax.diachromatic.map;
+package org.jax.diachromatic.align;
 
 
 import htsjdk.samtools.*;
@@ -11,9 +11,7 @@ import htsjdk.samtools.util.Log;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.exception.DiachromaticException;
-import org.jax.diachromatic.exception.DigestNotFoundException;
 import org.jax.diachromatic.io.Commandline;
-import org.jax.diachromatic.util.Pair;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,12 +28,10 @@ import java.util.*;
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
  * @version 0.1.2 (2018-01-06)
  */
-public class SAMPairer {
+public class Aligner {
     private static final Logger logger = LogManager.getLogger();
-    private static final htsjdk.samtools.util.Log log = Log.getInstance(SAMPairer.class);
+    private static final htsjdk.samtools.util.Log log = Log.getInstance(Aligner.class);
 
-    private final String outdir;
-    private final String outprefix;
 
     /**
      * Version of diachromatic. This is initialized within the command line class on the basis of the program
@@ -85,7 +81,7 @@ public class SAMPairer {
      */
     private int n_multimappedPair = 0;
 
-    private String outputBAMvalid, outputBAMrejected;
+    private String outputBAMvalid, outputBAMrejected, outputTsvInteractingFragmentCounts, outputTsvInteractionCounts;
 
     private int n_could_not_assign_to_digest = 0;
 
@@ -149,7 +145,7 @@ public class SAMPairer {
     final private Iterator<SAMRecord> it2;
     /** This will be used to keep a record of valid ditags in order to throw out duplicates. */
     private Set<DiTag> ditagSet;
-    /** Count up the number of errors encountered in our reads. THe key is the type of error, and the value is
+    /** Counter up the number of errors encountered in our reads. THe key is the type of error, and the value is
      * the count over the entire pair of SAM files.
      */
     private Map<ErrorCode,Integer> errorCounts;
@@ -164,11 +160,8 @@ public class SAMPairer {
      */
     private SAMFileWriter rejectedReadsWriter;
 
-    private String validBamFileName = "diachromatic.valid.bam";
-
-    private String rejectedBamFileName = "diachromatic.rejected.bam";
     /**
-     * If set to true, rejected readpairs are output to {@link #rejectedBamFileName} .
+     * If set to true, rejected readpairs are output to {@link #outputRejectedReads} .
      */
     private final boolean outputRejectedReads;
 
@@ -182,9 +175,7 @@ public class SAMPairer {
      * @param sam2    SAM file for the truncated "reverse" reads
      * @param digests see {@link #digestmap}.
      */
-    public SAMPairer(String sam1, String sam2, Map<String, List<Digest>> digests, boolean outputRejected, String outdir, String outprefix) {
-        this.outdir = outdir;
-        this.outprefix = outprefix;
+    public Aligner(String sam1, String sam2, Map<String, List<Digest>> digests, boolean outputRejected, String outputPathPrefix) {
         samPath1 = sam1;
         samPath2 = sam2;
         reader1 = SamReaderFactory.makeDefault().open(new File(samPath1));
@@ -195,7 +186,7 @@ public class SAMPairer {
         outputRejectedReads = outputRejected;
         VERSION = Commandline.getVersion();
         initializeErrorMap();
-        createOutputNames();
+        createOutputNames(outputPathPrefix);
     }
 
     /**
@@ -319,9 +310,10 @@ public class SAMPairer {
                 // discard this read and go to the next one
             }
         }
-        interactionMap.printInteractionCountsMapAsCountTable();
+        logger.trace(outputTsvInteractionCounts);
+        interactionMap.printInteractionCountsMapAsCountTable(outputTsvInteractionCounts);
 
-        interactionMap.printFragmentInteractionCountsMapAsCountTable();
+        interactionMap.printFragmentInteractionCountsMapAsCountTable(outputTsvInteractingFragmentCounts);
         validReadsWriter.close();
         if(outputRejectedReads) {
             rejectedReadsWriter.close();
@@ -330,7 +322,7 @@ public class SAMPairer {
 
 
 
-    /** The map {@link #errorCounts} is initialize by setting the counts for all elements to zero. */
+    /** The align {@link #errorCounts} is initialize by setting the counts for all elements to zero. */
     private void initializeErrorMap() {
         this.errorCounts=new HashMap<>();
         for (ErrorCode ec : ErrorCode.values()) {
@@ -409,8 +401,10 @@ public class SAMPairer {
 
     }
 
-    private void createOutputNames() {
-        outputBAMvalid = String.format("%s%s%s.%s", outdir, File.separator, outprefix, "valid_pairs.mapped.bam");
-        outputBAMrejected = String.format("%s%s%s.%s", outdir, File.separator, outprefix, "rejected_pairs.mapped.bam");
+    private void createOutputNames(String outputPathPrefix) {
+        outputBAMvalid = String.format("%s.%s", outputPathPrefix, "valid_pairs.aligned.bam");
+        outputBAMrejected = String.format("%s.%s", outputPathPrefix, "rejected_pairs.aligned.bam");
+        outputTsvInteractingFragmentCounts = String.format("%s.%s", outputPathPrefix, "interacting.fragments.counts.table.tsv"); // will be moved to class counts
+        outputTsvInteractionCounts = String.format("%s.%s", outputPathPrefix, "interaction.counts.table.tsv"); // will be moved to class counts
     }
 }

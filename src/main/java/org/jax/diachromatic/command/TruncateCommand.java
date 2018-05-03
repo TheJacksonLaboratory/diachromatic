@@ -18,8 +18,8 @@ import static org.jax.diachromatic.digest.RestrictionEnzyme.parseRestrictionEnzy
  * <P>
  *     Valid Hi-C pairs are chimeric reads that are made up of fragments from two different regions of the genome.
  *     With capture Hi-C, a typical valid read pair might comprise a DNA sequence from a promoter and a DNA sequence
- *     from an enhancer that is regulating the promoter. In most cases, the one of the reads of the read paier will map
- *     to a single ligation fragment, and the reverse read will map to another fragment. However, this is not always true
+ *     from an enhancer that is regulating the promoter. In most cases, the one of the reads of the read paier will align
+ *     to a single ligation fragment, and the reverse read will align to another fragment. However, this is not always true
  *     because the Hi-C ligation junction cvan be located within one of the sequenced reads. The truncater attempts to
  *     address this situation (which could lead to the read with the Hi-C junction not being mapped during the mapping
  *     step), buy deleting sequenced that is downstream of the enzyme recognition site. For example, if the forward read
@@ -43,7 +43,7 @@ public class TruncateCommand extends Command {
     private Truncator truncator = null;
     private RestrictionEnzyme re = null;
 
-    public TruncateCommand (String file1, String file2, String enzymeName, String outdir, String outprefix) throws DiachromaticException {
+    public TruncateCommand (String file1, String file2, String enzymeName, String outputPathPrefix) throws DiachromaticException {
         this.fastaqFile1=file1;
         this.fastaqFile2=file2;
         List<RestrictionEnzyme>  enzymelist = parseRestrictionEnzymes();
@@ -51,7 +51,7 @@ public class TruncateCommand extends Command {
         if (re==null) {
             throw new DiachromaticException(String.format("Could not identify restriction enzyme for \"%s\"",enzymeName));
         }
-        truncator = new Truncator(fastaqFile1,fastaqFile2,re,outdir,outprefix);
+        truncator = new Truncator(fastaqFile1,fastaqFile2,re, outputPathPrefix);
     }
 
     public void execute() {

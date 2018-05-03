@@ -1,4 +1,4 @@
-package org.jax.diachromatic.map;
+package org.jax.diachromatic.align;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -98,7 +98,7 @@ public class Digest {
 
     /**
      * Parse in the digest file (see {@link org.jax.diachromatic.digest.FragmentFactory} for details on file format).
-     * The map has the chromosome as a key and a list of {@link Digest} objects on the chromosome as the value
+     * The align has the chromosome as a key and a list of {@link Digest} objects on the chromosome as the value
      * @param digestFilePath path to the digest file created by {@link org.jax.diachromatic.command.DigestCommand}.
      * @return
      */

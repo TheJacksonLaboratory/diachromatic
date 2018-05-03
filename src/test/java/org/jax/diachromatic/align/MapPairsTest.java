@@ -1,13 +1,9 @@
-package org.jax.diachromatic.map;
+package org.jax.diachromatic.align;
 
-import com.sun.org.apache.regexp.internal.RE;
-import htsjdk.samtools.SAMRecord;
 import org.jax.diachromatic.exception.DiachromaticException;
-import org.jax.diachromatic.exception.DigestNotFoundException;
 import org.jax.diachromatic.util.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,12 +12,12 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 
-public class SAMPairerTest {
+public class MapPairsTest {
 
     private static int digestcounter=0;
     private static String restrictionsite=null;
     private static Map<String,List<Digest>> digestmap;
-    private static SAMPairer sampairer;
+    private static Aligner sampairer;
     private static String sam1;
     private static String sam2;
 
@@ -35,7 +31,7 @@ public class SAMPairerTest {
 
     @BeforeClass
     public  static void init() throws DiachromaticException {
-        ClassLoader classLoader = SAMPairerTest.class.getClassLoader();
+        ClassLoader classLoader = MapPairsTest.class.getClassLoader();
         sam1 = classLoader.getResource("data/sam/forwardtest.sam").getFile();
         sam2 = classLoader.getResource("data/sam/reversetest.sam").getFile();
         // make fake digests for the reads we will test
@@ -72,7 +68,7 @@ public class SAMPairerTest {
         readpairmap = new HashMap<>();
         String outdir = "results";
         String outprefix = "results";
-        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads,outdir, outprefix);
+        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test1");
         ReadPair pair;
         while ((pair = sampairer.getNextPair())!=null) {
             readpairmap.put(pair.forward().getReadName(),pair);
@@ -82,7 +78,7 @@ public class SAMPairerTest {
 
 
     /**
-     * We require a digest list for the {@link SAMPairer} constructor. We make a "fake" digest list for
+     * We require a digest list for the {@link Aligner} constructor. We make a "fake" digest list for
      * simplicity that will allow us to perform testing of various functionalities.
      * @param chrom chromosome
      * @param pos_pair pairs of integers with start and end position of the Digests
@@ -134,7 +130,7 @@ public class SAMPairerTest {
     public void testFragmentToLarge() throws DiachromaticException {
         int UPPER_SIZE_THRESHOLD=800;
         int LOWER_SIZE_THRESHOLD=150;
-        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads,"results", "prefix");
+        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test3");
         ReadPair readpair =readpairmap.get("1_uniquelyAlignedRead");
         assertNotNull(readpair);
         int insertSize=  readpair.getCalculatedInsertSize();
@@ -150,7 +146,7 @@ public class SAMPairerTest {
     public void testFragmentToLargeException() throws DiachromaticException {
         int UPPER_SIZE_THRESHOLD=800;
         int LOWER_SIZE_THRESHOLD=150;
-        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads,"results", "prefix");
+        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test2");
         ReadPair readpair = readpairmap.get("2_multiplyAlignedRead");
         assertNotNull(readpair);
         int insertSize=  readpair.getCalculatedInsertSize();
@@ -166,7 +162,7 @@ public class SAMPairerTest {
      */
     @Test
     public void testSelfLigation() throws DiachromaticException {
-        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads,"results", "prefix");
+        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test4");
         ReadPair readpair = readpairmap.get("1_uniquelyAlignedRead");
         assertFalse(readpair.selfLigation());
         readpair = readpairmap.get("4_selfLigation");//sampairer.getNextPair();// fourth read pair, self-ligation!

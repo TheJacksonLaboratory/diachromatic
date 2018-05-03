@@ -1,6 +1,5 @@
-package org.jax.diachromatic.map;
+package org.jax.diachromatic.align;
 
-import org.apache.commons.math3.analysis.integration.IterativeLegendreGaussIntegrator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -18,13 +17,12 @@ import java.util.*;
  * and Integer arrays that contain the numbers of interactions for individual conditions,
  * but it has additional features that take into account more specific requirements.
  *
- * Once the counting of interactions is done, a second hash map can be optionally derived for the numbers
+ * Once the counting of interactions is done, a second hash align can be optionally derived for the numbers
  * of reads at interacting fragments. The class provides methods that can be used to write the
  * content of the respective hash maps to a text file. Furthermore, numbers such as the total number
  * of interactions for a given condition or the total number of interacting fragments for a given condition
  * are determined and can be queried via public methods.
  *
- * TODO: Take active and inactive fragments into account.
  *
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
@@ -43,12 +41,12 @@ public class InteractionCountsMap {
     private Integer number_of_conditions;
 
     /**
-     * Count reads within active fragments
+     * Counter reads within active fragments
      */
     private Integer[] read_count = null;
 
     /**
-     * Count reads within active fragments
+     * Counter reads within active fragments
      */
     private Integer[] active_read_count = null;
 
@@ -83,26 +81,26 @@ public class InteractionCountsMap {
     private Integer[] active_interacting_fragment_count = null;
 
     /**
-     * Hash map for counting interactions
+     * Hash align for counting interactions
      */
     private HashMap<String,List<Integer>> interaction_counts_map = null;
 
     /**
      * Output filename for interaction counts
      */
-    private String interactionCountsTableFileName = "diachromatic.interaction.counts.table.tsv";
+    //private String interactionCountsTableFileName = "diachromatic.interaction.counts.table.tsv";
 
 
 
     /**
-     * Hash map for read counts at interacting fragments
+     * Hash align for read counts at interacting fragments
      */
     private HashMap<String,List<Integer>> fragment_interaction_counts_map = new HashMap<String,List<Integer>>();
 
     /**
      * Output filename read counts at interacting fragments
      */
-    private String interactingFragmentsCountsTableFileName = "diachromatic.interacting.fragments.counts.table.tsv";
+    //private String interactingFragmentsCountsTableFileName = "diachromatic.interacting.fragments.counts.table.tsv";
 
 
 
@@ -342,7 +340,7 @@ public class InteractionCountsMap {
      *
      * TODO: Include information about active/inactive fragments as soon as this information is available.
      */
-    public void printInteractionCountsMapAsCountTable() throws FileNotFoundException {
+    public void printInteractionCountsMapAsCountTable(String interactionCountsTableFileName) throws FileNotFoundException {
 
         // create file for output
         PrintStream printStream = new PrintStream(new FileOutputStream(interactionCountsTableFileName));
@@ -436,7 +434,7 @@ public class InteractionCountsMap {
      * All following fields contain the number of reads (that are part of a valid pair)
      * at the interacting fragments individual conditions.
      */
-    public void printFragmentInteractionCountsMapAsCountTable() throws FileNotFoundException {
+    public void printFragmentInteractionCountsMapAsCountTable(String interactingFragmentsCountsTableFileName) throws FileNotFoundException {
 
         // derive counts
         this.deriveReadCountsAtInteractingFragments();

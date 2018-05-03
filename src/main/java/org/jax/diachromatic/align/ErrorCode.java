@@ -1,8 +1,8 @@
-package org.jax.diachromatic.map;
+package org.jax.diachromatic.align;
 
 /**
  * These are enumeration constants for errors that can be found by the Q/C of Capture Hi-C readpairs. The
- * quality checks are mainly performed in {@link ReadPair} and {@link SAMPairer}, see those classes for
+ * quality checks are mainly performed in {@link ReadPair} and {@link Aligner}, see those classes for
  * details on the Q/C process and the meaning of these constants.
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
