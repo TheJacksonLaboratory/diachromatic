@@ -60,7 +60,7 @@ public class Bowtie2Runner {
         args[1]="--very-sensitive";
         //args[2]="--no-unal";
         args[2]="-p";
-        args[3]="2";
+        args[3]="4";
         args[4]="--reorder"; // keep same order of records as in FASTQ
         args[5]="-x";
         args[6]=pathToBowtieIndex;
