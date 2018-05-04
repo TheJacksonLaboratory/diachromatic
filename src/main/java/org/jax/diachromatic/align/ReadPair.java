@@ -219,6 +219,11 @@ public class ReadPair {
             multimapped_read2 = true;
             this.isPaired = false;
         }
+        // check if both reads are not on random chromosomes
+        if (R1.getReferenceName().contains("_") || R2.getReferenceName().contains("_")) {
+            this.isPaired = false;
+        }
+
 
         if (this.isPaired) {
 
