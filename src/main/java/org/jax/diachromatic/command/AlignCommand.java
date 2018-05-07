@@ -11,6 +11,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+
 /**
  * Class to coordinate bowtie2-mapping of the truncated FASTQ files followed by Q/C and filtering of the
  * mapped reads.
@@ -60,8 +62,9 @@ public class AlignCommand extends Command {
     }
 
     public void execute() {
-        String samFile1="tempoutname1.sam";
-        String samFile2="tempoutname2.sam";
+
+        String samFile1 = String.format("%s_%s_1.sam", this.outputPathPrefix, getRandomPrefix(7));
+        String samFile2 = String.format("%s_%s_2.sam", this.outputPathPrefix, getRandomPrefix(7));
         logger.trace(String.format("About to read digests from %s",digestFile));
         Map<String,List<Digest>> digestmap = Digest.readDigests(digestFile, activeDigestsFile);
         try {
@@ -83,4 +86,21 @@ public class AlignCommand extends Command {
     }
     @Override
     public String toString() {return "diachromatic:align";} //???
+
+
+    public String getRandomPrefix(int len) {
+        char[] ch = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
+                'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+                'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+                'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+                'w', 'x', 'y', 'z' };
+
+        char[] c=new char[len];
+        Random random=new Random();
+        for (int i = 0; i < len; i++) {
+            c[i]=ch[random.nextInt(ch.length)];
+        }
+        return new String(c);
+    }
 }
