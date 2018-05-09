@@ -59,7 +59,7 @@ class PotentiallyTruncatedFastQRecord {
 
     /** Write the current record to the file handle specified by out. */
     void writeToStream(BufferedWriter out) throws IOException {
-        out.write(name+"\n");
+        out.write("@" + name + "\n");
         out.write(sequence + "\n");
         out.write("+\n");
         out.write(quality+"\n");

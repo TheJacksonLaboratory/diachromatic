@@ -7,67 +7,54 @@ import org.jax.diachromatic.digest.RestrictionEnzyme;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.util.Pair;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.util.zip.GZIPOutputStream;
 
 public class Truncator {
     private static final Logger logger = LogManager.getLogger();
 
-    private final String outdir;
     private final String fastqFile1;
     private final String fastqFile2;
     private final RestrictionEnzyme renzyme;
     private final String filledEndSequence;
 
-    private final String outputSuffix;
+
 
     private String outputFASTQ1, outputFASTQ2;
     /**
      * Read 1 was too short after truncation, leading to the removal of the affected read inputSAMfiles.
      */
-    private int read1tooShort = 0;
+    private int removedBecauseRead1TooShort;
     /**
      * Read 2 was too short after truncation, leading to the removal of the affected read inputSAMfiles.
      */
-    private int read2tooShort;
+    private int removedBecauseRead2TooShort;
     /**
      * Read 1 or read 2 or both were too short after truncation, leading to the removal of the affected read inputSAMfiles.
      */
-    private int removedBecauseAtLeastOneReadTooShort;
-
-    private static final int LENGTH_THRESHOLD = 20;
+    private int NumOfPairsRemovedBecauseAtLeastOneReadTooShort;
 
 
-    public Truncator(String outdir, String inputFASTQforward, String inputFASTQreverse, RestrictionEnzyme re, String suffix) {
-        this.outdir = outdir;
+    private static final int LENGTH_THRESHOLD = 19; // using 19 the same results as for HiCUP are obtained
+
+
+    public Truncator(String inputFASTQforward, String inputFASTQreverse, RestrictionEnzyme re, String outputPathPrefix) {
         this.fastqFile1 = inputFASTQforward;
         this.fastqFile2 = inputFASTQreverse;
         this.renzyme = re;
         filledEndSequence = fillEnd(renzyme);
-        outputSuffix = suffix;
-        makeOutdirectoryIfNeeded();
-        createOutputNames();
+        createOutputNames(outputPathPrefix);
     }
 
-    private void makeOutdirectoryIfNeeded() {
-        File f = new File(outdir);
-        if (f.exists() && f.isFile()) {
-            logger.error(String.format("Cannot make output directory called %s because a file of the same name exists", outdir));
-        } else if (! f.exists()) {
-            f.mkdir(); // only make directory if necessary.
-        }
-    }
+    private void createOutputNames(String outputPathPrefix) {
 
-
-    private void createOutputNames() {
         String basename1 = (new File(fastqFile1)).getName();
-        int i = basename1.lastIndexOf(".");
-        outputFASTQ1 = String.format("%s%s%s.%s%s", outdir, File.separator, basename1.substring(0, i), outputSuffix, basename1.substring(i));
+        basename1 = basename1.substring(0,basename1.indexOf("."));
+        outputFASTQ1 = String.format("%s.%s.%s", outputPathPrefix, basename1, "truncated.fastq.gz");
+
         String basename2 = (new File(fastqFile2)).getName();
-        i = basename2.lastIndexOf(".");
-        outputFASTQ2 = String.format("%s%s%s.%s%s", outdir, File.separator, basename2.substring(0, i), outputSuffix, basename2.substring(i));
+        basename2 = basename2.substring(0,basename2.indexOf("."));
+        outputFASTQ2 = String.format("%s.%s.%s", outputPathPrefix, basename2, "truncated.fastq.gz");
         logger.trace(String.format("F1 %s \n F2 %s", outputFASTQ1, outputFASTQ2));
     }
 
@@ -80,22 +67,30 @@ public class Truncator {
         PotentiallyTruncatedFastQRecord.setLigationSequence(filledEndSequence);
         PotentiallyTruncatedFastQRecord.setRestrictionSequence(renzyme.getPlainSite());
         FastqPairParser parser = new FastqPairParser(fastqFile1, fastqFile2, filledEndSequence);
-        removedBecauseAtLeastOneReadTooShort = 0;
+        NumOfPairsRemovedBecauseAtLeastOneReadTooShort = 0;
+        removedBecauseRead1TooShort = 0;
+        removedBecauseRead2TooShort = 0;
+        logger.trace("filledEndSequence:" + filledEndSequence + "\trenzyme:" + renzyme.getSite() +  renzyme.getPlainSite() + "\n");
         try {
-            BufferedWriter out1 = new BufferedWriter(new FileWriter(outputFASTQ1));
-            BufferedWriter out2 = new BufferedWriter(new FileWriter(outputFASTQ2));
+
+            BufferedWriter out1 = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outputFASTQ1))));
+            BufferedWriter out2 = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outputFASTQ2))));
+
             while (parser.hasNextPair()) {
                 Pair<PotentiallyTruncatedFastQRecord, PotentiallyTruncatedFastQRecord> pair = parser.getNextPair();
+
                 if (pair.first.getLen() < LENGTH_THRESHOLD) {
-                    if (pair.second.getLen() < LENGTH_THRESHOLD) read2tooShort++;
-                    read1tooShort++;
-                    removedBecauseAtLeastOneReadTooShort++;
-                } else if (pair.second.getLen() < LENGTH_THRESHOLD) {
-                    read2tooShort++;
-                    removedBecauseAtLeastOneReadTooShort++;
-                } else {
+                    removedBecauseRead1TooShort++;
+                }
+                if (pair.second.getLen() < LENGTH_THRESHOLD) {
+                    removedBecauseRead2TooShort++;
+                }
+                if((LENGTH_THRESHOLD) < pair.first.getLen() && (LENGTH_THRESHOLD < pair.second.getLen())) {
                     pair.first.writeToStream(out1);
                     pair.second.writeToStream(out2);
+                }
+                else {
+                    NumOfPairsRemovedBecauseAtLeastOneReadTooShort++;
                 }
             }
             out1.close();
@@ -104,11 +99,19 @@ public class Truncator {
             logger.fatal(String.format("Error encountered while writing truncated FASTQ files: %s", e.getMessage()));
             e.printStackTrace();
         }
-        logger.trace(String.format("Number of reads processed: %d and Number of forward reads truncated %d (%.2f%%)",
-                parser.getnReadsProcessed(), parser.getReadOneTruncated(),
+        logger.trace(String.format("Number of pairs processed: %d",
+                parser.getnReadsProcessed()));
+        logger.trace(String.format("Number of truncated forward reads: %d (%.2f%%)",
+                parser.getReadOneTruncated(),
                 100.0 * parser.getReadOneTruncated() / parser.getnReadsProcessed()));
-        logger.trace(String.format("removed b/c too short %d", removedBecauseAtLeastOneReadTooShort));
-
+        logger.trace(String.format("Number of truncated reverse reads: %d (%.2f%%)",
+                parser.getReadTwoTruncated(),
+                100.0 * parser.getReadOneTruncated() / parser.getnReadsProcessed()));
+        logger.trace(String.format("Number of too short removed forward reads (<%d): %d", LENGTH_THRESHOLD, removedBecauseRead1TooShort));
+        logger.trace(String.format("Number of too short removed reverse reads (<%d): %d", LENGTH_THRESHOLD, removedBecauseRead2TooShort));
+        logger.trace(String.format("Number of removed pairs (at least one read too short): %d (%.2f%%)",
+                NumOfPairsRemovedBecauseAtLeastOneReadTooShort,
+                100.0 * NumOfPairsRemovedBecauseAtLeastOneReadTooShort / parser.getnReadsProcessed()));
     }
 
 
@@ -128,7 +131,8 @@ public class Truncator {
 
         if (offset == 0) {
             // this means the enzyme cuts right before the recognition site, e.g., DpnII (5'-^GATC-3')
-            return String.format("%s%s", plainsite, plainsite);
+            return String.format("%s", plainsite);
+
         } else if (offset == len) {
             // this means the enzyme cuts right after the recognition site, e.g., NlaIII (5'-CATG^-3')
             return String.format("%s%s", plainsite, plainsite);
@@ -148,7 +152,5 @@ public class Truncator {
 
             return String.format("%s%s%s%s", fivePrimeFlank, fillIn, fillIn, threePrimeFlank);
         }
-
     }
-
 }

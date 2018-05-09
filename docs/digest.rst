@@ -24,7 +24,10 @@ For example, the following command will digest the genome files found in the dir
 the restriction enzyme ``HindIII`` and will produce an output file called ``hg19HindIIIdigest.txt``. ::
 
 
-   $ java -jar Diachromatic.jar digest -g /path/to/hg19/ -e HindIII -o hg19HindIIIdigest.txt
+   $ java -jar Diachromatic.jar digest -g /path/to/hg19/hg19.fa -e HindIII -o hg19HindIIIdigest.txt
+
+**Note: Indexing of FASTA file does not work (Issue #33). A possible workaround for now is to build an index with samtools faidx and the run the digest command of Diachromatic. The existing index will not be overwritten.**
+
 
 Output file format
 ~~~~~~~~~~~~~~~~~~
