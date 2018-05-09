@@ -188,7 +188,7 @@ public class ReadPair {
      * @param digestmap a align of all digests
      * @throws DiachromaticException
      */
-    ReadPair(SAMRecord f, SAMRecord r, Map<String, List<Digest>> digestmap) throws DiachromaticException {
+    ReadPair(SAMRecord f, SAMRecord r, Map<String, List<Digest>> digestmap, DigestMap digestMap) throws DiachromaticException {
 
         R1 = f;
         R2 = r;
@@ -232,6 +232,7 @@ public class ReadPair {
 
             // try to find restriction digests that match the read pair
             this.digestPair = getDigestPair(this);
+            //this.digestPair = digestMap.getDigestPair2(this.R1.getReferenceName(),this.R1.getAlignmentStart(),this.R2.getReferenceName(),this.R2.getAlignmentStart());
             if (this.digestPair == null) {
                 logger.trace("invalidDigest");
                 this.setInvalidDigest();

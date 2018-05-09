@@ -2,6 +2,7 @@ package org.jax.diachromatic.command;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jax.diachromatic.align.DigestMap;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.align.Aligner;
 import org.jax.diachromatic.align.Bowtie2Runner;
@@ -61,18 +62,19 @@ public class AlignCommand extends Command {
         this.outputPathPrefix=outputPathPrefix;
     }
 
-    public void execute() {
+    public void execute() throws DiachromaticException {
 
         String samFile1 = String.format("%s_%s_1.sam", this.outputPathPrefix, getRandomPrefix(7));
         String samFile2 = String.format("%s_%s_2.sam", this.outputPathPrefix, getRandomPrefix(7));
         logger.trace(String.format("About to read digests from %s",digestFile));
         Map<String,List<Digest>> digestmap = Digest.readDigests(digestFile, activeDigestsFile);
+        DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
         try {
             Bowtie2Runner runner = new Bowtie2Runner(bowtiepath,pathToBowtieIndex,pathToInputFastq1,samFile1);
             runner.run();
             Bowtie2Runner runner2 = new Bowtie2Runner(bowtiepath,pathToBowtieIndex,pathToInputFastq2,samFile2);
             runner2.run();
-            Aligner pairer = new Aligner(samFile1,samFile2,digestmap,outputRejectedReads,outputPathPrefix);
+            Aligner pairer = new Aligner(samFile1,samFile2,digestmap,outputRejectedReads,outputPathPrefix, digestMap);
             pairer.inputSAMfiles();
             pairer.printStatistics();
             File file = new File(samFile1);

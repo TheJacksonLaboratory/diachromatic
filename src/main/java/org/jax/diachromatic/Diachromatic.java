@@ -2,6 +2,7 @@ package org.jax.diachromatic;
 
 
 import org.jax.diachromatic.command.Command;
+import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.io.Commandline;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,7 +16,7 @@ import org.apache.logging.log4j.Logger;
 public class Diachromatic {
     private static final Logger logger = LogManager.getLogger();
 
-    public static void main(String args[]) {
+    public static void main(String args[]) throws DiachromaticException {
         Commandline clp = new Commandline(args);
         Command command = clp.getCommand();
         logger.trace(String.format("running command %s",command));

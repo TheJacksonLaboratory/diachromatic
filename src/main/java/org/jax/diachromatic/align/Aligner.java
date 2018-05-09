@@ -127,6 +127,8 @@ public class Aligner {
      * Key: chromosome; value: a list of {@link Digest} objects on the chromosome.
      */
     private Map<String, List<Digest>> digestmap = null;
+    private  DigestMap digestMap;
+
     /**
      * A reader for the forward reads.
      */
@@ -175,7 +177,7 @@ public class Aligner {
      * @param sam2    SAM file for the truncated "reverse" reads
      * @param digests see {@link #digestmap}.
      */
-    public Aligner(String sam1, String sam2, Map<String, List<Digest>> digests, boolean outputRejected, String outputPathPrefix) {
+    public Aligner(String sam1, String sam2, Map<String, List<Digest>> digests, boolean outputRejected, String outputPathPrefix,DigestMap digestMap) {
         samPath1 = sam1;
         samPath2 = sam2;
         reader1 = SamReaderFactory.makeDefault().open(new File(samPath1));
@@ -183,6 +185,7 @@ public class Aligner {
         it1 = reader1.iterator();
         it2 = reader2.iterator();
         digestmap = digests;
+        this.digestMap = digestMap;
         outputRejectedReads = outputRejected;
         VERSION = Commandline.getVersion();
         initializeErrorMap();
@@ -200,7 +203,7 @@ public class Aligner {
         if (it1.hasNext() && it2.hasNext()) {
             SAMRecord record1 = it1.next();
             SAMRecord record2 = it2.next();
-            return new ReadPair(record1, record2, digestmap);
+            return new ReadPair(record1, record2, digestmap, digestMap);
         } else {
             return null;
         }
