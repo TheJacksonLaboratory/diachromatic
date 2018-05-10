@@ -242,7 +242,11 @@ public class Aligner {
         interactionMap = new InteractionCountsMap(1);
 
         ReadPair pair;
+        //long endWhile = System.nanoTime();
         while ((pair = getNextPair())!= null) {
+
+            //long startWhile = System.nanoTime();
+            //float outSideWhileLoop = startWhile - endWhile;
 
             n_total++;
 
@@ -312,6 +316,14 @@ public class Aligner {
                 }
                 // discard this read and go to the next one
             }
+            /*
+            endWhile = System.nanoTime();
+            float inSideWhileLoop = endWhile - startWhile;
+            float totalWhileLoop = inSideWhileLoop + outSideWhileLoop;
+            logger.trace(String.format("inSideWhileLoop: (%.1f%%)\n", (100.0 * inSideWhileLoop / totalWhileLoop)));
+            logger.trace(String.format("outSideWhileLoop: (%.1f%%)\n", (100.0 * outSideWhileLoop / totalWhileLoop)));
+            */
+
         }
         logger.trace(outputTsvInteractionCounts);
         interactionMap.printInteractionCountsMapAsCountTable(outputTsvInteractionCounts);

@@ -73,7 +73,7 @@ public class Digest {
     }
 
 
-    private void setActice() {
+    public void setActice() {
         this.active=true;
     }
 

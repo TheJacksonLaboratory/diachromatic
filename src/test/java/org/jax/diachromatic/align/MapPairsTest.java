@@ -68,7 +68,10 @@ public class MapPairsTest {
         readpairmap = new HashMap<>();
         String outdir = "results";
         String outprefix = "results";
-        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test1");
+        String digestFile = "/Users/hansep/IdeaProjects/diachromatic/src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
+        String activeDigestsFile = "/Users/hansep/IdeaProjects/diachromatic/src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
+        DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
+        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test1",digestMap);
         ReadPair pair;
         while ((pair = sampairer.getNextPair())!=null) {
             readpairmap.put(pair.forward().getReadName(),pair);
@@ -130,7 +133,10 @@ public class MapPairsTest {
     public void testFragmentToLarge() throws DiachromaticException {
         int UPPER_SIZE_THRESHOLD=800;
         int LOWER_SIZE_THRESHOLD=150;
-        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test3");
+        String digestFile = "/Users/hansep/IdeaProjects/diachromatic/src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
+        String activeDigestsFile = "/Users/hansep/IdeaProjects/diachromatic/src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
+        DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
+        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test3",digestMap);
         ReadPair readpair =readpairmap.get("1_uniquelyAlignedRead");
         assertNotNull(readpair);
         int insertSize=  readpair.getCalculatedInsertSize();
@@ -146,7 +152,10 @@ public class MapPairsTest {
     public void testFragmentToLargeException() throws DiachromaticException {
         int UPPER_SIZE_THRESHOLD=800;
         int LOWER_SIZE_THRESHOLD=150;
-        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test2");
+        String digestFile = "/Users/hansep/IdeaProjects/diachromatic/src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
+        String activeDigestsFile = "/Users/hansep/IdeaProjects/diachromatic/src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
+        DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
+        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test2",digestMap);
         ReadPair readpair = readpairmap.get("2_multiplyAlignedRead");
         assertNotNull(readpair);
         int insertSize=  readpair.getCalculatedInsertSize();
@@ -162,7 +171,10 @@ public class MapPairsTest {
      */
     @Test
     public void testSelfLigation() throws DiachromaticException {
-        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test4");
+        String digestFile = "/Users/hansep/IdeaProjects/diachromatic/src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
+        String activeDigestsFile = "/Users/hansep/IdeaProjects/diachromatic/src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
+        DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
+        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test4",digestMap);
         ReadPair readpair = readpairmap.get("1_uniquelyAlignedRead");
         assertFalse(readpair.selfLigation());
         readpair = readpairmap.get("4_selfLigation");//sampairer.getNextPair();// fourth read pair, self-ligation!

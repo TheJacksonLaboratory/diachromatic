@@ -72,7 +72,10 @@ public class ReadPairMappingTest {
         digests=makeFakeDigestList("chr18",new Pair<>(71910154,71919237));
         digestmap.put("chr18",digests);
         readpairmap = new HashMap<>();
-        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test5");
+        String digestFile = "/Users/hansep/IdeaProjects/diachromatic/src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
+        String activeDigestsFile = "/Users/hansep/IdeaProjects/diachromatic/src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
+        DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
+        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test5",digestMap);
         ReadPair pair;
         while ((pair = sampairer.getNextPair())!=null) {
             readpairmap.put(pair.forward().getReadName(),pair);
