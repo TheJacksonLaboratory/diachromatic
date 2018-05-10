@@ -31,5 +31,15 @@ public class DigestPair {
         return forwardDigest.getSize() + reverseDigest.getSize();
     }
 
-
+    public boolean isAdjacent() {
+        if(this.forwardDigest.getChromosome().equals(this.reverseDigest.getChromosome())) {
+            if((this.forwardDigest.getEndpos() == reverseDigest.getStartpos()-1) || (this.reverseDigest.getEndpos() == forwardDigest.getStartpos()-1)) {
+                return true;
+            } else {
+                return  false;
+            }
+        } else {
+            return false;
+        }
+    }
 }

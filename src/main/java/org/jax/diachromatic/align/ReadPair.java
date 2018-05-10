@@ -395,7 +395,7 @@ public class ReadPair {
      * @return true if the two read fragments are religated
      */
     boolean religation() {
-        if ((Math.abs(digestPair.reverse().getFragmentNumber() - digestPair.forward().getFragmentNumber()) == 1) &&
+        if (digestPair.isAdjacent() &&
                 (R1.getReadNegativeStrandFlag() != R2.getReadNegativeStrandFlag())) {
             errorcodes.add(RELIGATION);
             return true;
