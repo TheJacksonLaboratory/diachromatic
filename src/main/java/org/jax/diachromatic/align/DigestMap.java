@@ -113,6 +113,8 @@ public class DigestMap {
     }
 
     public DigestPair getDigestPair2(String chrom1, Integer coord1, String chrom2, Integer coord2) {
+
+        // handle exception with unknown reference IDs see test
         int index = Collections.binarySearch(this.digestMap.get(chrom1).coordArray, coord1);
         String d1[] = new String[6];
         d1[0] = chrom1;

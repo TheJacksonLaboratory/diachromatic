@@ -232,6 +232,10 @@ public class ReadPair {
 
             // try to find restriction digests that match the read pair
             //this.digestPair = getDigestPair(this);
+            logger.trace(this.R1.getReferenceName());
+            logger.trace(this.R1.getAlignmentStart());
+            logger.trace(this.R2.getReferenceName());
+            logger.trace(this.R2.getAlignmentStart());
             this.digestPair = digestMap.getDigestPair2(this.R1.getReferenceName(),this.R1.getAlignmentStart(),this.R2.getReferenceName(),this.R2.getAlignmentStart());
             if (this.digestPair == null) {
                 logger.trace("invalidDigest");
