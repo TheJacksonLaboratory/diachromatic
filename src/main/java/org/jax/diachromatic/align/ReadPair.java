@@ -629,6 +629,14 @@ public class ReadPair {
                         this.R2.getAlignmentStart() < this.R1.getAlignmentEnd())); // F2R1
     }
 
+    private boolean isOutwardFacing() {
+        return ((!this.R1.getReadNegativeStrandFlag() && this.R2.getReadNegativeStrandFlag() &&
+                getFivePrimeEndPosOfRead(this.R2) <= getFivePrimeEndPosOfRead(this.R1))
+                ||
+                (!this.R2.getReadNegativeStrandFlag() && this.R1.getReadNegativeStrandFlag() &&
+                        getFivePrimeEndPosOfRead(this.R1) <= getFivePrimeEndPosOfRead(this.R2)));
+    }
+
     /**
      * @return F1F2, F2F1, R1R2, R2R1, F1R2, F2R1, R2F1, R1F2
      */
@@ -685,17 +693,27 @@ public class ReadPair {
 
     /**
      * Check if at least one of the two reads overlaps the cutting site,
-     * i.e. has a distance of at most DANGLING_THRESHOLD=7.
+     * i.e. the 5' end position has a distance of at most DANGLING_THRESHOLD=7.
      *
      * @return true if this is the case.
      */
     private boolean readOverlapsCutSite() {
         int fragSta = this.digestPair.forward().getStartpos();
         int fragEnd = this.digestPair.forward().getEndpos();
-        int fwdReadSta = this.R1.getAlignmentStart();//this.R1.getUnclippedStart();
-        int fwdReadEnd = this.R1.getAlignmentEnd();//this.R1.getUnclippedEnd(); //
-        int revReadSta = this.R2.getAlignmentStart();//this.R2.getUnclippedStart();//
-        int revReadEnd = this.R2.getAlignmentEnd();//this.R2.getUnclippedEnd(); //
+
+        int fwdReadFpep = getFivePrimeEndPosOfRead(this.R1);
+        int revReadFpep = getFivePrimeEndPosOfRead(this.R2);
+        return(
+                Math.abs(fragSta-fwdReadFpep) <  DANGLING_THRESHOLD || Math.abs(fragEnd-fwdReadFpep) <  DANGLING_THRESHOLD ||
+                Math.abs(fragSta-revReadFpep) <  DANGLING_THRESHOLD || Math.abs(fragEnd-revReadFpep) <  DANGLING_THRESHOLD);
+
+
+
+        /*
+        int fwdReadSta = this.R1.getAlignmentStart();
+        int fwdReadEnd = this.R1.getAlignmentEnd();//
+        int revReadSta = this.R2.getAlignmentStart();
+        int revReadEnd = this.R2.getAlignmentEnd();
         return (
                 Math.abs(fragSta - fwdReadSta) < DANGLING_THRESHOLD ||
                         Math.abs(fragSta - fwdReadEnd) < DANGLING_THRESHOLD ||
@@ -705,6 +723,7 @@ public class ReadPair {
                         Math.abs(fragEnd - fwdReadEnd) < DANGLING_THRESHOLD ||
                         Math.abs(fragEnd - revReadSta) < DANGLING_THRESHOLD ||
                         Math.abs(fragEnd - revReadEnd) < DANGLING_THRESHOLD);
+        */
     }
 
 
@@ -715,7 +734,7 @@ public class ReadPair {
 
         if (this.digestPair.forward().equals(this.digestPair.reverse())) {
             // both reads are mapped to the same fragment
-            if (this.isInwardFacing()) {
+            if (!this.isOutwardFacing()) {
                 // reads point inwards
                 if (this.readOverlapsCutSite()) {
                     // at least one read overlaps cutting site
