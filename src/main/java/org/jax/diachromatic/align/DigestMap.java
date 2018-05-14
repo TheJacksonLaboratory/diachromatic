@@ -137,7 +137,7 @@ public class DigestMap {
                 // this is the first digest
                 staCoord = 0;
             } else {
-                staCoord = this.digestMap.get(chrom1).coordArray.get(i-1)+1;
+                staCoord = this.digestMap.get(chrom1).coordArray.get(i-1) + 1;
             }
         }
         d1[1] = staCoord.toString();
@@ -170,7 +170,7 @@ public class DigestMap {
                 // this is the first digest
                 staCoord = 0;
             } else {
-                staCoord = this.digestMap.get(chrom2).coordArray.get(i-1)+1;
+                staCoord = this.digestMap.get(chrom2).coordArray.get(i-1) + 1;
             }
         }
         d2[1] = staCoord.toString();

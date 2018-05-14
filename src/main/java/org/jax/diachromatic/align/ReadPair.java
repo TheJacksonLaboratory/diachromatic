@@ -232,11 +232,7 @@ public class ReadPair {
 
             // try to find restriction digests that match the read pair
             //this.digestPair = getDigestPair(this);
-            logger.trace(this.R1.getReferenceName());
-            logger.trace(this.R1.getAlignmentStart());
-            logger.trace(this.R2.getReferenceName());
-            logger.trace(this.R2.getAlignmentStart());
-            this.digestPair = digestMap.getDigestPair2(this.R1.getReferenceName(),this.R1.getAlignmentStart(),this.R2.getReferenceName(),this.R2.getAlignmentStart());
+            this.digestPair = digestMap.getDigestPair2(this.R1.getReferenceName(),getFivePrimeEndPosOfRead(this.R1),this.R2.getReferenceName(),getFivePrimeEndPosOfRead(this.R2));
             if (this.digestPair == null) {
                 logger.trace("invalidDigest");
                 this.setInvalidDigest();
@@ -248,13 +244,21 @@ public class ReadPair {
                 this.R1.setAttribute(BADREAD_ATTRIBUTE, this.categoryTag);
                 this.R2.setAttribute(BADREAD_ATTRIBUTE, this.categoryTag);
             }
-
-            // calculate insert sizes (di-tag length)
-//            if (this.isValid) {
-//                logger.trace("Insert size of valid pair:" + this.getCalculatedInsertSize(digestPair) + "\t" + R1.getReadNegativeStrandFlag() + "\t" + R2.getReadNegativeStrandFlag());
-//            }
         } else {
             this.digestPair=null;
+        }
+    }
+
+    /**
+     * @param samRecord
+     * @return The genomic position that corresponds to the 5' end position of the mapped read
+     */
+    private Integer getFivePrimeEndPosOfRead(SAMRecord samRecord) {
+        if(!samRecord.getReadNegativeStrandFlag()) {
+            return samRecord.getAlignmentStart();
+        }
+        else {
+            return samRecord.getAlignmentEnd();
         }
     }
 
@@ -688,10 +692,10 @@ public class ReadPair {
     private boolean readOverlapsCutSite() {
         int fragSta = this.digestPair.forward().getStartpos();
         int fragEnd = this.digestPair.forward().getEndpos();
-        int fwdReadSta = this.R1.getAlignmentStart();
-        int fwdReadEnd = this.R1.getAlignmentEnd();
-        int revReadSta = this.R2.getAlignmentStart();
-        int revReadEnd = this.R2.getAlignmentEnd();
+        int fwdReadSta = this.R1.getAlignmentStart();//this.R1.getUnclippedStart();
+        int fwdReadEnd = this.R1.getAlignmentEnd();//this.R1.getUnclippedEnd(); //
+        int revReadSta = this.R2.getAlignmentStart();//this.R2.getUnclippedStart();//
+        int revReadEnd = this.R2.getAlignmentEnd();//this.R2.getUnclippedEnd(); //
         return (
                 Math.abs(fragSta - fwdReadSta) < DANGLING_THRESHOLD ||
                         Math.abs(fragSta - fwdReadEnd) < DANGLING_THRESHOLD ||
