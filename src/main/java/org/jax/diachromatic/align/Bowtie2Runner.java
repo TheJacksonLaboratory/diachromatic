@@ -11,26 +11,29 @@ import java.util.stream.Collectors;
 public class Bowtie2Runner {
     private static final Logger logger = LogManager.getLogger();
 
-    private String pathToBowtie2=null;
+    private String pathToBowtie2 = null;
 
-    private String pathToBowtieIndex=null;
+    private String pathToBowtieIndex = null;
 
-    private String pathToInputFastq=null;
+    private String pathToInputFastq = null;
 
-    private String outname=null;
+    private String outname = null;
 
-    String stdin=null;
+    private Integer threadNum = 1;
 
-    String stderr=null;
+    String stdin = null;
+
+    String stderr = null;
 
 
-    public Bowtie2Runner(String bowtiepath, String btIndexPath, String inputFastqPath, String outnam) throws DiachromaticException {
+    public Bowtie2Runner(String bowtiepath, String btIndexPath, String inputFastqPath, String outnam, Integer threadNum) throws DiachromaticException {
         if (! checkBowtie2(bowtiepath) ){
             throw new DiachromaticException("Could not start bowtie");
         }
         pathToBowtieIndex=btIndexPath;
         pathToInputFastq=inputFastqPath;
         outname=outnam;
+        this.threadNum=threadNum;
     }
 
 
@@ -60,7 +63,7 @@ public class Bowtie2Runner {
         args[1]="--very-sensitive";
         //args[2]="--no-unal";
         args[2]="-p";
-        args[3]="10";
+        args[3]=threadNum.toString();
         args[4]="--reorder"; // keep same order of records as in FASTQ
         args[5]="-x";
         args[6]=pathToBowtieIndex;
