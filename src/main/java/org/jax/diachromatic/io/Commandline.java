@@ -52,6 +52,9 @@ public class Commandline {
     private String outputDirectory = DEFAULT_OUTPUT_DIRECTORY;
     private String outputPathPrefix = null;
     private Integer threadNum=1;
+    private boolean stickyEnds=false;
+
+    private boolean filledEnds = true; //
 
     /**
      * align specific fields
@@ -115,6 +118,9 @@ public class Commandline {
             }
             if (commandLine.hasOption("e")) {
                 this.enzyme=commandLine.getOptionValue("e");
+            }
+            if (commandLine.hasOption("s")) {
+                this.stickyEnds=true;
             }
             if (commandLine.hasOption("g")) {
                 this.genomeFastaFile=commandLine.getOptionValue("g");
@@ -202,7 +208,7 @@ public class Commandline {
                 if (filenamePrefix==null) {
                     filenamePrefix=DEFAULT_FILENAME_PREFIX;
                 }
-                this.command = new TruncateCommand(pathToInputFastq1, pathToInputFastq2, enzyme, outputPathPrefix);
+                this.command = new TruncateCommand(pathToInputFastq1, pathToInputFastq2, enzyme, stickyEnds, outputPathPrefix);
 
             } else if (mycommand.equalsIgnoreCase("align")) {
                 if (this.bowtiepath == null) {
@@ -264,6 +270,7 @@ public class Commandline {
                .addOption("m", "margin", true,"margin size for calculating GC and repeat content (default: 250 bp)") // digest specific option
 
                .addOption("e", "enzyme", true, "restriction enzyme name") // truncate specific option
+                .addOption("s", "sticky-ends", false, "no fill-in of sticky ends was performed ") // truncate specific option
                .addOption("q", "fastq-r1", true, "path to forward FASTQ input file") // truncate and align specific option
                .addOption("r", "fastq-r2", true, "path to reverse FASTQ input file") // truncate and align specific option
                .addOption("b", "bowtie-path", true, "path to bowtie2") // align specific option

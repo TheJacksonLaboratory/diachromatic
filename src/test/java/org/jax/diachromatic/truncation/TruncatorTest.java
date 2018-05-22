@@ -52,7 +52,7 @@ public class TruncatorTest {
         //sequence will be: GATC + GATC = GATCGATC.
         RestrictionEnzyme dpnII = new RestrictionEnzyme("DpnII","^GATC");
         String ligationSequence = Truncator.fillEnd(dpnII);
-        String expected = "GATC";
+        String expected = "GATCGATC";
         assertEquals(expected,ligationSequence);
     }
 

@@ -20,6 +20,7 @@ public class Truncator {
 
 
 
+
     private String outputFASTQ1, outputFASTQ2;
     /**
      * Read 1 was too short after truncation, leading to the removal of the affected read inputSAMfiles.
@@ -38,11 +39,16 @@ public class Truncator {
     private static final int LENGTH_THRESHOLD = 19; // using 19 the same results as for HiCUP are obtained
 
 
-    public Truncator(String inputFASTQforward, String inputFASTQreverse, RestrictionEnzyme re, String outputPathPrefix) {
+    public Truncator(String inputFASTQforward, String inputFASTQreverse, RestrictionEnzyme re, boolean stickyEnds, String outputPathPrefix) {
         this.fastqFile1 = inputFASTQforward;
         this.fastqFile2 = inputFASTQreverse;
         this.renzyme = re;
-        filledEndSequence = fillEnd(renzyme);
+        if(stickyEnds) {
+            filledEndSequence=re.getPlainSite();
+        } else {
+            filledEndSequence = fillEnd(renzyme);
+        }
+
         createOutputNames(outputPathPrefix);
     }
 
@@ -131,7 +137,7 @@ public class Truncator {
 
         if (offset == 0) {
             // this means the enzyme cuts right before the recognition site, e.g., DpnII (5'-^GATC-3')
-            return String.format("%s", plainsite);
+            return String.format("%s%s", plainsite, plainsite);
 
         } else if (offset == len) {
             // this means the enzyme cuts right after the recognition site, e.g., NlaIII (5'-CATG^-3')
