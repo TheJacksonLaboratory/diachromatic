@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.digest.RestrictionEnzyme;
 import org.jax.diachromatic.exception.DiachromaticException;
+import org.jax.diachromatic.normalization.PoissonRegression;
 import org.jax.diachromatic.util.Pair;
 
 import java.io.*;
@@ -34,6 +35,11 @@ public class Truncator {
      * Read 1 or read 2 or both were too short after truncation, leading to the removal of the affected read inputSAMfiles.
      */
     private int NumOfPairsRemovedBecauseAtLeastOneReadTooShort;
+    /**
+     * Count reads that start with the dangling end sequence.
+     */
+    private int numOfMaybeDanglingRead1;
+    private int numOfMaybeDanglingRead2;
 
 
     private static final int LENGTH_THRESHOLD = 19; // using 19 the same results as for HiCUP are obtained
@@ -72,11 +78,14 @@ public class Truncator {
     public void parseFASTQ() throws DiachromaticException {
         PotentiallyTruncatedFastQRecord.setLigationSequence(filledEndSequence);
         PotentiallyTruncatedFastQRecord.setRestrictionSequence(renzyme.getPlainSite());
+        PotentiallyTruncatedFastQRecord.setDanglingSequence(renzyme.getDanglingEndSequence());
         FastqPairParser parser = new FastqPairParser(fastqFile1, fastqFile2, filledEndSequence);
         NumOfPairsRemovedBecauseAtLeastOneReadTooShort = 0;
         removedBecauseRead1TooShort = 0;
         removedBecauseRead2TooShort = 0;
-        logger.trace("filledEndSequence:" + filledEndSequence + "\trenzyme:" + renzyme.getSite() +  renzyme.getPlainSite() + "\n");
+        numOfMaybeDanglingRead1 = 0;
+        numOfMaybeDanglingRead2 = 0;
+        logger.trace("filledEndSequence:"  + filledEndSequence + "\trenzyme.getSite(): " + renzyme.getSite() + "\tenzyme.getPlainSite(): " + renzyme.getPlainSite() + "\trenzyme.getDanglingEndSequence(): " + renzyme.getDanglingEndSequence() + "\n");
         try {
 
             BufferedWriter out1 = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outputFASTQ1))));
@@ -98,6 +107,12 @@ public class Truncator {
                 else {
                     NumOfPairsRemovedBecauseAtLeastOneReadTooShort++;
                 }
+                if(pair.first.isMaybeDangling()) {
+                    numOfMaybeDanglingRead1++;
+                }
+                if(pair.second.isMaybeDangling()) {
+                    numOfMaybeDanglingRead2++;
+                }
             }
             out1.close();
             out2.close();
@@ -113,6 +128,8 @@ public class Truncator {
         logger.trace(String.format("Number of truncated reverse reads: %d (%.2f%%)",
                 parser.getReadTwoTruncated(),
                 100.0 * parser.getReadOneTruncated() / parser.getnReadsProcessed()));
+        logger.trace(String.format("Number of maybe dangling forward reads: %d (%.2f%%)", numOfMaybeDanglingRead1,100.0 * numOfMaybeDanglingRead1/parser.getnReadsProcessed()));
+        logger.trace(String.format("Number of maybe dangling reverse reads: %d (%.2f%%)", numOfMaybeDanglingRead2,100.0 * numOfMaybeDanglingRead2/parser.getnReadsProcessed()));
         logger.trace(String.format("Number of too short removed forward reads (<%d): %d", LENGTH_THRESHOLD, removedBecauseRead1TooShort));
         logger.trace(String.format("Number of too short removed reverse reads (<%d): %d", LENGTH_THRESHOLD, removedBecauseRead2TooShort));
         logger.trace(String.format("Number of removed pairs (at least one read too short): %d (%.2f%%)",

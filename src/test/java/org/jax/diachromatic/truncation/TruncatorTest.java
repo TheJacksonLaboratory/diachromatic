@@ -132,6 +132,7 @@ public class TruncatorTest {
         String ligationSequence = Truncator.fillEnd(hindIII);
         PotentiallyTruncatedFastQRecord.setLigationSequence(ligationSequence);
         PotentiallyTruncatedFastQRecord.setRestrictionSequence(hindIII.getPlainSite());
+        PotentiallyTruncatedFastQRecord.setDanglingSequence(hindIII.getDanglingEndSequence());
         parser=new FastqPairParser(fastq_1,fastq_2,ligationSequence);
         while (parser.hasNextPair()) {
             Pair<PotentiallyTruncatedFastQRecord, PotentiallyTruncatedFastQRecord> pair = parser.getNextPair();
@@ -154,6 +155,7 @@ public class TruncatorTest {
         String ligationSequence = Truncator.fillEnd(hindIII);
         PotentiallyTruncatedFastQRecord.setLigationSequence(ligationSequence);
         PotentiallyTruncatedFastQRecord.setRestrictionSequence(hindIII.getPlainSite());
+        PotentiallyTruncatedFastQRecord.setDanglingSequence(hindIII.getDanglingEndSequence());
         parser=new FastqPairParser(fastq_1,fastq_2,ligationSequence);
         while (parser.hasNextPair()) {
             Pair<PotentiallyTruncatedFastQRecord, PotentiallyTruncatedFastQRecord> pair = parser.getNextPair();

@@ -20,6 +20,9 @@ class PotentiallyTruncatedFastQRecord {
 
     private static String ligationSequence=null;
     private static String restrictionSequence=null;
+    private static String danglingSequence=null;
+
+    private boolean maybeDangling=false;
 
 
     static void setLigationSequence(String seq) {
@@ -28,6 +31,12 @@ class PotentiallyTruncatedFastQRecord {
 
     static void setRestrictionSequence(String seq) {
         restrictionSequence=seq;
+    }
+
+    static void setDanglingSequence(String seq) { danglingSequence=seq; }
+
+    public boolean isMaybeDangling() {
+        return this.maybeDangling;
     }
 
     int getLen() { return sequence.length(); }
@@ -46,11 +55,14 @@ class PotentiallyTruncatedFastQRecord {
      * @return true if truncation was performed.
      */
     boolean truncateIfLigationSiteFound() {
+        int j = sequence.indexOf(PotentiallyTruncatedFastQRecord.danglingSequence);
+        if(j==0) {
+            this.maybeDangling=true;
+        }
         int i = sequence.indexOf(PotentiallyTruncatedFastQRecord.ligationSequence);
         if (i<0) {
             return false;  // we did not find the ligation sequence
         }
-
         sequence=sequence.substring(0,i) + PotentiallyTruncatedFastQRecord.restrictionSequence;
         int len=sequence.length();
         quality=quality.substring(0,len);
