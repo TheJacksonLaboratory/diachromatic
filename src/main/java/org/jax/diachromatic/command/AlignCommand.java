@@ -50,19 +50,24 @@ public class AlignCommand extends Command {
 
     private String outputPathPrefix = null;
 
-    private Integer threadNum=1;
+    private Integer threadNum = 1;
+
+    private Integer lowerFragSize;
+    private Integer upperFragSize;
 
     public AlignCommand(String bowtie, String btIndexPath, String inputFastqPath1, String inputFastqPath2, String digest, String activeDigests,
-                        boolean outputRejected, String outputPathPrefix, Integer threadNum) {
+                        boolean outputRejected, String outputPathPrefix, Integer threadNum, Integer lowerFragSize, Integer upperFragSize) {
         this.bowtiepath =bowtie;
         pathToBowtieIndex=btIndexPath;
         pathToInputFastq1 =inputFastqPath1;
         pathToInputFastq2 =inputFastqPath2;
         digestFile=digest;
-        activeDigestsFile=activeDigests;
-        outputRejectedReads=outputRejected;
-        this.outputPathPrefix=outputPathPrefix;
-        this.threadNum=threadNum;
+        activeDigestsFile = activeDigests;
+        outputRejectedReads = outputRejected;
+        this.outputPathPrefix = outputPathPrefix;
+        this.threadNum = threadNum;
+        this.lowerFragSize = lowerFragSize;
+        this.upperFragSize = upperFragSize;
     }
 
     public void execute() throws DiachromaticException {
@@ -77,7 +82,7 @@ public class AlignCommand extends Command {
             runner.run();
             Bowtie2Runner runner2 = new Bowtie2Runner(bowtiepath,pathToBowtieIndex,pathToInputFastq2,samFile2,this.threadNum);
             runner2.run();
-            Aligner pairer = new Aligner(samFile1,samFile2,digestmap,outputRejectedReads,outputPathPrefix, digestMap);
+            Aligner pairer = new Aligner(samFile1,samFile2,digestmap,outputRejectedReads,outputPathPrefix, digestMap, lowerFragSize, upperFragSize);
             pairer.inputSAMfiles();
             pairer.printStatistics();
             File file = new File(samFile1);

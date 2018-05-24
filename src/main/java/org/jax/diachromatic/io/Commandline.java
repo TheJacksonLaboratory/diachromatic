@@ -67,6 +67,12 @@ public class Commandline {
     private String pathToActiveDigestsFile=null;
     private String pathToBowtieIndex=null;
 
+    /**
+     * Lower and upper limit for size of valid pair fragments. Read pairs that correspond to hybrid fragments with
+     * a size outside this range will be categorized as wrong size pairs and discarded.
+     */
+    private Integer lowerFragSize = 150;
+    private Integer upperFragSize = 800;
 
     public Commandline(String args[]) {
         final CommandLineParser cmdLineGnuParser = new DefaultParser();
@@ -118,6 +124,12 @@ public class Commandline {
             }
             if (commandLine.hasOption("e")) {
                 this.enzyme=commandLine.getOptionValue("e");
+            }
+            if (commandLine.hasOption("l")) {
+                this.lowerFragSize=Integer.parseInt(commandLine.getOptionValue("l"));
+            }
+            if (commandLine.hasOption("u")) {
+                this.upperFragSize=Integer.parseInt(commandLine.getOptionValue("u"));
             }
             if (commandLine.hasOption("s")) {
                 this.stickyEnds=true;
@@ -238,7 +250,9 @@ public class Commandline {
                         pathToActiveDigestsFile,
                         outputRejectedReads,
                         outputPathPrefix,
-                        threadNum
+                        threadNum,
+                        lowerFragSize,
+                        upperFragSize
                         );
             } else {
                 printUsage(String.format("Did not recognize command: %s", mycommand));
@@ -280,6 +294,9 @@ public class Commandline {
                .addOption("a", "active-digests", true, "path to BED file with active digests") // align (and count) specific option
                .addOption("o", "out", true, "name/path of output file/directory")
                .addOption("p", "thread-num", true, "number of threads used by bowtie2")
+               .addOption("l", "lower-frag-size-limit", true, "lower limit for fragment size")
+               .addOption("u", "upper-frag-size-limit", true, "upper limit for fragment size")
+
         ;
         return options;
     }
@@ -355,18 +372,21 @@ public class Commandline {
             System.out.println("Command and options for align function");
             System.out.println("\talign align uses bowtie2 to align reads and then performs Q/C and repairing.");
         }
-        System.out.println("align:\n" +
+        System.out.println("\n" +
         "\tjava -jar Diachromatic.jar align -b <bowtie2> -i <bowtie2-index> \\ \n" +
 
         "\t\t\t-q <forward.truncated.fq.gz> -r <reverse.truncated.fq.gz> \\ \n" +
-        "\t\t\t-d <digest> [-od <outfile>] [-j <output-rejected>]\n\n" +
-        "\t\t\t[-a <active-digests>] [-o <outfile>] [-b] [-p] <thread-num>\n" +
+        "\t\t\t-d <digest> [-od <outfile>] [-j <output-rejected>]\n" +
+        "\t\t\t[-l <lower-frag-size-limit>] [-u <upper-frag-size-limit>]\n" +
+        "\t\t\t[-a <active-digests>] [-o <outfile>] [-b] [-p] <thread-num>\n\n" +
 
         "\t\t<bowtie2>: path to bowtie2 executable\n" +
         "\t\t<bowtie2-index>: path to bowtie2 index for digested genome\n" +
         "\t\t<forward.truncated.fq.gz>: path to the truncated forward gzipped FASTQ file\n" +
         "\t\t<reverse.truncated.fq.gz>: path to the truncated reverse gzipped FASTQ file\n" +
-        "\t\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII)\n" +
+        "\t\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII or HindIII)\n" +
+        "\t\t<lower-frag-size-limit>: lower limit for fragment size (Default: 150)\n" +
+        "\t\t<upper-frag-size-limit>: upper limit for fragment size (Default: 800)\n" +
         "\t\t<digest>: path to the digest file produced by the digest command\n" +
         "\t\t<active-digests>: path to a BED file with the coordinates of active digests\n" +
         "\t\t<thread-num>: number of threads used by bowtie2\n" +
