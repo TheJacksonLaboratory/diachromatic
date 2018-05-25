@@ -648,7 +648,7 @@ public class ReadPair {
             // both reads align to the same strand
             if (!R1.getReadNegativeStrandFlag()) {
                 // both reads align to the forward strand
-                if (R1.getAlignmentStart() <= R2.getAlignmentStart()) {
+                if (getFivePrimeEndPosOfRead(R1) <= getFivePrimeEndPosOfRead(R2)) {
                     // R1 proceeds R2
                     tag = "F1F2";
                 } else {
@@ -657,7 +657,7 @@ public class ReadPair {
                 }
             } else {
                 // both reads align to the reverse strand
-                if (R1.getAlignmentEnd() <= R2.getAlignmentEnd()) {
+                if (getFivePrimeEndPosOfRead(R1) <= getFivePrimeEndPosOfRead(R2)) {
                     // R1 proceeds R2
                     tag = "R1R2";
                 } else {
@@ -669,7 +669,7 @@ public class ReadPair {
             // reads align to different strands
             if (!R1.getReadNegativeStrandFlag()) {
                 // R1 is mapped to the forward and R2 to the reverse strand
-                if (R1.getAlignmentStart() <= R2.getAlignmentEnd()) {
+                if (getFivePrimeEndPosOfRead(R1) <= getFivePrimeEndPosOfRead(R2)) {
                     // R1 proceeds R2
                     tag = "F1R2"; // innie
                 } else {
@@ -678,7 +678,7 @@ public class ReadPair {
                 }
             } else {
                 // R1 is mapped to the reverse and R2 to the forward strand
-                if (R1.getAlignmentEnd() <= R2.getAlignmentStart()) {
+                if (getFivePrimeEndPosOfRead(R1) <= getFivePrimeEndPosOfRead(R2)) {
                     // R1 proceeds R2
                     tag = "R1F2"; // outie
                 } else {

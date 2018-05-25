@@ -388,15 +388,38 @@ public class Aligner {
 
         logger.trace("");
         logger.trace("Distribution of pair orientations (all pairs):");
-        logger.trace("n_F1F2" + "\t" + n_F1F2);
-        logger.trace("n_F2F1" + "\t" +  n_F2F1);
-        logger.trace("n_R1R2" + "\t" +  n_R1R2);
-        logger.trace("n_R2R1" + "\t" +  n_R2R1);
-        logger.trace("n_F1R2" + "\t" +  n_F1R2);
-        logger.trace("n_R2F1" + "\t" +  n_R2F1);
-        logger.trace("n_F2R1" + "\t" +  n_F2R1);
-        logger.trace("n_R1F2" + "\t" +  n_R1F2);
+        logger.trace("n_F1F2 (commie)" + "\t" + n_F1F2);
+        logger.trace("n_F2F1 (commie)" + "\t" +  n_F2F1);
+        logger.trace("n_R1R2 (commie)" + "\t" +  n_R1R2);
+        logger.trace("n_R2R1 (commie)" + "\t" +  n_R2R1);
+        logger.trace("n_F1R2 (innie)" + "\t" +  n_F1R2);
+        logger.trace("n_F2R1 (innie)" + "\t" +  n_F2R1);
+        logger.trace("n_R2F1 (outie)" + "\t" +  n_R2F1);
+        logger.trace("n_R1F2 (outie)" + "\t" +  n_R1F2);
         logger.trace("");
+        Integer n_outies = n_R1F2 + n_R2F1;
+        Integer n_innies = n_F1R2 + n_F2R1;
+        Integer n_commies = n_F1F2 + n_R1R2 + n_R2R1 + n_F2F1;
+        logger.trace("n_outies: " + n_outies);
+        logger.trace("n_innies: " + n_innies);
+        logger.trace("n_commies: " + n_commies);
+
+        /**
+         * Self-ligation must only result in read pairs that are pointing in outward direction (outies).
+         * Simple loops can also result in (outies), whereas twisted loops exclusively result in read pairs
+         * pointing in the same direction. Twisted loops are less affected by biases regarding proximity, e.g.
+         * same internal artifacts are almost always innies. Therefore, the number of outies that resulted from
+         * self-ligation is estimated by subtracting the mean number of commies from the mean number of commies.
+         * The proportion of outies that resulted from self-ligation and not simple loops is the self-ligation
+         * coefficient. Pseudo counts were added to avoid divisions by zero in extreme cases.
+         * The coefficient approaches zero, if no self-ligation occurred.
+         *
+         */
+        float mean_outies = n_outies/2;
+        float mean_commies = n_commies/4;
+        logger.trace("mean_outies: " + mean_outies);
+        logger.trace("mean_commies: " + mean_commies);
+        float selfLigationCoefficient = (float) ((1.0*(mean_outies-mean_commies)/(mean_outies+1)));
 
         logger.trace("");
         logger.trace("Summary statistics about interactions between active and inactive fragments:");
@@ -410,8 +433,9 @@ public class Aligner {
         logger.trace("\t" + "Number of active interacting fragments: " + interactionMap.getTotalNumberOfActiveInteractingFragmentsForCondition(0));
         logger.trace("");
         logger.trace("\t" + "Enrichment Coefficients:");
-        logger.trace("\t\t" + "Target Enrichment Coefficient (TEC): " + String.format("(%.2f%%)", 100*interactionMap.getTargetEnrichmentCoefficientForCondition(0)));
-        logger.trace("\t\t" + "Valid Interaction Enrichment Coefficient (VIEC): " + String.format("(%.2f%%)", 100.0*n_valid_pairs/n_paired));
+        logger.trace("\t\t" + "Target Enrichment Coefficient (TEC): " + String.format("%.2f%%", 100*interactionMap.getTargetEnrichmentCoefficientForCondition(0)));
+        logger.trace("\t\t" + "Valid Interaction Enrichment Coefficient (VIEC): " + String.format("%.2f%%", 100.0*n_valid_pairs/n_paired));
+        logger.trace("\t\t" + "Self Ligation Coefficient (SLC): " + String.format("%.2f", selfLigationCoefficient));
         logger.trace("");
 
     }
