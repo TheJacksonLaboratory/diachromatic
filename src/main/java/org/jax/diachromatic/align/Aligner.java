@@ -167,6 +167,9 @@ public class Aligner {
      */
     private final boolean outputRejectedReads;
 
+    private Integer lowerFragSize;
+    private Integer upperFragSize;
+
     /**
      * Stores counts about interactions
      */
@@ -177,7 +180,7 @@ public class Aligner {
      * @param sam2    SAM file for the truncated "reverse" reads
      * @param digests see {@link #digestmap}.
      */
-    public Aligner(String sam1, String sam2, Map<String, List<Digest>> digests, boolean outputRejected, String outputPathPrefix,DigestMap digestMap) {
+    public Aligner(String sam1, String sam2, Map<String, List<Digest>> digests, boolean outputRejected, String outputPathPrefix, DigestMap digestMap, Integer lowerFragSize, Integer upperFragSize) {
         samPath1 = sam1;
         samPath2 = sam2;
         reader1 = SamReaderFactory.makeDefault().open(new File(samPath1));
@@ -187,6 +190,9 @@ public class Aligner {
         digestmap = digests;
         this.digestMap = digestMap;
         outputRejectedReads = outputRejected;
+        this.lowerFragSize=lowerFragSize;
+        this.upperFragSize=upperFragSize;
+
         VERSION = Commandline.getVersion();
         initializeErrorMap();
         createOutputNames(outputPathPrefix);
@@ -203,7 +209,7 @@ public class Aligner {
         if (it1.hasNext() && it2.hasNext()) {
             SAMRecord record1 = it1.next();
             SAMRecord record2 = it2.next();
-            return new ReadPair(record1, record2, digestmap, digestMap);
+            return new ReadPair(record1, record2, digestmap, digestMap, lowerFragSize, upperFragSize);
         } else {
             return null;
         }

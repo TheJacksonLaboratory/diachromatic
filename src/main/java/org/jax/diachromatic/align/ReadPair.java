@@ -188,10 +188,13 @@ public class ReadPair {
      * @param digestmap a align of all digests
      * @throws DiachromaticException
      */
-    ReadPair(SAMRecord f, SAMRecord r, Map<String, List<Digest>> digestmap, DigestMap digestMap) throws DiachromaticException {
+    ReadPair(SAMRecord f, SAMRecord r, Map<String, List<Digest>> digestmap, DigestMap digestMap, Integer lowerFragSize, Integer upperFragSize) throws DiachromaticException {
 
         R1 = f;
         R2 = r;
+
+        this.LOWER_SIZE_THRESHOLD = lowerFragSize;
+        this.UPPER_SIZE_THRESHOLD = upperFragSize;
 
         errorcodes = new HashSet<>();
         this.digestmap = digestmap;
@@ -283,16 +286,6 @@ public class ReadPair {
     String getCategoryTag() {
         return this.categoryTag;
     }
-
-    // static methods to adjust threshold
-    public static void setUpperSizeThreshold(int threshold) {
-        UPPER_SIZE_THRESHOLD = threshold;
-    }
-
-    public static void setLowerSizeThreshold(int threshold) {
-        LOWER_SIZE_THRESHOLD = threshold;
-    }
-
 
     SAMRecord forward() {
         return R1;
