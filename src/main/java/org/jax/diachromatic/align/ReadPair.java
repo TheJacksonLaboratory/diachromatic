@@ -453,80 +453,42 @@ public class ReadPair {
         return UPPER_SIZE_THRESHOLD < insertSize;
     }
 
-
     /**
      * Mapped reads always "point towards" the ligation sequence. We can infer that the actually (physical) size of the
      * insert goes from the 5' end of a read to the ligation sequence (for each read of the ditag). We calculate this
      * size and will filter out reads whose size is substantially above what we expect given the reported experimental
-     * size selection step
+     * size selection step.
      *
-     * @return the insert size of chimeric read.
+     * @return the insert size of chimeric and also same internal read pairs
      */
-    int getCalculatedInsertSize() throws DiachromaticException {
-        SAMRecord readF = forward();
-        SAMRecord readR = reverse();
-        int distF, distR;
-        if (digestPair==null) throw new DiachromaticException("Cannot calculate insert size with null digest align (e.g., un/multimapped read");
-        if (!digestPair.forward().equals(digestPair.reverse())) {
-            if (readF.getReadNegativeStrandFlag()) { // readF is on the negative strand
-                distF = readF.getAlignmentEnd() - digestPair.forward().getStartpos() + 1;
-            } else {
-                distF = digestPair.forward().getEndpos() - readF.getAlignmentStart() + 1;
-            }
-            if (readR.getReadNegativeStrandFlag()) { // readR is on the negative strand
-                distR = readR.getAlignmentEnd() - digestPair.reverse().getStartpos() + 1;
-            } else {
-                distR = digestPair.reverse().getEndpos() - readR.getAlignmentStart() + 1;
-            }
-            return distF + distR;
-        } else { // if both reads align to the same restriction fragment
-            // Handle size calculation for circularized fragments. Needs to be calculated as above.
-            // If the read mapped to the reverse strand comes before the read mapped to the forward strand, calculate insert size as above
-            int insert_size;
-            logger.trace("Both reads are on the same fragment.");
+     public Integer getCalculatedInsertSize() throws DiachromaticException {
 
-            if (!readF.getMateNegativeStrandFlag() && readF.getAlignmentStart() > readR.getAlignmentStart()) { // readF is on the positive strand and comes after the other read
-                distF = digestPair.forward().getEndpos() - readF.getAlignmentStart() + 1;
-                distR = readR.getAlignmentEnd() - digestPair.reverse().getStartpos() + 1;
-                insert_size = distF + distR;
-            } else if (readF.getMateNegativeStrandFlag() && readR.getAlignmentStart() > readF.getAlignmentStart()) {
-                distF = readF.getAlignmentEnd() - digestPair.forward().getStartpos() + 1;
-                distR = digestPair.reverse().getEndpos() - readR.getAlignmentStart() + 1;
-                insert_size = distF + distR;
-            } else {
-                int sta = Math.min(Math.min(readF.getAlignmentStart(), readF.getAlignmentEnd()), Math.min(readR.getAlignmentStart(), readR.getAlignmentEnd()));
-                int end = Math.max(Math.max(readF.getAlignmentStart(), readF.getAlignmentEnd()), Math.max(readR.getAlignmentStart(), readR.getAlignmentEnd()));
-                logger.trace("calculated insert size: " + (end - sta + 1));
-                insert_size = end - sta + 1;
-            }
-            return insert_size;
-        }
-    }
+         SAMRecord R1 = forward();
+         SAMRecord R2 = reverse();
 
-    /**
-     * The insert size has to be calculated differently for valid pairs and other pairs.
-     * This function will produce reasonable results for valid pairs only.
-     *
-     * @return Insert size for valid pairs.
-     */
-    int getInsertSizeOfValidPairs() {
-        int insert_size = 0;
-        int distR1, distR2;
-        if (this.isValid) {
-            if (R1.getReadNegativeStrandFlag()) {
-                // R1 is on the negative and R2 on the positive strand
-                distR1 = R1.getAlignmentEnd() - digestPair.forward().getStartpos() + 1;
-                distR2 = digestPair.reverse().getEndpos() - R2.getAlignmentStart() + 1;
-            } else {
-                // R2 is on the negative and R1 on the positive strand
-                distR1 = digestPair.forward().getEndpos() - R1.getAlignmentStart() + 1;
-                distR2 = R2.getAlignmentEnd() - digestPair.reverse().getStartpos() + 1;
-            }
-            insert_size = distR1 + distR2;
-        }
-        return insert_size;
-    }
+         /*
+          Innies on the same fragment cannot be ligation products.
+           */
+         if(digestPair.forward().equals(digestPair.reverse()) && (getRelativeOrientationTag().equals("F1R2") || getRelativeOrientationTag().equals("F2R1"))) {
+            return Math.abs(getFivePrimeEndPosOfRead(R1)-getFivePrimeEndPosOfRead(R2));
+         }
 
+         int d1;
+         if(!R1.getReadNegativeStrandFlag()) {
+             d1 = digestPair.forward().getEndpos() - getFivePrimeEndPosOfRead(R1) + 1;
+         }
+         else {
+             d1 = getFivePrimeEndPosOfRead(R1) - digestPair.forward().getStartpos() + 1;
+         }
+         int d2;
+         if(!R2.getReadNegativeStrandFlag()) {
+             d2 = digestPair.reverse().getEndpos() - getFivePrimeEndPosOfRead(R2) + 1;
+         }
+         else {
+             d2 = getFivePrimeEndPosOfRead(R2) - digestPair.reverse().getStartpos() + 1;
+         }
+         return d1 + d2;
+     }
 
     /**
      * This function is called if the forward and reverse reads were found to be a valid pair

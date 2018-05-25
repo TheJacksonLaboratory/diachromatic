@@ -13,8 +13,7 @@ import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.io.Commandline;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -81,7 +80,7 @@ public class Aligner {
      */
     private int n_multimappedPair = 0;
 
-    private String outputBAMvalid, outputBAMrejected, outputTsvInteractingFragmentCounts, outputTsvInteractionCounts;
+    private String outputBAMvalid, outputBAMrejected, outputTsvInteractingFragmentCounts, outputTsvInteractionCounts, outputFragSizesCountsRscript;
 
     private int n_could_not_assign_to_digest = 0;
 
@@ -112,9 +111,13 @@ public class Aligner {
     private int n_R2F1 = 0;
     private int n_F2R1 = 0;
 
+    private static int FRAG_SIZE_LIMIT = 10000;
+    private int[] fragSizesAllPairs =  new int[FRAG_SIZE_LIMIT+1];
+    private int[] fragSizesHybridActivePairs =  new int[FRAG_SIZE_LIMIT+1];
 
 
     private int n_duplicate=0;
+
     /** Number of reads that pass all quality filters.*/
     private int n_good = 0;
     /**
@@ -193,6 +196,9 @@ public class Aligner {
         this.lowerFragSize=lowerFragSize;
         this.upperFragSize=upperFragSize;
 
+        Arrays.fill(fragSizesAllPairs, 0);
+        Arrays.fill(fragSizesHybridActivePairs, 0);
+
         VERSION = Commandline.getVersion();
         initializeErrorMap();
         createOutputNames(outputPathPrefix);
@@ -220,7 +226,7 @@ public class Aligner {
     /**
      * Input the pair of truncated SAM files. We will add the PG groups of both
      * SAM files to the header of the output file, and also add a line about the Diachromatic processing.
-     * As a side effect, write invalid reads to {@link #rejectedBamFileName}.
+     * As a side effect, write invalid reads to .
      */
     public void inputSAMfiles() throws IOException, DiachromaticException {
 
@@ -293,6 +299,15 @@ public class Aligner {
                 if(pair.getRelativeOrientationTag().equals("R1F2")) {n_R1F2++;}
             }
 
+            // count sizes of all fragments
+            Integer incrementFragSize = pair.getCalculatedInsertSize();
+            if(FRAG_SIZE_LIMIT<incrementFragSize) { incrementFragSize = FRAG_SIZE_LIMIT; }
+            fragSizesAllPairs[incrementFragSize]++;
+
+            // count sizes of all hybrid active fragments
+            if((pair.forwardDigestIsActive() & !pair.reverseDigestIsActive()) || (!pair.forwardDigestIsActive() & pair.reverseDigestIsActive())) {
+                fragSizesHybridActivePairs[incrementFragSize]++;
+            }
 
             if(pair.isValid()){
                 // set the SAM flags to paired-end
@@ -339,6 +354,38 @@ public class Aligner {
         if(outputRejectedReads) {
             rejectedReadsWriter.close();
         }
+
+        printFragmentLengthDistributionRscript(fragSizesAllPairs, fragSizesHybridActivePairs);
+
+
+
+    }
+
+    private void printFragmentLengthDistributionRscript(int[] fragSizesAllPairs, int[] fragSizesHybridActivePairs ) throws FileNotFoundException {
+
+        // create file for output
+        PrintStream printStream = new PrintStream(new FileOutputStream(outputFragSizesCountsRscript));
+
+        printStream.print("length<-c(");
+        for(int i=0; i<FRAG_SIZE_LIMIT-1; i++) {
+            printStream.print(i + ",");
+        }
+        printStream.print(FRAG_SIZE_LIMIT-1 + ")\n");
+
+        printStream.print("fragSizesAllPairs<-c(");
+        for(int i=0; i<FRAG_SIZE_LIMIT-1; i++) {
+            printStream.print(fragSizesAllPairs[i] + ",");
+        }
+        printStream.print(fragSizesAllPairs[FRAG_SIZE_LIMIT-1] + ")\n");
+
+        printStream.print("fragSizesHybridActivePairs<-c(");
+        for(int i=0; i<FRAG_SIZE_LIMIT-1; i++) {
+            printStream.print(fragSizesHybridActivePairs[i] + ",");
+        }
+        printStream.print(fragSizesHybridActivePairs[FRAG_SIZE_LIMIT-1] + ")\n");
+
+        printStream.print("plot(length,fragSizesAllPairs,xlim=c(0,1000),type=\"l\")");
+
     }
 
 
@@ -451,5 +498,6 @@ public class Aligner {
         outputBAMrejected = String.format("%s.%s", outputPathPrefix, "rejected_pairs.aligned.bam");
         outputTsvInteractingFragmentCounts = String.format("%s.%s", outputPathPrefix, "interacting.fragments.counts.table.tsv"); // will be moved to class counts
         outputTsvInteractionCounts = String.format("%s.%s", outputPathPrefix, "interaction.counts.table.tsv"); // will be moved to class counts
+        outputFragSizesCountsRscript = String.format("%s.%s", outputPathPrefix, "frag.sizes.counts.script.R");
     }
 }
