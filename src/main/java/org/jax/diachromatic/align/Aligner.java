@@ -264,10 +264,7 @@ public class Aligner {
 
         while ((pair = getNextPair())!= null) {
 
-           if(deDupMap.hasSeen(pair)) {
-                n_duplicate++;
-                continue;
-            }
+
 
             n_total++;
 
@@ -278,7 +275,12 @@ public class Aligner {
             if(pair.isMultiMappedR2()) {n_multimapped_read2++;}
             if(pair.isMultiMappedR1()||pair.isMultiMappedR2()) {n_multimappedPair++;}
             if(pair.isPaired()) {n_paired++;}
-            
+
+            // de-duplication starts withpaired pairs
+            if(deDupMap.hasSeen(pair)) {
+                n_duplicate++;
+                continue;
+            }
 
             // count categories of pairs
             if(pair.isPaired()) {
