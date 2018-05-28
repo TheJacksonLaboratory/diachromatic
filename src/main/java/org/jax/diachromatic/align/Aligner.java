@@ -84,8 +84,10 @@ public class Aligner {
 
     private int n_could_not_assign_to_digest = 0;
 
-
-
+    /**
+     * HashSet to keep track of duplicates.
+     */
+    private HashSet deDupHash = new HashSet();
 
     /** Number of read pairs whose insert was found to have a size above the threshold defined  in {@link ReadPair}.*/
 
@@ -150,6 +152,7 @@ public class Aligner {
     final private Iterator<SAMRecord> it2;
     /** This will be used to keep a record of valid ditags in order to throw out duplicates. */
     private Set<DiTag> ditagSet;
+
     /** Counter up the number of errors encountered in our reads. THe key is the type of error, and the value is
      * the count over the entire pair of SAM files.
      */
@@ -253,12 +256,18 @@ public class Aligner {
 
         interactionMap = new InteractionCountsMap(1);
 
+         DeDupMap deDupMap = new DeDupMap();
+
         ReadPair pair;
-        //long endWhile = System.nanoTime();
+
+
+
         while ((pair = getNextPair())!= null) {
 
-            //long startWhile = System.nanoTime();
-            //float outSideWhileLoop = startWhile - endWhile;
+           if(deDupMap.hasSeen(pair)) {
+                n_duplicate++;
+                continue;
+            }
 
             n_total++;
 
@@ -316,6 +325,7 @@ public class Aligner {
                     validReadsWriter.addAlignment(pair.reverse());
                 } else {
                     n_duplicate++;
+                    logger.trace("Is duplicated!"); // never printed for HiCUP test dataset because it contains no duplicates
                 }
                 n_good++;
 
@@ -337,14 +347,6 @@ public class Aligner {
                 }
                 // discard this read and go to the next one
             }
-            /*
-            endWhile = System.nanoTime();
-            float inSideWhileLoop = endWhile - startWhile;
-            float totalWhileLoop = inSideWhileLoop + outSideWhileLoop;
-            logger.trace(String.format("inSideWhileLoop: (%.1f%%)\n", (100.0 * inSideWhileLoop / totalWhileLoop)));
-            logger.trace(String.format("outSideWhileLoop: (%.1f%%)\n", (100.0 * outSideWhileLoop / totalWhileLoop)));
-            */
-
         }
         logger.trace(outputTsvInteractionCounts);
         interactionMap.printInteractionCountsMapAsCountTable(outputTsvInteractionCounts);
@@ -456,6 +458,8 @@ public class Aligner {
         logger.trace("n_outies: " + n_outies);
         logger.trace("n_innies: " + n_innies);
         logger.trace("n_commies: " + n_commies);
+
+        logger.trace("n_duplicate: " + n_duplicate);
 
         /**
          * Self-ligation must only result in read pairs that are pointing in outward direction (outies).

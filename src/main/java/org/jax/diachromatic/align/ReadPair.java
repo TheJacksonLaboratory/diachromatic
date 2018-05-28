@@ -265,6 +265,24 @@ public class ReadPair {
         }
     }
 
+    public Integer getFivePrimeEndPosOfR1() {
+        if(!this.R1.getReadNegativeStrandFlag()) {
+            return this.R1.getAlignmentStart();
+        }
+        else {
+            return this.R1.getAlignmentStart();
+        }
+    }
+
+    public Integer getFivePrimeEndPosOfR2() {
+        if(!this.R2.getReadNegativeStrandFlag()) {
+            return this.R2.getAlignmentStart();
+        }
+        else {
+            return this.R2.getAlignmentStart();
+        }
+    }
+
     /**
      * Mark this read pair as valid with:
      */
