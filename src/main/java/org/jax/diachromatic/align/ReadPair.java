@@ -202,10 +202,7 @@ public class ReadPair {
         // check if both reads could be mapped
         unmapped_read1 = false;
         unmapped_read2 = false;
-        multimapped_read1 = false;
-        multimapped_read2 = false;
         if (R1.getReadUnmappedFlag()) {
-            //logger.trace("Unmapped!");
             unmapped_read1 = true;
             this.isPaired = false;
         }
@@ -213,7 +210,10 @@ public class ReadPair {
             unmapped_read2 = true;
             this.isPaired = false;
         }
+
         // check if both reads could be uniquely mapped
+        multimapped_read1 = false;
+        multimapped_read2 = false;
         if (R1.getAttribute("XS") != null) {
             multimapped_read1 = true;
             this.isPaired = false;
@@ -222,10 +222,12 @@ public class ReadPair {
             multimapped_read2 = true;
             this.isPaired = false;
         }
+
         // check if both reads are not on random chromosomes
         if (R1.getReferenceName().contains("_") || R2.getReferenceName().contains("_")) {
             this.isPaired = false;
         }
+
 
 
         if (this.isPaired) {
@@ -469,6 +471,17 @@ public class ReadPair {
     private boolean hasTooBigInsertSize() throws DiachromaticException {
         int insertSize = getCalculatedInsertSize();
         return UPPER_SIZE_THRESHOLD < insertSize;
+    }
+
+    /**
+     * @return true if both reads are on the same chromosome, else false
+     */
+    public boolean isTrans() {
+        if(!R1.getReferenceName().equals(R2.getReferenceName())) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
