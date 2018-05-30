@@ -73,7 +73,7 @@ public class MapPairsTest {
         String digestFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
         String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
         DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
-        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test1",digestMap);
+        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test1",digestMap, 150, 800, "xxx");
         ReadPair pair;
         while ((pair = sampairer.getNextPair())!=null) {
             readpairmap.put(pair.forward().getReadName(),pair);
@@ -138,7 +138,7 @@ public class MapPairsTest {
         String digestFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
         String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
         DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
-        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test3",digestMap);
+        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test3",digestMap,150,800,"xxx");
         ReadPair readpair =readpairmap.get("1_uniquelyAlignedRead");
         assertNotNull(readpair);
         int insertSize=  readpair.getCalculatedInsertSize();
@@ -157,7 +157,7 @@ public class MapPairsTest {
         String digestFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
         String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
         DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
-        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test2",digestMap);
+        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test2",digestMap,150,800,"xxx");
         ReadPair readpair = readpairmap.get("2_multiplyAlignedRead");
         assertNotNull(readpair);
         int insertSize=  readpair.getCalculatedInsertSize();
@@ -176,7 +176,7 @@ public class MapPairsTest {
         String digestFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
         String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
         DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
-        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test4",digestMap);
+        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test4",digestMap,150,800,"xxx");
         ReadPair readpair = readpairmap.get("1_uniquelyAlignedRead");
         assertFalse(readpair.selfLigation());
         readpair = readpairmap.get("4_selfLigation");//sampairer.getNextPair();// fourth read pair, self-ligation!

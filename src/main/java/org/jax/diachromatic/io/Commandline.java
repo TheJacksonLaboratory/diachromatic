@@ -252,7 +252,8 @@ public class Commandline {
                         outputPathPrefix,
                         threadNum,
                         lowerFragSize,
-                        upperFragSize
+                        upperFragSize,
+                        filenamePrefix
                         );
             } else {
                 printUsage(String.format("Did not recognize command: %s", mycommand));

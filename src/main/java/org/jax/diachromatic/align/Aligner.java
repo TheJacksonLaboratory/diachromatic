@@ -85,6 +85,8 @@ public class Aligner {
 
     private String outputBAMvalid, outputBAMrejected, outputTsvInteractingFragmentCounts, outputTsvInteractionCounts, outputFragSizesCountsRscript, outputTxtStats;
 
+    private String filenamePrefix;
+
     private int n_could_not_assign_to_digest = 0;
 
     /**
@@ -203,7 +205,7 @@ public class Aligner {
      * @param sam2    SAM file for the truncated "reverse" reads
      * @param digests see {@link #digestmap}.
      */
-    public Aligner(String sam1, String sam2, Map<String, List<Digest>> digests, boolean outputRejected, String outputPathPrefix, DigestMap digestMap, Integer lowerFragSize, Integer upperFragSize) {
+    public Aligner(String sam1, String sam2, Map<String, List<Digest>> digests, boolean outputRejected, String outputPathPrefix, DigestMap digestMap, Integer lowerFragSize, Integer upperFragSize, String filenamePrefix) {
         samPath1 = sam1;
         samPath2 = sam2;
         reader1 = SamReaderFactory.makeDefault().open(new File(samPath1));
@@ -215,6 +217,7 @@ public class Aligner {
         outputRejectedReads = outputRejected;
         this.lowerFragSize=lowerFragSize;
         this.upperFragSize=upperFragSize;
+        this.filenamePrefix=filenamePrefix;
 
         Arrays.fill(fragSizesAllPairs, 0);
         Arrays.fill(fragSizesHybridActivePairs, 0);
@@ -417,6 +420,8 @@ public class Aligner {
         // create file for output
         PrintStream printStream = new PrintStream(new FileOutputStream(outputFragSizesCountsRscript));
 
+
+
         printStream.print("length<-c(");
         for(int i=0; i<FRAG_SIZE_LIMIT-1; i++) {
             printStream.print(i + ",");
@@ -435,8 +440,63 @@ public class Aligner {
         }
         printStream.print(fragSizesHybridActivePairs[FRAG_SIZE_LIMIT-1] + ")\n");
 
-        printStream.print("plot(length,fragSizesAllPairs,xlim=c(0,1000),type=\"l\")");
+        printStream.print("\n");
+        printStream.print("cairo_pdf(\"");
+        printStream.print(filenamePrefix);
+        printStream.print(".pdf\")\n");
 
+        printStream.print("MAIN=\"");
+        printStream.print(filenamePrefix);
+        printStream.print("\"\n");
+
+        printStream.print("XLIM<-c(0,1000)\n");
+
+        printStream.print("YLIM<-max(max(fragSizesAllPairs[10:1000]),max(fragSizesHybridActivePairs[10:1000]))\n");
+
+        printStream.print("plot(length, fragSizesAllPairs, xlim=XLIM, type=\"l\", ylim=c(0,YLIM), ylab=NA, xlab=NA, axes=FALSE)\n");
+
+        printStream.print("par(new=TRUE)\n");
+
+        printStream.print("plot(length,fragSizesHybridActivePairs,main=MAIN, xlim=XLIM,type=\"l\", ylim=c(0,YLIM),col=\"red\",ylab=\"fragment count\")\n");
+
+        printStream.print("PREDOM_FRAG_SIZE<-which(max(fragSizesAllPairs)==fragSizesAllPairs)\n");
+        printStream.print("abline(v=PREDOM_FRAG_SIZE)\n");
+
+        printStream.print("PREDOM_ACTIVE_FRAG_SIZE<-numeric()\n");
+        printStream.print("if(0<sum(fragSizesHybridActivePairs)) {\n");
+        printStream.print("PREDOM_ACTIVE_FRAG_SIZE<-which(max(fragSizesHybridActivePairs)==fragSizesHybridActivePairs)\n");
+        printStream.print("abline(v=PREDOM_ACTIVE_FRAG_SIZE)\n");
+        printStream.print("} else {PREDOM_ACTIVE_FRAG_SIZE <-0}\n");
+
+        printStream.print("LEGEND_ALL<-paste(\"All fragments (\",PREDOM_FRAG_SIZE,\")\",sep=\"\")\n");
+        printStream.print("LEGEND_HYBRID_ACTIVE<-paste(\"Hybrid active fragments (\",PREDOM_ACTIVE_FRAG_SIZE,\")\",sep=\"\")\n");
+        printStream.print("legend(\"topright\",legend=c(LEGEND_ALL, LEGEND_HYBRID_ACTIVE), col=c(\"black\", \"red\"), lty=1, bg = \"white\")\n");
+
+        printStream.print("dev.off()\n");
+
+      /*
+        MEAN_FRAG_SIZE_ALL<-sum(length*fragSizesAllPairs)/sum(fragSizesAllPairs)
+        print(MEAN_FRAG_SIZE_ALL)
+
+        MEAN_FRAG_SIZE_ACTIVE<-sum(length*fragSizesHybridActivePairs)/sum(fragSizesHybridActivePairs)
+        print(MEAN_FRAG_SIZE_ACTIVE)
+
+        s<-0
+        MEADIAN_FRAG_SIZE<-1
+        while(s < sum(fragSizesAllPairs)/2) {
+            s = s + fragSizesAllPairs[MEADIAN_FRAG_SIZE]
+            MEADIAN_FRAG_SIZE = MEADIAN_FRAG_SIZE + 1
+        }
+        print(MEADIAN_FRAG_SIZE)
+
+        s<-0
+        MEADIAN_ACTIVE_FRAG_SIZE<-1
+        while(s < sum(fragSizesAllPairs)/2) {
+            s = s + fragSizesAllPairs[MEADIAN_ACTIVE_FRAG_SIZE]
+            MEADIAN_ACTIVE_FRAG_SIZE = MEADIAN_ACTIVE_FRAG_SIZE + 1
+        }
+        print(MEADIAN_ACTIVE_FRAG_SIZE)
+    */
     }
 
 
@@ -610,6 +670,7 @@ public class Aligner {
         printStream.print("\n");
         printStream.print("Artifact statistics (Diachromatic like)\n");
         printStream.print("---------------------------------------\n");
+        printStream.print("\n");
         printStream.print("\n");
         printStream.print("Will be added soon.\n");
         printStream.print("\n");
