@@ -569,7 +569,7 @@ public class Aligner {
 
         printStream.print("Number of paired read pairs:\t" + n_paired + String.format(" (%.2f%%)", 100.0*n_paired/n_total) + "\n");
         printStream.print("\tNumber of unique paired read pairs:\t" + n_paired_unique + "\n");
-        printStream.print("\t of duplicated pairs:\t" + n_duplicate + "\n");
+        printStream.print("\tNumber of duplicated pairs:\t" + n_duplicate + "\n");
 
         printStream.print("\tPair duplication rate:\t" + String.format("%.2f%%", 100.0*n_duplicate/n_paired) + "\n");
         printStream.print("\n");
@@ -597,7 +597,7 @@ public class Aligner {
         printStream.print("Artifact statistics (HiCUP like)\n");
         printStream.print("--------------------------------\n");
         printStream.print("\n");
-        printStream.print("Valid:\t" + n_same_internal + String.format(" (%.2f%%)", 100.0*n_valid_pairs/n_paired_unique) + "\n");
+        printStream.print("Valid:\t" + n_valid_pairs + String.format(" (%.2f%%)", 100.0*n_valid_pairs/n_paired_unique) + "\n");
         printStream.print("Same internal:\t" + n_same_internal + String.format(" (%.2f%%)", 100.0*n_same_internal/n_paired_unique) + "\n");
         printStream.print("Same dangling:\t" + n_same_dangling_end + String.format(" (%.2f%%)", 100.0*n_same_dangling_end/n_paired_unique) + "\n");
         Integer n_same_circularized = n_same_circularized_internal+n_same_circularized_dangling;
