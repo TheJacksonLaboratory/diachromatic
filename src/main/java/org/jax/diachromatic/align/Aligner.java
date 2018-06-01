@@ -376,7 +376,8 @@ public class Aligner {
                         pair.reverse().getReferenceName(),
                         pair.getReverseDigestStart(),
                         pair.getReverseDigestEnd(),
-                        pair.reverseDigestIsActive());
+                        pair.reverseDigestIsActive(),
+                        pair.getRelativeOrientationTag());
             } else {
                 updateErrorMap(pair.getErrorCodes());
                 if (outputRejectedReads) {

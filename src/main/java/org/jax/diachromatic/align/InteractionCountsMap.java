@@ -224,10 +224,13 @@ public class InteractionCountsMap {
      * TODO: Try to pass the corresponding two digests to this function instead of the long list of arguments.
      *
      */
-    public String incrementFragPair(Integer condition_num, String refID_1, Integer fragStaPos_1, Integer fragEndPos_1, boolean fragActive_1, String refID_2, Integer fragStaPos_2, Integer fragEndPos_2, boolean fragActive_2) throws IncrementSameInternalInteractionException {
+    public String incrementFragPair(Integer condition_num, String refID_1, Integer fragStaPos_1, Integer fragEndPos_1, boolean fragActive_1, String refID_2, Integer fragStaPos_2, Integer fragEndPos_2, boolean fragActive_2, String relOriTag) throws IncrementSameInternalInteractionException {
 
         // generate unique key
         String hashKey = getHashKey(refID_1, fragStaPos_1, fragEndPos_1, fragActive_1, refID_2, fragStaPos_2, fragEndPos_2, fragActive_2);
+        hashKey += ";";
+        hashKey += relOriTag;
+        //logger.trace(hashKey);
 
         // count reads in active fragments
         if(fragActive_1) {active_read_count[condition_num]++;}
@@ -366,8 +369,12 @@ public class InteractionCountsMap {
             String fragEndPos_2 = tmp2[1];
             String fragActivationState_2 = tmp1[2];
 
+            String relOriTag = frags[2];
+
             printStream.print(refID_1 + "\t" + fragStaPos_1 + "\t" + fragEndPos_1 + "\t" + fragActivationState_1 + "\t");
             printStream.print(refID_2 + "\t" + fragStaPos_2 + "\t" + fragEndPos_2 + "\t" + fragActivationState_2);
+
+            printStream.print("\t" + relOriTag);
 
             for(int i=0; i<number_of_conditions; i++) {
                 printStream.print("\t");
