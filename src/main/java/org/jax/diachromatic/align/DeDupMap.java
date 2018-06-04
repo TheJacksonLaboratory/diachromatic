@@ -119,7 +119,7 @@ public class DeDupMap {
          logger.trace(stringKey + "\t" + intKey + "\t" + intVal);
 
          if(dedupmap.containsKey(stringKey)) {
-             // a read pair has already been seen for this pair of chromosomesß
+             // a read pair has already been seen for this pair of chromosomes
              if(dedupmap.get(stringKey).containsKey(intKey)) {
                  // the coordinate of the first read has already been seen
                  if(dedupmap.get(stringKey).get(intKey).contains(intVal)) {
