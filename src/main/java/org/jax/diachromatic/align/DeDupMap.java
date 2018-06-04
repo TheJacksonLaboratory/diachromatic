@@ -104,11 +104,10 @@ public class DeDupMap {
              stringKey += readPair.getRelativeOrientationTag();
          }
 
-         logger.trace(stringKey);
+         logger.trace(stringKey + "\t" + intKey + "\t" + intVal);
 
          if(dedupmap.containsKey(stringKey)) {
-             // a read pair has already been seen for this pair of chromosomes
-             logger.trace("===");
+             // a read pair has already been seen for this pair of chromosomesß
              if(dedupmap.get(stringKey).containsKey(intKey)) {
                  // the coordinate of the first read has already been seen
                  if(dedupmap.get(stringKey).get(intKey).contains(intVal)) {
@@ -116,7 +115,7 @@ public class DeDupMap {
                      return true;
                  }
                  else {
-                     // first coordinate of the second read has not yet been seen
+                     // coordinate of the second read has not yet been seen
                      dedupmap.get(stringKey).get(intKey).add(intVal); // add to set
                      second_coord_num++;
                      insertion_num++;
@@ -138,7 +137,7 @@ public class DeDupMap {
              HashMap newIntHashMap = new HashMap<Integer,Set<Integer>>(); // create new integer HashMap
              Set newSet = new HashSet<Integer>(); // create new integer set
              newSet.add(intVal); /// add coordinate to set
-             newIntHashMap.put(stringKey,newSet);  // put set on integer HashMap
+             newIntHashMap.put(intKey,newSet);  // put set on integer HashMap
              dedupmap.put(stringKey,newIntHashMap); // put integer HashMap on string HashMap
              chr_pair_key_num++;
              first_coord_num++;
