@@ -84,6 +84,10 @@ public class ReadPair {
      */
     private final static String BADREAD_ATTRIBUTE = "YY";
     /**
+     * Tag to indicate relative orientation of read pair ()
+     */
+    private final static String ORIENTATION_ATTRIBUTE = "RO";
+    /**
      * Set false, if read pair is an artifact.
      */
     private boolean isValid = false;
@@ -249,6 +253,12 @@ public class ReadPair {
                 this.R1.setAttribute(BADREAD_ATTRIBUTE, this.categoryTag);
                 this.R2.setAttribute(BADREAD_ATTRIBUTE, this.categoryTag);
             }
+
+            // add attribute for relative orientation of read pair
+            this.R1.setAttribute(ORIENTATION_ATTRIBUTE, this.getRelativeOrientationTag());
+            this.R2.setAttribute(ORIENTATION_ATTRIBUTE, this.getRelativeOrientationTag());
+
+
         } else {
             this.digestPair=null;
         }

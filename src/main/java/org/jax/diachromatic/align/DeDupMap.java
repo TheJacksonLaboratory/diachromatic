@@ -104,8 +104,11 @@ public class DeDupMap {
              stringKey += readPair.getRelativeOrientationTag();
          }
 
+         logger.trace(stringKey);
+
          if(dedupmap.containsKey(stringKey)) {
              // a read pair has already been seen for this pair of chromosomes
+             logger.trace("===");
              if(dedupmap.get(stringKey).containsKey(intKey)) {
                  // the coordinate of the first read has already been seen
                  if(dedupmap.get(stringKey).get(intKey).contains(intVal)) {
