@@ -101,8 +101,20 @@ public class DeDupMap {
           * duplicated.
           */
          if(useRelativeOrientation) {
-             stringKey += readPair.getRelativeOrientationTag();
+             if (readPair.getRelativeOrientationTag().equals("F1R2") || readPair.getRelativeOrientationTag().equals("F2R1")) {
+                 stringKey += "1";
+             }
+             if (readPair.getRelativeOrientationTag().equals("R1F2") || readPair.getRelativeOrientationTag().equals("R2F1")) {
+                 stringKey += "2";
+             }
+             if (readPair.getRelativeOrientationTag().equals("F1F2") || readPair.getRelativeOrientationTag().equals("F2F1")) {
+                 stringKey += "3";
+             }
+             if (readPair.getRelativeOrientationTag().equals("R1R2") || readPair.getRelativeOrientationTag().equals("R2R1")) {
+                 stringKey += "4";
+             }
          }
+
 
          logger.trace(stringKey + "\t" + intKey + "\t" + intVal);
 
