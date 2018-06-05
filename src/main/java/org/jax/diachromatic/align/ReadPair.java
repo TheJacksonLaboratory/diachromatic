@@ -282,7 +282,7 @@ public class ReadPair {
             return this.R1.getAlignmentStart();
         }
         else {
-            return this.R1.getAlignmentStart();
+            return this.R1.getAlignmentEnd();
         }
     }
 
@@ -291,7 +291,7 @@ public class ReadPair {
             return this.R2.getAlignmentStart();
         }
         else {
-            return this.R2.getAlignmentStart();
+            return this.R2.getAlignmentEnd();
         }
     }
 
