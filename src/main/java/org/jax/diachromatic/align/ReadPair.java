@@ -385,6 +385,9 @@ public class ReadPair {
         if (!R1.getReferenceName().equals(R2.getReferenceName())) {
             return false; // reads not on same chromosome, therefore, not contiguous
         }
+        if((R1.getReadNegativeStrandFlag() == R2.getReadNegativeStrandFlag())) {
+            return false;
+        }
         int contigsize = Math.max(R2.getAlignmentStart() - R1.getAlignmentStart(),
                 R1.getAlignmentStart() - R2.getAlignmentStart());
         if (contigsize > LOWER_SIZE_THRESHOLD && contigsize < UPPER_SIZE_THRESHOLD) {  // TODO: Does this make sense?
