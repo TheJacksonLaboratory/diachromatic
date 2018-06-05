@@ -115,15 +115,6 @@ public class DeDupMap {
              }
          }
 
-         logger.trace("--------");
-         logger.trace(stringKey + "\t" + intKey + "\t" + intVal);
-         logger.trace("R1:" + readPair.forward().getReadName() + "\t" + readPair.getFivePrimeEndPosOfR1());
-         logger.trace("R2:" + readPair.reverse().getReadName() + "\t" + readPair.getFivePrimeEndPosOfR2());
-         logger.trace(readPair.getRelativeOrientationTag());
-         logger.trace("--------");
-
-
-
          if(dedupmap.containsKey(stringKey)) {
              // a read pair has already been seen for this pair of chromosomes
              if(dedupmap.get(stringKey).containsKey(intKey)) {

@@ -357,14 +357,10 @@ public class Aligner {
             }
 
             if(pair.isValid()){
-                // set the SAM flags to paired-end
-                if (! DiTag.isDuplicate(pair)) { // check for duplicate reads
-                    validReadsWriter.addAlignment(pair.forward());
-                    validReadsWriter.addAlignment(pair.reverse());
-                } else {
-                    n_duplicate++;
-                    logger.trace("Is duplicated!"); // never printed for HiCUP test dataset because it contains no duplicates
-                }
+
+                validReadsWriter.addAlignment(pair.forward());
+                validReadsWriter.addAlignment(pair.reverse());
+
                 n_good++;
 
                 // count interaction
