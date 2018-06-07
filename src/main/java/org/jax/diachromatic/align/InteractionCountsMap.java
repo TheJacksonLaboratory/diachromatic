@@ -228,8 +228,18 @@ public class InteractionCountsMap {
 
         // generate unique key
         String hashKey = getHashKey(refID_1, fragStaPos_1, fragEndPos_1, fragActive_1, refID_2, fragStaPos_2, fragEndPos_2, fragActive_2);
+
+        // count interaction separately for simple and twisted
+        String oriTag;
+        if(relOriTag.equals("F1F2") || relOriTag.equals("F2F1") || relOriTag.equals("R1R2") || relOriTag.equals("R2R1")) {
+            oriTag="T"; // twisted
+        } else {
+            oriTag="S"; // simple
+        }
+
+
         hashKey += ";";
-        hashKey += relOriTag;
+        hashKey += oriTag;
         //logger.trace(hashKey);
 
         // count reads in active fragments

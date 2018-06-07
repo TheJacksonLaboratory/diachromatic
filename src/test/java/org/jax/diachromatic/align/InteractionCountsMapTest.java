@@ -30,13 +30,13 @@ public class InteractionCountsMapTest {
     @Test
     public void testUniqueKeys_IncrementFragPair() throws IncrementSameInternalInteractionException {
         String uniqueKey = testInteractionCountsMap2c.incrementFragPair(0, "chr1", 23, 33, false,"chr3", 77,87,false,"F1F2");
-        assertEquals("chr1:23-33:I;chr3:77-87:I;F1F2",uniqueKey);
+        assertEquals("chr1:23-33:I;chr3:77-87:I;T",uniqueKey);
         uniqueKey = testInteractionCountsMap2c.incrementFragPair(0, "chr3", 23, 33,false,"chr1", 77, 87,false,"F1F2");
-        assertEquals("chr3:23-33:I;chr1:77-87:I;F1F2",uniqueKey);
+        assertEquals("chr3:23-33:I;chr1:77-87:I;T",uniqueKey);
         uniqueKey = testInteractionCountsMap2c.incrementFragPair(0, "chr3", 77, 87,false,"chr1", 23, 33,false,"F1F2");
-        assertEquals("chr1:23-33:I;chr3:77-87:I;F1F2",uniqueKey);
+        assertEquals("chr1:23-33:I;chr3:77-87:I;T",uniqueKey);
         uniqueKey = testInteractionCountsMap2c.incrementFragPair(0, "chr1", 77, 87, false,"chr3", 23, 33,false,"F1F2");
-        assertEquals("chr3:23-33:I;chr1:77-87:I;F1F2",uniqueKey);
+        assertEquals("chr3:23-33:I;chr1:77-87:I;T",uniqueKey);
     }
 
     /**
@@ -55,23 +55,23 @@ public class InteractionCountsMapTest {
         uniqueKey = testInteractionCountsMapTmp.incrementFragPair(1, "chr3", 23,33,false,"chr1", 77,87,false,"F1F2");
         uniqueKey = testInteractionCountsMapTmp.incrementFragPair(2, "chr3", 77,87,false,"chr1", 23,33,false,"F1F2");
         uniqueKey = testInteractionCountsMapTmp.incrementFragPair(2, "chr1", 77,87,false,"chr1", 23,33,false,"F1F2");
-        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33:I;chr1:77-87:I;F1F2", 0).intValue());
-        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33:I;chr1:77-87:I;F1F2", 1).intValue());
-        assertEquals(1, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33:I;chr1:77-87:I;F1F2", 2).intValue());
-        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33:I;chr1:77-87:I;F1F2", 3).intValue());
-        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33:I;chr1:77-87:I;F1F2", 4).intValue());
+        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33:I;chr1:77-87:I;T", 0).intValue());
+        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33:I;chr1:77-87:I;T", 1).intValue());
+        assertEquals(1, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33:I;chr1:77-87:I;T", 2).intValue());
+        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33:I;chr1:77-87:I;T", 3).intValue());
+        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33:I;chr1:77-87:I;T", 4).intValue());
 
-        assertEquals(3, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33:I;chr3:77-87:I;F1F2", 0).intValue());
-        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33:I;chr3:77-87:I;F1F2", 1).intValue());
-        assertEquals(1, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33:I;chr3:77-87:I;F1F2", 2).intValue());
-        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33:I;chr3:77-87:I;F1F2", 3).intValue());
-        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33:I;chr3:77-87:I;F1F2", 4).intValue());
+        assertEquals(3, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33:I;chr3:77-87:I;T", 0).intValue());
+        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33:I;chr3:77-87:I;T", 1).intValue());
+        assertEquals(1, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33:I;chr3:77-87:I;T", 2).intValue());
+        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33:I;chr3:77-87:I;T", 3).intValue());
+        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr1:23-33:I;chr3:77-87:I;T", 4).intValue());
 
-        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr3:23-33:I;chr1:77-87:I;F1F2", 0).intValue());
-        assertEquals(3, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr3:23-33:I;chr1:77-87:I;F1F2", 1).intValue());
-        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr3:23-33:I;chr1:77-87:I;F1F2", 2).intValue());
-        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr3:23-33:I;chr1:77-87:I;F1F2", 3).intValue());
-        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr3:23-33:I;chr1:77-87:I;F1F2", 4).intValue());
+        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr3:23-33:I;chr1:77-87:I;T", 0).intValue());
+        assertEquals(3, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr3:23-33:I;chr1:77-87:I;T", 1).intValue());
+        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr3:23-33:I;chr1:77-87:I;T", 2).intValue());
+        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr3:23-33:I;chr1:77-87:I;T", 3).intValue());
+        assertEquals(0, testInteractionCountsMapTmp.getNumberOfInteractionsForKeyAndCondition("chr3:23-33:I;chr1:77-87:I;T", 4).intValue());
         testInteractionCountsMap5c.printInteractionCountsMapAsCountTable("test2");
     }
 
