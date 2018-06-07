@@ -54,6 +54,7 @@
 \usepackage[utf8]{inputenc} %unicode support
 %\usepackage[applemac]{inputenc} %applemac support if unicode package fails
 %\usepackage[latin1]{inputenc} %UNIX support if unicode package fails
+\usepackage{graphicx}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -72,8 +73,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\def\includegraphic{}
-\def\includegraphics{}
+%\def\includegraphic{}
+%\def\includegraphics{}
 
 
 
@@ -250,14 +251,19 @@ Text for this section.
 %%%%%%%%%%%%%%%%
 %% Background %%
 %%
-\section*{Content}
-Text and results for this section, as per the individual journal's instructions for authors. %\cite{koon,oreg,khar,zvai,xjon,schn,pond,smith,marg,hunn,advi,koha,mouse}
+\section*{Background}
 
-\section*{Section title}
-Text for this section \ldots
-\subsection*{Sub-heading for section}
-Text for this sub-heading \ldots
-\subsubsection*{Sub-sub heading for section}
+Capture Hi-C is a valuable method for the study of enhancer promoter contacts.\\
+
+\section*{Results}
+
+\subsection*{Preprocessing of capture Hi-C reads}
+
+XXX.\\
+
+\subsection*{Directed DNA-DNA contacts}
+
+XXX.\\
 Text for this sub-sub-heading \ldots
 \paragraph*{Sub-sub-sub heading for section}
 Text for this sub-sub-sub-heading \ldots
@@ -353,7 +359,23 @@ Thus we observe that this expected value is finite for all $v>0$ (also see \cite
 %%
 %% Do not use \listoffigures as most will included as separate files
 
+\clearpage\newpage
+
 \section*{Figures}
+
+  \begin{figure}[!ht]
+      \includegraphics[width=.99\linewidth]{pics/ligation_products.pdf}
+  	\caption{{\bf Enumeration of possible ligation events, resulting fragments and relative orientations of mapped paired-end reads.} XXX. }
+    \label{fig:ligation_products}
+  \end{figure}
+  
+    \begin{figure}[!ht]
+      \includegraphics[width=.99\linewidth]{pics/read_pair_filter_workflow.pdf}
+  	\caption{{\bf Read pair filter.} XXX. }
+    \label{fig:read_pair_filter_workflow}
+  \end{figure}
+
+
   \begin{figure}[h!]
   \caption{\csentence{Sample figure title.}
       A short description of the figure content
