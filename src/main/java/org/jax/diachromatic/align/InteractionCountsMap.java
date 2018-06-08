@@ -232,9 +232,9 @@ public class InteractionCountsMap {
         // count interaction separately for simple and twisted
         String oriTag;
         if(relOriTag.equals("F1F2") || relOriTag.equals("F2F1") || relOriTag.equals("R1R2") || relOriTag.equals("R2R1")) {
-            oriTag="T"; // twisted
+            oriTag="T"; // twisted loop
         } else {
-            oriTag="S"; // simple
+            oriTag="S"; // simple loop
         }
 
 
@@ -360,10 +360,20 @@ public class InteractionCountsMap {
 
         // iterate over hash and write to file
         Iterator it = interaction_counts_map.entrySet().iterator();
+        HashSet seenHashKeys = new HashSet(); // keep track of seen interaction, either simple or twisted, to avoid double printing
         while (it.hasNext()) {
+
             Map.Entry pair = (Map.Entry)it.next();
+
             String hashKey = pair.getKey().toString();
             String[] frags = hashKey.split(";");
+            String baseHashKey = frags[0].concat(frags[1]);
+
+            if(seenHashKeys.contains(baseHashKey)) {
+                continue;
+            } else {
+                seenHashKeys.add(baseHashKey);
+            }
 
             String[] tmp1 = frags[0].split(":");
             String refID_1 = tmp1[0];
@@ -387,10 +397,37 @@ public class InteractionCountsMap {
             printStream.print("\t" + relOriTag);
 
             for(int i=0; i<number_of_conditions; i++) {
+                Integer simpleNum;
+                Integer twistedNum;
+                if(relOriTag.equals("S")) {
+                    simpleNum = interaction_counts_map.get(hashKey).get(i);
+                    // check if there is also a twisted interaction
+                    String twistedHaskKey = baseHashKey.concat(";T");
+                    if(interaction_counts_map.containsKey(twistedHaskKey)) {
+                        twistedNum = interaction_counts_map.get(twistedHaskKey).get(i);
+                    } else {
+                        twistedNum = 0;
+                    }
+                } else {
+                    twistedNum = interaction_counts_map.get(hashKey).get(i);
+                    // check if there is also a twisted interaction
+                    String twistedHaskKey = baseHashKey.concat(";S");
+                    if(interaction_counts_map.containsKey(twistedHaskKey)) {
+                        simpleNum = interaction_counts_map.get(twistedHaskKey).get(i);
+                    } else {
+                        simpleNum = 0;
+                    }
+                }
+
                 printStream.print("\t");
-                printStream.print(interaction_counts_map.get(hashKey).get(i));
+                printStream.print(simpleNum);
+                printStream.print(":");
+                printStream.print(twistedNum);
+
+                //printStream.print(interaction_counts_map.get(hashKey).get(i));
             }
             printStream.print("\n");
+
         }
     }
 
