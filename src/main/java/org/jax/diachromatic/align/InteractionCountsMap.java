@@ -238,9 +238,10 @@ public class InteractionCountsMap {
         }
 
 
+
+
         hashKey += ";";
         hashKey += oriTag;
-        //logger.trace(hashKey);
 
         // count reads in active fragments
         if(fragActive_1) {active_read_count[condition_num]++;}
@@ -367,7 +368,9 @@ public class InteractionCountsMap {
 
             String hashKey = pair.getKey().toString();
             String[] frags = hashKey.split(";");
-            String baseHashKey = frags[0].concat(frags[1]);
+            String baseHashKey = frags[0];
+            baseHashKey += ";";
+            baseHashKey += frags[1];
 
             if(seenHashKeys.contains(baseHashKey)) {
                 continue;
@@ -394,8 +397,6 @@ public class InteractionCountsMap {
             printStream.print(refID_1 + "\t" + fragStaPos_1 + "\t" + fragEndPos_1 + "\t" + fragActivationState_1 + "\t");
             printStream.print(refID_2 + "\t" + fragStaPos_2 + "\t" + fragEndPos_2 + "\t" + fragActivationState_2);
 
-            printStream.print("\t" + relOriTag);
-
             for(int i=0; i<number_of_conditions; i++) {
                 Integer simpleNum;
                 Integer twistedNum;
@@ -411,9 +412,9 @@ public class InteractionCountsMap {
                 } else {
                     twistedNum = interaction_counts_map.get(hashKey).get(i);
                     // check if there is also a twisted interaction
-                    String twistedHaskKey = baseHashKey.concat(";S");
-                    if(interaction_counts_map.containsKey(twistedHaskKey)) {
-                        simpleNum = interaction_counts_map.get(twistedHaskKey).get(i);
+                    String simpleHaskKey = baseHashKey.concat(";S");
+                    if(interaction_counts_map.containsKey(simpleHaskKey)) {
+                        simpleNum = interaction_counts_map.get(simpleHaskKey).get(i);
                     } else {
                         simpleNum = 0;
                     }
@@ -429,6 +430,7 @@ public class InteractionCountsMap {
             printStream.print("\n");
 
         }
+        logger.trace("-----");
     }
 
     /**
