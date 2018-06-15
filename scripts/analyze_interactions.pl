@@ -63,6 +63,9 @@ my $N_TWISTED_WEAK_READ_PAIRS = 0;
 my $N_SIMPLE_STRONG_READ_PAIRS = 0;
 my $N_TWISTED_STRONG_READ_PAIRS = 0;
 
+my $N_EXCLUDED = 0;
+my $N_INCLUDED = 0;
+
 while (my $row = <$fh>) {
 
     chomp $row;
@@ -84,7 +87,8 @@ while (my $row = <$fh>) {
     my $n_simple = $TMP2[0];
     my $n_twisted = $TMP2[1];
 
-    if($n_simple + $n_twisted < 2) {next;} # restrict all analyses to interactions that might be directed
+    if($n_simple + $n_twisted < 2) {$N_EXCLUDED++; next;} # restrict all analyses to interactions that might be directed
+    else { $N_INCLUDED++; }
 
     my $directed = 0;
     if((1 < $n_simple + $n_twisted) && ((2*$n_simple <= $n_twisted) || (2*$n_twisted <= $n_simple))) {
@@ -196,6 +200,18 @@ while (my $row = <$fh>) {
 
 # Finished counting
 
+print("==============================================================================\n\n");
+
+print("An interaction is defined to be directed, if it consists of more than one read pair,\n");
+print("and either the number of simple is twice as much as the number of twisted read pairs,\n");
+print("or the otherway around. I.e. 2:0 and 0:2 are the smallest directions.\n\n");
+
+print("This analysis is restricted to interactions with at least two read pairs,\n");
+print("because a directed interaction requires at least two read pairs.\n\n");
+
+print("N_EXCLUDED: $N_EXCLUDED (Interactions with only one read pair cannot be directed.)\n");
+print("N_INCLUDED: $N_INCLUDED\n\n");
+
 print("==============================================================================\n");
 print("1A. Simple and twisted read pairs within cis and trans interactions:\n\n");
 
@@ -212,7 +228,6 @@ my $N_TRANS_READ_PAIRS_TOTAL = $N_TRANS_SIMPLE_READ_PAIRS + $N_TRANS_TWISTED_REA
 print("N_READ_PAIRS_TOTAL: $N_READ_PAIRS_TOTAL\n");
 print("N_CIS_READ_PAIRS_TOTAL: $N_CIS_READ_PAIRS_TOTAL\n");
 print("N_TRANS_READ_PAIRS_TOTAL: $N_TRANS_READ_PAIRS_TOTAL\n\n");
-
 
 print("The distribution of simple and twisted read pairs seems to be independent of cis and trans.\n\n");
 
@@ -242,14 +257,22 @@ print("F_TRANS_TWISTED_READ_PAIRS: $F_TRANS_TWISTED_READ_PAIRS\n\n");
 print("------------------------------------------------------------------------------\n");
 print("1B. Directed and undirected interactions within cis and trans:\n\n");
 
-print("A interaction is defined to be directed, if it consists of more than one read pair,\n");
-print("and either the number of simple is twice as much as the number of twisted read pairs,\n");
-print("or the othernway around.\n\n");
-
 print("N_CIS_DIRECTED_INTERACTION: $N_CIS_DIRECTED_INTERACTION\n");
 print("N_TRANS_DIRECTED_INTERACTION: $N_TRANS_DIRECTED_INTERACTION\n");
 print("N_CIS_UNDIRECTED_INTERACTION: $N_CIS_UNDIRECTED_INTERACTION\n");
 print("N_TRANS_UNDIRECTED_INTERACTION: $N_TRANS_UNDIRECTED_INTERACTION\n\n");
+
+my $N_CIS = $N_CIS_DIRECTED_INTERACTION + $N_CIS_UNDIRECTED_INTERACTION;
+my $N_TRANS = $N_TRANS_DIRECTED_INTERACTION + $N_TRANS_UNDIRECTED_INTERACTION;
+my $N_DIRECTED = $N_CIS_DIRECTED_INTERACTION + $N_TRANS_DIRECTED_INTERACTION;
+my $N_UNDIRECTED = $N_CIS_UNDIRECTED_INTERACTION + $N_TRANS_UNDIRECTED_INTERACTION;
+my $N_TOTAL = $N_CIS + $N_TRANS;
+
+print("N_CIS: $N_CIS\n");
+print("N_TRANS: $N_TRANS\n");
+print("N_DIRECTED: $N_DIRECTED\n");
+print("N_UNDIRECTED: $N_UNDIRECTED\n");
+print("N_TOTAL: $N_TOTAL\n\n");
 
 my $fraction_directed_cis = $N_CIS_DIRECTED_INTERACTION / ($N_CIS_DIRECTED_INTERACTION + $N_CIS_UNDIRECTED_INTERACTION);
 my $fraction_directed_trans = $N_TRANS_DIRECTED_INTERACTION / ($N_TRANS_DIRECTED_INTERACTION + $N_TRANS_UNDIRECTED_INTERACTION);
@@ -327,6 +350,18 @@ print("N_CIS_SHORT_RANGE_UNDIRECTED_INTERACTION: $N_CIS_SHORT_RANGE_UNDIRECTED_I
 print("N_CIS_LONG_RANGE_DIRECTED_INTERACTION: $N_CIS_LONG_RANGE_DIRECTED_INTERACTION\n");
 print("N_CIS_LONG_RANGE_UNDIRECTED_INTERACTION: $N_CIS_LONG_RANGE_UNDIRECTED_INTERACTION\n\n");
 
+my $N_SHORT = $N_CIS_SHORT_RANGE_DIRECTED_INTERACTION + $N_CIS_SHORT_RANGE_UNDIRECTED_INTERACTION;
+my $N_LONG = $N_CIS_LONG_RANGE_DIRECTED_INTERACTION + $N_CIS_LONG_RANGE_UNDIRECTED_INTERACTION;
+$N_DIRECTED = $N_CIS_SHORT_RANGE_DIRECTED_INTERACTION + $N_CIS_LONG_RANGE_DIRECTED_INTERACTION;
+$N_UNDIRECTED = $N_CIS_SHORT_RANGE_UNDIRECTED_INTERACTION + $N_CIS_LONG_RANGE_UNDIRECTED_INTERACTION;
+$N_TOTAL = $N_SHORT + $N_LONG;
+
+print("N_SHORT: $N_CIS\n");
+print("N_LONG: $N_TRANS\n");
+print("N_DIRECTED: $N_DIRECTED\n");
+print("N_UNDIRECTED: $N_UNDIRECTED\n");
+print("N_TOTAL: $N_TOTAL\n\n");
+
 my $fraction_directed_short_range = $N_CIS_SHORT_RANGE_DIRECTED_INTERACTION / ($N_CIS_SHORT_RANGE_DIRECTED_INTERACTION + $N_CIS_SHORT_RANGE_UNDIRECTED_INTERACTION);
 my $fraction_directed_long_range = $N_CIS_LONG_RANGE_DIRECTED_INTERACTION / ($N_CIS_LONG_RANGE_DIRECTED_INTERACTION + $N_CIS_LONG_RANGE_UNDIRECTED_INTERACTION);
 
@@ -352,9 +387,6 @@ print("chisq.test(Interactions2B,correct=FALSE)\n\n");
 
 print("==============================================================================\n");
 print("3A. Simple and twisted read pairs within weak and strong interactions:\n\n");
-
-print("This analysis is restricted to interactions with at least two read pairs,\n");
-print("because a directed interaction requires at least two read pairs (should this also be done for cis/trans and short/long?).\n\n");
 
 print("An interaction is defined to be weak,\n");
 print("if it contains a smaller or equal number of read pairs than the average number of read pairs in interactions with at least two read pairs,\n");
@@ -402,6 +434,18 @@ print("N_WEAK_UNDIRECTED_INTERACTION: $N_WEAK_UNDIRECTED_INTERACTION\n");
 print("N_STRONG_DIRECTED_INTERACTION: $N_STRONG_DIRECTED_INTERACTION\n");
 print("N_STRONG_UNDIRECTED_INTERACTION: $N_STRONG_UNDIRECTED_INTERACTION\n\n");
 
+my $N_WEAK = $N_WEAK_DIRECTED_INTERACTION + $N_WEAK_UNDIRECTED_INTERACTION;
+my $N_STRONG = $N_STRONG_DIRECTED_INTERACTION + $N_STRONG_UNDIRECTED_INTERACTION;
+$N_DIRECTED = $N_WEAK_DIRECTED_INTERACTION + $N_STRONG_DIRECTED_INTERACTION;
+$N_UNDIRECTED = $N_WEAK_UNDIRECTED_INTERACTION + $N_STRONG_UNDIRECTED_INTERACTION;
+$N_TOTAL = $N_WEAK + $N_STRONG;
+
+print("N_WEAK: $N_WEAK\n");
+print("N_STRONG: $N_STRONG\n");
+print("N_DIRECTED: $N_DIRECTED\n");
+print("N_UNDIRECTED: $N_UNDIRECTED\n");
+print("N_TOTAL: $N_TOTAL\n\n");
+
 my $fraction_directed_weak = $N_WEAK_DIRECTED_INTERACTION / ($N_WEAK_DIRECTED_INTERACTION + $N_WEAK_UNDIRECTED_INTERACTION);
 my $fraction_directed_strong = $N_STRONG_DIRECTED_INTERACTION / ($N_STRONG_DIRECTED_INTERACTION + $N_STRONG_UNDIRECTED_INTERACTION);
 
@@ -420,3 +464,4 @@ print("fisher.test(Interactions3B, alternative = \"two.sided\")\n\n");
 
 print("Chi-Squared (use this line in R):\n");
 print("chisq.test(Interactions3B,correct=FALSE)\n\n");
+
