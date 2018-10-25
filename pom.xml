@@ -19,7 +19,6 @@
     </properties>
 
     <dependencies>
-
         <dependency>
             <groupId>org.rosuda.REngine</groupId>
             <artifactId>REngine</artifactId>
@@ -98,7 +97,6 @@
                 <type>pom</type>
             </dependency>
         </dependencies>
-
     </dependencyManagement>
 
 

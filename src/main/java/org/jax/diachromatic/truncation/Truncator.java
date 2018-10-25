@@ -5,7 +5,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.digest.RestrictionEnzyme;
 import org.jax.diachromatic.exception.DiachromaticException;
-import org.jax.diachromatic.normalization.PoissonRegression;
 import org.jax.diachromatic.util.Pair;
 
 import java.io.*;

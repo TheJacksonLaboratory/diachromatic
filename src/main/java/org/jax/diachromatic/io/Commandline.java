@@ -291,8 +291,8 @@ public class Commandline {
                .addOption("b", "bowtie-path", true, "path to bowtie2") // align specific option
                .addOption("i", "bowtie-index", true, "path to bowtie2 index") // align specific option
                .addOption("j", "bad", false, "output bad (rejected) reads to separated file") // align specific option
-               .addOption("d", "digest", true, "path to diachromatic digest file") // align (and count) specific option
-               .addOption("a", "active-digests", true, "path to BED file with active digests") // align (and count) specific option
+               .addOption("d", "digest", true, "path to GOPHER digest file") // align (and count) specific option
+               .addOption("a", "active-digests", true, "path to BED file with active digests (overwrites information in digest file)") // align (and count) specific option
                .addOption("o", "out", true, "name/path of output file/directory")
                .addOption("p", "thread-num", true, "number of threads used by bowtie2")
                .addOption("l", "lower-frag-size-limit", true, "lower limit for fragment size")

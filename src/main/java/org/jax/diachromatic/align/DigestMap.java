@@ -87,6 +87,7 @@ public class DigestMap {
                 if (!digestMap.containsKey(chromosome)) {
                     digestMap.put(chromosome,new ArrayPair());
                 }
+
                 digestMap.get(chromosome).addCoord(digestEnd);
                 String key = chromosome;
                 key += ":";
@@ -94,6 +95,16 @@ public class DigestMap {
                 if(activeDigests.contains(key))
                 {
                     digestMap.get(chromosome).addActiveStateCoord(digestEnd);
+                }
+
+                /*
+                 An additional file for active digests passed with -a option overwrites infos in columns 11 of the
+                 digest file. Only if no file for active fragments is given, the information in column 11 is used.
+                  */
+                if(activeDigestsFile == null) {
+                    if(fields[11].equals("T")) {
+                        digestMap.get(chromosome).addActiveStateCoord(digestEnd);
+                    }
                 }
             }
             br.close();
