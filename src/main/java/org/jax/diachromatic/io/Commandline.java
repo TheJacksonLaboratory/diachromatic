@@ -25,13 +25,8 @@ public class Commandline {
 
     private Command command=null;
 
-    /** The default name of the file that is produced by the {@code digest} command. */
-    private final static String DEFAULT_DIGEST_FILE_NAME = "default"; // digestion and fasta indexing will be moved to GOPHER
     /** Default size of margin of fragments used for calculating GC and repeat content. */
     private final static int DEFAULT_MARGIN_SIZE = 250; // also GC and repeat content will be calculated within GOPHER
-    /** Absolute path to the combined genome fasta file (which will be indexed only if necessary). */
-    private String genomeFastaFile=null; // only needed for digestion
-
     private final static String DEFAULT_OUTPUT_DIRECTORY="results";
     private final static String DEFAULT_FILENAME_PREFIX="prefix";
 
@@ -91,7 +86,7 @@ public class Commandline {
             commandLine = cmdLineGnuParser.parse(gnuOptions, args);
             String category[] = commandLine.getArgs();
             if (category.length == 0) {
-                printUsage("command missing");
+                printUsage("Error: Subcommand missing!");
             } else if (category.length > 1) {
                 String cmd= Arrays.stream(category).collect(Collectors.joining("\t"));
                 System.out.println(String.format("%d arguments for command: %s",category.length,cmd ));
@@ -133,9 +128,6 @@ public class Commandline {
             }
             if (commandLine.hasOption("s")) {
                 this.stickyEnds=true;
-            }
-            if (commandLine.hasOption("g")) {
-                this.genomeFastaFile=commandLine.getOptionValue("g");
             }
             if (commandLine.hasOption("h")) {
                 this.doHelp=true;
@@ -187,26 +179,13 @@ public class Commandline {
         }
         if (doHelp) {
             switch (mycommand) {
-                case "digest": printHelpHeader(); printDigestHelp(true); break;
                 case "truncate": printHelpHeader(); printTruncateHelp(true); break;
                 case "align": printHelpHeader(); printAlignHelp(true); break;
             }
             System.exit(1);
         }
         try {
-            if (mycommand.equals("digest")) {
-                if (this.genomeFastaFile == null) {
-                    printDigestHelp("-g option required for digest command");
-                }
-                if (this.enzyme==null) {
-                    printDigestHelp("-e option required for digest command");
-                }
-                if (this.outputFilePath == null) {
-                    outputFilePath=DEFAULT_DIGEST_FILE_NAME;
-                }
-                this.command = new DigestCommand(this.genomeFastaFile, enzyme,this.outputFilePath,this.marginsize);
-
-            } else if (mycommand.equalsIgnoreCase("truncate")) {
+            if (mycommand.equalsIgnoreCase("truncate")) {
                 logger.trace(outputPathPrefix);
                 if (this.outputDirectory == null) {
                     this.outputDirectory=DEFAULT_OUTPUT_DIRECTORY;
@@ -313,30 +292,6 @@ public class Commandline {
         return version;
     }
 
-
-    private static void printDigestHelp(String message) {
-        System.out.println("\n"+ message + "\n");
-        printDigestHelp(true);
-        System.out.println();
-        System.exit(0);
-    }
-
-    private static void printDigestHelp(boolean specific) {
-
-        if (specific) {
-            System.out.println("Command and options for digest function");
-            System.out.println("\tdigest creates an in silico digest of the genome that is need in later steps of the analysis");
-        }
-
-        System.out.println("digest:\n" +
-            "\tjava -jar Diachromatic.jar digest -g <path> -e <enzyme> [-o <outfile>] [-m <margin>]\n\n" +
-
-            "\t\t<path>: path to a directory containing indexed genome FASTA files (e.g. genomes/hg19.fa)\n" +
-            "\t\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII)\n" +
-            "\t\t<margin>: margin size in basepairs ? (Default: 250)\n" +
-            "\t\t<outfile>: optional name of output file (Default: <genome>_<enzyme>_digest.tsv)\n\n");
-    }
-
     private static void printTruncateHelp(String message) {
         System.out.println("\n"+ message + "\n");
         printTruncateHelp(true);
@@ -349,7 +304,7 @@ public class Commandline {
             System.out.println("Command and options for truncate function");
             System.out.println("\ttruncate searches for Hi-C religation sequences and truncates reads accordingly");
         }
-        System.out.println("truncate:\n" +
+        System.out.println("Truncate:\n" +
         "\tjava -jar Diachromatic.jar truncate -q <forward.fq.gz> \\ \n"+
             "\t\t\t-r <reverse.fq.gz> -e <enzyme> [-out-dir <output_directory>] [-out-prefix <filename_prefix>]\n\n"+
 
@@ -373,7 +328,7 @@ public class Commandline {
             System.out.println("Command and options for align function");
             System.out.println("\talign align uses bowtie2 to align reads and then performs Q/C and repairing.");
         }
-        System.out.println("\n" +
+        System.out.println("Align:\n" +
         "\tjava -jar Diachromatic.jar align -b <bowtie2> -i <bowtie2-index> \\ \n" +
 
         "\t\t\t-q <forward.truncated.fq.gz> -r <reverse.truncated.fq.gz> \\ \n" +
@@ -397,7 +352,7 @@ public class Commandline {
     private static void printHelpHeader() {
         String version=getVersion();
         System.out.println();
-        System.out.println("Diachromatic (Analysis of Differential Capture Hi-C Interactions)\n"+
+        System.out.println("Diachromatic (Analysis of Directed Capture Hi-C Interactions)\n"+
                 "Version: "+version + "\n\n");
     }
 
@@ -409,11 +364,9 @@ public class Commandline {
     {
         printHelpHeader();
         System.out.println(message + "\n\n"+
-        "Usage: java -jar Diachromatic.jar <command> [options]\n\n"+
+        "Usage: java -jar Diachromatic.jar <subcommand> [options]\n\n"+
         "Available commands:\n\n");
 
-        printDigestHelp(false);
-        System.out.println();
         printTruncateHelp(false);
         System.out.println();
         printAlignHelp(false);
