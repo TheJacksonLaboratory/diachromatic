@@ -192,7 +192,7 @@ public class ReadPair {
      * @param digestmap a align of all digests
      * @throws DiachromaticException
      */
-    ReadPair(SAMRecord f, SAMRecord r, Map<String, List<Digest>> digestmap, DigestMap digestMap, Integer lowerFragSize, Integer upperFragSize) throws DiachromaticException {
+    ReadPair(SAMRecord f, SAMRecord r, Map<String, List<Digest>> digestmap, DigestMap digestMap, Integer lowerFragSize, Integer upperFragSize, boolean stringentUnique) throws DiachromaticException {
 
         R1 = f;
         R2 = r;
@@ -218,13 +218,32 @@ public class ReadPair {
         // check if both reads could be uniquely mapped
         multimapped_read1 = false;
         multimapped_read2 = false;
+
         if (R1.getAttribute("XS") != null) {
-            multimapped_read1 = true;
-            this.isPaired = false;
+            // there is more than one alignment
+            if(stringentUnique) {
+                // in the stringent mode this enough to be multi-mapped
+                multimapped_read1 = true;
+                this.isPaired = false;
+            } else {
+                if(R1.getMappingQuality()<30 && Math.abs((int)R1.getAttribute("XS")-(int)R1.getAttribute("AS"))<10) {
+                    multimapped_read1 = true;
+                    this.isPaired = false;
+                }
+            }
         }
         if (R2.getAttribute("XS") != null) {
-            multimapped_read2 = true;
-            this.isPaired = false;
+            // there is more than one alignment
+            if(stringentUnique) {
+                // in the stringent mode this enough to be multi-mapped
+                multimapped_read2 = true;
+                this.isPaired = false;
+            } else {
+                if(R2.getMappingQuality()<30 && Math.abs((int)R2.getAttribute("XS")-(int)R2.getAttribute("AS"))<10) {
+                    multimapped_read2 = true;
+                    this.isPaired = false;
+                }
+            }
         }
 
         // check if both reads are not on random chromosomes

@@ -69,6 +69,8 @@ public class Commandline {
     private Integer lowerFragSize = 150;
     private Integer upperFragSize = 800;
 
+    private boolean useStringentUniqueSettings = false;
+
     public Commandline(String args[]) {
         final CommandLineParser cmdLineGnuParser = new DefaultParser();
 
@@ -128,6 +130,9 @@ public class Commandline {
             }
             if (commandLine.hasOption("s")) {
                 this.stickyEnds=true;
+            }
+            if (commandLine.hasOption("bsu")) {
+                this.useStringentUniqueSettings=true;
             }
             if (commandLine.hasOption("h")) {
                 this.doHelp=true;
@@ -232,7 +237,8 @@ public class Commandline {
                         threadNum,
                         lowerFragSize,
                         upperFragSize,
-                        filenamePrefix
+                        filenamePrefix,
+                        useStringentUniqueSettings
                         );
             } else {
                 printUsage(String.format("Did not recognize command: %s", mycommand));
@@ -269,6 +275,7 @@ public class Commandline {
                .addOption("r", "fastq-r2", true, "path to reverse FASTQ input file") // truncate and align specific option
                .addOption("b", "bowtie-path", true, "path to bowtie2") // align specific option
                .addOption("i", "bowtie-index", true, "path to bowtie2 index") // align specific option
+               .addOption("bsu", "bowtie-stringent-unique", false, "use stringent settings for definition of uniquely mapped reads")
                .addOption("j", "bad", false, "output bad (rejected) reads to separated file") // align specific option
                .addOption("d", "digest", true, "path to GOPHER digest file") // align (and count) specific option
                .addOption("a", "active-digests", true, "path to BED file with active digests (overwrites information in digest file)") // align (and count) specific option
