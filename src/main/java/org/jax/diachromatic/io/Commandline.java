@@ -345,6 +345,7 @@ public class Commandline {
 
         "\t\t<bowtie2>: path to bowtie2 executable\n" +
         "\t\t<bowtie2-index>: path to bowtie2 index for digested genome\n" +
+        "\t\t<bowtie-stringent-unique>: use stringent settings for definition of uniquely mapped reads\n" +
         "\t\t<forward.truncated.fq.gz>: path to the truncated forward gzipped FASTQ file\n" +
         "\t\t<reverse.truncated.fq.gz>: path to the truncated reverse gzipped FASTQ file\n" +
         "\t\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII or HindIII)\n" +
