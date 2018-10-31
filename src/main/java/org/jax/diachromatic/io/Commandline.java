@@ -9,7 +9,6 @@ import org.apache.logging.log4j.Logger;
 
 import org.apache.commons.cli.*;
 import org.jax.diachromatic.command.Command;
-import org.jax.diachromatic.command.DigestCommand;
 import org.jax.diachromatic.command.AlignCommand;
 import org.jax.diachromatic.command.TruncateCommand;
 import org.jax.diachromatic.exception.DiachromaticException;

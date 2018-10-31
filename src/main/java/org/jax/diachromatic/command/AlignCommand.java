@@ -39,10 +39,10 @@ public class AlignCommand extends Command {
     private String pathToInputFastq2 = null;
 
 
-    /** Path to the genome digest file produced by {@link org.jax.diachromatic.command.DigestCommand}.*/
+    /** Path to the genome digest file produced by GOPHER.*/
     private String digestFile = null;
 
-    /** Path to BED file containing the coordinates of active digests {@link org.jax.diachromatic.command.DigestCommand}.*/
+    /** Path to BED file containing the coordinates of active digests.*/
     private String activeDigestsFile = null;
 
     //** if this is set, an extra BAM file containg the rejected read pairs will be created */

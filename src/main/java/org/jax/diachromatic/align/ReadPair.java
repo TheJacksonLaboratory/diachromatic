@@ -441,9 +441,7 @@ public class ReadPair {
 
     /**
      * Adjacent fragments have the same orientation and thus the reads have opposite orientation
-     * We know the fragments are adjacent because their fragment numbers differ by 1. Recall that
-     * the {@link org.jax.diachromatic.command.DigestCommand} assigns fragments a fragment number so that
-     * adjacent fragments are number i and i+1.
+     * We know the fragments are adjacent because their fragment numbers differ by 1.
      *
      * @return true if the two read fragments are religated
      */
