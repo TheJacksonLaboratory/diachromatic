@@ -1,33 +1,36 @@
 
-Diachromatic: Creating an in silico restriction digest map of the genome
-========================================================================
+Creating an in silico restriction digest map for Diachromatic using GOPHER
+==========================================================================
 
-The Capture Hi-C (CHC) protocol involves the restriction digestion of a sample
-and the downstream analysis assigns reads to pairs of restriction fragments
-(See todo for details on the CHC protocol). Therefore, the first step of
-the diachromatic analysis pipeline is the preparation of an in silico digest
-of the genome corresponding to the sample and the restriction enzyme used in
-the experiment.
+The Capture Hi-C (CHC) protocol involves the restriction digestion of a sample and the downstream analysis assigns
+reads to pairs of restriction fragments. Therefore, the ``align`` subcommand of Diachromatic requires a list of all
+restriction fragments that result from the in silico digestions of a given genome with the chosen enzyme or enzymes.
+Such lists can be generated using the GOPHER_ software for design of capture Hi-C viewpoints and probes. The TSV
+formatted file exported from GOPHER can be passed to Diachromatic using the ``-m`` or ``digest`` option.
 
-Performing the digest
-~~~~~~~~~~~~~~~~~~~~~
-The command to perform in silico digestion is: ::
+.. _GOPHER: https://github.com/TheJacksonLaboratory/Gopher
 
-    $ java -jar Diachromatic.jar digest -g <path> -e <enzyme> [-o <outfile>]
+Performing the in silico digest using GOPHER
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The meaning of the options is
-   * -g <path> The path to the directory with genome FASTA files (one per chromosome; for instance, the genome fasta files downloaded from the UCSC Genome Browser are in this format). The FASTA files need to be unzipped.
-   * -e <enzyme> The symbol of the restriction enzyme used in the Capture Hi-C experiment.
-   * [-o <outfile>] Name and path of the output file. This flag is optional and if it is not passed, the default name of ``diachromaticDigest.txt`` will be used.
+If the GOPHER software was used for the design of the given capture Hi-C experiment, you can just open the corresponding
+GOPHER project and export the required file via the export menu. In such cases the exported file also includes the
+information about active and inactive digests, i.e. if there are probes associated with given digests.
 
-For example, the following command will digest the genome files found in the directory ``hg19`` using
-the restriction enzyme ``HindIII`` and will produce an output file called ``hg19HindIIIdigest.txt``. ::
+.. figure:: img/output_export.png
 
+If you did not perform the design using GOPHER, you will have to `setup a new project`_.
+It's sufficient to specify the parameters within the *Data sources* section and to selected used enzyme within the
+*Design parameters* section. If you prepare the digest map in this way, all digests will be marked as inactive.
 
-   $ java -jar Diachromatic.jar digest -g /path/to/hg19/hg19.fa -e HindIII -o hg19HindIIIdigest.txt
+.. _setup a new project: https://gopher.readthedocs.io/en/latest/02_gui_data.html
 
-**Note: Indexing of FASTA file does not work (Issue #33). A possible workaround for now is to build an index with samtools faidx and the run the digest command of Diachromatic. The existing index will not be overwritten.**
+.. figure:: img/digest_parameters.png
 
+In order to retrospectively mark digests as active an additional BED file can be passed to Diachromatic using the
+option ``-a``. This file should contain all digests that are desired to be marked as active. The coordinates of the digests
+have to be exactly the same as in the digest file produced by GOPHER. It is useful to use ``bedtools intersect`` in order
+to make sure that the coordinates of the digests are identical between the two files.
 
 Output file format
 ~~~~~~~~~~~~~~~~~~
