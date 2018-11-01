@@ -32,9 +32,41 @@ option ``-a``. This file should contain all digests that are desired to be marke
 have to be exactly the same as in the digest file produced by GOPHER. It is useful to use ``bedtools intersect`` in order
 to make sure that the coordinates of the digests are identical between the two files.
 
-Output file format
-~~~~~~~~~~~~~~~~~~
-The output file has the following format.
+Format of the digest file
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
++--------+-------------------------+----------+
+| Column | Name                    | Example  |
++--------+-------------------------+----------+
+| 1      | Chromosome              | chr1     |
++--------+-------------------------+----------+
+| 2      | Fragment_Start_Position | 18376    |
++--------+-------------------------+----------+
+| 3      | Fragment_End_Position   | 18392    |
++--------+-------------------------+----------+
+| 4      | Fragment_Number         | 42       |
++--------+-------------------------+----------+
+| 5      | 5'_Restriction_Site     | DpnII    |
++--------+-------------------------+----------+
+| 6      | 3'_Restriction_Site     | DpnII    |
++--------+-------------------------+----------+
+| 7      | Length                  | 1245     |
++--------+-------------------------+----------+
+| 8      | 5'_GC_Content           | 0.500    |
++--------+-------------------------+----------+
+| 9      | 3'_GC_Content           | 0.500    |
++--------+-------------------------+----------+
+| 10     | 5'_Repeat_Content       | 0.138    |
++--------+-------------------------+----------+
+| 11     | 3'_Repeat_Content       | 0.126    |
++--------+-------------------------+----------+
+| 12     | Selected                | F (or T) |
++--------+-------------------------+----------+
+| 13     | 5'_Probes               | 2        |
++--------+-------------------------+----------+
+| 14     | 3'_Repeat_Content       | 0        |
++--------+-------------------------+----------+
 
 
 +----------------+----------+---------+--------+----------+----------+
