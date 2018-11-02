@@ -1,32 +1,29 @@
 
-Diachromatic: Preprocessing (truncating) raw reads
-========================================================================
+Truncating unaligned reads
+==========================
 
-The next part of the pipeline truncates part of reads that contain the ligation sequence.
+Chimeric fragments and reads
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Truncation procedure
-~~~~~~~~~~~~~~~~~~~~
-Valid Hi-C pairs are chimeric reads that require special processing that is distinct from
-pipelines for many other genomic analysis techniques such as exome sequencing or ChIP-seq.
-The chimeric reads that result from the Hi-C procedure cosist one fragment each from
-two different regions of the genome. Capture Hi-C (CHC) is similar except that a capture procedure
-is used to enrich regions of interest (usually promoters). Thus, with CHC typical valid
-read pairs may comprise a DNA sequence from a promoter and a DNA sequence from an enhancer
-that is regulating the promoter.
+Valid Hi-C read pairs stem from chimeric fragments consisting of DNA from two different loci linked by the ligation
+junction. Depending on whether the sticky ends of the dangling ends were filled or not, the ligation junction consist
+of either one or two restriction enzyme cutting motifs.
+
+.. figure:: img/sticky_and_blunt_ends.png
 
 
-In most cases, one of the reads of the read pair will map
-to a single ligation fragment, and the reverse read will map to another fragment.
-However, this is not always true because the Hi-C ligation junction can be located within one of the sequenced reads.
-This step of the pipeline attempts to address this situation (which could lead to the
-read with the Hi-C junction not being mapped during the mapping
-step), by deleting the sequence that is downstream of the enzyme recognition site.
+
+In most cases, one of the reads of the read pair will map to a single ligation fragment, and the reverse read will map
+to another fragment. However, this is not always true because the Hi-C ligation junction can be located within one of
+the sequenced reads. This step of the pipeline attempts to address this situation (which could lead to the read with
+the Hi-C junction not being mapped during the mapping step), by deleting the sequence that is downstream of the enzyme
+recognition site.
 
 
 For example, if the forward read is entirely contained within one ligation fragment and the reverse read starts in
-another fragment but contains the ligation junction and then continues and finishes with part of the fragment of the forward read, then the
-truncation step will remove the part of the reverse read that maps
-to the first ligation fragment.
+another fragment but contains the ligation junction and then continues and finishes with part of the fragment of the
+forward read, then the truncation step will remove the part of the reverse read that maps to the first ligation
+fragment.
 
 Running Diachromatic's Truncation Step
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
