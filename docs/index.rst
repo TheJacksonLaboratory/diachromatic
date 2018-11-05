@@ -10,7 +10,7 @@ Welcome to Diachromatic's documentation!
    :caption: Contents:
 
    In silico digest <digest>
-   Truncating raw reads <truncate>
+   Truncation of chimeric reads <truncate>
    Mapping truncated reads <mapping>
    testing
 

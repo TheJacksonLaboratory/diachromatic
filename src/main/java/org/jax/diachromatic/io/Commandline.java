@@ -311,12 +311,13 @@ public class Commandline {
             System.out.println("\ttruncate searches for Hi-C religation sequences and truncates reads accordingly");
         }
         System.out.println("Truncate:\n" +
-        "\tjava -jar Diachromatic.jar truncate -q <forward.fq.gz> \\ \n"+
-            "\t\t\t-r <reverse.fq.gz> -e <enzyme> [-out-dir <output_directory>] [-out-prefix <filename_prefix>]\n\n"+
+        "\tjava -jar Diachromatic.jar truncate -q <forward.fq.gz> -r <reverse.fq.gz> -e <enzyme> \\ \n"+
+            "\t\t\t[-sticky-ends] [-out-dir <output_directory>] [-out-prefix <filename_prefix>]\n\n"+
 
             "\t\t<forward.fq.gz>: path to the forward FASTQ file (may or may not be compressed with gzip)\n"+
             "\t\t<reverse.fq.gz>: path to the reverse FASTQ file (may or may not be compressed with gzip)\n"+
             "\t\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII)\n"+
+            "\t\t<true|false>: no fill-in of sticky ends was performed (Default: false)\n"+
             "\t\t<output_directory>: directory containing the output of the truncate command (Default: " + DEFAULT_OUTPUT_DIRECTORY + ")\n"+
             "\t\t<filename_prefix>: prefix for all generated files in output directory (Default: " + DEFAULT_FILENAME_PREFIX + ")\n");
     }
