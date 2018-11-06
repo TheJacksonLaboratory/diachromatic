@@ -4,43 +4,44 @@
    contain the root `toctree` directive.
 
 Welcome to Diachromatic's documentation!
-===============================
+========================================
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   In silico digest <digest>
-   Truncation of chimeric reads <truncate>
-   Mapping truncated reads <mapping>
+   In silico digest of the genome <digest>
+   Truncation of chimeric Hi-C reads <truncate>
+   Mapping paired-end Hi-C reads <mapping>
    testing
 
-Diachromatic
-~~~~~~~~~~~~
-Diachromatic (Differential Analysis of Chromatin Interactions by Capture)
-implements a capture Hi-C preprocessing pipeline followed by analysis of differential chromatin interactions
+
+Differential Analysis of Chromatin Interactions by Capture (Diachromatic)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Diachromatic_ implements a capture Hi-C preprocessing pipeline followed by analysis of differential chromatin interactions
 ("loopings").  Diachromatic is a Java application. The preprocessing pipeline is based on the
 Perl scripts of HiCUP and produces comparable results. Diachromatic is designed to work
-with the capture probes as designed by VPV (see next section).
+with the capture probes as designed by GOPHER (see next section).
+
+.. _Diachromatic: https://github.com/TheJacksonLaboratory/diachromatic
 
 
+Generator Of Probes for capture Hi-C Expriments at high Resolution (GOPHER)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ViewPointViewer (VPV)
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-VPV is a Java application designed to help design capture probes
+GOPHER_ is a Java application designed to help design capture probes
 for capture Hi-C and related protocols. Capture Hi-C (CHC) is based
 on the Hi-C protocol but uses capture baits (similar to whole-exome sequencing) to enrich a set of viewpoints.
 Commonly, the viewpoints represent proximal promoter regions (surrounding the transcription start site [TSS]) of
-genes of interest or of all protein-coding genes.
+genes of interest or of all protein-coding genes. CHC detects interactions between viewpoint regions and distal
+enhancers (or other genomic regions) and has been most commonly performed with the 4-cutter DpnII or with the 6-cutter
+HindIII.
 
-- CHC detects interactions between viewpoint regions and distal enhancers (or other genomic regions).
-- CHC has been most commonly performed with the 4-cutter DpnII or with the 6-cutter HindIII.
-- For more information, see the VPV GitHub page at https://github.com/TheJacksonLaboratory/VPV.
-
+.. _GOPHER: https://github.com/TheJacksonLaboratory/Gopher
 
 
 Quick start
-~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~
 Diachromatic requires Java 8 or higher to run. The source code of Diachromatic can be downloaded
 from the Diachromatic GitHub repository and the application can be built using maven (see the GitHub page for instructions).
 
@@ -50,7 +51,7 @@ To build the application, clone the repository and create the Java app with mave
     $ cd diachromatic
     $ mvn package
 
-To test whether the build process was successful, enter the following command. ::
+To test whether the build process was successful, enter the following command: ::
 
     $ java -jar target/target/diachromatic-0.0.2.jar
 
@@ -67,7 +68,3 @@ following command. ::
 
 The remaining pages of this site provide detailed explanations and tips for the various steps of preprocessing and analyzing
 capture Hi-C data with diachromatic.
- 
-
-
-

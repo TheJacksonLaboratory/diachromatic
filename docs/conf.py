@@ -45,7 +45,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'diachromatic'
+project = u'Diachromatic'
 copyright = u'2018, Peter Hansen, Peter Robinson'
 author = u'Peter Hansen, Peter Robinson'
 

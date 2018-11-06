@@ -27,8 +27,7 @@ Running Diachromatic's truncation subcommand
 
 Use the following command to run the truncation step. ::
 
-    $ java -jar Diachromatic.jar truncate -q test1.fastq -r test2.fastq -e HindIII -s suffix [--outdir <directory>]
-
+    $ java -jar Diachromatic.jar truncate -q test1.fastq -r test2.fastq -e HindIII
 
 
 The following table lists all possible arguments.

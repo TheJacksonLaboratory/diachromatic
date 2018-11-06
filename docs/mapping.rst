@@ -1,17 +1,12 @@
-Diachromatic: Mapping the truncated reads
-========================================================================
 
-The next part of the pipeline maps the truncated reads and performs Q/C and filtering.
+Mapping of paired-end Hi-C reads
+================================
 
-Mapping procedure
-~~~~~~~~~~~~~~~~~
-We now align the truncated FASTQ files to the genome. We will start for now with
-the test files from the HiCUP distribution, which are human sequences. We will
-align to the hg37 genome with bowtie 2 (http://bowtie-bio.sourceforge.net/bowtie2/index.shtml).
+Preparation of the bowtie2 index
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We download the prebuilt index for the human hg37 genome, H. sapiens, UCSC hg19 (3.5 GB) from the bowtei2 website.
-The index needs to be unzipped. ::
-
+The prebuilt ``bowtie2`` indices for human hg19 (3.5 GB) and other genome builds can be downloaded from the
+`bowtei2 website`_. Move the downloaded archive to an appropriate on your computer and unpack with: ::
 
     $ unzip hg19.zip
         Archive:  hg19.zip
@@ -23,16 +18,62 @@ The index needs to be unzipped. ::
         inflating: hg19.rev.2.bt2
         inflating: make_hg19.sh
 
-We will call the path to the directory where the index was unpacked /path/to/bowtie2index/
+We will call the path to the directory where the index was unpacked **/path/to/bowtie2index/**.
+
+.. _bowtei2 website: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
 
 
+Independent mapping of forward and reverse paired-end reads using bowtie2
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The two reads of any given valid Hi-C read pair stem from two different interacting genomic regions that can be
+separated by a large number of nucleotides within the same chromosome (**cis interactions**) or even be located on
+different chromosomes (**trans interactions**). For this reason, the distance between the two 5' ends of the reads can
+no longer be interpreted as the *insert size*, and the forward (R1) and reverse (R2) reads have to be mapped
+independently.
+
+Diachromatic executes ``bowtie2`` two times with the ``--very-sensitive`` option. Individual reads mapping to multiple locations
+are typically discarded. Diachromatic provides two levels of stringency
+for the definition of multi-mapped reads:
+    1. *Very stringent definition:* There is no second best alignment for the given read. In this case the line in the SAM file produced by ``bowtie2`` contains no ``XS`` tag. Use Diachromatic's ``--bowtie-stringent-unique`` or ``-bsu`` option in order to use this level of stringency.
+    2. *Less stringent definition:* There can be a second best alignment, but the score of the alignment needs to e greater than 30 and the difference of the mapping scores between the best and second best alignment must be greater than 10. This definition was adopted from HiCUP (since v0.6.0). Diachromatic uses this option by default.
+
+
+Pairing of proper mapped read pairs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The independently mapped reads are written to two temporary SAM files, whereby the order of reads is the same for both
+files, i.e. two reads of any given line consitute a pair. I a next step Diachromatic iterates simultaneously over the
+two SAM files. Only pairs for which both reads could be uniquely mapped are retained and all other pairs are discarded.
+
+Categorization of proper mapped read pairs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Depending on the different formation processes, Diachromatic takes into consideration five different categories
+of reads pairs:
+
+    1. Valid interactions between regions on the same chromosome (cis)
+    2. Self-ligation
+    3. Cross-ligation of cross-linked protein-DNA complexes from the same chromosome
+    4. Valid interactions between chromosomes (trans)
+    5. Cross-ligation of cross-linked protein-DNA complexes from different chromosomes
+
+We found no criterion that could be used in order to distinguish read pairs that emerged from cross-ligation events
+from others. However, we generally notice a large fraction of trans *interactions* between pairs of restriction
+fragments consisting of only one read pair. We believe that those read pairs mainly result from cross-ligation events
+and use their total number in order to calculate a global cross-ligation coefficient (CLC).
+
+We also found no accurate way to distinguish read pairs that emerged from very short valid range contacts and
+self-ligation events.
+
+Instead, we estimate the average size of chimeric fragments and use this size as a self-ligation threshold.
 
 
 Performing the mapping and Q/C step
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Use the following command: ::
 
-    $ java -jar Diachromatic.jar map -b <bowtie2> -i <bowtie2-index> -q <fastq1> -r <fastq2> -d <digest> [-o <outfile>]
+    $ java -jar Diachromatic.jar align -b <bowtie2> -i <bowtie2-index> -q <fastq1> -r <fastq2> -d <digest> [-o <outfile>]
 
 The meaning of the options is:
     * -b <bowtie2> Path to the bowtie2 executable
