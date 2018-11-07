@@ -2,27 +2,6 @@
 Mapping of paired-end Hi-C reads
 ================================
 
-Preparation of the bowtie2 index
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The prebuilt ``bowtie2`` indices for human hg19 (3.5 GB) and other genome builds can be downloaded from the
-`bowtei2 website`_. Move the downloaded archive to an appropriate on your computer and unpack with: ::
-
-    $ unzip hg19.zip
-        Archive:  hg19.zip
-        inflating: hg19.1.bt2
-        inflating: hg19.2.bt2
-        inflating: hg19.3.bt2
-        inflating: hg19.4.bt2
-        inflating: hg19.rev.1.bt2
-        inflating: hg19.rev.2.bt2
-        inflating: make_hg19.sh
-
-We will call the path to the directory where the index was unpacked **/path/to/bowtie2index/**.
-
-.. _bowtei2 website: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
-
-
 Independent mapping of forward and reverse paired-end reads using bowtie2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -46,32 +25,43 @@ The independently mapped reads are written to two temporary SAM files, whereby t
 files, i.e. two reads of any given line consitute a pair. I a next step Diachromatic iterates simultaneously over the
 two SAM files. Only pairs for which both reads could be uniquely mapped are retained and all other pairs are discarded.
 
-Categorization of proper mapped read pairs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Categorization of mapped read pairs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Depending on the different formation processes, Diachromatic takes into consideration five different categories
-of reads pairs:
+Depending on the different formation processes of Hi-C fragments, Diachromatic takes into consideration different
+categories of reads pairs.
 
-    1. Valid interactions between regions on the same chromosome (cis)
-    2. Self-ligation
-    3. Cross-ligation of cross-linked protein-DNA complexes from the same chromosome
-    4. Valid interactions between chromosomes (trans)
-    5. Cross-ligation of cross-linked protein-DNA complexes from different chromosomes
+.. figure:: img/fragment_categories.png
+    :align: center
+
+Besides the informative valid read pairs, there are also various kinds of artifact read pairs:
+
+    1. **Dangling ends:** If the ends of the two interacting restriction fragments fail to ligate, this will result in fragments that either start or end with the recognition motif of the restriction enzyme. Consequently, also one of the two reads of the corresponding read pair will have the motif at the 5' end.
+
+    2. **Self-ligation:** If within the protein-DNA complexes the two ends of the same fragment ligate, this will result in a fragments that cannot readily be distinguished from valid Hi-C fragments arising from very short range interactions.
+
+    3. **Cross-ligation:** If the ends of two different protein-DNA complexes ligate, this will result in fragments that cannot be distinguished from valid Hi-C fragments.
 
 We found no criterion that could be used in order to distinguish read pairs that emerged from cross-ligation events
-from others. However, we generally notice a large fraction of trans *interactions* between pairs of restriction
+from valid read pairs. However, we generally notice a large fraction of trans *interactions* between pairs of restriction
 fragments consisting of only one read pair. We believe that those read pairs mainly result from cross-ligation events
 and use their total number in order to calculate a global cross-ligation coefficient (CLC).
 
-We also found no accurate way to distinguish read pairs that emerged from very short valid range contacts and
-self-ligation events.
+We also found no accurate way to distinguish between read pairs that emerged from very short range contacts and
+self-ligation events. Instead, we use the fact that self-ligation must result only in inward pointing read pairs.
+Inward pointing read pairs whose 5' ends have a distance smaller than a user-defined **self-liagtion threshold**
+(``-slt``) are flagged as self-ligation artifacts and not used for downstream analyses. The fragment length estimation
+routine of the `peak caller Q`_ be used to estimate the average fragment size of the Hi-C library which is a
+suitable value for the self-ligation threshold.
 
-Instead, we estimate the average size of chimeric fragments and use this size as a self-ligation threshold.
+.. _peak caller Q: http://charite.github.io/Q/
 
 
-Performing the mapping and Q/C step
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Use the following command: ::
+
+Running Diachromatic's align subcommand
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use the following command to run the alignment and counting step. ::
 
     $ java -jar Diachromatic.jar align -b <bowtie2> -i <bowtie2-index> -q <fastq1> -r <fastq2> -d <digest> [-o <outfile>]
 
@@ -88,9 +78,16 @@ For instance, the following command will use bowtie2 to map the two FASTQ files 
 
     $ java -jar target/diachromatic-0.0.2.jar map -b /usr/bin/bowtie2 -i btindex/hg19 -q hindIIIhg19chc/test_dataset1.hindIIIhg19.fastq -r hindIIIhg19chc/test_dataset2.hindIIIhg19.fastq -d hg19HindIIIdigest.txtr -o hindIII
 
+
+Output files
+~~~~~~~~~~~~
+
 Two output files will be produced:
-    * ``diachromatic.valid.bam`` contains all uniquely mapped pairs. Known artifacts and duplicated reads are removed. This file can be used for downstream analyses.
-    * ``diachromatic.rejected.bam`` contains all pairs that show characteristics of known artifacts:
+
+    * ``prefix.valid.bam`` contains all uniquely mapped pairs. Known artifacts and duplicated reads are removed. This file can be used for downstream analyses.
+
+    * ``prefix.rejected.bam`` contains all pairs that show characteristics of known artifacts:
+
         * insert too long (Tag: ``TB``)
         * insert too short (Tag: ``TS``)
         * circularized read (Tag: ``SL``)
@@ -99,9 +96,10 @@ Two output files will be produced:
         * re-ligation (Tag: ``RL``)
         * contiguous (Tag: ``CT``)
 
+    * ``prefix.align.stats.``
+
 Read pairs for which one read cannot be mapped or cannot be mapped uniquely (bowtie2: XS:i tag exists) will be discarded completely. Statistics about the numbers of unmappable reads, multimappable reads, and artifact pairs will be written to the screen.
 
 
-todo -- demand that at least one read maps to one of the VPV target regions
 
 

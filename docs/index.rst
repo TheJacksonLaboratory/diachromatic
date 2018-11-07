@@ -66,5 +66,27 @@ following command. ::
 
   $ sudo apt-get install bowtie2
 
+
+Preparation of the bowtie2 index
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The prebuilt ``bowtie2`` indices for human hg19 (3.5 GB) and other genome builds can be downloaded from the
+`bowtei2 website`_. Move the downloaded archive to an appropriate on your computer and unpack with: ::
+
+    $ unzip hg19.zip
+        Archive:  hg19.zip
+        inflating: hg19.1.bt2
+        inflating: hg19.2.bt2
+        inflating: hg19.3.bt2
+        inflating: hg19.4.bt2
+        inflating: hg19.rev.1.bt2
+        inflating: hg19.rev.2.bt2
+        inflating: make_hg19.sh
+
+We will call the path to the directory where the index was unpacked **/path/to/bowtie2index/**.
+
+.. _bowtei2 website: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
+
+
 The remaining pages of this site provide detailed explanations and tips for the various steps of preprocessing and analyzing
 capture Hi-C data with diachromatic.
