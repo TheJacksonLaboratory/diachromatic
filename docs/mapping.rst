@@ -29,7 +29,16 @@ Categorization of mapped read pairs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Depending on the different formation processes of Hi-C fragments, Diachromatic takes into consideration different
-categories of reads pairs.
+categories of reads pairs. Shearing of re-ligated DNA results in hybrid digests consisting of DNA from two
+different genomic loci. Those fragments correspond to valid interactions.
+
+Besides that, there are also fragments that do not contain a ligation junction either because they originate from
+genomic regions between cutting sites or because the ends failed to re-ligate. Such fragments must result in inward
+pointing pairs of mapped reads, and the length of the fragment corresponds to the distance between the 5' end positions
+of the two reads. In Diachromatic, inward pointing read pairs whose 5' end positions have a distance smaller than a
+given size threshold are categorized as *unligated-internal*. If the recognition motif of the restriction enzyme occurs
+at one 5' ends of the two reads, the pair is categorized as *unligated-dangling*.
+
 
 .. figure:: img/fragment_categories.png
     :align: center
