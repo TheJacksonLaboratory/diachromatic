@@ -1,19 +1,22 @@
 package org.jax.diachromatic.digest;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
+
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 public class RestrictionEnzymeTest {
     private static RestrictionEnzyme hindIII;
     private static List<RestrictionEnzyme> reList;
 
-    @BeforeClass
-    public static void setup() throws Exception {
+    @BeforeAll
+    public static void setup() {
         hindIII = new RestrictionEnzyme("HindIII", "A^AGCTT");
         reList=RestrictionEnzyme.parseRestrictionEnzymes();
     }

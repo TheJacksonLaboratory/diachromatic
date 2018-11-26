@@ -3,17 +3,19 @@ package org.jax.diachromatic.map;
 
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.util.Pair;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 /**
  * This class is designed to test specifically the ability of the classes {@link SAMPairer} and
@@ -35,7 +37,7 @@ public class ReadPairMappingTest {
 
     private static final boolean outputRejectedReads=false;
 
-    @BeforeClass
+    @BeforeAll
     public  static void init() throws DiachromaticException {
         ClassLoader classLoader = SAMPairerTest.class.getClassLoader();
         sam1 = classLoader.getResource("data/sam/forwardtest.sam").getFile();

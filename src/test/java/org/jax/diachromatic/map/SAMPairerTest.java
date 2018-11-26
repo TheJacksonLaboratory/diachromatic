@@ -1,20 +1,20 @@
 package org.jax.diachromatic.map;
 
-import com.sun.org.apache.regexp.internal.RE;
-import htsjdk.samtools.SAMRecord;
+
 import org.jax.diachromatic.exception.DiachromaticException;
-import org.jax.diachromatic.exception.DigestNotFoundException;
 import org.jax.diachromatic.util.Pair;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+
 
 public class SAMPairerTest {
 
@@ -33,7 +33,7 @@ public class SAMPairerTest {
 
     private static final boolean outputRejectedReads=false;
 
-    @BeforeClass
+    @BeforeAll
     public  static void init() throws DiachromaticException {
         ClassLoader classLoader = SAMPairerTest.class.getClassLoader();
         sam1 = classLoader.getResource("data/sam/forwardtest.sam").getFile();
@@ -118,12 +118,13 @@ public class SAMPairerTest {
 
     /**
      * An exception should be thrown if we look at a position that has no Digest.
-     * @throws DiachromaticException
      */
-    @Test(expected = DigestNotFoundException.class)
-    public void testDigestNotFound() throws DiachromaticException{
-        sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
-        DigestPair pair = sampairer.getDigestPair("crazyChromosome1", 1, 2, "wrongChromosome2", 3, 4);
+    @Test
+    public void testDigestNotFound() {
+        Assertions.assertThrows(DiachromaticException.class, () -> {
+            sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
+            DigestPair pair = sampairer.getDigestPair("crazyChromosome1", 1, 2, "wrongChromosome2", 3, 4);
+        });
     }
 
 
@@ -184,7 +185,7 @@ public class SAMPairerTest {
      * @throws DiachromaticException
      */
     @Test
-    public void testSelfLigation() throws DiachromaticException {
+    public void testSelfLigation() {
         sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
         ReadPair readpair = readpairmap.get("1_uniquelyAlignedRead");
         assertFalse(readpair.selfLigation());
@@ -241,7 +242,7 @@ public class SAMPairerTest {
 
     /** The insert of the seventh read pair is above threshold of 800. */
     @Test
-    public void testSetSamFlagsForCorrectPair() throws DiachromaticException {
+    public void testSetSamFlagsForCorrectPair() {
         ReadPair readpair =readpairmap.get("7_validRead1");
         SamBitflagFilter.debugDisplayBitflag(readpair.forward().getFlags());
         // before we pair, the flags are set only to zero.
