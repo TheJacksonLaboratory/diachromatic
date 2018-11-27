@@ -389,7 +389,7 @@ public class Aligner {
         logger.trace(outputTsvInteractionCounts);
         interactionMap.printInteractionCountsMapAsCountTable(outputTsvInteractionCounts);
 
-        interactionMap.printFragmentInteractionCountsMapAsCountTable(outputTsvInteractingFragmentCounts);
+        //interactionMap.printFragmentInteractionCountsMapAsCountTable(outputTsvInteractingFragmentCounts);
         validReadsWriter.close();
         if(outputRejectedReads) {
             rejectedReadsWriter.close();

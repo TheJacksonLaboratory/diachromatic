@@ -438,8 +438,11 @@ public class InteractionCountsMap {
      */
     public void deriveReadCountsAtInteractingFragments() {
 
+        int cnt=0;
         Iterator it = interaction_counts_map.entrySet().iterator();
         while (it.hasNext()) {
+            cnt++;
+            if(cnt%1000==0) {logger.trace(cnt);}
             Map.Entry pair = (Map.Entry)it.next();
             String hashKey = pair.getKey().toString();
             String[] fragKey = hashKey.split(";");
@@ -491,6 +494,8 @@ public class InteractionCountsMap {
      * at the interacting fragments individual conditions.
      */
     public void printFragmentInteractionCountsMapAsCountTable(String interactingFragmentsCountsTableFileName) throws FileNotFoundException {
+
+        logger.trace("Hurz!!");
 
         // derive counts
         this.deriveReadCountsAtInteractingFragments();
