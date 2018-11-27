@@ -4,7 +4,7 @@ Testing
 This document contains a summary of how some of the unit tests were designed. Probably this page can/should be
 deleted before publication.
 
-HiCup
+HiCUP
 ~~~~~
 HiCUp is currently a standard tool for capture Hi-C Q/C and preprocessing and much of the preprocuessing
 for diachromatic is based on Hicup (and we cite it). Here is how Hicup was used to generate results from

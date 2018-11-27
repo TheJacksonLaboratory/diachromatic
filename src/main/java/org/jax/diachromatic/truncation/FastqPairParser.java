@@ -5,9 +5,7 @@ import htsjdk.samtools.fastq.FastqRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 
 import org.jax.diachromatic.exception.DiachromaticException;
@@ -15,7 +13,8 @@ import org.jax.diachromatic.util.Pair;
 
 
 /**
- * Parse paired end FASTQ read files. This class will read un g-zipped files.
+ * Parse paired end FASTQ read files. This class will read g-zipped files.
+ * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
  */
 public class FastqPairParser {
     private static final Logger logger = LogManager.getLogger();
@@ -31,142 +30,76 @@ public class FastqPairParser {
      * Number of reads from file 1 that got truncated during processing.
      */
     private int nReadOneTruncated;
-    /**
-     * Number of reads from file 2 that got truncated during processing.
-     */
+    /** Number of reads from file 2 that got truncated during processing. */
     private int nReadTwoTruncated;
-    /**
-     * Total number of reads from each file that got processed.
-     */
+    /** Total number of reads from each file that got processed.*/
     private int nReadsProcessed;
-    /**
-     * A buffered reader for {@link #fastqFile1}.
-     */
-    private BufferedReader br1;
-    /**
-     * A buffered reader for {@link #fastqFile2}.
-     */
-    private BufferedReader br2;
-
-
+    /** FASTQ reader for the forward reads. */
     private FastqReader fastQreader1;
-
+    /** FASTQ reader for the reverse reads. */
     private FastqReader fastQreader2;
+    /** Number at which we show logger trace messages (every BLOCKSIZE reads)*/
+    private final int BLOCKSIZE=200_000;
 
 
     /**
      * This is used to store the last processed pair of reads roughly in the style of an iterator.
      */
-    private Pair<FastQRecord, FastQRecord> currentPair = null;
+    private Pair<PotentiallyTruncatedFastQRecord, PotentiallyTruncatedFastQRecord> currentPair = null;
     /**
      * This is the Hi-C ligation sequence that is created from the restriction enzyme.
      */
     private String ligationSequence = null;
 
-    public FastqPairParser(String file1, String file2, String ligationSequence) {
+    public FastqPairParser(String file1, String file2, String ligationSequence) throws DiachromaticException {
         fastqFile1 = file1;
         fastqFile2 = file2;
         logger.trace(String.format("Processing FASTQ files %s and %s with ligation sequence %s", file1, file2, ligationSequence));
         try {
             setUpIterator(ligationSequence);
         } catch (IOException e) {
+            String msg=String.format("I/O error setting up Fastq readers for %s and %s: %s",file1,file2,e.getMessage() );
             e.printStackTrace();
-            System.exit(1); // todo exception
+            throw new DiachromaticException(msg);
         }
     }
 
 
     private void setUpIterator(String ligSeq) throws IOException {
-        br1 = new BufferedReader(new FileReader(this.fastqFile1));
-        br2 = new BufferedReader(new FileReader(this.fastqFile2));
-//        fastQreader1 = new FastqReader(new File(fastqFile1));
-//        fastQreader2 = new FastqReader(new File(fastqFile2));
+        fastQreader1 = new FastqReader(new File(fastqFile1));
+        fastQreader2 = new FastqReader(new File(fastqFile2));
         this.ligationSequence = ligSeq;
         movePairIterator();
     }
 
-    public int getnReadsProcessed() {
+    int getnReadsProcessed() {
         return nReadsProcessed;
     }
 
-    public int getReadOneTruncated() {
+    int getReadOneTruncated() {
         return nReadOneTruncated;
     }
 
-    public int getReadTwoTruncated() {
+    int getReadTwoTruncated() {
         return nReadTwoTruncated;
     }
 
     /**
-     * This function will read four lines each from {@link #br1} and {@link #br2}. If there is a problem, it will
+     * This function will read the next FASTQ record each from {@link #fastQreader1} and {@link #fastQreader2}. If there is a problem, it will
      * set {@link #currentPair} to null and return. Otherwise, it will use the four lines from each file handle to
-     * create two {@link FastQRecord} objects and place them in {@link #currentPair}. If there is any exception thrown
-     * while constructing the {@link FastQRecord} objects, the function will set {@link #currentPair} to null and return
+     * create two {@link PotentiallyTruncatedFastQRecord} objects and place them in {@link #currentPair}. If there is any exception thrown
+     * while constructing the {@link PotentiallyTruncatedFastQRecord} objects, the function will set {@link #currentPair} to null and return
      *
-     * @throws IOException
+     * @throws IOException if either of the FastqReaders has a problem
      */
     private void movePairIterator() throws IOException {
+        if (fastQreader1.hasNext() && fastQreader2.hasNext()) {
+            FastqRecord fq1 = fastQreader1.next();
+            FastqRecord fq2 = fastQreader2.next();
 
-//        if (fastQreader2.hasNext()) {
-//            FastqRecord fastqRecord1 = fastQreader2.next();
-//        }
 
-
-        String read1[] = new String[4];
-        String read2[] = new String[4];
-        String line = null;
-        if (((line = br1.readLine()) != null) && line.startsWith("@")) { // TODO Error / exception if '@' not here
-            read1[0] = line;
-        } else {
-            currentPair = null;
-            return;
-        }
-        if ((line = br1.readLine()) != null) {
-            read1[1] = line;
-        } else {
-            currentPair = null;
-            return;
-        }
-        if (((line = br1.readLine()) != null) && line.startsWith("+")) {
-            read1[2] = line;
-        } else {
-            currentPair = null;
-            return;
-        }
-        if ((line = br1.readLine()) != null) {
-            read1[3] = line;
-        } else {
-            currentPair = null;
-            return;
-        }
-        if (((line = br2.readLine()) != null) && line.startsWith("@")) {
-            read2[0] = line;
-        } else {
-            currentPair = null;
-            return;
-        }
-        if ((line = br2.readLine()) != null) {
-            read2[1] = line;
-        } else {
-            currentPair = null;
-            return;
-        }
-        if (((line = br2.readLine()) != null) && line.startsWith("+")) {
-            read2[2] = line;
-        } else {
-            currentPair = null;
-            return;
-        }
-        if ((line = br2.readLine()) != null) {
-            read2[3] = line;
-        } else {
-            currentPair = null;
-            return;
-        }
-        // Now construct the FastQRecord objects
-        try {
-            FastQRecord fqr1 = new FastQRecord(read1);
-            FastQRecord fqr2 = new FastQRecord(read2);
+            PotentiallyTruncatedFastQRecord fqr1 = new PotentiallyTruncatedFastQRecord(fq1);
+            PotentiallyTruncatedFastQRecord fqr2 = new PotentiallyTruncatedFastQRecord(fq2);
             if (fqr1.truncateIfLigationSiteFound()) {
                 nReadOneTruncated++;
             }
@@ -175,25 +108,27 @@ public class FastqPairParser {
             }
             currentPair = new Pair<>(fqr1, fqr2);
             nReadsProcessed++;
-        } catch (DiachromaticException e) {
-            logger.error("Exception encountered while parsing FASTQ files: " + e.getMessage());
-            e.printStackTrace();
-            logger.error("Exiting program -- check the format of the input file");
-            System.exit(1);
+            if (nReadsProcessed % BLOCKSIZE == 0) {
+                logger.trace("Processed readpair number {}.", nReadsProcessed);
+            }
+        } else {
+            currentPair=null;
         }
-
-
-
     }
 
-
-    public boolean hasNextPair() {
+    /**
+     *
+     * @return true iff the FASTQ Readers have another read pair.
+     */
+    boolean hasNextPair() {
         return currentPair != null;
     }
 
-
-    public Pair<FastQRecord, FastQRecord> getNextPair() {
-        Pair<FastQRecord, FastQRecord> tmp = currentPair;
+    /**
+     * @return the next forward/reverse read pair
+     */
+    Pair<PotentiallyTruncatedFastQRecord, PotentiallyTruncatedFastQRecord> getNextPair() {
+        Pair<PotentiallyTruncatedFastQRecord, PotentiallyTruncatedFastQRecord> tmp = currentPair;
         try {
             movePairIterator();
         } catch (IOException e) {

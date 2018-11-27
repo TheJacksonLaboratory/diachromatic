@@ -26,6 +26,20 @@ public class RestrictionEnzyme implements Serializable {
 
     /** Same as site but without the caret symbol */
     private String plainSite;
+
+    /**
+     * Dangling end sequence, i.e. the ends of un-ligated sequences. This is the sequence between the cutting site and
+     * the last nucleotide of the recognition motif, e.g.
+     *
+     * for HindIII the recognition motif is A^AGCTT and the dangling end sequence is AGCTT
+     *
+     * or for DpnII the recognition motif is ^GATC and the dangling end sequence is GATC.
+     *
+     * The dangling end sequence is independent of the sticky ends option,
+     * i.e. whether a fill-in of the sticky ends was performed for Hi-C or not.
+     */
+    private String danglingEndSeq;
+
     /** The offset of the cutting site in this restriction enzyme. For instancen the offset for ^GATC is 0 and the
      * offset for A^AGCTT is 1.
      */
@@ -43,6 +57,14 @@ public class RestrictionEnzyme implements Serializable {
         if (i>=0) {
             plainSite=site.substring(0,i)+site.substring(i+1);
         }
+        int center=plainSite.length()/2;
+        if(offset<=center) {
+            this.danglingEndSeq=plainSite.substring(offset,plainSite.length());
+        }
+        else {
+            this.danglingEndSeq=plainSite.substring(plainSite.length()-offset,plainSite.length());
+        }
+        //logger.trace("name: " + name + "\tsite: " + site + "\tplainSite: " +  plainSite + "\toffset: " + offset + "\tcenter: " + center + "\tdanglingEndSeq: " + this.danglingEndSeq);
     }
 
     public String getName() {
@@ -60,6 +82,10 @@ public class RestrictionEnzyme implements Serializable {
     }
 
     public Integer getOffset() { return this.offset; }
+
+    public  String getDanglingEndSequence() {
+        return this.danglingEndSeq;
+    }
 
 
     public static List<RestrictionEnzyme> parseRestrictionEnzymes() {

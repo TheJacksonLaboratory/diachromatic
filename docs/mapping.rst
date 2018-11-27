@@ -1,38 +1,78 @@
-Diachromatic: Mapping the truncated reads
-========================================================================
 
-The next part of the pipeline maps the truncated reads and performs Q/C and filtering.
+Mapping of paired-end Hi-C reads
+================================
 
-Mapping procedure
-~~~~~~~~~~~~~~~~~
-We now align the truncated FASTQ files to the genome. We will start for now with
-the test files from the HiCUP distribution, which are human sequences. We will
-align to the hg37 genome with bowtie 2 (http://bowtie-bio.sourceforge.net/bowtie2/index.shtml).
+Independent mapping of forward and reverse paired-end reads using bowtie2
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We download the prebuilt index for the human hg37 genome, H. sapiens, UCSC hg19 (3.5 GB) from the bowtei2 website.
-The index needs to be unzipped. ::
+The two reads of any given valid Hi-C read pair stem from two different interacting genomic regions that can be
+separated by a large number of nucleotides within the same chromosome (**cis interactions**) or even be located on
+different chromosomes (**trans interactions**). For this reason, the distance between the two 5' ends of the reads can
+no longer be interpreted as the *insert size*, and the forward (R1) and reverse (R2) reads have to be mapped
+independently.
 
-
-    $ unzip hg19.zip
-        Archive:  hg19.zip
-        inflating: hg19.1.bt2
-        inflating: hg19.2.bt2
-        inflating: hg19.3.bt2
-        inflating: hg19.4.bt2
-        inflating: hg19.rev.1.bt2
-        inflating: hg19.rev.2.bt2
-        inflating: make_hg19.sh
-
-We will call the path to the directory where the index was unpacked /path/to/bowtie2index/
+Diachromatic executes ``bowtie2`` two times with the ``--very-sensitive`` option. Individual reads mapping to multiple locations
+are typically discarded. Diachromatic provides two levels of stringency
+for the definition of multi-mapped reads:
+    1. *Very stringent definition:* There is no second best alignment for the given read. In this case the line in the SAM file produced by ``bowtie2`` contains no ``XS`` tag. Use Diachromatic's ``--bowtie-stringent-unique`` or ``-bsu`` option in order to use this level of stringency.
+    2. *Less stringent definition:* There can be a second best alignment, but the score of the alignment needs to e greater than 30 and the difference of the mapping scores between the best and second best alignment must be greater than 10. This definition was adopted from HiCUP (since v0.6.0). Diachromatic uses this option by default.
 
 
-
-
-Performing the mapping and Q/C step
+Pairing of proper mapped read pairs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Use the following command: ::
 
-    $ java -jar Diachromatic.jar map -b <bowtie2> -i <bowtie2-index> -q <fastq1> -r <fastq2> -d <digest> [-o <outfile>]
+The independently mapped reads are written to two temporary SAM files, whereby the order of reads is the same for both
+files, i.e. two reads of any given line consitute a pair. I a next step Diachromatic iterates simultaneously over the
+two SAM files. Only pairs for which both reads could be uniquely mapped are retained and all other pairs are discarded.
+
+Categorization of mapped read pairs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Depending on the different formation processes of Hi-C fragments, Diachromatic takes into consideration different
+categories of reads pairs. Shearing of re-ligated DNA results in hybrid digests consisting of DNA from two
+different genomic loci. Those fragments correspond to valid interactions.
+
+Besides that, there are also fragments that do not contain a ligation junction either because they originate from
+genomic regions between cutting sites or because the ends failed to re-ligate. Such fragments must result in inward
+pointing pairs of mapped reads, and the length of the fragment corresponds to the distance between the 5' end positions
+of the two reads. In Diachromatic, inward pointing read pairs whose 5' end positions have a distance smaller than a
+given size threshold are categorized as *unligated-internal*. If the recognition motif of the restriction enzyme occurs
+at one 5' ends of the two reads, the pair is categorized as *unligated-dangling*.
+
+
+.. figure:: img/fragment_categories.png
+    :align: center
+
+Besides the informative valid read pairs, there are also various kinds of artifact read pairs:
+
+    1. **Dangling ends:** If the ends of the two interacting restriction fragments fail to ligate, this will result in fragments that either start or end with the recognition motif of the restriction enzyme. Consequently, also one of the two reads of the corresponding read pair will have the motif at the 5' end.
+
+    2. **Self-ligation:** If within the protein-DNA complexes the two ends of the same fragment ligate, this will result in a fragments that cannot readily be distinguished from valid Hi-C fragments arising from very short range interactions.
+
+    3. **Cross-ligation:** If the ends of two different protein-DNA complexes ligate, this will result in fragments that cannot be distinguished from valid Hi-C fragments.
+
+We found no criterion that could be used in order to distinguish read pairs that emerged from cross-ligation events
+from valid read pairs. However, we generally notice a large fraction of trans *interactions* between pairs of restriction
+fragments consisting of only one read pair. We believe that those read pairs mainly result from cross-ligation events
+and use their total number in order to calculate a global cross-ligation coefficient (CLC).
+
+We also found no accurate way to distinguish between read pairs that emerged from very short range contacts and
+self-ligation events. Instead, we use the fact that self-ligation must result only in inward pointing read pairs.
+Inward pointing read pairs whose 5' ends have a distance smaller than a user-defined **self-liagtion threshold**
+(``-slt``) are flagged as self-ligation artifacts and not used for downstream analyses. The fragment length estimation
+routine of the `peak caller Q`_ be used to estimate the average fragment size of the Hi-C library which is a
+suitable value for the self-ligation threshold.
+
+.. _peak caller Q: http://charite.github.io/Q/
+
+
+
+Running Diachromatic's align subcommand
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use the following command to run the alignment and counting step. ::
+
+    $ java -jar Diachromatic.jar align -b <bowtie2> -i <bowtie2-index> -q <fastq1> -r <fastq2> -d <digest> [-o <outfile>]
 
 The meaning of the options is:
     * -b <bowtie2> Path to the bowtie2 executable
@@ -47,9 +87,16 @@ For instance, the following command will use bowtie2 to map the two FASTQ files 
 
     $ java -jar target/diachromatic-0.0.2.jar map -b /usr/bin/bowtie2 -i btindex/hg19 -q hindIIIhg19chc/test_dataset1.hindIIIhg19.fastq -r hindIIIhg19chc/test_dataset2.hindIIIhg19.fastq -d hg19HindIIIdigest.txtr -o hindIII
 
+
+Output files
+~~~~~~~~~~~~
+
 Two output files will be produced:
-    * ``diachromatic.valid.bam`` contains all uniquely mapped pairs. Known artifacts and duplicated reads are removed. This file can be used for downstream analyses.
-    * ``diachromatic.rejected.bam`` contains all pairs that show characteristics of known artifacts:
+
+    * ``prefix.valid.bam`` contains all uniquely mapped pairs. Known artifacts and duplicated reads are removed. This file can be used for downstream analyses.
+
+    * ``prefix.rejected.bam`` contains all pairs that show characteristics of known artifacts:
+
         * insert too long (Tag: ``TB``)
         * insert too short (Tag: ``TS``)
         * circularized read (Tag: ``SL``)
@@ -58,9 +105,10 @@ Two output files will be produced:
         * re-ligation (Tag: ``RL``)
         * contiguous (Tag: ``CT``)
 
+    * ``prefix.align.stats.``
+
 Read pairs for which one read cannot be mapped or cannot be mapped uniquely (bowtie2: XS:i tag exists) will be discarded completely. Statistics about the numbers of unmappable reads, multimappable reads, and artifact pairs will be written to the screen.
 
 
-todo -- demand that at least one read maps to one of the VPV target regions
 
 
