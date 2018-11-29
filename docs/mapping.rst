@@ -1,6 +1,6 @@
 
-Mapping of paired-end Hi-C reads
-================================
+Mapping and categorization of Hi-C paired-end reads
+===================================================
 
 Independent mapping of forward and reverse paired-end reads using bowtie2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -32,10 +32,17 @@ Categorization of mapped read pairs
 
 Hi-C fragments arise from cross-linked chromatin passing through three successive experimental processing steps:
 restriction digest, re-ligation and shearing (see illustration below). Different fragments differ with regard to their
-formation history. For instance, valid Hi-C fragments originate from two pieces of DNA that re-ligated within the same
+formation history.
+
+.. figure:: img/fragment_formation.png
+    :align: center
+
+For instance, valid Hi-C fragments originate from two pieces of DNA that re-ligated within the same
 cross-linked protein-DNA complex, whereas cross-ligation artifacts emerge from re-ligations between different complexes.
-The shearing step further increases the diversity of fragments by introducing a second type of fragment ends in addition
-to the restriction cutting sites, and paired-end sequencing results in eight different read pair orientations.
+The shearing step further increases the diversity of fragments by introducing a second type of fragment end in addition
+to the restriction cutting site ends that are also referred to as *dangling ends*. Paired-end sequencing of fragments may
+results all possible relative orientations, i.e. reads of given pairs may pointing inwards, outwards or in the same
+direction.
 
 Diachromatic uses a predefined fragment size threshold ``-l <size>`` that corresponds to the average size of fragments
 after sonication and read pair orientation in order to remove two categories of artifact pairs arising from:
@@ -43,36 +50,32 @@ after sonication and read pair orientation in order to remove two categories of 
     2. **Self-ligated fragments:** Self-ligated fragments can only result in outward pointing read pairs that are mapped to the same chromosome. The size of self-ligated fragments corresponds to distance between the first cutting positions that occur in 3' direction of the 5' end mapping positions of the two reads. If this distance is smaller than the predefined ``<size>``, the read pair is categorized as self-ligated.
 
 All remaining read pairs are referred to as **valid pairs** even though they do not necessarily arise only from genuine
-chromatin-chromatin interactions but also from artefactual cross-ligation events. These two categories cannot be
-distinguished. However, cross-ligation between pieces of DNA from different chromosomes (trans) is assumed to occur
-more likely than cross-ligation between DNA from the same chromosome (cis).
+chromatin-chromatin interactions but also from artefactual **cross-ligation** events. These two categories cannot be
+distinguished. However, cross-ligation between DNA of different chromosomes (trans) is assumed to occur
+more likely than cross-ligation between DNA from the same chromosome (cis). Therefore, the ratio of the numbers of cis
+and trans read pairs is taken as an indicator of poor Hi-C libraries that contain lots of false positive interaction
+pairs arising from spurious cross-ligation events (Wingett 2015, Nagano 2015).
+However, it has also been pointed out that this quality measure depends also on other factors such as the genome size and
+number of chromosomes of the analyzed species (Wingett 2015). Diachromatic provides a more robust quality metric that
+can be used to access the extent of cross-ligation. Amongst the trans read pairs, we generally observe a large proportion
+of restriction fragments that are connected by single read pairs only. The number of all possible different cross-ligation
+events (including cis and trans) can roughly be estimated as the square number of all restriction fragments across the
+entire genome. Given this huge number, we reasoned that it is very unlikely that the same cross-ligation event occurs
+twice. Therefore, we defined a **cross-ligation coefficient (CLC)** as the ratio of singleton read pairs and all read pairs.
 
-Valid read pairs may have possible orientations, and the determination of the size of the underlying hybrid fragment is
-not straightforward. Diachromatic, calculates this size by determining the distance between 5' end mapping position and
-the next occuring cutting motif in 3' direction for each read of a given pair and calculating the sum of the two
-distances. This approach that was adopted from HiCUP may yield two small sizes, if the digest was incomplete.
+The identification of read pairs arising from un-ligated or self-ligated fragments requires the definition of a threshold
+``-l <size>`` that corresponds to the **average size of fragments of the Hi-C library**.
+
+Due to the hybrid nature of Hi-C fragments, the determination of the size is not straightforward.
+
+One approach is to determine the distance between 5' end mapping position and the next occurrence cutting motif in 3'
+direction separately for each read of a given pair first and then to calculate the sum of the two distances.
+
+This approach that was adopted from HiCUP may yield two small sizes, if the digest was incomplete.
 
 
-.. figure:: img/fragment_categories.png
-    :align: center
 
-Besides the informative valid read pairs, there are also various kinds of artifact read pairs:
-
-    1. **Dangling ends:** If the ends of the two interacting restriction fragments fail to ligate, this will result in fragments that either start or end with the recognition motif of the restriction enzyme. Consequently, also one of the two reads of the corresponding read pair will have the motif at the 5' end.
-
-    2. **Self-ligation:** If within the protein-DNA complexes the two ends of the same fragment ligate, this will result in a fragments that cannot readily be distinguished from valid Hi-C fragments arising from very short range interactions.
-
-    3. **Cross-ligation:** If the ends of two different protein-DNA complexes ligate, this will result in fragments that cannot be distinguished from valid Hi-C fragments.
-
-We found no criterion that could be used in order to distinguish read pairs that emerged from cross-ligation events
-from valid read pairs. However, we generally notice a large fraction of trans *interactions* between pairs of restriction
-fragments consisting of only one read pair. We believe that those read pairs mainly result from cross-ligation events
-and use their total number in order to calculate a global cross-ligation coefficient (CLC).
-
-We also found no accurate way to distinguish between read pairs that emerged from very short range contacts and
-self-ligation events. Instead, we use the fact that self-ligation must result only in inward pointing read pairs.
-Inward pointing read pairs whose 5' ends have a distance smaller than a user-defined **self-liagtion threshold**
-(``-slt``) are flagged as self-ligation artifacts and not used for downstream analyses. The fragment length estimation
+The fragment length estimation
 routine of the `peak caller Q`_ be used to estimate the average fragment size of the Hi-C library which is a
 suitable value for the self-ligation threshold.
 
