@@ -31,15 +31,15 @@ Categorization of mapped read pairs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Hi-C fragments arise from cross-linked chromatin passing through three successive experimental processing steps:
-restriction digest, re-ligation and shearing (see illustration below). Different fragments differ with regard to their
+*restriction digest*, *re-ligation* and *shearing* (see illustration below). Different fragments differ with regard to their
 formation history.
 
 .. figure:: img/fragment_formation.png
     :align: center
 
 
-For Hi-C, cross-linked chromatin is digested, which results in restriction fragments whose ends re-ligate and thereby form
-ligation junctions.
+For Hi-C, cross-linked chromatin is digested using one or more restriction enzymes,
+which results in restriction fragments whose ends re-ligate thereby forming ligation junctions.
 The shearing step further increases the diversity of fragments by introducing DNA breakpoints representing a second type
 of ends in addition those introduced by digestion.
 Fragment ends corresponding to restriction enzyme cutting sites are generally referred to as *dangling ends* because
@@ -55,50 +55,46 @@ may pointing *inwards*, *outwards* or in the *same direction*.
 In contrast to that, sequencing of un-ligated fragments results in inward pointing pairs only, and sequencing of
 self-ligated fragments results in outward pointing pairs only.
 
-Due to the fact that the read pair orientations overlap for different categories, the identification of read pairs
+Due to the fact that the read pair orientations overlap for the different categories, the identification of read pairs
 arising from un-ligated or self-ligated fragments additionally requires the definition of a size threshold that
 corresponds to the **average size of fragments of the Hi-C library**.
+Roughly speaking, the underlying idea is that such pairs can be assumed to span distances not much larger than this
+threshold only.
 However, the determination of the size of a given fragment is not straightforward for Hi-C for several reasons.
 First, the size has to be calculated differently depending the category of the fragment.
 For un-ligated fragments, the size corresponds to the distance between the 5’ end mapping positions of the two reads as
-usual, whereas for self-ligation and hybrid fragments the size has to be calculated differently.
-In these cases, the two distances between the 5' ends of the mapped reads and the cutting motif in 3' direction that
-correspond to the ligation junction have to be determined and subsequently added.
-The problem with this approach is that the ligation junction cannot be unambiguously determined because the digestion
-of might be incomplete, i.e. there may be restriction fragments containing uncut restriction sites (marked with asterisk).
-In such cases the size is underestimated, because for lack of further information simply the first occurrence of a cutting
+usual, whereas for self-ligation and hybrid fragments the size is calculated as the sum of the two distances between
+the 5' ends of the mapped reads and the next occurrence of a cutting motif in 3' direction which is assumed to correspond
+to the ligation junction (Wingett 2015).
+The problem with this approach is that in fact the ligation junction cannot be unambiguously determined, because the
+digestion of genome is not necessarily complete, i.e. there may be restriction fragments containing uncut restriction
+sites (in the illustration marked with asterisk).
+In such cases, the size is underestimated, because, for lack of further information, simply the first occurrence of a cutting
 motif is interpreted as the one that corresponds to the ligation junction.
-Therefore, Diachromatic requires this parameter to be specified.
-It can be estimated using an external tool such as the `peak caller Q`_.
-Even though the fragment length estimation implemented in Q is intended for ChIP-seq data, the estimation routine is
-also suitable for Hi-C because the reads distribute in a similar strand specific fashion around restriction sites as
-compared to ChIP-seq peaks.
+Therefore, Diachromatic does not use this approach but requires this parameter to be specified using the ``-l <size>`` option.
+We recommend to use external tool such as the `peak caller Q`_ for fragment size estimation.
+Even though the Hamming distance method implemented in Q is intended for ChIP-seq data, it is also suitable for Hi-C,
+because at restriction sites, the reads distribute in a strand specific fashion that is similar to that observed for
+ChIP-seq reads. Within Diachromatic, inward pointing read pairs for which the distance between the 5' ends is less than
+the specified threshold are categorized as un-ligated pairs, whereas outward pointing read pairs with a calculated size
+smaller than the threshold are categorized as self-ligated pairs.
 
 .. _peak caller Q: http://charite.github.io/Q/
 
-
-Read pairs arising from valid arise only from genuine
-chromatin-chromatin interactions but also from artefactual **cross-ligation** events. These two categories cannot be
-distinguished.
-
-However, cross-ligation between DNA of different chromosomes (trans) is assumed to occur
-more likely than cross-ligation between DNA from the same chromosome (cis). Therefore, the ratio of the numbers of cis
+Valid read pairs arising from genuine chromatin-chromatin interactions cannot be distinguished from those arising from
+**cross-ligation** events.
+However, the overall extend of **cross-ligation** is estimated for given experiments.
+Based on the assumption that cross-ligation between DNA fragments of different chromosomes (trans) occurs more likely
+as compared to cross-ligation between DNA fragments of the same chromosome (cis), the ratio of the numbers of cis
 and trans read pairs is taken as an indicator of poor Hi-C libraries that contain lots of false positive interaction
 pairs arising from spurious cross-ligation events (Wingett 2015, Nagano 2015).
-However, it has also been pointed out that this quality measure depends also on other factors such as the genome size and
+However, it has been pointed out that this quality measure depends also on other factors such as the genome size and
 number of chromosomes of the analyzed species (Wingett 2015). Diachromatic provides an alternative and more robust quality metric that
 can be used to access the extent of cross-ligation. Amongst the trans read pairs, we generally observe a large proportion
 of restriction fragments that are connected by single read pairs only. The number of all possible different cross-ligation
 events (including cis and trans) can roughly be estimated as the square number of all restriction fragments across the
 entire genome. Given this huge number, we reasoned that it is very unlikely that the same cross-ligation event occurs
 twice. Therefore, we defined a **cross-ligation coefficient (CLC)** as the ratio of singleton read pairs and all read pairs.
-
-
-
-
-
-
-
 
 Running Diachromatic's align subcommand
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
