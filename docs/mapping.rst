@@ -18,8 +18,8 @@ for the definition of multi-mapped reads:
     2. **Less stringent definition:** There can be a second best alignment, but the score of the alignment (MAPQ) needs to e greater than 30 and the difference of the mapping scores between the best and second best alignment must be greater than 10. This definition was adopted from HiCUP (version v0.6.0 and higher). Diachromatic uses this option by default.
 
 
-Pairing of proper mapped read pairs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Pairing of properly mapped read pairs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The independently mapped reads are written to two temporary SAM files, whereby the order of read records in the
 truncated FASTQ files is retained by using bowtie2's option ``--reorder``. I a next step, Diachromatic iterates
@@ -37,49 +37,66 @@ formation history.
 .. figure:: img/fragment_formation.png
     :align: center
 
-For instance, valid Hi-C fragments originate from two pieces of DNA that re-ligated within the same
-cross-linked protein-DNA complex, whereas cross-ligation artifacts emerge from re-ligations between different complexes.
-The shearing step further increases the diversity of fragments by introducing a second type of fragment end in addition
-to the restriction cutting site ends that are also referred to as *dangling ends*. Paired-end sequencing of fragments may
-results all possible relative orientations, i.e. reads of given pairs may pointing inwards, outwards or in the same
-direction.
 
-Diachromatic uses a predefined fragment size threshold ``-l <size>`` that corresponds to the average size of fragments
-after sonication and read pair orientation in order to remove two categories of artifact pairs arising from:
-    1. **Un-ligated fragments:** Un-ligated fragments can only result in inward pointing read pairs that are mapped to the same chromosome. The size of un-ligated fragments corresponds to the distance between the 5' end mapping positions of the two reads. If this distance is smaller than the predefined ``<size>``, the read pair is categorized as un-ligated.
-    2. **Self-ligated fragments:** Self-ligated fragments can only result in outward pointing read pairs that are mapped to the same chromosome. The size of self-ligated fragments corresponds to distance between the first cutting positions that occur in 3' direction of the 5' end mapping positions of the two reads. If this distance is smaller than the predefined ``<size>``, the read pair is categorized as self-ligated.
+For Hi-C, cross-linked chromatin is digested, which results in restriction fragments whose ends re-ligate and thereby form
+ligation junctions.
+The shearing step further increases the diversity of fragments by introducing DNA breakpoints representing a second type
+of ends in addition those introduced by digestion.
+Fragment ends corresponding to restriction enzyme cutting sites are generally referred to as *dangling ends* because
+they failed to re-ligate.
 
-All remaining read pairs are referred to as **valid pairs** even though they do not necessarily arise only from genuine
+In total, three categories of fragments are distinguished within Diachromatic: **hybrid fragments** that arise from
+re-ligation between ends of different restriction fragments and two artifact types that correspond to single
+restriction fragments whose ends failed to re-ligate with other fragments, either because both ends remained **un-ligated**
+or **self-ligated** with each other. Hybrid fragments correspond to valid interactions but also to cross-ligation
+artifacts depending on whether the re-ligtion occurred within the same protein-DNA complex or between different complexes.
+Paired-end sequencing of hybrid fragments may results in all possible relative orientations, i.e. reads of given pairs
+may pointing *inwards*, *outwards* or in the *same direction*.
+In contrast to that, sequencing of un-ligated fragments results in inward pointing pairs only, and sequencing of
+self-ligated fragments results in outward pointing pairs only.
+
+Due to the fact that the read pair orientations overlap for different categories, the identification of read pairs
+arising from un-ligated or self-ligated fragments additionally requires the definition of a size threshold that
+corresponds to the **average size of fragments of the Hi-C library**.
+However, the determination of the size of a given fragment is not straightforward for Hi-C for several reasons.
+First, the size has to be calculated differently depending the category of the fragment.
+For un-ligated fragments, the size corresponds to the distance between the 5’ end mapping positions of the two reads as
+usual, whereas for self-ligation and hybrid fragments the size has to be calculated differently.
+In these cases, the two distances between the 5' ends of the mapped reads and the cutting motif in 3' direction that
+correspond to the ligation junction have to be determined and subsequently added.
+The problem with this approach is that the ligation junction cannot be unambiguously determined because the digestion
+of might be incomplete, i.e. there may be restriction fragments containing uncut restriction sites (marked with asterisk).
+In such cases the size is underestimated, because for lack of further information simply the first occurrence of a cutting
+motif is interpreted as the one that corresponds to the ligation junction.
+Therefore, Diachromatic requires this parameter to be specified.
+It can be estimated using an external tool such as the `peak caller Q`_.
+Even though the fragment length estimation implemented in Q is intended for ChIP-seq data, the estimation routine is
+also suitable for Hi-C because the reads distribute in a similar strand specific fashion around restriction sites as
+compared to ChIP-seq peaks.
+
+.. _peak caller Q: http://charite.github.io/Q/
+
+
+Read pairs arising from valid arise only from genuine
 chromatin-chromatin interactions but also from artefactual **cross-ligation** events. These two categories cannot be
-distinguished. However, cross-ligation between DNA of different chromosomes (trans) is assumed to occur
+distinguished.
+
+However, cross-ligation between DNA of different chromosomes (trans) is assumed to occur
 more likely than cross-ligation between DNA from the same chromosome (cis). Therefore, the ratio of the numbers of cis
 and trans read pairs is taken as an indicator of poor Hi-C libraries that contain lots of false positive interaction
 pairs arising from spurious cross-ligation events (Wingett 2015, Nagano 2015).
 However, it has also been pointed out that this quality measure depends also on other factors such as the genome size and
-number of chromosomes of the analyzed species (Wingett 2015). Diachromatic provides a more robust quality metric that
+number of chromosomes of the analyzed species (Wingett 2015). Diachromatic provides an alternative and more robust quality metric that
 can be used to access the extent of cross-ligation. Amongst the trans read pairs, we generally observe a large proportion
 of restriction fragments that are connected by single read pairs only. The number of all possible different cross-ligation
 events (including cis and trans) can roughly be estimated as the square number of all restriction fragments across the
 entire genome. Given this huge number, we reasoned that it is very unlikely that the same cross-ligation event occurs
 twice. Therefore, we defined a **cross-ligation coefficient (CLC)** as the ratio of singleton read pairs and all read pairs.
 
-The identification of read pairs arising from un-ligated or self-ligated fragments requires the definition of a threshold
-``-l <size>`` that corresponds to the **average size of fragments of the Hi-C library**.
-
-Due to the hybrid nature of Hi-C fragments, the determination of the size is not straightforward.
-
-One approach is to determine the distance between 5' end mapping position and the next occurrence cutting motif in 3'
-direction separately for each read of a given pair first and then to calculate the sum of the two distances.
-
-This approach that was adopted from HiCUP may yield two small sizes, if the digest was incomplete.
 
 
 
-The fragment length estimation
-routine of the `peak caller Q`_ be used to estimate the average fragment size of the Hi-C library which is a
-suitable value for the self-ligation threshold.
 
-.. _peak caller Q: http://charite.github.io/Q/
 
 
 
