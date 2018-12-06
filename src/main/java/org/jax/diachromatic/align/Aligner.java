@@ -377,6 +377,7 @@ public class Aligner {
                         pair.getReverseDigestEnd(),
                         pair.reverseDigestIsActive(),
                         pair.getRelativeOrientationTag());
+                if(interactionMap.getTotalNumberOfInteractionsForCondition(0)%10000==0) { logger.trace("Size of interactionMap: " + interactionMap.getTotalNumberOfInteractionsForCondition(0)); }
             } else {
                 updateErrorMap(pair.getErrorCodes());
                 if (outputRejectedReads) {
