@@ -28,6 +28,8 @@ public class DigestMap {
 
     private HashMap<String,ArrayPair> digestMap = null; // key: chromosome name, value: pair of arrays (start coordinate of digest and active state)
 
+    private HashMap<Integer,String> digestHash = null;
+
     public DigestMap(String digestFilePath, String activeDigestsFile) throws DiachromaticException {
 
         try {
@@ -75,6 +77,7 @@ public class DigestMap {
 
             BufferedReader br = new BufferedReader(new FileReader(digestFilePath));
             String line;
+            int digestNumber = 0;
             while ((line=br.readLine())!=null) {
                 if (line.startsWith("Chromosome")) continue; // the header line
                 String fields[] = line.split("\t");
@@ -88,7 +91,8 @@ public class DigestMap {
                     digestMap.put(chromosome,new ArrayPair());
                 }
 
-                digestMap.get(chromosome).addCoord(digestEnd);
+                digestMap.get(chromosome).addCoord(digestEnd,digestNumber);
+                digestNumber++;
                 String key = chromosome;
                 key += ":";
                 key += digestEnd;
@@ -117,11 +121,57 @@ public class DigestMap {
                 digestMap.get(key).finalizeArrayPair();
             }
 
+            // create a second hash for all digest with integer keys and string values containing coordinates and active states
+            for (String key : digestMap.keySet()) {
+                for(int i=0; i<digestMap.get(key).coordArray.size(); i++) {
+                    String val = key;
+                    val += "\t";
+                    if(i==0) {
+                        val += 1;
+                    } else {
+                        val += digestMap.get(key).coordArray.get(i-1);
+                    }
+                    val += "\t";
+                    val += digestMap.get(key).coordArray.get(i);
+                    val += "\t";
+                    if(digestMap.get(key).stateArray.get(i)==1) {
+                        val += "A";
+                    } else {
+                        val += "I";
+                    }
+                    digestHash.put(digestMap.get(key).keyArray.get(i),val);
+                }
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1); // todo throw exception
         }
     }
+
+    /**
+     * Each digest has a unique integer key. This function returns a string of the form
+     * "chrName \t startPos \t endPos \t activeState", which can be directly used for output files.
+     *
+     * @param digestKey
+     * @return
+     */
+    public String getCoordinatesForDigestKey(Integer digestKey) {
+        return digestHash.get(digestKey);
+    }
+
+    public Integer getDigestKeyForCoordinates(String chrom, Integer coord) {
+        int index = Collections.binarySearch(this.digestMap.get(chrom).coordArray, coord);
+        if(0 <= index) {
+            // coord is in the list and corresponds to digest end position
+            return(this.digestMap.get(chrom).keyArray.get(index));
+        } else {
+            // coord is not in the list and would be inserted at i=(index+1)*(-1)
+            int i = (index+1)*(-1);
+            return(this.digestMap.get(chrom).keyArray.get(i));
+        }
+    }
+
 
     public DigestPair getDigestPair2(String chrom1, Integer coord1, String chrom2, Integer coord2) {
 
@@ -202,20 +252,19 @@ public class DigestMap {
 
         private ArrayList<Integer> coordArray;
         private ArrayList<Integer> stateArray;
+        private ArrayList<Integer> keyArray;
         Set<Integer> activeStateCoordSet;
 
         ArrayPair() {
             coordArray = new ArrayList<Integer>();
             stateArray = new ArrayList<Integer>();
+            keyArray = new ArrayList<Integer>();
             activeStateCoordSet = new HashSet<>();
         }
 
-        public void addCoord(Integer x) {
+        public void addCoord(Integer x, Integer digestNumber) {
             coordArray.add(x);
-        }
-
-        public Integer getCoord(Integer index) {
-            return coordArray.get(index);
+            keyArray.add(digestNumber); // this number is an integer key that is unique for each digest (even for digests on different chromosomes)
         }
 
         public void addActiveStateCoord(Integer x) {

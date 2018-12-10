@@ -375,7 +375,7 @@ public class InteractionCountsMap {
             if(seenHashKeys.contains(baseHashKey)) {
                 continue;
             } else {
-                seenHashKeys.add(baseHashKey);
+                //seenHashKeys.add(baseHashKey);
             }
 
             String[] tmp1 = frags[0].split(":");
