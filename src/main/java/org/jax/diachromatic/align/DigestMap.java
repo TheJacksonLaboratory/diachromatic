@@ -179,15 +179,17 @@ public class DigestMap {
         int index = Collections.binarySearch(this.digestMap.get(chrom1).coordArray, coord1);
         String d1[] = new String[6];
         d1[0] = chrom1;
-        Integer staCoord, endCoord;
+        Integer staCoord, endCoord, intKey;
         if(0 <= index) {
             // coord1 is in the list and corresponds to digest end position
             endCoord = this.digestMap.get(chrom1).coordArray.get(index);
             if(index == 0) {
                 // this is the first digest
                 staCoord = 1;
+                intKey = this.digestMap.get(chrom1).keyArray.get(0);
             } else {
                 staCoord = this.digestMap.get(chrom1).coordArray.get(index-1) + 1;
+                intKey = this.digestMap.get(chrom1).keyArray.get(index-1);
             }
         } else {
             // coord1 is not in the list and would be inserted at i=(index+1)*(-1)
@@ -196,20 +198,23 @@ public class DigestMap {
             endCoord = this.digestMap.get(chrom1).coordArray.get(i);
             if(i == 0) {
                 // this is the first digest
-                staCoord = 0;
+                staCoord = 0; // ToDo: or 1?
+                intKey = this.digestMap.get(chrom1).keyArray.get(0);
             } else {
                 staCoord = this.digestMap.get(chrom1).coordArray.get(i-1) + 1;
+                intKey = this.digestMap.get(chrom1).keyArray.get(i-1);
             }
         }
         d1[1] = staCoord.toString();
         d1[2] = endCoord.toString();
-        d1[3] = "42";
+        d1[3] = intKey.toString();
         d1[4] = "Dpn2";
         d1[5] = "Dpn2";
         Digest digest1 = new Digest(d1);
         if(this.digestMap.get(chrom1).activeStateCoordSet.contains(endCoord)) {
             digest1.setActice();
         }
+
         index = Collections.binarySearch(this.digestMap.get(chrom2).coordArray, coord2);
         String d2[] = new String[6];
         d2[0] = chrom2;
@@ -219,8 +224,11 @@ public class DigestMap {
             if(index == 0) {
                 // this is the first digest
                 staCoord = 1;
+                intKey = this.digestMap.get(chrom2).keyArray.get(0);
+
             } else {
                 staCoord = this.digestMap.get(chrom2).coordArray.get(index-1) + 1;
+                intKey = this.digestMap.get(chrom2).keyArray.get(index-1);
             }
         } else {
             // coord1 is not in the list and would be inserted at i=(index+1)*(-1)
@@ -229,14 +237,16 @@ public class DigestMap {
             endCoord = this.digestMap.get(chrom2).coordArray.get(i);
             if(i == 0) {
                 // this is the first digest
-                staCoord = 0;
+                staCoord = 0; // ToDo: or 1?
+                intKey = this.digestMap.get(chrom2).keyArray.get(0);
             } else {
                 staCoord = this.digestMap.get(chrom2).coordArray.get(i-1) + 1;
+                intKey = this.digestMap.get(chrom2).keyArray.get(i-1);
             }
         }
         d2[1] = staCoord.toString();
         d2[2] = endCoord.toString();
-        d2[3] = "43";
+        d2[3] = intKey.toString();
         d2[4] = "Dpn2";
         d2[5] = "Dpn2";
         Digest digest2 = new Digest(d2);

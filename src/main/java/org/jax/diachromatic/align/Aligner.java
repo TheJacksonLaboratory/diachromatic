@@ -372,10 +372,12 @@ public class Aligner {
                         pair.getForwardDigestStart(),
                         pair.getForwardDigestEnd(),
                         pair.forwardDigestIsActive(),
+                        pair.getForwardDigestKey(),
                         pair.reverse().getReferenceName(),
                         pair.getReverseDigestStart(),
                         pair.getReverseDigestEnd(),
                         pair.reverseDigestIsActive(),
+                        pair.getReverseDigestKey(),
                         pair.getRelativeOrientationTag());
                 if(interactionMap.getTotalNumberOfInteractionsForCondition(0)%10000==0) { logger.trace("Size of interactionMap: " + interactionMap.getTotalNumberOfInteractionsForCondition(0)); }
             } else {

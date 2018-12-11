@@ -23,8 +23,7 @@ public class Digest {
 
     private final int endpos;
 
-    private final int fragmentNumber;
-
+    private final int digestIntKey;
 
     private String fivePrimeRestrictionSite;
 
@@ -32,12 +31,11 @@ public class Digest {
 
     private boolean active = false;
 
-
     public Digest(String[] fields) {
         chromosome=fields[0];
         startpos=Integer.parseInt(fields[1]);
         endpos=Integer.parseInt(fields[2]);
-        fragmentNumber=Integer.parseInt(fields[3]);
+        digestIntKey =Integer.parseInt(fields[3]);
         fivePrimeRestrictionSite=fields[4];
         threePrimeRestrictionSite=fields[5];
     }
@@ -55,23 +53,13 @@ public class Digest {
         return endpos;
     }
 
-    int getFragmentNumber() {
-        return fragmentNumber;
+    int getDigestIntegerKey() {
+        return digestIntKey;
     }
-
-    public String getFivePrimeRestrictionSite() {
-        return fivePrimeRestrictionSite;
-    }
-
-    public String getThreePrimeRestrictionSite() {
-        return threePrimeRestrictionSite;
-    }
-
 
     public int getSize() {
         return endpos - startpos + 1;
     }
-
 
     public void setActice() {
         this.active=true;
@@ -186,7 +174,7 @@ public class Digest {
                 chromosome,
                 startpos,
                 endpos,
-                fragmentNumber,
+                digestIntKey,
                 fivePrimeRestrictionSite,
                 threePrimeRestrictionSite);
     }
