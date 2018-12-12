@@ -122,7 +122,9 @@ public class DigestMap {
             }
 
             // create a second hash for all digest with integer keys and string values containing coordinates and active states
+            digestHash = new HashMap<Integer,String>();
             for (String key : digestMap.keySet()) {
+                //logger.trace(key);
                 for(int i=0; i<digestMap.get(key).coordArray.size(); i++) {
                     String val = key;
                     val += "\t";
@@ -139,6 +141,8 @@ public class DigestMap {
                     } else {
                         val += "I";
                     }
+                    //logger.trace(val);
+                    //logger.trace(digestMap.get(key).keyArray.get(i));
                     digestHash.put(digestMap.get(key).keyArray.get(i),val);
                 }
             }
@@ -183,26 +187,25 @@ public class DigestMap {
         if(0 <= index) {
             // coord1 is in the list and corresponds to digest end position
             endCoord = this.digestMap.get(chrom1).coordArray.get(index);
+            intKey = this.digestMap.get(chrom1).keyArray.get(index);
             if(index == 0) {
                 // this is the first digest
                 staCoord = 1;
-                intKey = this.digestMap.get(chrom1).keyArray.get(0);
             } else {
                 staCoord = this.digestMap.get(chrom1).coordArray.get(index-1) + 1;
-                intKey = this.digestMap.get(chrom1).keyArray.get(index-1);
             }
         } else {
             // coord1 is not in the list and would be inserted at i=(index+1)*(-1)
             int i = (index+1)*(-1);
             //logger.trace("index: " + index + " i: " + i);
             endCoord = this.digestMap.get(chrom1).coordArray.get(i);
+            intKey = this.digestMap.get(chrom1).keyArray.get(i);
             if(i == 0) {
                 // this is the first digest
                 staCoord = 0; // ToDo: or 1?
                 intKey = this.digestMap.get(chrom1).keyArray.get(0);
             } else {
                 staCoord = this.digestMap.get(chrom1).coordArray.get(i-1) + 1;
-                intKey = this.digestMap.get(chrom1).keyArray.get(i-1);
             }
         }
         d1[1] = staCoord.toString();
@@ -221,27 +224,24 @@ public class DigestMap {
         if(0 <= index) {
             // coord1 is in the list and corresponds to digest end position
             endCoord = this.digestMap.get(chrom2).coordArray.get(index);
+            intKey = this.digestMap.get(chrom2).keyArray.get(index);
             if(index == 0) {
                 // this is the first digest
                 staCoord = 1;
-                intKey = this.digestMap.get(chrom2).keyArray.get(0);
-
             } else {
                 staCoord = this.digestMap.get(chrom2).coordArray.get(index-1) + 1;
-                intKey = this.digestMap.get(chrom2).keyArray.get(index-1);
             }
         } else {
             // coord1 is not in the list and would be inserted at i=(index+1)*(-1)
             int i = (index+1)*(-1);
             //logger.trace("index: " + index + " i: " + i);
             endCoord = this.digestMap.get(chrom2).coordArray.get(i);
+            intKey = this.digestMap.get(chrom2).keyArray.get(i);
             if(i == 0) {
                 // this is the first digest
                 staCoord = 0; // ToDo: or 1?
-                intKey = this.digestMap.get(chrom2).keyArray.get(0);
             } else {
                 staCoord = this.digestMap.get(chrom2).coordArray.get(i-1) + 1;
-                intKey = this.digestMap.get(chrom2).keyArray.get(i-1);
             }
         }
         d2[1] = staCoord.toString();

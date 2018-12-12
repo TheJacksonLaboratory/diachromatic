@@ -93,9 +93,9 @@ public class InteractionCountsMap {
     /**
      * Space efficient hash for counting interactions using pairs of Integer keys. For a given key pair,
      * the smaller key points to a HashMap and within this HashMap the larger key points to an count array.
-     * Interactions are counted separately for different conditions and read pair orientations.
+     * Interactions are counted separately for different read pair orientations.
      */
-    private HashMap<Integer,HashMap<Integer,List<List<Integer>>>> interaction_key_counts_map = null;
+    private HashMap<Integer,HashMap<Integer,short[]>> interaction_key_counts_map = null;
 
     /**
      * Output filename for interaction counts
@@ -123,6 +123,8 @@ public class InteractionCountsMap {
 
         this.number_of_conditions = number_of_conditions;
         interaction_counts_map = new HashMap<String,List<Integer>>();
+
+        interaction_key_counts_map = new HashMap<Integer,HashMap<Integer,short[]>>();
 
         this.interaction_count = new Integer[number_of_conditions];
         Arrays.fill(interaction_count, 0);
@@ -219,34 +221,44 @@ public class InteractionCountsMap {
     // public methods
     // --------------
 
-    public void incrementFragPair2(Integer condition_num, Integer digestKey1, Integer digestKey2, String relOriTag) {
+    public void incrementFragPair2(Integer condition_num, Integer digestKey1, Integer digestKey2, int relOriTag) {
 
-        // ensure that (a,b) and (b,a) pairs are treated the same way
+        // ensure that (a,b) and (b,a) pairs are treated as the same
         Integer firstKey, secondKey;
-        if(digestKey1<digestKey2){
-            firstKey=digestKey1;
-            secondKey=digestKey2;
+        if (digestKey1 < digestKey2) {
+            firstKey = digestKey1;
+            secondKey = digestKey2;
         } else {
-            firstKey=digestKey2;
-            secondKey=digestKey1;
+            firstKey = digestKey2;
+            secondKey = digestKey1;
         }
 
-        if(!interaction_key_counts_map.containsKey(firstKey) || !interaction_key_counts_map.get(firstKey).containsKey(secondKey)) {
-            // at least one of the two digest o
-            ArrayList listOfLists = new ArrayList<ArrayList<Integer>>(number_of_conditions); // create new 2d array for different conditions and read pair orientations
-            for(int i=0; i<number_of_conditions; i++) { // and init everything with zero
-                ArrayList oriList = new ArrayList<Integer>(number_of_orientations);
-                for(int j=0; j<number_of_orientations; j++) {
-                    oriList.set(j,0);
-                }
-                listOfLists.set(i,oriList);
-            }
-        } else {
-            // digest with smaller key has already been seen
-            if(!interaction_key_counts_map.get(firstKey).containsKey(secondKey)) {
-                // but the second key occurs for the first time
-            }
+        // create new structures, if necessary
+        HashMap<Integer, short[]> newInnerMap;
+        short[] newCountArray;
+        if (!interaction_key_counts_map.containsKey(firstKey)) {
+            // create new inner hash map
+            newInnerMap = new HashMap<Integer, short[]>();
+            // create new count array and put on inner hash map
+            newCountArray = new short[8];
+            //Arrays.fill(newCountArray, 0);
+            newInnerMap.put(secondKey, newCountArray);
+            // and put inner hash on outer hash
+            interaction_key_counts_map.put(firstKey, newInnerMap);
+            interaction_count[condition_num]++;
+        } else if (!interaction_key_counts_map.get(firstKey).containsKey(secondKey)) {
+            // there is already an inner hash map only count array needs to be created
+            newCountArray = new short[8];
+            //Arrays.fill(newCountArray, 0);
+            // put count array on inner hash map
+            interaction_key_counts_map.get(firstKey).put(secondKey,newCountArray);
+            interaction_count[condition_num]++;
         }
+
+        // increment either way
+        interaction_key_counts_map.get(firstKey).get(secondKey)[relOriTag]++;
+
+        //logger.trace(digestKey1 + "," + digestKey2 + " -> " + interaction_key_counts_map.get(firstKey).get(secondKey)[relOriTag]);
     }
 
 
@@ -270,7 +282,7 @@ public class InteractionCountsMap {
      * TODO: Try to pass the corresponding two digests to this function instead of the long list of arguments.
      *
      */
-    public String incrementFragPair(Integer condition_num, String refID_1, Integer fragStaPos_1, Integer fragEndPos_1, boolean fragActive_1, Integer digestKey1, String refID_2, Integer fragStaPos_2, Integer fragEndPos_2, boolean fragActive_2, Integer digestKey2, String relOriTag) throws IncrementSameInternalInteractionException {
+    public String incrementFragPair(Integer condition_num, String refID_1, Integer fragStaPos_1, Integer fragEndPos_1, boolean fragActive_1, String refID_2, Integer fragStaPos_2, Integer fragEndPos_2, boolean fragActive_2, String relOriTag) throws IncrementSameInternalInteractionException {
 
         // generate unique String key
         String hashKey = getHashKey(refID_1, fragStaPos_1, fragEndPos_1, fragActive_1, refID_2, fragStaPos_2, fragEndPos_2, fragActive_2);
@@ -474,6 +486,34 @@ public class InteractionCountsMap {
 
         }
         logger.trace("-----");
+    }
+
+    public void printInteractionCountsMapAsCountTable2(DigestMap digestMap, String interactionCountsTableFileName) throws FileNotFoundException {
+
+        // create file for output
+        PrintStream printStream = new PrintStream(new FileOutputStream(interactionCountsTableFileName));
+
+        // iterate over all interactions
+        for (Integer key1 : interaction_key_counts_map.keySet()) {
+            for(Integer key2 : interaction_key_counts_map.get(key1).keySet()) {
+                //logger.trace(key1 + ", " + key2);
+                //logger.trace(digestMap.getCoordinatesForDigestKey(key1) + ", " + digestMap.getCoordinatesForDigestKey(key2));
+                //logger.trace("Interaction count: " + interaction_key_counts_map.get(key1).get(key2)[0]);
+                printStream.print(digestMap.getCoordinatesForDigestKey(key1) + "\t" + digestMap.getCoordinatesForDigestKey(key2) + "\t");
+                short [] countArray = interaction_key_counts_map.get(key1).get(key2);
+                int simple=0, twisted=0;
+                for(int i=0; i<countArray.length; i++) {
+                    printStream.print(countArray[i] + "\t");
+                    if(i<4) {
+                        twisted=twisted+countArray[i];
+                    } else {
+                        simple=simple+countArray[i];
+                    }
+                }
+                printStream.print(simple + ":" + twisted + "\n");
+
+            }
+        }
     }
 
     /**
