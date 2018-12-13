@@ -1,6 +1,6 @@
 
-Mapping of paired-end Hi-C reads
-================================
+Mapping and categorization of Hi-C paired-end reads
+===================================================
 
 Independent mapping of forward and reverse paired-end reads using bowtie2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -8,64 +8,93 @@ Independent mapping of forward and reverse paired-end reads using bowtie2
 The two reads of any given valid Hi-C read pair stem from two different interacting genomic regions that can be
 separated by a large number of nucleotides within the same chromosome (**cis interactions**) or even be located on
 different chromosomes (**trans interactions**). For this reason, the distance between the two 5' ends of the reads can
-no longer be interpreted as the *insert size*, and the forward (R1) and reverse (R2) reads have to be mapped
+no longer be interpreted as the *insert size*, and the truncated forward (R1) and reverse (R2) reads have to be mapped
 independently.
 
-Diachromatic executes ``bowtie2`` two times with the ``--very-sensitive`` option. Individual reads mapping to multiple locations
-are typically discarded. Diachromatic provides two levels of stringency
+Diachromatic executes ``bowtie2`` separately for R1 and R2 with the ``--very-sensitive`` option. Individual reads mapping
+to multiple locations are typically discarded. Diachromatic provides two levels of stringency
 for the definition of multi-mapped reads:
-    1. *Very stringent definition:* There is no second best alignment for the given read. In this case the line in the SAM file produced by ``bowtie2`` contains no ``XS`` tag. Use Diachromatic's ``--bowtie-stringent-unique`` or ``-bsu`` option in order to use this level of stringency.
-    2. *Less stringent definition:* There can be a second best alignment, but the score of the alignment needs to e greater than 30 and the difference of the mapping scores between the best and second best alignment must be greater than 10. This definition was adopted from HiCUP (since v0.6.0). Diachromatic uses this option by default.
+    1. **Very stringent definition:** There is no second best alignment for the given read. In this case the line in the SAM file produced by ``bowtie2`` contains no ``XS`` tag. Use Diachromatic's ``--bowtie-stringent-unique`` or ``-bsu`` option in order to use this level of stringency.
+    2. **Less stringent definition:** There can be a second best alignment, but the score of the alignment (MAPQ) needs to e greater than 30 and the difference of the mapping scores between the best and second best alignment must be greater than 10. This definition was adopted from HiCUP (version v0.6.0 and higher). Diachromatic uses this option by default.
 
 
-Pairing of proper mapped read pairs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Pairing of properly mapped read pairs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The independently mapped reads are written to two temporary SAM files, whereby the order of reads is the same for both
-files, i.e. two reads of any given line consitute a pair. I a next step Diachromatic iterates simultaneously over the
-two SAM files. Only pairs for which both reads could be uniquely mapped are retained and all other pairs are discarded.
+The independently mapped reads are written to two temporary SAM files, whereby the order of read records in the
+truncated FASTQ files is retained by using bowtie2's option ``--reorder``. I a next step, Diachromatic iterates
+simultaneously over the two SAM files. Pairs for which at least one read could not be mapped uniquely are discarded,
+whereas all other pairs are futher subdivided into different categories comprising valid interaction and artefactual
+read pairs arising from shortcomings of the Hi-C protocol.
 
 Categorization of mapped read pairs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Depending on the different formation processes of Hi-C fragments, Diachromatic takes into consideration different
-categories of reads pairs. Shearing of re-ligated DNA results in hybrid digests consisting of DNA from two
-different genomic loci. Those fragments correspond to valid interactions.
+Hi-C fragments arise from cross-linked chromatin passing through three successive experimental processing steps:
+*restriction digest*, *re-ligation* and *shearing* (see illustration below). Different fragments differ with regard to their
+formation history.
 
-Besides that, there are also fragments that do not contain a ligation junction either because they originate from
-genomic regions between cutting sites or because the ends failed to re-ligate. Such fragments must result in inward
-pointing pairs of mapped reads, and the length of the fragment corresponds to the distance between the 5' end positions
-of the two reads. In Diachromatic, inward pointing read pairs whose 5' end positions have a distance smaller than a
-given size threshold are categorized as *unligated-internal*. If the recognition motif of the restriction enzyme occurs
-at one 5' ends of the two reads, the pair is categorized as *unligated-dangling*.
-
-
-.. figure:: img/fragment_categories.png
+.. figure:: img/fragment_formation.png
     :align: center
 
-Besides the informative valid read pairs, there are also various kinds of artifact read pairs:
 
-    1. **Dangling ends:** If the ends of the two interacting restriction fragments fail to ligate, this will result in fragments that either start or end with the recognition motif of the restriction enzyme. Consequently, also one of the two reads of the corresponding read pair will have the motif at the 5' end.
+For Hi-C, cross-linked chromatin is digested using one or more restriction enzymes,
+which results in restriction fragments whose ends re-ligate thereby forming ligation junctions.
+The shearing step further increases the diversity of fragments by introducing DNA breakpoints representing a second type
+of ends in addition those introduced by digestion.
+Fragment ends corresponding to restriction enzyme cutting sites are generally referred to as *dangling ends* because
+they failed to re-ligate.
 
-    2. **Self-ligation:** If within the protein-DNA complexes the two ends of the same fragment ligate, this will result in a fragments that cannot readily be distinguished from valid Hi-C fragments arising from very short range interactions.
+In total, three categories of fragments are distinguished within Diachromatic: **hybrid fragments** that arise from
+re-ligation between ends of different restriction fragments and two artifact types that correspond to single
+restriction fragments whose ends failed to re-ligate with other fragments, either because both ends remained **un-ligated**
+or **self-ligated** with each other. Hybrid fragments correspond to valid interactions but also to cross-ligation
+artifacts depending on whether the re-ligtion occurred within the same protein-DNA complex or between different complexes.
+Paired-end sequencing of hybrid fragments may results in all possible relative orientations, i.e. reads of given pairs
+may pointing *inwards*, *outwards* or in the *same direction*.
+In contrast to that, sequencing of un-ligated fragments results in inward pointing pairs only, and sequencing of
+self-ligated fragments results in outward pointing pairs only.
 
-    3. **Cross-ligation:** If the ends of two different protein-DNA complexes ligate, this will result in fragments that cannot be distinguished from valid Hi-C fragments.
-
-We found no criterion that could be used in order to distinguish read pairs that emerged from cross-ligation events
-from valid read pairs. However, we generally notice a large fraction of trans *interactions* between pairs of restriction
-fragments consisting of only one read pair. We believe that those read pairs mainly result from cross-ligation events
-and use their total number in order to calculate a global cross-ligation coefficient (CLC).
-
-We also found no accurate way to distinguish between read pairs that emerged from very short range contacts and
-self-ligation events. Instead, we use the fact that self-ligation must result only in inward pointing read pairs.
-Inward pointing read pairs whose 5' ends have a distance smaller than a user-defined **self-liagtion threshold**
-(``-slt``) are flagged as self-ligation artifacts and not used for downstream analyses. The fragment length estimation
-routine of the `peak caller Q`_ be used to estimate the average fragment size of the Hi-C library which is a
-suitable value for the self-ligation threshold.
+Due to the fact that the read pair orientations overlap for the different categories, the identification of read pairs
+arising from un-ligated or self-ligated fragments additionally requires the definition of a size threshold that
+corresponds to the **average size of fragments of the Hi-C library**.
+Roughly speaking, the underlying idea is that such pairs can be assumed to span distances not much larger than this
+threshold only.
+However, the determination of the size of a given fragment is not straightforward for Hi-C for several reasons.
+First, the size has to be calculated differently depending the category of the fragment.
+For un-ligated fragments, the size corresponds to the distance between the 5’ end mapping positions of the two reads as
+usual, whereas for self-ligation and hybrid fragments the size is calculated as the sum of the two distances between
+the 5' ends of the mapped reads and the next occurrence of a cutting motif in 3' direction which is assumed to correspond
+to the ligation junction (Wingett 2015).
+The problem with this approach is that in fact the ligation junction cannot be unambiguously determined, because the
+digestion of genome is not necessarily complete, i.e. there may be restriction fragments containing uncut restriction
+sites (in the illustration marked with asterisk).
+In such cases, the size is underestimated, because, for lack of further information, simply the first occurrence of a cutting
+motif is interpreted as the one that corresponds to the ligation junction.
+Therefore, Diachromatic does not use this approach but requires this parameter to be specified using the ``-l <size>`` option.
+We recommend to use external tool such as the `peak caller Q`_ for fragment size estimation.
+Even though the Hamming distance method implemented in Q is intended for ChIP-seq data, it is also suitable for Hi-C,
+because at restriction sites, the reads distribute in a strand specific fashion that is similar to that observed for
+ChIP-seq reads. Within Diachromatic, inward pointing read pairs for which the distance between the 5' ends is less than
+the specified threshold are categorized as un-ligated pairs, whereas outward pointing read pairs with a calculated size
+smaller than the threshold are categorized as self-ligated pairs.
 
 .. _peak caller Q: http://charite.github.io/Q/
 
-
+Valid read pairs arising from genuine chromatin-chromatin interactions cannot be distinguished from those arising from
+**cross-ligation** events.
+However, the overall extend of **cross-ligation** is estimated for given experiments.
+Based on the assumption that cross-ligation between DNA fragments of different chromosomes (trans) occurs more likely
+as compared to cross-ligation between DNA fragments of the same chromosome (cis), the ratio of the numbers of cis
+and trans read pairs is taken as an indicator of poor Hi-C libraries that contain lots of false positive interaction
+pairs arising from spurious cross-ligation events (Wingett 2015, Nagano 2015).
+However, it has been pointed out that this quality measure depends also on other factors such as the genome size and
+number of chromosomes of the analyzed species (Wingett 2015). Diachromatic provides an alternative and more robust quality metric that
+can be used to access the extent of cross-ligation. Amongst the trans read pairs, we generally observe a large proportion
+of restriction fragments that are connected by single read pairs only. The number of all possible different cross-ligation
+events (including cis and trans) can roughly be estimated as the square number of all restriction fragments across the
+entire genome. Given this huge number, we reasoned that it is very unlikely that the same cross-ligation event occurs
+twice. Therefore, we defined a **cross-ligation coefficient (CLC)** as the ratio of singleton read pairs and all read pairs.
 
 Running Diachromatic's align subcommand
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -852,11 +852,10 @@ public class ReadPair {
     public Integer getForwardDigestStart() {return this.digestPair.forward().getStartpos();}
     public Integer getForwardDigestEnd() {return this.digestPair.forward().getEndpos();}
     public boolean forwardDigestIsActive() {return this.digestPair.forward().isActive();}
+    public Integer getForwardDigestKey() {return this.digestPair.forward().getDigestIntegerKey();}
 
     public Integer getReverseDigestStart() {return this.digestPair.reverse().getStartpos();}
     public Integer getReverseDigestEnd() {return this.digestPair.reverse().getEndpos();}
     public boolean reverseDigestIsActive() {return this.digestPair.reverse().isActive();}
-
-
-
+    public Integer getReverseDigestKey() {return this.digestPair.reverse().getDigestIntegerKey();}
 }

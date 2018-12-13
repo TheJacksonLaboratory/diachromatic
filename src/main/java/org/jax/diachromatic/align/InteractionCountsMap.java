@@ -41,6 +41,11 @@ public class InteractionCountsMap {
     private Integer number_of_conditions;
 
     /**
+     * Total number of read pair orientations
+     */
+    private Integer number_of_orientations = 8;
+
+    /**
      * Counter reads within active fragments
      */
     private Integer[] read_count = null;
@@ -86,6 +91,13 @@ public class InteractionCountsMap {
     private HashMap<String,List<Integer>> interaction_counts_map = null;
 
     /**
+     * Space efficient hash for counting interactions using pairs of Integer keys. For a given key pair,
+     * the smaller key points to a HashMap and within this HashMap the larger key points to an count array.
+     * Interactions are counted separately for different read pair orientations.
+     */
+    private HashMap<Integer,HashMap<Integer,short[]>> interaction_key_counts_map = null;
+
+    /**
      * Output filename for interaction counts
      */
     //private String interactionCountsTableFileName = "diachromatic.interaction.counts.table.tsv";
@@ -111,6 +123,8 @@ public class InteractionCountsMap {
 
         this.number_of_conditions = number_of_conditions;
         interaction_counts_map = new HashMap<String,List<Integer>>();
+
+        interaction_key_counts_map = new HashMap<Integer,HashMap<Integer,short[]>>();
 
         this.interaction_count = new Integer[number_of_conditions];
         Arrays.fill(interaction_count, 0);
@@ -207,6 +221,50 @@ public class InteractionCountsMap {
     // public methods
     // --------------
 
+    public void incrementFragPair2(Integer condition_num, Integer digestKey1, Integer digestKey2, int relOriTag) {
+
+        // ensure that (a,b) and (b,a) pairs are treated as the same
+        Integer firstKey, secondKey;
+        if (digestKey1 < digestKey2) {
+            firstKey = digestKey1;
+            secondKey = digestKey2;
+        } else {
+            firstKey = digestKey2;
+            secondKey = digestKey1;
+        }
+
+        // create new structures, if necessary
+        HashMap<Integer, short[]> newInnerMap;
+        short[] newCountArray;
+        if (!interaction_key_counts_map.containsKey(firstKey)) {
+            // create new inner hash map
+            newInnerMap = new HashMap<Integer, short[]>();
+            // create new count array and put on inner hash map
+            newCountArray = new short[8];
+            //Arrays.fill(newCountArray, 0);
+            newInnerMap.put(secondKey, newCountArray);
+            // and put inner hash on outer hash
+            interaction_key_counts_map.put(firstKey, newInnerMap);
+            interaction_count[condition_num]++;
+        } else if (!interaction_key_counts_map.get(firstKey).containsKey(secondKey)) {
+            // there is already an inner hash map only count array needs to be created
+            newCountArray = new short[8];
+            //Arrays.fill(newCountArray, 0);
+            // put count array on inner hash map
+            interaction_key_counts_map.get(firstKey).put(secondKey,newCountArray);
+            interaction_count[condition_num]++;
+        }
+
+        // increment either way
+        interaction_key_counts_map.get(firstKey).get(secondKey)[relOriTag]++;
+
+        //logger.trace(digestKey1 + "," + digestKey2 + " -> " + interaction_key_counts_map.get(firstKey).get(secondKey)[relOriTag]);
+    }
+
+
+
+
+
     /**
      * This method is the main interface of this class. It can be used to increment the count of interactions
      * for a given pair of restriction fragment and condition.
@@ -226,7 +284,7 @@ public class InteractionCountsMap {
      */
     public String incrementFragPair(Integer condition_num, String refID_1, Integer fragStaPos_1, Integer fragEndPos_1, boolean fragActive_1, String refID_2, Integer fragStaPos_2, Integer fragEndPos_2, boolean fragActive_2, String relOriTag) throws IncrementSameInternalInteractionException {
 
-        // generate unique key
+        // generate unique String key
         String hashKey = getHashKey(refID_1, fragStaPos_1, fragEndPos_1, fragActive_1, refID_2, fragStaPos_2, fragEndPos_2, fragActive_2);
 
         // count interaction separately for simple and twisted
@@ -236,9 +294,6 @@ public class InteractionCountsMap {
         } else {
             oriTag="S"; // simple loop
         }
-
-
-
 
         hashKey += ";";
         hashKey += oriTag;
@@ -375,7 +430,7 @@ public class InteractionCountsMap {
             if(seenHashKeys.contains(baseHashKey)) {
                 continue;
             } else {
-                seenHashKeys.add(baseHashKey);
+                //seenHashKeys.add(baseHashKey);
             }
 
             String[] tmp1 = frags[0].split(":");
@@ -431,6 +486,34 @@ public class InteractionCountsMap {
 
         }
         logger.trace("-----");
+    }
+
+    public void printInteractionCountsMapAsCountTable2(DigestMap digestMap, String interactionCountsTableFileName) throws FileNotFoundException {
+
+        // create file for output
+        PrintStream printStream = new PrintStream(new FileOutputStream(interactionCountsTableFileName));
+
+        // iterate over all interactions
+        for (Integer key1 : interaction_key_counts_map.keySet()) {
+            for(Integer key2 : interaction_key_counts_map.get(key1).keySet()) {
+                //logger.trace(key1 + ", " + key2);
+                //logger.trace(digestMap.getCoordinatesForDigestKey(key1) + ", " + digestMap.getCoordinatesForDigestKey(key2));
+                //logger.trace("Interaction count: " + interaction_key_counts_map.get(key1).get(key2)[0]);
+                printStream.print(digestMap.getCoordinatesForDigestKey(key1) + "\t" + digestMap.getCoordinatesForDigestKey(key2) + "\t");
+                short [] countArray = interaction_key_counts_map.get(key1).get(key2);
+                int simple=0, twisted=0;
+                for(int i=0; i<countArray.length; i++) {
+                    printStream.print(countArray[i] + "\t");
+                    if(i<4) {
+                        twisted=twisted+countArray[i];
+                    } else {
+                        simple=simple+countArray[i];
+                    }
+                }
+                printStream.print(simple + ":" + twisted + "\n");
+
+            }
+        }
     }
 
     /**
@@ -494,8 +577,6 @@ public class InteractionCountsMap {
      * at the interacting fragments individual conditions.
      */
     public void printFragmentInteractionCountsMapAsCountTable(String interactingFragmentsCountsTableFileName) throws FileNotFoundException {
-
-        logger.trace("Hurz!!");
 
         // derive counts
         this.deriveReadCountsAtInteractingFragments();
