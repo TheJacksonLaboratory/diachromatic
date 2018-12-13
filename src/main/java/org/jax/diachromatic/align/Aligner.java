@@ -378,14 +378,10 @@ public class Aligner {
                         pair.reverseDigestIsActive(),
                         pair.getRelativeOrientationTag());*/
                 Integer relOriTag=-1;
-                if(pair.getRelativeOrientationTag().equals("F1F2")) {relOriTag=0;} // twisted
-                if(pair.getRelativeOrientationTag().equals("F2F1")) {relOriTag=1;} // twisted
-                if(pair.getRelativeOrientationTag().equals("R1R2")) {relOriTag=2;} // twisted
-                if(pair.getRelativeOrientationTag().equals("R2R1")) {relOriTag=3;} // twisted
-                if(pair.getRelativeOrientationTag().equals("F1R2")) {relOriTag=4;} // simple
-                if(pair.getRelativeOrientationTag().equals("R2F1")) {relOriTag=5;} // simple
-                if(pair.getRelativeOrientationTag().equals("F2R1")) {relOriTag=6;} // simple
-                if(pair.getRelativeOrientationTag().equals("R1F2")) {relOriTag=7;} // simple
+                if(pair.getRelativeOrientationTag().equals("F1F2") || pair.getRelativeOrientationTag().equals("F2F1")) {relOriTag=0;} // right - twisted
+                if(pair.getRelativeOrientationTag().equals("R1R2") || pair.getRelativeOrientationTag().equals("R2R1")) {relOriTag=1;} // left - twisted
+                if(pair.getRelativeOrientationTag().equals("F1R2") || pair.getRelativeOrientationTag().equals("F2R1")) {relOriTag=2;} // inwards - simple
+                if(pair.getRelativeOrientationTag().equals("R2F1") || pair.getRelativeOrientationTag().equals("R1F2")) {relOriTag=3;} // outwards -simple
                 interactionMap.incrementFragPair2(0, pair.getForwardDigestKey(), pair.getReverseDigestKey(),relOriTag);
                 if(interactionMap.getTotalNumberOfInteractionsForCondition(0)%10000==0) { logger.trace("Size of interactionMap: " + interactionMap.getTotalNumberOfInteractionsForCondition(0)); }
             } else {

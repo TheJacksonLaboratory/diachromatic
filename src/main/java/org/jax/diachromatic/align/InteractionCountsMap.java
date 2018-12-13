@@ -43,7 +43,7 @@ public class InteractionCountsMap {
     /**
      * Total number of read pair orientations
      */
-    private Integer number_of_orientations = 8;
+    private Integer number_of_orientations = 4;
 
     /**
      * Counter reads within active fragments
@@ -240,7 +240,7 @@ public class InteractionCountsMap {
             // create new inner hash map
             newInnerMap = new HashMap<Integer, short[]>();
             // create new count array and put on inner hash map
-            newCountArray = new short[8];
+            newCountArray = new short[4];
             //Arrays.fill(newCountArray, 0);
             newInnerMap.put(secondKey, newCountArray);
             // and put inner hash on outer hash
@@ -248,7 +248,7 @@ public class InteractionCountsMap {
             interaction_count[condition_num]++;
         } else if (!interaction_key_counts_map.get(firstKey).containsKey(secondKey)) {
             // there is already an inner hash map only count array needs to be created
-            newCountArray = new short[8];
+            newCountArray = new short[4];
             //Arrays.fill(newCountArray, 0);
             // put count array on inner hash map
             interaction_key_counts_map.get(firstKey).put(secondKey,newCountArray);
@@ -504,7 +504,7 @@ public class InteractionCountsMap {
                 int simple=0, twisted=0;
                 for(int i=0; i<countArray.length; i++) {
                     printStream.print(countArray[i] + "\t");
-                    if(i<4) {
+                    if(i<2) {
                         twisted=twisted+countArray[i];
                     } else {
                         simple=simple+countArray[i];
