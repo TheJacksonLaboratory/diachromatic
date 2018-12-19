@@ -57,6 +57,7 @@ my $N_WEAK_DIRECTED_INTERACTION = 0;
 my $N_WEAK_UNDIRECTED_INTERACTION = 0;
 my $N_STRONG_DIRECTED_INTERACTION = 0;
 my $N_STRONG_UNDIRECTED_INTERACTION = 0;
+my $N_STRONG_DIRECTED_LONG_RANGE_INTERACTION = 0;
 
 my $N_SIMPLE_WEAK_READ_PAIRS = 0;
 my $N_TWISTED_WEAK_READ_PAIRS = 0;
@@ -166,6 +167,11 @@ while (my $row = <$fh>) {
     my $n_simple = $TMP2[0];
     my $n_twisted = $TMP2[1];
 
+    my $dist=-1;
+    if($frag1_chr eq $frag2_chr) {
+        $dist = getInteractionDist($frag1_chr, $frag1_sta, $frag1_end, $frag2_chr, $frag2_sta, $frag2_end);
+    }
+
     my $directed = 0;
     if((1 < $n_simple + $n_twisted) && ((2*$n_simple <= $n_twisted) || (2*$n_twisted <= $n_simple))) {
         $directed = 1;
@@ -177,6 +183,9 @@ while (my $row = <$fh>) {
 
             if($directed) {
                 $N_STRONG_DIRECTED_INTERACTION++;
+                if($dist!=-1 && $LONG_RANGE_CUTOFF<$dist) {
+                    $N_STRONG_DIRECTED_LONG_RANGE_INTERACTION++;
+                }
             } else {
                 $N_STRONG_UNDIRECTED_INTERACTION++;
             }
@@ -204,7 +213,7 @@ print("=========================================================================
 
 print("An interaction is defined to be directed, if it consists of more than one read pair,\n");
 print("and either the number of simple is twice as much as the number of twisted read pairs,\n");
-print("or the otherway around. I.e. 2:0 and 0:2 are the smallest directions.\n\n");
+print("or the otherway around. I.e. 2:0 and 0:2 are the smallest directed interactions.\n\n");
 
 print("This analysis is restricted to interactions with at least two read pairs,\n");
 print("because a directed interaction requires at least two read pairs.\n\n");
@@ -464,4 +473,10 @@ print("fisher.test(Interactions3B, alternative = \"two.sided\")\n\n");
 
 print("Chi-Squared (use this line in R):\n");
 print("chisq.test(Interactions3B,correct=FALSE)\n\n");
+
+print("------------------------------------------------------------------------------\n");
+print("3D. Directed and strong long range interactions:\n\n");
+
+print("N_STRONG_DIRECTED_LONG_RANGE_INTERACTION: $N_STRONG_DIRECTED_LONG_RANGE_INTERACTION\n\n");
+
 
