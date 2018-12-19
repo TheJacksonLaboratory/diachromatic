@@ -3,6 +3,32 @@
 use strict;
 use warnings;
 
+my $OUT_PREFIX = $ARGV[1];
+
+# prepare BED files for directed trans interactions
+my $filename = $OUT_PREFIX . "_directed_trans.bed";
+open(my $directed_trans, '>', $filename) or die "Could not open file '$filename' $!";
+
+$filename = $OUT_PREFIX . "_undirected_trans.bed";
+open(my $undirected_trans, '>', $filename) or die "Could not open file '$filename' $!";
+
+# prepare BED files for directed trans interactions
+$filename = $OUT_PREFIX . "_directed_strong_long.bed";
+open(my $directed_strong_long, '>', $filename) or die "Could not open file '$filename' $!";
+
+# prepare BED files for directed trans interactions
+$filename = $OUT_PREFIX . "_undirected_strong_long.bed";
+open(my $undirected_strong_long, '>', $filename) or die "Could not open file '$filename' $!";
+
+# command for extracting FASTA from BED
+# bedtools getfasta -name -fi ../VPV_data/mm9/mm9.fa -bed xxx_undirected_trans.bed > xxx_undirected_trans.fasta
+
+# command for replacing all small letters in FASTA wit N
+
+# sed -e '/^>/! s/[[:lower:]]/N/g' in.fasta > out.fasta
+
+
+
 my $LONG_RANGE_CUTOFF = 10000;
 
 ########## sub definitions first
@@ -89,6 +115,7 @@ while (my $row = <$fh>) {
     my $n_twisted = $TMP2[1];
 
     if($n_simple + $n_twisted < 2) {$N_EXCLUDED++; next;} # restrict all analyses to interactions that might be directed
+    if($frag1_chr eq "chrM" || $frag2_chr eq "chrM") {$N_EXCLUDED++; next;} # exclude interactions involving chrM
     else { $N_INCLUDED++; }
 
     my $directed = 0;
@@ -134,7 +161,13 @@ while (my $row = <$fh>) {
 
         if($directed) {
             $N_TRANS_DIRECTED_INTERACTION++;
+            print $directed_trans $frag1_chr . "\t" . $frag1_sta . "\t" . $frag1_end . "\tA:" . $n_simple . ":" . $n_twisted . ":" . $N_TRANS_DIRECTED_INTERACTION . "\n";
+            print $directed_trans $frag2_chr . "\t" . $frag2_sta . "\t" . $frag2_end . "\tB:" . $n_simple . ":" . $n_twisted . ":" . $N_TRANS_DIRECTED_INTERACTION . "\n";
         } else {
+            if($N_TRANS_UNDIRECTED_INTERACTION <= $N_TRANS_DIRECTED_INTERACTION) { # also write out undirected interactions as control
+                print $undirected_trans $frag1_chr . "\t" . $frag1_sta . "\t" . $frag1_end . "\tA:" . $n_simple . ":" . $n_twisted . ":" . $N_TRANS_UNDIRECTED_INTERACTION . "\n";
+                print $undirected_trans $frag2_chr . "\t" . $frag2_sta . "\t" . $frag2_end . "\tB:" . $n_simple . ":" . $n_twisted . ":" . $N_TRANS_UNDIRECTED_INTERACTION . "\n";
+            }
             $N_TRANS_UNDIRECTED_INTERACTION++;
         }
     }
@@ -177,6 +210,8 @@ while (my $row = <$fh>) {
         $directed = 1;
     }
 
+    if($frag1_chr eq "chrM" || $frag2_chr eq "chrM") {next;} # exclude interactions involving chrM
+
     if(2 <= $n_simple + $n_twisted) { # restrict analysis to interaction that might be directed
 
         if($AVG_AT_LEASTS_TWO_READ_PAIR_INTERACTION < $n_simple + $n_twisted) {
@@ -185,9 +220,19 @@ while (my $row = <$fh>) {
                 $N_STRONG_DIRECTED_INTERACTION++;
                 if($dist!=-1 && $LONG_RANGE_CUTOFF<$dist) {
                     $N_STRONG_DIRECTED_LONG_RANGE_INTERACTION++;
+                    if(7<$n_simple + $n_twisted){
+                        print $directed_strong_long $frag1_chr . "\t" . $frag1_sta . "\t" . $frag1_end . "\tA:" . $n_simple . ":" . $n_twisted . ":" . $N_STRONG_DIRECTED_LONG_RANGE_INTERACTION . "\n";
+                        print $directed_strong_long $frag2_chr . "\t" . $frag2_sta . "\t" . $frag2_end . "\tB:" . $n_simple . ":" . $n_twisted . ":" . $N_STRONG_DIRECTED_LONG_RANGE_INTERACTION . "\n";
+                    }
                 }
             } else {
                 $N_STRONG_UNDIRECTED_INTERACTION++;
+                if($N_STRONG_UNDIRECTED_INTERACTION<$N_STRONG_DIRECTED_LONG_RANGE_INTERACTION) {
+                    if(7<$n_simple + $n_twisted){
+                        print $undirected_strong_long $frag1_chr . "\t" . $frag1_sta . "\t" . $frag1_end . "\tA:" . $n_simple . ":" . $n_twisted . ":" . $N_STRONG_UNDIRECTED_INTERACTION . "\n";
+                        print $undirected_strong_long $frag2_chr . "\t" . $frag2_sta . "\t" . $frag2_end . "\tB:" . $n_simple . ":" . $n_twisted . ":" . $N_STRONG_UNDIRECTED_INTERACTION . "\n";
+                        }
+                }
             }
 
             $N_SIMPLE_STRONG_READ_PAIRS = $N_SIMPLE_STRONG_READ_PAIRS + $n_simple;
@@ -478,5 +523,58 @@ print("-------------------------------------------------------------------------
 print("3D. Directed and strong long range interactions:\n\n");
 
 print("N_STRONG_DIRECTED_LONG_RANGE_INTERACTION: $N_STRONG_DIRECTED_LONG_RANGE_INTERACTION\n\n");
+
+
+close $directed_trans;
+close $undirected_trans;
+close $directed_strong_long;
+close $undirected_strong_long;
+
+my $bed_filename = $OUT_PREFIX . "_directed_trans.bed";
+my $fasta_filename_dir = $OUT_PREFIX . "_directed_trans.fasta";
+
+# extract FASTA
+system("bedtools getfasta -name -fi ../VPV_data/mm9/mm9.fa -bed $bed_filename > $fasta_filename_dir");
+
+# replace small letters with N
+my $fasta_filename_dir_no_rep = $OUT_PREFIX . "_directed_trans_no_rep.fasta";
+system("sed -e '/^>/! s/[[:lower:]]/N/g' $fasta_filename_dir > $fasta_filename_dir_no_rep");
+
+# the same for the control
+$bed_filename = $OUT_PREFIX . "_undirected_trans.bed";
+my $fasta_filename_undir = $OUT_PREFIX . "_undirected_trans.fasta";
+my $fasta_filename_undir_no_rep = $OUT_PREFIX . "_undirected_trans_no_rep.fasta";
+system("bedtools getfasta -name -fi ../VPV_data/mm9/mm9.fa -bed $bed_filename > $fasta_filename_undir");
+system("sed -e '/^>/! s/[[:lower:]]/N/g' $fasta_filename_undir > $fasta_filename_undir_no_rep");
+
+# run DREME for sequences with and without repeats
+my $dreme_directory = $OUT_PREFIX . "_DREME_NOREP";
+#system("dreme -oc $dreme_directory -p $fasta_filename_dir_no_rep -n $fasta_filename_undir_no_rep -eps");
+
+$dreme_directory = $OUT_PREFIX . "_DREME";
+#system("dreme -oc $dreme_directory -p $fasta_filename_dir -n $fasta_filename_undir -eps");
+
+
+$bed_filename = $OUT_PREFIX . "_directed_strong_long.bed";
+$fasta_filename_dir = $OUT_PREFIX . "_directed_strong_long.fasta";
+
+# extract FASTA
+system("bedtools getfasta -name -fi ../VPV_data/mm9/mm9.fa -bed $bed_filename > $fasta_filename_dir");
+$fasta_filename_dir_no_rep = $OUT_PREFIX . "_directed_strong_long_no_rep.fasta";
+system("sed -e '/^>/! s/[[:lower:]]/N/g' $fasta_filename_dir > $fasta_filename_dir_no_rep");
+
+$bed_filename = $OUT_PREFIX . "_undirected_strong_long.bed";
+$fasta_filename_undir = $OUT_PREFIX . "_undirected_strong_long.fasta";
+$fasta_filename_undir_no_rep = $OUT_PREFIX . "_undirected_strong_long_no_rep.fasta";
+
+system("bedtools getfasta -name -fi ../VPV_data/mm9/mm9.fa -bed $bed_filename > $fasta_filename_undir");
+system("sed -e '/^>/! s/[[:lower:]]/N/g' $fasta_filename_undir > $fasta_filename_undir_no_rep");
+
+system("dreme -oc $dreme_directory -p $fasta_filename_dir_no_rep -n $fasta_filename_undir_no_rep -eps");
+
+
+
+
+
 
 
