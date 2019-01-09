@@ -46,11 +46,14 @@ public class ReadPairTest {
         rpair = new ReadPair(record1,record2,emptymap,mockDigestMap, upperFragSize,lowerFragSize,stringent);
         assertFalse(rpair.isPaired());
 
-        // test 3 -> positive case cannot be tested, because paired reads result in NullPointerExceptions using the fake mock objects
+        // test 3 now use the stringent definition of multi mapping
+        stringent = true;
         when(record1.getMappingQuality()).thenReturn(31); // mapping quality is sufficient
         when(record1.getAttribute("AS")).thenReturn(0);
-        when(record1.getAttribute("XS")).thenReturn(null); // distance between the scores of the best and second best alignment is sufficiently large
-        // rpair = new ReadPair(record1,record2,emptymap,mockDigestMap,upperFragSize,lowerFragSize,stringent);
-        //assertTrue(rpair.isPaired());
+        when(record1.getAttribute("XS")).thenReturn(-20); // distance between the scores of the best and second best alignment is sufficiently large
+        rpair = new ReadPair(record1,record2,emptymap,mockDigestMap,upperFragSize,lowerFragSize,stringent);
+        assertFalse(rpair.isPaired()); // but this is not enough for the stringent mode; the reads remain unpaired
+
+        // positive cannot be tested using incomplete fake mock objects
     }
 }
