@@ -226,7 +226,7 @@ public class ReadPair {
                 multimapped_read1 = true;
                 this.isPaired = false;
             } else {
-                if(R1.getMappingQuality()<30 && Math.abs((int)R1.getAttribute("XS")-(int)R1.getAttribute("AS"))<10) {
+                if(R1.getMappingQuality()<30 || (int)R1.getAttribute("AS")-(int)R1.getAttribute("XS")<10) {
                     multimapped_read1 = true;
                     this.isPaired = false;
                 }
@@ -239,7 +239,7 @@ public class ReadPair {
                 multimapped_read2 = true;
                 this.isPaired = false;
             } else {
-                if(R2.getMappingQuality()<30 && Math.abs((int)R2.getAttribute("XS")-(int)R2.getAttribute("AS"))<10) {
+                if(R2.getMappingQuality()<30 || (int)R2.getAttribute("AS")-(int)R2.getAttribute("XS")<10) {
                     multimapped_read2 = true;
                     this.isPaired = false;
                 }
