@@ -48,16 +48,16 @@ The following table lists all possible arguments.
 | -op          | ---out-prefix   | stim_rep1     | no       | Prefix for all generated files in output directory.      | prefix  |
 +--------------+-----------------+---------------+----------+----------------------------------------------------------+---------+
 
-If the names of the input files are:
+Output files
+~~~~~~~~~~~~
 
-    * forward.fq.gz
-    * reverse.fq.gz
+The default names of the truncated and gzipped FASTQ files are:
 
-the names of the gzipped output files are:
+    * prefix.truncated_R1.fastq.gz
+    * prefix.truncated_R2.fastq.gz
 
-    * prefix.forward.truncated.fastq.gz
-    * prefix.reverse.truncated.fastq.gz
+In addition, a file
 
-The output files contain truncated and not truncated reads. Summary statistics are written to the screen and the file:
+    * prefix.truncation.stats.txt
 
-    * prefix.truncation.stats.txt (Not yet implemented.)
+is produced that contains summary statistics about the truncation step.
