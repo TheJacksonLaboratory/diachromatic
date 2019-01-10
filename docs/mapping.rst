@@ -96,6 +96,7 @@ events (including cis and trans) can roughly be estimated as the square number o
 entire genome. Given this huge number, we reasoned that it is very unlikely that the same cross-ligation event occurs
 twice. Therefore, we defined a **cross-ligation coefficient (CLC)** as the ratio of singleton read pairs and all read pairs.
 
+
 Running Diachromatic's align subcommand
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
