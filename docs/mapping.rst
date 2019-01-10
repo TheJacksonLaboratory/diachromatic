@@ -96,48 +96,65 @@ events (including cis and trans) can roughly be estimated as the square number o
 entire genome. Given this huge number, we reasoned that it is very unlikely that the same cross-ligation event occurs
 twice. Therefore, we defined a **cross-ligation coefficient (CLC)** as the ratio of singleton read pairs and all read pairs.
 
+
 Running Diachromatic's align subcommand
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Use the following command to run the alignment and counting step. ::
 
-    $ java -jar Diachromatic.jar align -b <bowtie2> -i <bowtie2-index> -q <fastq1> -r <fastq2> -d <digest> [-o <outfile>]
+    $ java -jar target/diachromatic-0.0.2.jar map -b /usr/bin/bowtie2 -i /data/bt_indices/hg38 -q prefix.truncated_R1.fq.gz -r prefix.truncated_R2.fq.gz -d hg38_DpnII_DigestedGenome.txt
 
-The meaning of the options is:
-    * -b <bowtie2> Path to the bowtie2 executable
-    * -i <bowtie2-index> Path to the bowtie2 index for the genome used to map the FASTQ files
-    * --q <fastq1> Name and path to the *truncated* "forward" FASTQ file (produced in previous step)
-    * --r <fastq2> Name and path to the *truncated* "reverse" FASTQ file (produced in previous step)
-    * -d <digest> Path to the digest file produced in the first step
-    * [-o <outfile>] This flag is optional and if it is not passed, the default name of ``diachromatic-processed.bam`` will be used.
-    * [-x] If this is option is used a set, an additional BAM file for rejected pairs will be created. The general tag for rejected reads is ``YY``. See below for tags of individual artifacts.
 
-For instance, the following command will use bowtie2 to map the two FASTQ files of a paired-end run independently (as it they were single-end sequences). Subsequently, the two resulting mappings will be paired, and pairs that show characteristics of known artifacts will be counted and sorted out. Finally, duplicates will be removed. ::
-
-    $ java -jar target/diachromatic-0.0.2.jar map -b /usr/bin/bowtie2 -i btindex/hg19 -q hindIIIhg19chc/test_dataset1.hindIIIhg19.fastq -r hindIIIhg19chc/test_dataset2.hindIIIhg19.fastq -d hg19HindIIIdigest.txtr -o hindIII
-
++--------------+----------------------+--------------------------------------------------------+----------+----------------------------------------------------------------------+---------+
+| Short option | Long option          | Example                                                | Required | Description                                                          | Default |
++--------------+----------------------+--------------------------------------------------------+----------+----------------------------------------------------------------------+---------+
+| -q           | --fastq-r1           | prefix.truncated_R1.fq.gz                              | yes      | Path to the truncated forward FASTQ file.                            |    --   |
++--------------+----------------------+--------------------------------------------------------+----------+----------------------------------------------------------------------+---------+
+| -r           | --fastq-r2           | prefix.truncated_R2.fq.gz                              | yes      | Path to the truncated reverse FASTQ file.                            |    --   |
++--------------+----------------------+--------------------------------------------------------+----------+----------------------------------------------------------------------+---------+
+| -b           | --bowtie2            | /tools/bowtie2-2.3.4.1-linux-x86_64/bowtie2            | yes      | Path to bowtie2 executable.                                          |    --   |
++--------------+----------------------+--------------------------------------------------------+----------+----------------------------------------------------------------------+---------+
+| -i           | bowtie2-index        | /data/indices/bowtie2/hg38/hg38                        | yes      | Path to bowtie2 index of the corresponding genome.                   |    --   |
++--------------+----------------------+--------------------------------------------------------+----------+----------------------------------------------------------------------+---------+
+| -d           | --digest-file        | /data/GOPHER/hg38_DpnII_DigestedGenome.txt             | yes      | Path to the digest file produced with GOPHER.                        |    --   |
++--------------+----------------------+--------------------------------------------------------+----------+----------------------------------------------------------------------+---------+
+| -a           | --active-digest-file | /data/GOPHER/hg38_DpnII_active_digests_cd4v2_genes.bed | no       | Path to a BED file containing the coordinates of active digests.     |    --   |
++--------------+----------------------+--------------------------------------------------------+----------+----------------------------------------------------------------------+---------+
+| -od          | --out-directory      | cd4v2                                                  | no       | Directory containing the output of the align subcommand.             | results |
++--------------+----------------------+--------------------------------------------------------+----------+----------------------------------------------------------------------+---------+
+| -op          | ---out-prefix        | stim_rep1                                              | no       | Prefix for all generated files in output directory.                  | prefix  |
++--------------+----------------------+--------------------------------------------------------+----------+----------------------------------------------------------------------+---------+
+| -p           | --thread-num         | 15                                                     | no       | Number of threads used by bowtie2.                                   | 1       |
++--------------+----------------------+--------------------------------------------------------+----------+----------------------------------------------------------------------+---------+
+| -j           | --output-rejected    | --                                                     | no       | If set, a BAM file containing the reject read pairs will be created. | false   |
++--------------+----------------------+--------------------------------------------------------+----------+----------------------------------------------------------------------+---------+
 
 Output files
 ~~~~~~~~~~~~
 
-Two output files will be produced:
+The default name of the BAM file containing all unique valid pairs that can be used for downstream analysis is:
 
-    * ``prefix.valid.bam`` contains all uniquely mapped pairs. Known artifacts and duplicated reads are removed. This file can be used for downstream analyses.
+    * ``prefix.valid.bam``
 
-    * ``prefix.rejected.bam`` contains all pairs that show characteristics of known artifacts:
 
-        * insert too long (Tag: ``TB``)
-        * insert too short (Tag: ``TS``)
-        * circularized read (Tag: ``SL``)
-        * same dangling end (Tag: ``DE``)
-        * same internal (Tag: ``SI``)
-        * re-ligation (Tag: ``RL``)
-        * contiguous (Tag: ``CT``)
+If ``--output-rejected`` is set, there will be second BAM file cointaing all rejected pairs:
+
+    * ``prefix.rejected.bam``
+
+The optional fields of the SAM records contain information about the reasons for rejection:
+
+    * insert too long (Tag: ``TB``)
+    * insert too short (Tag: ``TS``)
+    * circularized read (Tag: ``SL``)
+    * same dangling end (Tag: ``DE``)
+    * same internal (Tag: ``SI``)
+    * re-ligation (Tag: ``RL``)
+    * contiguous (Tag: ``CT``)
+
+In addition, a file
 
     * ``prefix.align.stats.``
 
-Read pairs for which one read cannot be mapped or cannot be mapped uniquely (bowtie2: XS:i tag exists) will be discarded completely. Statistics about the numbers of unmappable reads, multimappable reads, and artifact pairs will be written to the screen.
-
-
+is produced that contains summary statistics about the alignment step.
 
 

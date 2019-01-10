@@ -276,8 +276,8 @@ public class Commandline {
                .addOption("i", "bowtie-index", true, "path to bowtie2 index") // align specific option
                .addOption("bsu", "bowtie-stringent-unique", false, "use stringent settings for definition of uniquely mapped reads")
                .addOption("j", "bad", false, "output bad (rejected) reads to separated file") // align specific option
-               .addOption("d", "digest", true, "path to GOPHER digest file") // align (and count) specific option
-               .addOption("a", "active-digests", true, "path to BED file with active digests (overwrites information in digest file)") // align (and count) specific option
+               .addOption("d", "digest-file", true, "path to GOPHER digest file") // align (and count) specific option
+               .addOption("a", "active-digest-file", true, "path to BED file with active digests (overwrites information in digest file)") // align (and count) specific option
                .addOption("o", "out", true, "name/path of output file/directory")
                .addOption("p", "thread-num", true, "number of threads used by bowtie2")
                .addOption("l", "lower-frag-size-limit", true, "lower limit for fragment size")
@@ -339,20 +339,20 @@ public class Commandline {
         "\tjava -jar Diachromatic.jar align -b <bowtie2> -i <bowtie2-index> \\ \n" +
 
         "\t\t\t-q <forward.truncated.fq.gz> -r <reverse.truncated.fq.gz> \\ \n" +
-        "\t\t\t-d <digest> [-od <outfile>] [-j <output-rejected>]\n" +
+        "\t\t\t-d <digest-file> [-od <outfile>] [-j <output-rejected>]\n" +
         "\t\t\t[-l <lower-frag-size-limit>] [-u <upper-frag-size-limit>]\n" +
-        "\t\t\t[-a <active-digests>] [-o <outfile>] [-b] [-p] <thread-num>\n\n" +
+        "\t\t\t[-a <active-digest-file>] [-o <outfile>] [-b] [-p] <thread-num>\n\n" +
 
         "\t\t<bowtie2>: path to bowtie2 executable\n" +
-        "\t\t<bowtie2-index>: path to bowtie2 index for digested genome\n" +
+        "\t\t<bowtie2-index>: path to bowtie2 index of the reference genome\n" +
         "\t\t<bowtie-stringent-unique>: use stringent settings for definition of uniquely mapped reads\n" +
         "\t\t<forward.truncated.fq.gz>: path to the truncated forward gzipped FASTQ file\n" +
         "\t\t<reverse.truncated.fq.gz>: path to the truncated reverse gzipped FASTQ file\n" +
         "\t\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII or HindIII)\n" +
         "\t\t<lower-frag-size-limit>: lower limit for fragment size (Default: 150)\n" +
         "\t\t<upper-frag-size-limit>: upper limit for fragment size (Default: 800)\n" +
-        "\t\t<digest>: path to the digest file produced by the digest command\n" +
-        "\t\t<active-digests>: path to a BED file with the coordinates of active digests\n" +
+        "\t\t<digest-file>: path to the digest file produced with GOPHER\n" +
+        "\t\t<active-digest-file>: path to a BED file with the coordinates of active digests\n" +
         "\t\t<thread-num>: number of threads used by bowtie2\n" +
         "\t\t<output-rejected>: output rejected reads to file)\n");
     }
