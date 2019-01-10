@@ -56,4 +56,44 @@ public class ReadPairTest {
 
         // positive cannot be tested using incomplete fake mock objects
     }
+
+    @Test
+    public void testUniMappedReads() throws DiachromaticException {
+        SAMRecord record1 = Mockito.mock(SAMRecord.class);
+        SAMRecord record2 = Mockito.mock(SAMRecord.class);
+        Map<String, List<Digest>> emptymap=ImmutableMap.of();
+        DigestMap mockDigestMap = Mockito.mock(DigestMap.class);
+
+        when(record1.getAlignmentStart()).thenReturn(100);
+        when(record1.getAlignmentEnd()).thenReturn(200);
+
+        when(record2.getAlignmentStart()).thenReturn(400);
+        when(record2.getAlignmentEnd()).thenReturn(500);
+
+
+        Digest digest = Mockito.mock(Digest.class);
+        DigestPair mockDigestPair = Mockito.mock(DigestPair.class);
+        when(mockDigestPair.forward()).thenReturn(digest);
+        when(mockDigestPair.reverse()).thenReturn(digest);
+
+        when(mockDigestMap.getDigestPair2("fakeChromosome1", 200, "fakeChromosome2", 400)).thenReturn(mockDigestPair);
+        int upperFragSize = 250;
+        int lowerFragSize = 200;
+        boolean stringent = false;
+
+        when(record1.getReferenceName()).thenReturn("fakeChromosome1");
+        when(record2.getReferenceName()).thenReturn("fakeChromosome2");
+
+        when(record1.getReadUnmappedFlag()).thenReturn(false);
+        when(record2.getReadUnmappedFlag()).thenReturn(false);
+
+        when(record1.getAttribute("XS")).thenReturn(null);
+        when(record2.getAttribute("XS")).thenReturn(null);
+
+        when(record1.getReadNegativeStrandFlag()).thenReturn(true);
+        when(record2.getReadNegativeStrandFlag()).thenReturn(false);
+
+        ReadPair rpair = new ReadPair(record1,record2,emptymap,mockDigestMap,upperFragSize,lowerFragSize,stringent);
+        assertTrue(rpair.isPaired());
+    }
 }
