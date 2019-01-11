@@ -1,4 +1,3 @@
-
 Mapping and categorization of Hi-C paired-end reads
 ===================================================
 
@@ -129,17 +128,20 @@ Use the following command to run the alignment and counting step. ::
 | -j           | --output-rejected    | --                                                     | no       | If set, a BAM file containing the reject read pairs will be created. | false   |
 +--------------+----------------------+--------------------------------------------------------+----------+----------------------------------------------------------------------+---------+
 
+
+
+
 Output files
 ~~~~~~~~~~~~
 
 The default name of the BAM file containing all unique valid pairs that can be used for downstream analysis is:
 
-    * ``prefix.valid.bam``
+    * ``prefix.valid_pairs.aligned.bam``
 
 
 If ``--output-rejected`` is set, there will be second BAM file cointaing all rejected pairs:
 
-    * ``prefix.rejected.bam``
+    * ``prefix.rejected_pairs.aligned.bam``
 
 The optional fields of the SAM records contain information about the reasons for rejection:
 
@@ -151,10 +153,10 @@ The optional fields of the SAM records contain information about the reasons for
     * re-ligation (Tag: ``RL``)
     * contiguous (Tag: ``CT``)
 
+Furthermore, there is an ``RO`` attribute that gives the relative orientation of the pair (``R1F2``, ``R2F1``, etc.).
+
 In addition, a file
 
     * ``prefix.align.stats.``
 
 is produced that contains summary statistics about the alignment step.
-
-

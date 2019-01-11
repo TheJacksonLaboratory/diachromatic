@@ -12,7 +12,8 @@ Welcome to Diachromatic's documentation!
    In silico digest of the genome <digest>
    Truncation of chimeric Hi-C reads <truncate>
    Mapping paired-end Hi-C reads <mapping>
-   testing
+   Counting unique valid pairs <count>
+
 
 
 Differential Analysis of Chromatin Interactions by Capture (Diachromatic)
