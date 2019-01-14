@@ -1,20 +1,42 @@
 Counting of valid read pairs between pairs of restriction fragments
 ===================================================================
 
-Requirements regarding the input BAM file containing the valid pairs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-If you used Diachromatic with the subcommand ``align``, nothing has to be done. If the BAM file was produced in a
-different way, make sure that the two reads of given pairs occur consecutively. Furthermore, make sure that duplicates
-were previously removed.
-
-GOPHER digest file.
-
-BED file for active fragments.
+Mapped Hi-C read pairs are typically transformed into contact matrices, whereby the pairs are counted between windows of
+fixed size, typically 5 kbp (ref). Diachromatic was developed in the first place for *capture Hi-C* data which achieves
+a much higher resolution as compared to Hi-C. Therefore, for Diachromatic the read counts are determined on the
+restriction fragment level.
 
 
-Simple and twisted interaction counts
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Required input files
+~~~~~~~~~~~~~~~~~~~~
+
+GOPHER digest file
+------------------
+
+Due to the fact that the counts are determined on the restriction fragment level, the digest file `initially produced
+using GOPHER`_ needs to be passed to ``Diachromatic count``. If the captured viewpoints were designed with GOPHER,
+this file also includes information about active and inactive restriction fragments. If this is not the case,
+you can pass an additional BED file containing the coordinates of active digests. Note that the coordinates must exactly
+match the coordinates in the digest file. The coordinates in GOPHER's digest file are 1-based. Therefore, the BED file
+for active fragments does strictly speaking not comply with the BED format that has 0-based start coordinates and
+1-based end coordinates.
+
+.. _initially produced using GOPHER: digest.html
+
+
+BAM file with unique valid pairs
+--------------------------------
+
+The second required input file contains the unique valid mapped read pairs in BAM format. If this file was generated `using
+Diachromatic with the align subcommand`_, nothing has to be done or taken care of. If the BAM file was produced in a different way,
+make sure that the two reads of any given pair occur consecutively. Furthermore, make sure that duplicates were previously
+removed.
+
+.. _using Diachromatic with the align subcommand: mapping.html
+
+
+Simple and twisted read pairs and counts of directed interaction
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Diachromatic aggregates read pairs whose 5' end positions map to the same pair of restriction fragments into interaction counts,
 whereby one special feature of Diachromatic is that the relative orientation of read pairs is taken into account.
@@ -51,30 +73,22 @@ Use the following command to run the counting step. ::
 | -op          | --out-prefix         | stim_rep1                                              | no       | Prefix for all generated files in output directory.              | prefix  |
 +--------------+----------------------+--------------------------------------------------------+----------+------------------------------------------------------------------+---------+
 
+
 Output files
 ~~~~~~~~~~~~
 
-The interactions are written to a tab separated text file the followning name by default:
+The interactions are written to a tab separated text file that has the following name by default:
 
     * ``interaction.counts.table.tsv``
 
-The structure of this file is similar to that of BED files. Each line stands for one pair of interacting fragments.
+The structure of this file is similar to that of iBED files. Each line stands for one pair of interacting fragments.
 Consider the following example:
 
  ::
 
     chr7    42304777        42314850        A       chr3    152941166       152943990       I       12:2
 
-
-The first three columns contain the coordinates of a restriction fragment on chromosome 7.
-The ``A`` in column 4 indicates that this fragment is defined as active,
-i.e. it is part of a viewpoint that was enriched using capture technology.
+The first three columns contain the coordinates of a restriction fragment on chromosome 7. The ``A`` in column 4
+indicates that this fragment is defined to be active, i.e. it is part of a viewpoint that was enriched using capture technology.
 The information about active states of fragments originates either from the GOPHER digest file passed to Diachromatic
 using the ``-d`` option or from the additional input file passed using the ``-a`` option.
-
-
-
-
-
-
-
