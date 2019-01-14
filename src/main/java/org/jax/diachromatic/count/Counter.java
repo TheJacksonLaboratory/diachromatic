@@ -7,6 +7,8 @@ import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.align.Aligner;
 import org.jax.diachromatic.align.DigestMap;
 import org.jax.diachromatic.align.InteractionCountsMap;
+import org.jax.diachromatic.align.ReadPair;
+import org.jax.diachromatic.exception.DiachromaticException;
 
 import java.io.File;
 import java.util.Iterator;
@@ -40,6 +42,11 @@ public class Counter {
     InteractionCountsMap interactionMap;
 
     /**
+     * Stores interaction counts.
+     */
+    DigestMap digestMap;
+
+    /**
      * Paths for output files.
      */
     String outputTsvInteractingFragmentCounts, outputTsvInteractionCounts, outputTxtStats;
@@ -57,19 +64,26 @@ public class Counter {
 
     public Counter(String validPairsBamFile, DigestMap digestMap, String outputPathPrefix, String filenamePrefix) {
         this.reader = SamReaderFactory.makeDefault().open(new File(validPairsBamFile));
+        this.digestMap=digestMap;
         this.it = reader.iterator();
 
     }
 
-    public void countInteractions(){
+    public void countInteractions() throws DiachromaticException {
 
         interactionMap = new InteractionCountsMap(1);
 
         // iterate over unique valid pairs
         while (it.hasNext()) {
-            SAMRecord record = it.next();
-            logger.trace(record.getReadName());
-            logger.trace(record.getAttribute("RO"));
+            SAMRecord record1 = it.next();
+            SAMRecord record2 = it.next();
+            logger.trace(record1.getReadName());
+            logger.trace(record1.getAttribute("RO"));
+
+            // create read pair
+            ReadPair readPair = new ReadPair(record1, record2, digestMap);
+            //readPair.
+
         }
 
     }
