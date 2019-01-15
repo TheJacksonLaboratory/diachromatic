@@ -56,6 +56,13 @@ public class InteractionCountsMap {
     private Integer[] interaction_count = null;
 
     /**
+     * Total current number of singleton interactions for each condition.
+     * Note: Initialized only after execution of the function
+     * 'printInteractionCountsMapAsCountTable', which is not nice.
+     */
+    private Integer[] n_singleton_interactions = null;
+
+    /**
      * Number of interactions between two active fragments for each condition
      */
     private Integer[] active_active_interaction_count = null;
@@ -114,6 +121,9 @@ public class InteractionCountsMap {
 
         this.interaction_count = new Integer[number_of_conditions];
         Arrays.fill(interaction_count, 0);
+
+        this.n_singleton_interactions = new Integer[number_of_conditions];
+        Arrays.fill(n_singleton_interactions, 0);
 
         this.active_active_interaction_count = new Integer[number_of_conditions];
         Arrays.fill(active_active_interaction_count, 0);
@@ -282,7 +292,7 @@ public class InteractionCountsMap {
             }
         }
         catch (IncrementSameInternalInteractionException e) {
-            logger.warn("IncrementSameInternalInteraction occured. Interaction is within the same fragment.");
+            logger.warn("IncrementSameInternalInteraction occurred. Interaction is within the same fragment.");
         }
         return hashKey;
     }
@@ -294,6 +304,15 @@ public class InteractionCountsMap {
      */
     public Integer getTotalNumberOfInteractionsForCondition(Integer condition) {
         return this.interaction_count[condition];
+    }
+
+    /**
+     *
+     * @return Total number of interactions with only one read pair for a given condition.
+     *
+     */
+    public Integer getTotalNumberOfSingletonInteractionsForCondition(Integer condition) {
+        return this.n_singleton_interactions[condition];
     }
 
     /**
@@ -352,7 +371,6 @@ public class InteractionCountsMap {
      * All following fields contain the number of read pairs observed for the given fragment pair
      * for individual conditions.
      *
-     * TODO: Include information about active/inactive fragments as soon as this information is available.
      */
     public void printInteractionCountsMapAsCountTable(String interactionCountsTableFileName) throws FileNotFoundException {
 
@@ -425,12 +443,13 @@ public class InteractionCountsMap {
                 printStream.print(":");
                 printStream.print(twistedNum);
 
+                if(simpleNum+twistedNum==1) {n_singleton_interactions[i]++;}
+
                 //printStream.print(interaction_counts_map.get(hashKey).get(i));
             }
             printStream.print("\n");
 
         }
-        logger.trace("-----");
     }
 
     /**
@@ -494,8 +513,6 @@ public class InteractionCountsMap {
      * at the interacting fragments individual conditions.
      */
     public void printFragmentInteractionCountsMapAsCountTable(String interactingFragmentsCountsTableFileName) throws FileNotFoundException {
-
-        logger.trace("Hurz!!");
 
         // derive counts
         this.deriveReadCountsAtInteractingFragments();

@@ -97,7 +97,6 @@ public class Commandline {
                 System.out.println(String.format("%d arguments for command: %s",category.length,cmd ));
             } else {
                 mycommand=category[0];
-
             }
             if (commandLine.getArgs().length<1) {
                 printUsage("no arguments passed");
