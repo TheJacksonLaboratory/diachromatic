@@ -1,5 +1,6 @@
 package org.jax.diachromatic.align;
 
+import org.jax.diachromatic.count.InteractionCountsMap;
 import org.jax.diachromatic.exception.IncrementSameInternalInteractionException;
 import org.junit.BeforeClass;
 import org.junit.Test;

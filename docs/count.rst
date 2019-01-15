@@ -77,18 +77,60 @@ Use the following command to run the counting step. ::
 Output files
 ~~~~~~~~~~~~
 
+Interaction counts
+------------------
+
 The interactions are written to a tab separated text file that has the following name by default:
 
-    * ``interaction.counts.table.tsv``
+    * ``prefix.interaction.counts.table.tsv``
 
 The structure of this file is similar to that of iBED files. Each line stands for one pair of interacting fragments.
 Consider the following example:
 
  ::
 
-    chr7    42304777        42314850        A       chr3    152941166       152943990       I       12:2
+    chr7    42304777        42314850        A       chr7    152941166       152943990       I       12:2
+    chr7    42304777        42314850        A       chr7    38624777       38625305       I       7:4
 
 The first three columns contain the coordinates of a restriction fragment on chromosome 7. The ``A`` in column 4
 indicates that this fragment is defined to be active, i.e. it is part of a viewpoint that was enriched using capture technology.
 The information about active states of fragments originates either from the GOPHER digest file passed to Diachromatic
 using the ``-d`` option or from the additional input file passed using the ``-a`` option.
+
+Read counts at interacting fragments
+------------------------------------
+
+Another file that is created contains the counts of reads at interacting fragments. By default the name of this file is:
+
+    * ``prefix.interacting.fragments.counts.table.tsv``
+
+The structure is again similar to that of BED files. Consider the following example:
+
+ ::
+
+    chr7    42304777        42314850        A       25
+    chr7    152941166       152943990       I       14
+    chr7    38624777       38625305       I       11
+
+The first three columns contain the coordinates of interacting restriction fragments. This is again followed by either an ``A`` or ``I`` in column 4,
+whereby ``A`` means active and ``I`` inactive. The fifth column contains the read counts aggregated from all
+interactions that end in the corresponding fragment. For better understanding, compare these counts to the two
+interactions given above.
+
+Interaction count statistics
+----------------------------
+
+As for the other subcommands, a text file containing summary statistics is generated:
+
+    * ``prefix.count.stats.txt``
+
+This file contains:
+
+    * The total number of processed read pairs.
+    * The read pair counts broken down into the eight possible pair orientations.
+    * Summary statistics about interactions between active and inactive fragments.
+    * Quality metrics for experimental trouble shooting
+        + Target Enrichment Coefficient (TEC): The fraction of reads that are mapped to active fragments.
+        + Cross-ligation coefficient (CLC):	The fraction of trans read pairs.
+        + Fraction of Singleton Interactions (FSI): The proportion of interactions consisting of only one read pair among all interactions.
+            - This is an alternative quality metric that is intended to reflect the extend cross-ligation events.

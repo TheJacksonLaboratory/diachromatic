@@ -6,7 +6,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.align.Aligner;
 import org.jax.diachromatic.align.DigestMap;
-import org.jax.diachromatic.align.InteractionCountsMap;
 import org.jax.diachromatic.align.ReadPair;
 import org.jax.diachromatic.exception.DiachromaticException;
 
@@ -170,12 +169,6 @@ public class Counter {
         printStream.print("\tR1F2 - outie:\t" + n_R1F2 + String.format(" (%.2f%%)", 100.0*n_R1F2/n_pairs_total) + "\n");
         printStream.print("\n");
 
-        printStream.print("Quality metrics for experimental trouble shooting:\n");
-        printStream.print("\tTarget Enrichment Coefficient (TEC):\t" + String.format("%.2f%%", 100*interactionMap.getTargetEnrichmentCoefficientForCondition(0)) + "\n");
-        printStream.print("\tCross-ligation coefficient (CLC):\t" + String.format("%.2f%%", 100.0*n_trans_pairs/n_pairs_total) + "\n");
-        double fsi = 100.0*interactionMap.getTotalNumberOfSingletonInteractionsForCondition(0)/interactionMap.getTotalNumberOfInteractionsForCondition(0);
-        printStream.print("\tFraction of Singleton Interactions (FSI):\t" + String.format("%.2f%%", fsi) + "\n");
-
         printStream.print("\n");
         printStream.print("Summary statistics about interactions between active and inactive fragments:\n");
         printStream.print("\t" + "Total number of interactions: " + interactionMap.getTotalNumberOfInteractionsForCondition(0) + "\n");
@@ -186,10 +179,16 @@ public class Counter {
         printStream.print("\t" + "Total number of interacting fragments: " + interactionMap.getTotalNumberOfInteractingFragmentsForCondition(0) + "\n");
         printStream.print("\t" + "Number of active interacting fragments: " + interactionMap.getTotalNumberOfActiveInteractingFragmentsForCondition(0) + "\n");
         printStream.print("\n");
+
+        printStream.print("Quality metrics for experimental trouble shooting:\n");
+        printStream.print("\tTarget Enrichment Coefficient (TEC):\t" + String.format("%.2f%%", 100*interactionMap.getTargetEnrichmentCoefficientForCondition(0)) + "\n");
+        printStream.print("\tCross-ligation coefficient (CLC):\t" + String.format("%.2f%%", 100.0*n_trans_pairs/n_pairs_total) + "\n");
+        double fsi = 100.0*interactionMap.getTotalNumberOfSingletonInteractionsForCondition(0)/interactionMap.getTotalNumberOfInteractionsForCondition(0);
+        printStream.print("\tFraction of Singleton Interactions (FSI):\t" + String.format("%.2f%%", fsi) + "\n");
     }
 
     private void createOutputNames(String outputPathPrefix) {
-        outputTsvInteractingFragmentCounts = String.format("%s.%s", outputPathPrefix, "interacting.fragments.counts.table.tsv");
+        outputTsvInteractingFragmentCounts = String.format("%s.%s", outputPathPrefix, "interacting.fragments.counts2.table.tsv");
         outputTsvInteractionCounts = String.format("%s.%s", outputPathPrefix, "interaction.counts2.table.tsv");
         outputTxtStats = String.format("%s.%s", outputPathPrefix, "count.stats.txt");
     }
