@@ -12,6 +12,8 @@ Welcome to Diachromatic's documentation!
    In silico digest of the genome <digest>
    Truncation of chimeric Hi-C reads <truncate>
    Mapping paired-end Hi-C reads <mapping>
+   Calling SNPs on Hi-C reads <allelspec>
+   testing
    Counting unique valid pairs <count>
 
 
