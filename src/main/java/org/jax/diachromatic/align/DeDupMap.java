@@ -18,12 +18,6 @@ public class DeDupMap {
     private int query_num;
 
     /**
-     * Number of chromosome name pair keys. Should not become too large, because a good proportion of read pairs
-     * maps to the same chromosome.
-     */
-    private int chr_pair_key_num;
-
-    /**
      * Number of insertions that were made. Corresponds to the number of unique pairs.
      */
     private int insertion_num;
@@ -50,7 +44,6 @@ public class DeDupMap {
      DeDupMap(boolean useRelativeOrientation) {
         dedupmap = new  HashMap<String, HashMap<Integer,Set<Integer>>>();
         query_num = 0;
-        chr_pair_key_num = 0;
         insertion_num = 0;
         first_coord_num = 0;
         second_coord_num = 0;
@@ -150,7 +143,6 @@ public class DeDupMap {
              newSet.add(intVal); /// add coordinate to set
              newIntHashMap.put(intKey,newSet);  // put set on integer HashMap
              dedupmap.put(stringKey,newIntHashMap); // put integer HashMap on string HashMap
-             chr_pair_key_num++;
              first_coord_num++;
              second_coord_num++;
              insertion_num++;
@@ -159,8 +151,9 @@ public class DeDupMap {
          }
      }
 
+     /** @return Number of keys used to kep track of chromosome interaction combinations, e.g., chr1chr23 means chromosome 1-chromosome2-orientation 3.*/
      public int getNumOfChrPairKeys() {
-         return chr_pair_key_num;
+         return dedupmap.size();
      }
 
      public int getNumOfQueries() {
