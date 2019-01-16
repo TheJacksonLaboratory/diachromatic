@@ -3,6 +3,7 @@ package org.jax.diachromatic.count;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import org.jax.diachromatic.align.DigestMap;
 import org.jax.diachromatic.exception.IncrementSameInternalInteractionException;
 
 import java.io.FileNotFoundException;
