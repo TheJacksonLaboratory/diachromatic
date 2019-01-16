@@ -10,6 +10,7 @@ import htsjdk.samtools.util.Log;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jax.diachromatic.count.InteractionCountsMap;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.io.Commandline;
 
@@ -264,7 +265,7 @@ public class Aligner {
             //header.addProgramRecord(spr);
         }
         // now add the new program record from Diachromatic
-        String programGroupId = "@PG\tID:Diachromatic\tPN:Diachromatic\tVN:" + VERSION;
+        String programGroupId = "Diachromatic\tPN:Diachromatic\tVN:" + VERSION;
         SAMProgramRecord programRecord = new SAMProgramRecord(programGroupId);
         header.addProgramRecord(programRecord);
         // we are good to go with this SAMFileHeader
@@ -397,7 +398,7 @@ public class Aligner {
         //interactionMap.printInteractionCountsMapAsCountTable(outputTsvInteractionCounts);
         interactionMap.printInteractionCountsMapAsCountTable2(digestMap,outputTsvInteractionCounts);
 
-        //interactionMap.printFragmentInteractionCountsMapAsCountTable(outputTsvInteractingFragmentCounts);
+        interactionMap.printFragmentInteractionCountsMapAsCountTable(outputTsvInteractingFragmentCounts);
         validReadsWriter.close();
         if(outputRejectedReads) {
             rejectedReadsWriter.close();
@@ -710,8 +711,8 @@ public class Aligner {
     private void createOutputNames(String outputPathPrefix) {
         outputBAMvalid = String.format("%s.%s", outputPathPrefix, "valid_pairs.aligned.bam");
         outputBAMrejected = String.format("%s.%s", outputPathPrefix, "rejected_pairs.aligned.bam");
-        outputTsvInteractingFragmentCounts = String.format("%s.%s", outputPathPrefix, "interacting.fragments.counts.table.tsv"); // will be moved to class counts
-        outputTsvInteractionCounts = String.format("%s.%s", outputPathPrefix, "interaction.counts.table.tsv"); // will be moved to class counts
+        outputTsvInteractingFragmentCounts = String.format("%s.%s", outputPathPrefix, "interacting.fragments.counts.table.tsv"); // was copied to class counts
+        outputTsvInteractionCounts = String.format("%s.%s", outputPathPrefix, "interaction.counts.table.tsv"); // was copied to class counts
         outputFragSizesCountsRscript = String.format("%s.%s", outputPathPrefix, "frag.sizes.counts.script.R");
         outputTxtStats = String.format("%s.%s", outputPathPrefix, "align.stats.txt");
     }

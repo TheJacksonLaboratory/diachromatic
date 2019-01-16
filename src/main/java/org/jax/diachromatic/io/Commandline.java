@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.commons.cli.*;
 import org.jax.diachromatic.command.Command;
 import org.jax.diachromatic.command.AlignCommand;
+import org.jax.diachromatic.command.CountCommand;
 import org.jax.diachromatic.command.TruncateCommand;
 import org.jax.diachromatic.exception.DiachromaticException;
 
@@ -61,6 +62,9 @@ public class Commandline {
     private String pathToActiveDigestsFile=null;
     private String pathToBowtieIndex=null;
 
+    private String pathToValidPairsBamFile=null;
+    private String pathToGopherDigestFile=null;
+
     /**
      * Lower and upper limit for size of valid pair fragments. Read pairs that correspond to hybrid fragments with
      * a size outside this range will be categorized as wrong size pairs and discarded.
@@ -93,7 +97,6 @@ public class Commandline {
                 System.out.println(String.format("%d arguments for command: %s",category.length,cmd ));
             } else {
                 mycommand=category[0];
-
             }
             if (commandLine.getArgs().length<1) {
                 printUsage("no arguments passed");
@@ -112,8 +115,12 @@ public class Commandline {
             if (commandLine.hasOption("p")) {
                 this.threadNum=Integer.parseInt(commandLine.getOptionValue("p"));
             }
+            if (commandLine.hasOption("v")) {
+                this.pathToValidPairsBamFile=commandLine.getOptionValue("v");
+            }
             if (commandLine.hasOption("d")) {
                 this.pathToDiachromaticDigestFile=commandLine.getOptionValue("d");
+                this.pathToGopherDigestFile=commandLine.getOptionValue("d");
             }
             if (commandLine.hasOption("a")) {
                 this.pathToActiveDigestsFile=commandLine.getOptionValue("a");
@@ -185,6 +192,7 @@ public class Commandline {
             switch (mycommand) {
                 case "truncate": printHelpHeader(); printTruncateHelp(true); break;
                 case "align": printHelpHeader(); printAlignHelp(true); break;
+                case "count": printHelpHeader(); printCountHelp(true); break;
             }
             System.exit(1);
         }
@@ -239,6 +247,20 @@ public class Commandline {
                         filenamePrefix,
                         useStringentUniqueSettings
                         );
+            } else if (mycommand.equalsIgnoreCase("count")) {
+                if (this.pathToValidPairsBamFile == null) {
+                    printCountHelp("ERROR: -v option required for count command. Please specify a BAM file with valid pairs.");
+                } else if (this.pathToGopherDigestFile==null) {
+                    printCountHelp("ERROR: -d option required for count command. Please specify a GOPHER digest file.");
+                }
+                logger.trace("List of arguments");
+                logger.trace("=================");
+                logger.trace("pathToValidPairsBamFile: " + this.pathToValidPairsBamFile);
+                logger.trace("pathToGopherDigestFile: " + this.pathToGopherDigestFile);
+                logger.trace("pathToActiveDigestsFile: " + this.pathToActiveDigestsFile);
+                logger.trace("outputPathPrefix: " + this.outputPathPrefix);
+                logger.trace("filenamePrefix: " + this.filenamePrefix + "\n");
+                this.command=new CountCommand(this.pathToValidPairsBamFile,this.pathToGopherDigestFile,this.pathToActiveDigestsFile,this.outputPathPrefix,this.filenamePrefix);
             } else {
                 printUsage(String.format("Did not recognize command: %s", mycommand));
             }
@@ -276,12 +298,13 @@ public class Commandline {
                .addOption("i", "bowtie-index", true, "path to bowtie2 index") // align specific option
                .addOption("bsu", "bowtie-stringent-unique", false, "use stringent settings for definition of uniquely mapped reads")
                .addOption("j", "bad", false, "output bad (rejected) reads to separated file") // align specific option
-               .addOption("d", "digest", true, "path to GOPHER digest file") // align (and count) specific option
-               .addOption("a", "active-digests", true, "path to BED file with active digests (overwrites information in digest file)") // align (and count) specific option
+               .addOption("d", "digest-file", true, "path to GOPHER digest file") // align (and count) specific option
+               .addOption("a", "active-digest-file", true, "path to BED file with active digests (overwrites information in digest file)") // align (and count) specific option
                .addOption("o", "out", true, "name/path of output file/directory")
                .addOption("p", "thread-num", true, "number of threads used by bowtie2")
                .addOption("l", "lower-frag-size-limit", true, "lower limit for fragment size")
                .addOption("u", "upper-frag-size-limit", true, "upper limit for fragment size")
+               .addOption("v", "valid-pairs-bam", true, "path to BAM file with unique valid pairs produced using the 'align' subcommand")
 
         ;
         return options;
@@ -312,14 +335,14 @@ public class Commandline {
         }
         System.out.println("Truncate:\n" +
         "\tjava -jar Diachromatic.jar truncate -q <forward.fq.gz> -r <reverse.fq.gz> -e <enzyme> \\ \n"+
-            "\t\t\t[-sticky-ends] [-out-dir <output_directory>] [-out-prefix <filename_prefix>]\n\n"+
+            "\t\t\t[-sticky-ends] [-od <out-dir>] [-op <out-prefix>]\n\n"+
 
             "\t\t<forward.fq.gz>: path to the forward FASTQ file (may or may not be compressed with gzip)\n"+
             "\t\t<reverse.fq.gz>: path to the reverse FASTQ file (may or may not be compressed with gzip)\n"+
             "\t\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII)\n"+
             "\t\t<true|false>: no fill-in of sticky ends was performed (Default: false)\n"+
-            "\t\t<output_directory>: directory containing the output of the truncate command (Default: " + DEFAULT_OUTPUT_DIRECTORY + ")\n"+
-            "\t\t<filename_prefix>: prefix for all generated files in output directory (Default: " + DEFAULT_FILENAME_PREFIX + ")\n");
+            "\t\t<out-dir>: directory containing the output of the truncate command (Default: " + DEFAULT_OUTPUT_DIRECTORY + ")\n"+
+            "\t\t<out-prefix>: prefix for all generated files in output directory (Default: " + DEFAULT_FILENAME_PREFIX + ")\n");
     }
 
     private static void printAlignHelp(String message) {
@@ -339,22 +362,45 @@ public class Commandline {
         "\tjava -jar Diachromatic.jar align -b <bowtie2> -i <bowtie2-index> \\ \n" +
 
         "\t\t\t-q <forward.truncated.fq.gz> -r <reverse.truncated.fq.gz> \\ \n" +
-        "\t\t\t-d <digest> [-od <outfile>] [-j <output-rejected>]\n" +
+        "\t\t\t-d <digest-file> [-od <outfile>] [-j <output-rejected>]\n" +
         "\t\t\t[-l <lower-frag-size-limit>] [-u <upper-frag-size-limit>]\n" +
-        "\t\t\t[-a <active-digests>] [-o <outfile>] [-b] [-p] <thread-num>\n\n" +
+        "\t\t\t[-a <active-digest-file>] [-o <outfile>] [-b] [-p] <thread-num>\n\n" +
 
         "\t\t<bowtie2>: path to bowtie2 executable\n" +
-        "\t\t<bowtie2-index>: path to bowtie2 index for digested genome\n" +
+        "\t\t<bowtie2-index>: path to bowtie2 index of the reference genome\n" +
         "\t\t<bowtie-stringent-unique>: use stringent settings for definition of uniquely mapped reads\n" +
         "\t\t<forward.truncated.fq.gz>: path to the truncated forward gzipped FASTQ file\n" +
         "\t\t<reverse.truncated.fq.gz>: path to the truncated reverse gzipped FASTQ file\n" +
         "\t\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII or HindIII)\n" +
         "\t\t<lower-frag-size-limit>: lower limit for fragment size (Default: 150)\n" +
         "\t\t<upper-frag-size-limit>: upper limit for fragment size (Default: 800)\n" +
-        "\t\t<digest>: path to the digest file produced by the digest command\n" +
-        "\t\t<active-digests>: path to a BED file with the coordinates of active digests\n" +
+        "\t\t<digest-file>: path to the digest file produced with GOPHER\n" +
+        "\t\t<active-digest-file>: path to a BED file with the coordinates of active digests\n" +
         "\t\t<thread-num>: number of threads used by bowtie2\n" +
         "\t\t<output-rejected>: output rejected reads to file)\n");
+    }
+
+    private static void printCountHelp(String message) {
+        System.out.println("\n"+ message + "\n");
+        printCountHelp(true);
+        System.out.println();
+        System.exit(0);
+    }
+
+
+    private static void printCountHelp(boolean specific) {
+        if (specific) {
+            System.out.println("The subcommand 'count' takes a BAM file containing unique valid read pairs determined during the align step and a digest file created with GOPHER and counts valid pairs between pairs of restriction fragments.\n");
+        }
+        System.out.println("Count:\n" +
+                "\tjava -jar Diachromatic.jar count -v <valid-pairs-bam> -d <digest-file> \\ \n" +
+                "\t\t\t[-a <active-digest-file>] [-od <out-dir>] [-op <out-prefix>]>\n\n" +
+
+                "\t\t<valid-pairs-bam>: path to BAM file with unique valid read pairs produced during the align step (REQUIRED)\n" +
+                "\t\t<digest-file>: path to the digest file produced using GOPHER (REQUIRED)\n" +
+                "\t\t<active-digest-file>: path to a BED file with the coordinates of active digests (optional)\n" +
+                "\t\t<out-dir>: directory for output files (Default: results)\n" +
+                "\t\t<out-prefix>: prefix for names of output files (Default: prefix)\n");
     }
 
     private static void printHelpHeader() {
@@ -379,6 +425,7 @@ public class Commandline {
         System.out.println();
         printAlignHelp(false);
         System.out.println();
+        printCountHelp(false);
         System.exit(0);
     }
 
