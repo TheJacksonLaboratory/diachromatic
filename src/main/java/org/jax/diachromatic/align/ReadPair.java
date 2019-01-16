@@ -62,11 +62,11 @@ public class ReadPair {
     /**
      * First (forward) read in a read pair.
      */
-    private final SAMRecord R1;
+    private SAMRecord R1=null;
     /**
      * Second (reverse) read in a read pair.
      */
-    private final SAMRecord R2;
+    private SAMRecord R2=null;
     /**
      * Smallest allowable size of the insert of a read pair.
      */
@@ -146,7 +146,7 @@ public class ReadPair {
      * an in silico digest. A {@link DigestPair} consists of two {@link Digest} objects, one for each read. Note that
      * if both reads were mapped to the same fragment, the {@link Digest} objects are identical to each other.
      */
-    private final DigestPair digestPair;
+    private DigestPair digestPair=null;
 
     /**
      * If both reads of the pair were mapped uniquely,
@@ -184,8 +184,23 @@ public class ReadPair {
 
     private int n_could_not_assign_to_digest = 0;
 
+
     /**
-     * Constructor
+     * Simpler constructor for interaction counting.
+     */
+    public ReadPair(SAMRecord f, SAMRecord r, DigestMap digestMap) throws DiachromaticException {
+
+        R1 = f;
+        R2 = r;
+
+        // create digest pair
+        this.digestPair = digestMap.getDigestPair2(f.getReferenceName(),getFivePrimeEndPosOfRead(f),r.getReferenceName(),getFivePrimeEndPosOfRead(r));
+
+    }
+
+
+    /**
+     * Constructor for filtering and categorization
      *
      * @param f         forward read
      * @param r         reverse read
@@ -226,7 +241,7 @@ public class ReadPair {
                 multimapped_read1 = true;
                 this.isPaired = false;
             } else {
-                if(R1.getMappingQuality()<30 && Math.abs((int)R1.getAttribute("XS")-(int)R1.getAttribute("AS"))<10) {
+                if(R1.getMappingQuality()<30 || (int)R1.getAttribute("AS")-(int)R1.getAttribute("XS")<10) {
                     multimapped_read1 = true;
                     this.isPaired = false;
                 }
@@ -239,7 +254,7 @@ public class ReadPair {
                 multimapped_read2 = true;
                 this.isPaired = false;
             } else {
-                if(R2.getMappingQuality()<30 && Math.abs((int)R2.getAttribute("XS")-(int)R2.getAttribute("AS"))<10) {
+                if(R2.getMappingQuality()<30 || (int)R2.getAttribute("AS")-(int)R2.getAttribute("XS")<10) {
                     multimapped_read2 = true;
                     this.isPaired = false;
                 }
@@ -336,11 +351,11 @@ public class ReadPair {
         return this.categoryTag;
     }
 
-    SAMRecord forward() {
+    public SAMRecord forward() {
         return R1;
     }
 
-    SAMRecord reverse() {
+    public SAMRecord reverse() {
         return R2;
     }
 
@@ -656,7 +671,7 @@ public class ReadPair {
     /**
      * @return F1F2, F2F1, R1R2, R2R1, F1R2, F2R1, R2F1, R1F2
      */
-    String getRelativeOrientationTag() {
+    public String getRelativeOrientationTag() {
 
         String tag = "NA";
 

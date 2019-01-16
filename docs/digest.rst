@@ -1,6 +1,7 @@
 
 Creating an in silico restriction digest map for Diachromatic using GOPHER
 ==========================================================================
+.. _rst_digest:
 
 The Capture Hi-C (CHC) protocol involves the restriction digestion of a sample and the downstream analysis assigns
 reads to pairs of restriction fragments. Therefore, the ``align`` subcommand of Diachromatic requires a list of all

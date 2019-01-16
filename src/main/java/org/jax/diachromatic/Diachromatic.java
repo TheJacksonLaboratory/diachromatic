@@ -19,7 +19,7 @@ public class Diachromatic {
     public static void main(String args[]) throws DiachromaticException {
         Commandline clp = new Commandline(args);
         Command command = clp.getCommand();
-        logger.trace(String.format("running command %s",command));
+        logger.trace(String.format("Running command %s",command));
         command.execute();
     }
 }
