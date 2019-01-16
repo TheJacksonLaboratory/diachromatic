@@ -10,6 +10,7 @@ import htsjdk.samtools.util.Log;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jax.diachromatic.count.InteractionCountsMap;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.io.Commandline;
 
@@ -390,7 +391,7 @@ public class Aligner {
         logger.trace(outputTsvInteractionCounts);
         interactionMap.printInteractionCountsMapAsCountTable(outputTsvInteractionCounts);
 
-        //interactionMap.printFragmentInteractionCountsMapAsCountTable(outputTsvInteractingFragmentCounts);
+        interactionMap.printFragmentInteractionCountsMapAsCountTable(outputTsvInteractingFragmentCounts);
         validReadsWriter.close();
         if(outputRejectedReads) {
             rejectedReadsWriter.close();

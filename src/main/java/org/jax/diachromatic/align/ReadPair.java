@@ -190,6 +190,9 @@ public class ReadPair {
      */
     public ReadPair(SAMRecord f, SAMRecord r, DigestMap digestMap) throws DiachromaticException {
 
+        R1 = f;
+        R2 = r;
+
         // create digest pair
         this.digestPair = digestMap.getDigestPair2(f.getReferenceName(),getFivePrimeEndPosOfRead(f),r.getReferenceName(),getFivePrimeEndPosOfRead(r));
 
@@ -348,11 +351,11 @@ public class ReadPair {
         return this.categoryTag;
     }
 
-    SAMRecord forward() {
+    public SAMRecord forward() {
         return R1;
     }
 
-    SAMRecord reverse() {
+    public SAMRecord reverse() {
         return R2;
     }
 
@@ -668,7 +671,7 @@ public class ReadPair {
     /**
      * @return F1F2, F2F1, R1R2, R2R1, F1R2, F2R1, R2F1, R1F2
      */
-    String getRelativeOrientationTag() {
+    public String getRelativeOrientationTag() {
 
         String tag = "NA";
 

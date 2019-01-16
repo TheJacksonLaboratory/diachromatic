@@ -7,6 +7,7 @@ import org.jax.diachromatic.align.DigestMap;
 import org.jax.diachromatic.count.Counter;
 import org.jax.diachromatic.exception.DiachromaticException;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -41,8 +42,14 @@ public class CountCommand extends Command {
         DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
 
         Counter counter = new Counter(validPairsBamFile, digestMap, outputPathPrefix, filenamePrefix);
-        counter.countInteractions();
-        counter.printStatistics();
+        try {
+            counter.countInteractions();
+            counter.printStatistics();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
 
     }
+    @Override
+    public String toString() {return "diachromatic:count";} //???
 }
