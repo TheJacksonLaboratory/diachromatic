@@ -62,11 +62,11 @@ public class ReadPair {
     /**
      * First (forward) read in a read pair.
      */
-    private final SAMRecord R1;
+    private SAMRecord R1=null;
     /**
      * Second (reverse) read in a read pair.
      */
-    private final SAMRecord R2;
+    private SAMRecord R2=null;
     /**
      * Smallest allowable size of the insert of a read pair.
      */
@@ -146,7 +146,7 @@ public class ReadPair {
      * an in silico digest. A {@link DigestPair} consists of two {@link Digest} objects, one for each read. Note that
      * if both reads were mapped to the same fragment, the {@link Digest} objects are identical to each other.
      */
-    private final DigestPair digestPair;
+    private DigestPair digestPair=null;
 
     /**
      * If both reads of the pair were mapped uniquely,
@@ -184,8 +184,20 @@ public class ReadPair {
 
     private int n_could_not_assign_to_digest = 0;
 
+
     /**
-     * Constructor
+     * Simpler constructor for interaction counting.
+     */
+    public ReadPair(SAMRecord f, SAMRecord r, DigestMap digestMap) throws DiachromaticException {
+
+        // create digest pair
+        this.digestPair = digestMap.getDigestPair2(f.getReferenceName(),getFivePrimeEndPosOfRead(f),r.getReferenceName(),getFivePrimeEndPosOfRead(r));
+
+    }
+
+
+    /**
+     * Constructor for filtering and categorization
      *
      * @param f         forward read
      * @param r         reverse read

@@ -1,8 +1,9 @@
 package org.jax.diachromatic.align;
 
 import org.jax.diachromatic.exception.IncrementSameInternalInteractionException;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -14,7 +15,7 @@ public class InteractionCountsMapTest {
     private static InteractionCountsMap testInteractionCountsMap2c = null;
     private static InteractionCountsMap testInteractionCountsMap5c = null;
 
-    @BeforeClass
+    @BeforeAll
     public static void setup() throws IOException {
 
         // create test objects for two conditions
@@ -122,7 +123,7 @@ public class InteractionCountsMapTest {
         uniqueKey = testInteractionCountsMap5c.incrementFragPair(1, "chr3", 23,33,false,"chr1", 77,87,false,"F1F2");
         uniqueKey = testInteractionCountsMap5c.incrementFragPair(2, "chr3", 77,87,false,"chr1", 23,33,false,"F1F2");
         uniqueKey = testInteractionCountsMap5c.incrementFragPair(2, "chr1", 77,87,false,"chr1", 23,33,false,"F1F2");
-        testInteractionCountsMap5c.printInteractionCountsMapAsCountTable("test");
+       testInteractionCountsMap5c.printInteractionCountsMapAsCountTable("test");
     }
 
     /**
