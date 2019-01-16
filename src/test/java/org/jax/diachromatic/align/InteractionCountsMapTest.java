@@ -123,7 +123,7 @@ public class InteractionCountsMapTest {
         uniqueKey = testInteractionCountsMap5c.incrementFragPair(1, "chr3", 23,33,false,"chr1", 77,87,false,"F1F2");
         uniqueKey = testInteractionCountsMap5c.incrementFragPair(2, "chr3", 77,87,false,"chr1", 23,33,false,"F1F2");
         uniqueKey = testInteractionCountsMap5c.incrementFragPair(2, "chr1", 77,87,false,"chr1", 23,33,false,"F1F2");
-       // testInteractionCountsMap5c.printInteractionCountsMapAsCountTable("test");
+       testInteractionCountsMap5c.printInteractionCountsMapAsCountTable("test");
     }
 
     /**

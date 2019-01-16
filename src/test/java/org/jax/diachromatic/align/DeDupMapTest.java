@@ -55,8 +55,42 @@ class DeDupMapTest {
         assertEquals(1,ddmap.getNumOfChrPairKeys());
 
 
+        // Now test two read pairs that have the same coordinates (5' end positions) but different orientations that cannot be explained by a duplication event
+
+        useRelativeOrientation=true;
+        DeDupMap ddmap2 = new DeDupMap(useRelativeOrientation);
+
+        ReadPair rpair3 = Mockito.mock(ReadPair.class);
+        SAMRecord r3f=Mockito.mock(SAMRecord.class);
+        SAMRecord r3r=Mockito.mock(SAMRecord.class);
+        when(rpair3.isTrans()).thenReturn(false);
+        when (rpair3.getFivePrimeEndPosOfR1()).thenReturn(10);
+        when (rpair3.getFivePrimeEndPosOfR2()).thenReturn(1010);
+        when (rpair3.forward()).thenReturn(r3f);
+        when (rpair3.reverse()).thenReturn(r3r);
+        when (r3f.getReferenceName()).thenReturn("chr1");
+        when (r3r.getReferenceName()).thenReturn("chr1");
+        when (rpair3.getRelativeOrientationTag()).thenReturn("F1F2");
+
+        // add another read pair that differs with respect to orientation only
+        ReadPair rpair4 = Mockito.mock(ReadPair.class);
+        SAMRecord r4f=Mockito.mock(SAMRecord.class);
+        SAMRecord r4r=Mockito.mock(SAMRecord.class);
+        when(rpair4.isTrans()).thenReturn(false);
+        when (rpair4.getFivePrimeEndPosOfR1()).thenReturn(10);
+        when (rpair4.getFivePrimeEndPosOfR2()).thenReturn(1010);
+        when (rpair4.forward()).thenReturn(r4f);
+        when (rpair4.reverse()).thenReturn(r4r);
+        when (r4f.getReferenceName()).thenReturn("chr1");
+        when (r4r.getReferenceName()).thenReturn("chr1");
+        when (rpair4.getRelativeOrientationTag()).thenReturn("F1R2"); // two read pairs with F1F2 and F1R2 cannot originate from duplication event
+
+        // query and insert rpair3
+        result = ddmap2.hasSeen(rpair3);
+        assertFalse(result); // rpair3 should be unknown for DeDupMap
+
+        // query and insert rpair4
+        result = ddmap2.hasSeen(rpair4);
+        assertFalse(result); // this read pair should be inserted, because of the different orientation
     }
-
-
-
 }
