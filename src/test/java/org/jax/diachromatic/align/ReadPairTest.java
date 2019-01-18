@@ -36,14 +36,14 @@ public class ReadPairTest {
         when(record1.getMappingQuality()).thenReturn(31); // mapping quality is sufficient
         when(record1.getAttribute("AS")).thenReturn(0);
         when(record1.getAttribute("XS")).thenReturn(-5); // but the distance between the scores of the best and second best alignment is two small
-        ReadPair rpair = new ReadPair(record1,record2,emptymap,mockDigestMap, upperFragSize,lowerFragSize,stringent);
+        ReadPair rpair = new ReadPair(record1,record2,mockDigestMap, upperFragSize,lowerFragSize,stringent);
         assertFalse(rpair.isPaired());
 
         // test 2
         when(record1.getAttribute("AS")).thenReturn(0);
         when(record1.getAttribute("XS")).thenReturn(-20); // distance between the scores of the best and second best alignment is sufficiently large
         when(record1.getMappingQuality()).thenReturn(25); // but the mapping quality is insufficient
-        rpair = new ReadPair(record1,record2,emptymap,mockDigestMap, upperFragSize,lowerFragSize,stringent);
+        rpair = new ReadPair(record1,record2,mockDigestMap, upperFragSize,lowerFragSize,stringent);
         assertFalse(rpair.isPaired());
 
         // test 3 now use the stringent definition of multi mapping
@@ -51,7 +51,7 @@ public class ReadPairTest {
         when(record1.getMappingQuality()).thenReturn(31); // mapping quality is sufficient
         when(record1.getAttribute("AS")).thenReturn(0);
         when(record1.getAttribute("XS")).thenReturn(-20); // distance between the scores of the best and second best alignment is sufficiently large
-        rpair = new ReadPair(record1,record2,emptymap,mockDigestMap,upperFragSize,lowerFragSize,stringent);
+        rpair = new ReadPair(record1,record2,mockDigestMap,upperFragSize,lowerFragSize,stringent);
         assertFalse(rpair.isPaired()); // but this is not enough for the stringent mode; the reads remain unpaired
 
         // positive cannot be tested using incomplete fake mock objects
@@ -93,7 +93,7 @@ public class ReadPairTest {
         when(record1.getReadNegativeStrandFlag()).thenReturn(true);
         when(record2.getReadNegativeStrandFlag()).thenReturn(false);
 
-        ReadPair rpair = new ReadPair(record1,record2,emptymap,mockDigestMap,upperFragSize,lowerFragSize,stringent);
+        ReadPair rpair = new ReadPair(record1,record2,mockDigestMap,upperFragSize,lowerFragSize,stringent);
         assertTrue(rpair.isPaired());
     }
 }

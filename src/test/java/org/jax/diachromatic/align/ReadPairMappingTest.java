@@ -77,7 +77,7 @@ public class ReadPairMappingTest {
         String digestFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
         String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
         DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
-        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test5",digestMap,150,800,"xxx",true);
+        sampairer = new Aligner(sam1,sam2,outputRejectedReads,"test5",digestMap,150,800,"xxx",true);
         ReadPair pair;
         while ((pair = sampairer.getNextPair())!=null) {
             readpairmap.put(pair.forward().getReadName(),pair);
