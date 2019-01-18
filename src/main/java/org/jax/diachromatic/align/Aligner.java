@@ -101,7 +101,6 @@ public class Aligner {
 
     /**
      * Largest calculated insert size representable in Diachromatic.
-     * TODO: This is onle used for determining the size distribution, but this will be possibly discarded.
      */
     private static int FRAG_SIZE_LIMIT = 10000;
     private int[] fragSizesAllPairs =  new int[FRAG_SIZE_LIMIT+1];
@@ -125,22 +124,14 @@ public class Aligner {
      * Filenames (including path) for output BAM files and for text file containing statistics about the alignment and
      * filtering step.
      */
-    private String outputBAMvalid, outputBAMrejected, outputTxtStats;
-
-
-    /**
-     * TODO: Can be removed.
-     */
-    private String  outputTsvInteractingFragmentCounts, outputTsvInteractionCounts, outputFragSizesCountsRscript;
-
-
+    private String outputBAMvalid, outputBAMrejected, outputTxtStats, outputFragSizesCountsRscript;
     private String filenamePrefix;
 
 
     /**
      * HiCUP-like artifact counts.
      *
-     * TODO: Replace this with streamlined definitions of artifacts after revision of read pair class.
+     * TODO: Replace this with streamlined definitions of artifacts after revision of ReadPair class.
      */
     private int n_same_internal = 0;
     private int n_same_dangling_end = 0;
@@ -176,13 +167,6 @@ public class Aligner {
      */
     final private Iterator<SAMRecord> it1;
     final private Iterator<SAMRecord> it2;
-
-    /**
-     * Central customized auxiliary class of Diachromatic.
-     * TODO: Remove, because interactions are now counted in in class Counts.
-     *
-     */
-    InteractionCountsMap interactionMap;
 
     /**
      * @param sam1    SAM file for the truncated "forward" reads
@@ -252,8 +236,6 @@ public class Aligner {
             this.rejectedReadsWriter = new SAMFileWriterFactory().makeBAMWriter(header, presorted, new File(outputBAMrejected));
         }
 
-        interactionMap = new InteractionCountsMap(1);
-
         DeDupMap dedup_map = new DeDupMap(true);
 
         ReadPair pair;
@@ -321,20 +303,7 @@ public class Aligner {
 
                 validReadsWriter.addAlignment(pair.forward());
                 validReadsWriter.addAlignment(pair.reverse());
-
-                // count interaction
-                interactionMap.incrementFragPair(0,
-                        pair.forward().getReferenceName(),
-                        pair.getForwardDigestStart(),
-                        pair.getForwardDigestEnd(),
-                        pair.forwardDigestIsActive(),
-                        pair.reverse().getReferenceName(),
-                        pair.getReverseDigestStart(),
-                        pair.getReverseDigestEnd(),
-                        pair.reverseDigestIsActive(),
-                        pair.getRelativeOrientationTag());
-                if(interactionMap.getTotalNumberOfInteractionsForCondition(0)%10000==0) { logger.trace("Size of interactionMap: " + interactionMap.getTotalNumberOfInteractionsForCondition(0)); }
-            } else {
+           } else {
                 if (outputRejectedReads) {
                     rejectedReadsWriter.addAlignment(pair.forward());
                     rejectedReadsWriter.addAlignment(pair.reverse());
@@ -342,10 +311,6 @@ public class Aligner {
             }
         }
 
-        logger.trace(outputTsvInteractionCounts);
-        interactionMap.printInteractionCountsMapAsCountTable(outputTsvInteractionCounts);
-
-        interactionMap.printFragmentInteractionCountsMapAsCountTable(outputTsvInteractingFragmentCounts);
         validReadsWriter.close();
         if(outputRejectedReads) {
             rejectedReadsWriter.close();
@@ -442,18 +407,7 @@ public class Aligner {
         logger.trace("");
         logger.trace("Total number of pairs: " + (n_same_internal+n_same_dangling_end+n_same_circularized_internal+n_same_circularized_dangling+n_religation+n_contiguous+n_insert_too_long+n_insert_too_short+n_valid_pairs));
         logger.trace("");
-        logger.trace("Summary statistics about interactions between active and inactive fragments:");
-        logger.trace("");
-        logger.trace("\t" + "Total number of interactions: " + interactionMap.getTotalNumberOfInteractionsForCondition(0));
-        logger.trace("\t" + "Number of interactions between active fragments: " + interactionMap.getNumberOfInteractionsBetweenActiveFragmentsForCondition(0));
-        logger.trace("\t" + "Number of interactions between inactive fragments: " + interactionMap.getNumberOfInteractionsBetweenInactiveFragmentsForCondition(0));
-        logger.trace("\t" + "Number of interactions between active and inactive fragments: " + interactionMap.getNumberOfInteractionsBetweenActiveAndInactiveFragmentsForCondition(0));
-        logger.trace("");
-        logger.trace("\t" + "Total number of interacting fragments: " + interactionMap.getTotalNumberOfInteractingFragmentsForCondition(0));
-        logger.trace("\t" + "Number of active interacting fragments: " + interactionMap.getTotalNumberOfActiveInteractingFragmentsForCondition(0));
-        logger.trace("");
         logger.trace("\t" + "Enrichment Coefficients:");
-        logger.trace("\t\t" + "Target Enrichment Coefficient (TEC): " + String.format("%.2f%%", 100*interactionMap.getTargetEnrichmentCoefficientForCondition(0)));
         logger.trace("\t\t" + "Valid Interaction Enrichment Coefficient (VIEC): " + String.format("%.2f%%", 100.0*n_valid_pairs/n_total));
         logger.trace("\t\t" + "Cross-ligation coefficient (CLC): " + String.format("%.2f%%", 100.0* n_paired_unique_trans /n_paired_unique));
         logger.trace("\t\t" + "Re-ligation coefficient (RLC): " + String.format("%.2f%%", 100.0*(n_paired_unique-n_same_dangling_end)/n_paired_unique));
@@ -511,7 +465,6 @@ public class Aligner {
         printStream.print("--------------------------------------------------\n");
         printStream.print("\n");
         printStream.print("Yield of Valid Pairs (YVP):\t" + String.format("%.2f%%", 100.0*n_valid_pairs/n_total) + "\n");
-        printStream.print("Target Enrichment Coefficient (TEC):\t" + String.format("%.2f%%", 100*interactionMap.getTargetEnrichmentCoefficientForCondition(0)) + "\n");
         printStream.print("Cross-ligation coefficient (CLC):\t" + String.format("%.2f%%", 100.0* n_paired_unique_trans /n_paired_unique) + "\n");
         printStream.print("Re-ligation coefficient (RLC):\t" + String.format("%.2f%%", 100.0*(n_paired_unique-n_same_dangling_end)/n_paired_unique) + "\n");
         printStream.print("\n");
@@ -520,8 +473,6 @@ public class Aligner {
     private void createOutputNames(String outputPathPrefix) {
         outputBAMvalid = String.format("%s.%s", outputPathPrefix, "valid_pairs.aligned.bam");
         outputBAMrejected = String.format("%s.%s", outputPathPrefix, "rejected_pairs.aligned.bam");
-        outputTsvInteractingFragmentCounts = String.format("%s.%s", outputPathPrefix, "interacting.fragments.counts.table.tsv"); // was copied to class counts
-        outputTsvInteractionCounts = String.format("%s.%s", outputPathPrefix, "interaction.counts.table.tsv"); // was copied to class counts
         outputFragSizesCountsRscript = String.format("%s.%s", outputPathPrefix, "frag.sizes.counts.script.R");
         outputTxtStats = String.format("%s.%s", outputPathPrefix, "align.stats.txt");
     }
