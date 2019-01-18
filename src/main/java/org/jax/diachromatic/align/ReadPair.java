@@ -5,14 +5,7 @@ import htsjdk.samtools.SAMRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.exception.DiachromaticException;
-import org.jax.diachromatic.exception.DigestNotFoundException;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import static org.jax.diachromatic.align.ErrorCode.*;
 
 /**
  * This class represents a pair of reads R1 and R2 of an illumina paired-end run.
@@ -55,10 +48,7 @@ import static org.jax.diachromatic.align.ErrorCode.*;
  */
 public class ReadPair {
     private static final Logger logger = LogManager.getLogger();
-    /**
-     * A set of Q/C criteria that this read pair did NOT pass.
-     */
-    private Set<ErrorCode> errorcodes;
+
     /**
      * First (forward) read in a read pair.
      */
@@ -209,8 +199,6 @@ public class ReadPair {
         this.LOWER_SIZE_THRESHOLD = lowerFragSize;
         this.UPPER_SIZE_THRESHOLD = upperFragSize;
 
-        errorcodes = new HashSet<>();
-
         // check if both reads could be mapped
         unmapped_read1 = false;
         unmapped_read2 = false;
@@ -269,10 +257,6 @@ public class ReadPair {
             // try to find restriction digests that match the read pair
             //this.digestPair = getDigestPair(this);
             this.digestPair = digestMap.getDigestPair2(this.R1.getReferenceName(),getFivePrimeEndPosOfRead(this.R1),this.R2.getReferenceName(),getFivePrimeEndPosOfRead(this.R2));
-            if (this.digestPair == null) {
-                logger.trace("invalidDigest");
-                this.setInvalidDigest();
-            }
 
             // categorize ReadPair
             this.categorizeReadPair();
@@ -352,19 +336,6 @@ public class ReadPair {
         return R2;
     }
 
-    Set<ErrorCode> getErrorCodes() {
-        return errorcodes;
-    }
-
-    boolean isUnmapped() {
-        return errorcodes.contains(READPAIR_UNMAPPED);
-    }
-
-    boolean isMultimapped() {
-        return errorcodes.contains(READPAIR_MULTIMAPPED);
-    }
-
-
     /**
      * This function checks if the two reads are on the sam chromosome; if not, it
      * sets the {@code CT} user-defined attribute of the reads to {@code TRANS}.
@@ -418,7 +389,6 @@ public class ReadPair {
         int contigsize = Math.max(R2.getAlignmentStart() - R1.getAlignmentStart(),
                 R1.getAlignmentStart() - R2.getAlignmentStart());
         if (contigsize > LOWER_SIZE_THRESHOLD && contigsize < UPPER_SIZE_THRESHOLD) {  // TODO: Does this make sense?
-            errorcodes.add(CONTIGUOUS);
             return true;
         } else {
             return false;
@@ -439,7 +409,6 @@ public class ReadPair {
                 Math.abs(R1.getAlignmentStart() - digestPair.forward().getEndpos()) < DANGLING_THRESHOLD ||
                 Math.abs(R2.getAlignmentStart() - digestPair.forward().getStartpos()) < DANGLING_THRESHOLD ||
                 Math.abs(R2.getAlignmentStart() - digestPair.forward().getEndpos()) < DANGLING_THRESHOLD) {
-            errorcodes.add(SAME_DANGLING_END);
             return true;
         } else {
             return false;
@@ -456,18 +425,10 @@ public class ReadPair {
     boolean religation() {
         if (digestPair.isAdjacent() &&
                 (R1.getReadNegativeStrandFlag() != R2.getReadNegativeStrandFlag())) {
-            errorcodes.add(RELIGATION);
             return true;
         } else {
             return false;
         }
-    }
-
-    /**
-     * This function gets called if we cannot find valid digests for this readpair.
-     */
-    private void setInvalidDigest() {
-        errorcodes.add(COULD_NOT_ASSIGN_TO_DIGEST);
     }
 
     /**
@@ -488,7 +449,6 @@ public class ReadPair {
                 (reverse().getAlignmentStart() < forward().getAlignmentStart() &&
                         !forward().getReadNegativeStrandFlag() &&
                         reverse().getReadNegativeStrandFlag())) {
-            errorcodes.add(CIRCULARIZED_READ);
             return true;
         } else {
             return false;
@@ -560,11 +520,9 @@ public class ReadPair {
      }
 
     /**
-     * This function is called if the forward and reverse reads were found to be a valid pair
-     * by {@link #readPairUniquelyMapped()}. The function adjusts the SAM flags of each read to
+     * This  function adjusts the SAM flags of each read to
      * indicate that they are a valid read pair. Note that client code must call this algorithm after
-     * determining that the reads should be paired, it is not done automatically by
-     * {@link #readPairUniquelyMapped()}.
+     * determining that the reads should be paired.
      */
     void pairReads() {
         // This read pair is valid
@@ -589,49 +547,6 @@ public class ReadPair {
         reverse().setMateReferenceIndex(forward().getReferenceIndex());
         forward().setMateAlignmentStart(reverse().getAlignmentStart());
         reverse().setMateAlignmentStart(forward().getAlignmentStart());
-    }
-
-
-    /**
-     * Determine if both reads from a paired-end could be uniquely mapped. If so, return true. If not,
-     * add the corresponding enumeration constant from {@link ErrorCode} and return false. There are two
-     * things that can go wrong -- either one or both reads could not be mapped, or one or both reads were mapped
-     * to more than one locus in the genome. The XS attribute is used in bowtie2 to indicate that a read has
-     * been multimapped.
-     *
-     * @return true if both reads could be uniquely mapped.
-     */
-    boolean readPairUniquelyMapped() {
-        if (forward().getReadUnmappedFlag()) {
-            //read 1 could not be aligned
-            errorcodes.add(READ_1_UNMAPPED);
-            errorcodes.add(READPAIR_UNMAPPED);
-            if (reverse().getReadUnmappedFlag()) {
-                errorcodes.add(READ_2_UNMAPPED);
-            }
-            return false;
-        } else if (reverse().getReadUnmappedFlag()) {
-            // note read1 must be OK if we get here...
-            errorcodes.add(READ_2_UNMAPPED);
-            errorcodes.add(READPAIR_UNMAPPED);
-            return false;
-        } else if (forward().getAttribute("XS") != null) {
-            // Now look for multimapped reads.
-            // If a read has an XS attribute, then bowtie2 multi-mapped it.
-            errorcodes.add(READ_1_MULTIMAPPED);
-            errorcodes.add(READPAIR_MULTIMAPPED);
-            if (reverse().getAttribute("XS") != null) {
-                errorcodes.add(READ_2_MULTIMAPPED);
-            }
-            errorcodes.add(READPAIR_MULTIMAPPED);
-            return false;
-        } else if (reverse().getAttribute("XS") != null) {
-            // note if we are here, read1 was not multimapped
-            errorcodes.add(READ_2_MULTIMAPPED);
-            errorcodes.add(READPAIR_MULTIMAPPED);
-            return false;
-        }
-        return true;
     }
 
 
@@ -730,24 +645,6 @@ public class ReadPair {
         return(
                 Math.abs(fragSta-fwdReadFpep) <  DANGLING_THRESHOLD || Math.abs(fragEnd-fwdReadFpep) <  DANGLING_THRESHOLD ||
                 Math.abs(fragSta-revReadFpep) <  DANGLING_THRESHOLD || Math.abs(fragEnd-revReadFpep) <  DANGLING_THRESHOLD);
-
-
-
-        /*
-        int fwdReadSta = this.R1.getAlignmentStart();
-        int fwdReadEnd = this.R1.getAlignmentEnd();//
-        int revReadSta = this.R2.getAlignmentStart();
-        int revReadEnd = this.R2.getAlignmentEnd();
-        return (
-                Math.abs(fragSta - fwdReadSta) < DANGLING_THRESHOLD ||
-                        Math.abs(fragSta - fwdReadEnd) < DANGLING_THRESHOLD ||
-                        Math.abs(fragSta - revReadSta) < DANGLING_THRESHOLD ||
-                        Math.abs(fragSta - revReadEnd) < DANGLING_THRESHOLD ||
-                        Math.abs(fragEnd - fwdReadSta) < DANGLING_THRESHOLD ||
-                        Math.abs(fragEnd - fwdReadEnd) < DANGLING_THRESHOLD ||
-                        Math.abs(fragEnd - revReadSta) < DANGLING_THRESHOLD ||
-                        Math.abs(fragEnd - revReadEnd) < DANGLING_THRESHOLD);
-        */
     }
 
 
