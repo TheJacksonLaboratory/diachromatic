@@ -2,7 +2,6 @@ package org.jax.diachromatic.align;
 
 import htsjdk.samtools.*;
 import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.Log;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -172,7 +171,6 @@ public class Aligner {
     private SAMFileWriter validReadsWriter;
     private SAMFileWriter rejectedReadsWriter;
 
-
     /**
      * Iterator over reads from R1 {@link #sam_reader_R1} and R2 {@link #sam_reader_R2}.
      */
@@ -180,7 +178,9 @@ public class Aligner {
     final private Iterator<SAMRecord> it2;
 
     /**
-     * Stores counts about interactions
+     * Central customized auxiliary class of Diachromatic.
+     * TODO: Remove, because interactions are now counted in in class Counts.
+     *
      */
     InteractionCountsMap interactionMap;
 
@@ -244,7 +244,6 @@ public class Aligner {
         String programGroupId = "Diachromatic\tPN:Diachromatic\tVN:" + VERSION;
         SAMProgramRecord programRecord = new SAMProgramRecord(programGroupId);
         header.addProgramRecord(programRecord);
-        // we are good to go with this SAMFileHeader
 
         // init BAM outfile
         boolean presorted = false;
@@ -252,11 +251,10 @@ public class Aligner {
         if(outputRejectedReads) {
             this.rejectedReadsWriter = new SAMFileWriterFactory().makeBAMWriter(header, presorted, new File(outputBAMrejected));
         }
-        final ProgressLogger pl = new ProgressLogger(log, 1000000);
 
         interactionMap = new InteractionCountsMap(1);
 
-        DeDupMap deDupMapAll = new DeDupMap(true);
+        DeDupMap dedup_map = new DeDupMap(true);
 
         ReadPair pair;
 
@@ -282,7 +280,7 @@ public class Aligner {
                 n_paired++;
 
                 // de-duplication starts with paired pairs
-                if(deDupMapAll.hasSeen(pair)) {
+                if(dedup_map.hasSeen(pair)) {
                     n_paired_duplicated++;
                     continue;
                 }
@@ -305,10 +303,8 @@ public class Aligner {
                 }
             }
 
-            // both reads were uniquely mapped, otherwise continue
+            // Both reads were uniquely mapped, otherwise the this pair is not paired. If so, continue.
             if(!pair.isPaired()) {continue;}
-
-
 
 
             // count sizes of all fragments
@@ -343,9 +339,9 @@ public class Aligner {
                     rejectedReadsWriter.addAlignment(pair.forward());
                     rejectedReadsWriter.addAlignment(pair.reverse());
                 }
-                // discard this read and go to the next one
             }
         }
+
         logger.trace(outputTsvInteractionCounts);
         interactionMap.printInteractionCountsMapAsCountTable(outputTsvInteractionCounts);
 
@@ -357,23 +353,13 @@ public class Aligner {
 
         printFragmentLengthDistributionRscript(fragSizesAllPairs, fragSizesHybridActivePairs);
 
-        logger.trace("" );
-        logger.trace("Deduplication stats:" );
-        logger.trace("n_duplicate: " + n_paired_duplicated);
-        logger.trace("deDupMapAll.getNumOfChrPairKeys(): " + deDupMapAll.getNumOfChrPairKeys());
-        logger.trace("deDupMapAll.getNumOfQueries(): " + deDupMapAll.getNumOfQueries());
-        logger.trace("deDupMapAll.getNumOfInsertions(): " + deDupMapAll.getNumOfInsertions());
-        logger.trace("deDupMapAll.getNumOfFirstCoords(): " + deDupMapAll.getNumOfFirstCoords());
-        logger.trace("deDupMapAll.getNumOfSecondCoords(): " + deDupMapAll.getNumOfSecondCoords());
-        logger.trace("" );
+        //dedup_map.printDeDupStatistics(n_paired_duplicated);
     }
 
     private void printFragmentLengthDistributionRscript(int[] fragSizesAllPairs, int[] fragSizesHybridActivePairs ) throws FileNotFoundException {
 
         // create file for output
         PrintStream printStream = new PrintStream(new FileOutputStream(outputFragSizesCountsRscript));
-
-
 
         printStream.print("length<-c(");
         for(int i=0; i<FRAG_SIZE_LIMIT-1; i++) {
@@ -410,7 +396,7 @@ public class Aligner {
 
         printStream.print("par(new=TRUE)\n");
 
-        printStream.print("plot(length,fragSizesHybridActivePairs,main=MAIN, xlim=XLIM,type=\"l\", ylim=c(0,YLIM),col=\"red\",ylab=\"fragment count\")\n");
+        printStream.print("plot(length,fragSizesHybridActivePairs,main=MAIN, xlim=XLIM,type=\"l\", ylim=c(0,YLIM),col=\"red\",xlab=\"Size (nt)\",ylab=\"Fragment count\")\n");
 
         printStream.print("PREDOM_FRAG_SIZE<-which(max(fragSizesAllPairs)==fragSizesAllPairs)\n");
         printStream.print("abline(v=PREDOM_FRAG_SIZE)\n");
@@ -426,31 +412,8 @@ public class Aligner {
         printStream.print("legend(\"topright\",legend=c(LEGEND_ALL, LEGEND_HYBRID_ACTIVE), col=c(\"black\", \"red\"), lty=1, bg = \"white\")\n");
 
         printStream.print("dev.off()\n");
-
-      /*
-        MEAN_FRAG_SIZE_ALL<-sum(length*fragSizesAllPairs)/sum(fragSizesAllPairs)
-        print(MEAN_FRAG_SIZE_ALL)
-
-        MEAN_FRAG_SIZE_ACTIVE<-sum(length*fragSizesHybridActivePairs)/sum(fragSizesHybridActivePairs)
-        print(MEAN_FRAG_SIZE_ACTIVE)
-
-        s<-0
-        MEADIAN_FRAG_SIZE<-1
-        while(s < sum(fragSizesAllPairs)/2) {
-            s = s + fragSizesAllPairs[MEADIAN_FRAG_SIZE]
-            MEADIAN_FRAG_SIZE = MEADIAN_FRAG_SIZE + 1
-        }
-        print(MEADIAN_FRAG_SIZE)
-
-        s<-0
-        MEADIAN_ACTIVE_FRAG_SIZE<-1
-        while(s < sum(fragSizesAllPairs)/2) {
-            s = s + fragSizesAllPairs[MEADIAN_ACTIVE_FRAG_SIZE]
-            MEADIAN_ACTIVE_FRAG_SIZE = MEADIAN_ACTIVE_FRAG_SIZE + 1
-        }
-        print(MEADIAN_ACTIVE_FRAG_SIZE)
-    */
     }
+
 
     public void printStatistics() throws FileNotFoundException {
 
@@ -463,9 +426,7 @@ public class Aligner {
         logger.trace(String.format("n_multimapped_R2=%d\n", n_multimapped_R2));
         logger.trace(String.format("n_multimappedPair=%d\n", n_multimappedPair));
 
-
         logger.trace(String.format("n_paired=%d (%.1f%%)\n", n_paired, (100.0 * n_paired / n_total)));
-
 
         logger.trace(String.format("n_same_internal=%d", n_same_internal));
         logger.trace(String.format("n_same_dangling_end=%d", n_same_dangling_end));
@@ -480,8 +441,6 @@ public class Aligner {
         logger.trace(String.format("n_valid_pairs=%d (%.1f%%)", n_valid_pairs, (100.0 * n_valid_pairs / n_paired_unique)));
         logger.trace("");
         logger.trace("Total number of pairs: " + (n_same_internal+n_same_dangling_end+n_same_circularized_internal+n_same_circularized_dangling+n_religation+n_contiguous+n_insert_too_long+n_insert_too_short+n_valid_pairs));
-
-
         logger.trace("");
         logger.trace("Summary statistics about interactions between active and inactive fragments:");
         logger.trace("");

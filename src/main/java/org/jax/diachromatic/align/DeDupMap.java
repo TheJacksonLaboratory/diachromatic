@@ -171,4 +171,16 @@ public class DeDupMap {
     public int getNumOfSecondCoords() {
         return second_coord_num;
     }
+
+    public void printDeDupStatistics(int n_paired_duplicated) {
+        logger.trace("" );
+        logger.trace("Deduplication statitics:" );
+        logger.trace("n_duplicate: " + n_paired_duplicated);
+        logger.trace("getNumOfChrPairKeys(): " + getNumOfChrPairKeys());
+        logger.trace("getNumOfQueries(): " + getNumOfQueries());
+        logger.trace("getNumOfInsertions(): " + getNumOfInsertions());
+        logger.trace("getNumOfFirstCoords(): " + getNumOfFirstCoords());
+        logger.trace("getNumOfSecondCoords(): " + getNumOfSecondCoords());
+        logger.trace("" );
+    }
 }

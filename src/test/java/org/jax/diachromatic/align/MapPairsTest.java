@@ -241,15 +241,4 @@ public class MapPairsTest {
     }
 
 
-    //TODO CHECK THIS TEST
-    @Test
-    public void testDuplicate() {
-        ReadPair readpair =readpairmap.get("7_validRead1");
-        assertFalse(DiTag.isDuplicate(readpair));
-        readpair=readpairmap.get("8_validRead1");
-//        assertTrue(DiTag.isDuplicate(readpair));
-    }
-
-
-
 }
