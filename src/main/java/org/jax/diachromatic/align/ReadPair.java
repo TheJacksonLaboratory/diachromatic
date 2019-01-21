@@ -61,10 +61,24 @@ public class ReadPair {
      * Smallest allowable size of the insert of a read pair.
      */
     private static int LOWER_SIZE_THRESHOLD = 150;
+
     /**
-     * Largest allowable size of the insert of a read pair.
+     * Largest allowable size of the insert of a read pair. This size corresponds to the average size of fragments
+     * after sonication. For capture Hi-C, an average sizes from 300 to 500 bp are recommended. Therefore, a default
+     * threshold of 800 seems to be reasonable.
+     *
+     * For inward pointing read pairs, the linear genomic distance between the two 5' ends (d) is compared to this threshold.
+     * If this distance is smaller, the read pair is categorized as un-ligated.
+     *
+     * For outward pointing read pairs, the calculated size of the hybrid fragment d' is added to d.
+     * If d+d' is smaller than the threshold, the read pair is categorized as self-ligated.
+     *
+     * Trans pairs (reads map to different chromosomes) cannot be explained neither by un-ligated fragments nor by
+     * self-ligated fragments.
+     *
      */
     private static int UPPER_SIZE_THRESHOLD = 800;
+
     /**
      * Length threshold in nucleotides for the end of a read being near to a restriction fragment/ligation sequence
      */
@@ -81,10 +95,13 @@ public class ReadPair {
      * Set false, if read pair is an artifact.
      */
     private boolean isValid = false;
+    private boolean isNewValid = false;
+
     /**
      * A read pair belongs to one of the following categories: SL, DE, CD, CI, SI, RL, TS, TL, VP.
      */
     private String categoryTag = "NA";
+    private String categoryTag2 = "NA";
     /**
      * True if read 1 is unmapped.
      */
@@ -153,12 +170,29 @@ public class ReadPair {
         CONTIGUOUS("CT"),
         INSERT_TOO_SMALL("TS"),
         INSERT_TOO_LONG("TL"),
-        VALID_PAIR("VP"),
-        NOT_AVAILABLE("NA");
+        VALID_PAIR("VP");
 
         private String tag;
 
         ReadPairCategory(String readPairTypeTag) {
+            this.tag = readPairTypeTag;
+        }
+
+        public String getTag() {
+            return tag;
+        }
+    }
+
+    private enum ReadPairCategory2 {
+        NEW_VALID_PAIR("NP"),
+        UN_LIGATED_PAIR("UP"),
+        SELF_LIGATED_PAIR("SP"),
+        TINY_PAIR("TP"),
+        HUGE_PAIR("HP");
+
+        private String tag;
+
+        ReadPairCategory2(String readPairTypeTag) {
             this.tag = readPairTypeTag;
         }
 
@@ -260,6 +294,7 @@ public class ReadPair {
 
             // categorize ReadPair
             this.categorizeReadPair();
+            this.categorizeReadPair2();
             if (!this.isValid) {
                 this.R1.setAttribute(BADREAD_ATTRIBUTE, this.categoryTag);
                 this.R2.setAttribute(BADREAD_ATTRIBUTE, this.categoryTag);
@@ -314,6 +349,13 @@ public class ReadPair {
     }
 
     /**
+     * Mark this read pair as valid with:
+     */
+    private void setNewValid() {
+        this.isNewValid = true;
+    }
+
+    /**
      * Check if read pair as valid with:
      */
     public boolean isValid() {
@@ -326,6 +368,14 @@ public class ReadPair {
 
     String getCategoryTag() {
         return this.categoryTag;
+    }
+
+    private void setCategoryTag2(String categoryTag) {
+        this.categoryTag2 = categoryTag;
+    }
+
+    String getCategoryTag2() {
+        return this.categoryTag2;
     }
 
     public SAMRecord forward() {
@@ -631,12 +681,12 @@ public class ReadPair {
 
 
     /**
-     * Check if at least one of the two reads overlaps the cutting site,
-     * i.e. the 5' end position has a distance of at most DANGLING_THRESHOLD=7.
+     * Check if at least one of the two reads overlaps the cutting site, i.e. the 5' end position has a distance of at
+     * most DANGLING_THRESHOLD = 7.
      *
-     * @return true if this is the case.
+     * @return True, if this pair belongs to a dangling end fragment.
      */
-    private boolean readOverlapsCutSite() {
+    public boolean isDanglingEnd() {
         int fragSta = this.digestPair.forward().getStartpos();
         int fragEnd = this.digestPair.forward().getEndpos();
 
@@ -657,7 +707,7 @@ public class ReadPair {
             // both reads are mapped to the same fragment
             if (!this.isOutwardFacing()) {
                 // reads point inwards
-                if (this.readOverlapsCutSite()) {
+                if (this.isDanglingEnd()) {
                     // at least one read overlaps cutting site
                     setCategoryTag(ReadPairCategory.DANGLING_END.getTag());
                 } else {
@@ -666,7 +716,7 @@ public class ReadPair {
                 }
             } else {
                 // reads point outwards
-                if (this.readOverlapsCutSite()) {
+                if (this.isDanglingEnd()) {
                     // at least one read overlaps cutting site
                     setCategoryTag(ReadPairCategory.CIRULARIZED_DANGLING.getTag());
                 } else {
@@ -699,6 +749,67 @@ public class ReadPair {
             }
         }
     }
+
+    private void categorizeReadPair2() throws DiachromaticException {
+
+        // now subdivide all pairs in three disjoint categories: valid, self-ligated, un-ligated
+        if(this.isTrans()) {
+            // trans pairs cannot be distinguished from valid pairs
+            if(this.hasTooSmallInsertSize()) {
+                setCategoryTag2(ReadPairCategory2.TINY_PAIR.getTag());
+            } else if(this.hasTooBigInsertSize()){
+                setCategoryTag2(ReadPairCategory2.HUGE_PAIR.getTag());
+            } else {
+                setCategoryTag2(ReadPairCategory2.NEW_VALID_PAIR.getTag()); // only if hybrid fragment has the right size it is categorized as valid
+            }
+        } else {
+            // cis pairs may correspond to valid, un-ligated and self-ligated fragments
+            if(isOutwardFacing()) {
+                // pair is valid or self-ligated
+                if(this.getDistanceBetweenFivePrimeEnds()+this.getCalculatedInsertSize() < this.UPPER_SIZE_THRESHOLD) {
+                    setCategoryTag2(ReadPairCategory2.SELF_LIGATED_PAIR.getTag());
+                } else {
+                    if(this.hasTooSmallInsertSize()) {
+                        setCategoryTag2(ReadPairCategory2.TINY_PAIR.getTag());
+                    } else if(this.hasTooBigInsertSize()){
+                        setCategoryTag2(ReadPairCategory2.HUGE_PAIR.getTag());
+                    } else {
+                        setCategoryTag2(ReadPairCategory2.NEW_VALID_PAIR.getTag()); // only if hybrid fragment has the right size it is categorized as valid
+                    }
+                }
+            } else {
+                // pair is valid or un-ligated
+                if(this.getDistanceBetweenFivePrimeEnds() < this.UPPER_SIZE_THRESHOLD) {
+                    setCategoryTag2(ReadPairCategory2.UN_LIGATED_PAIR.getTag());
+                } else {
+                    if(this.hasTooSmallInsertSize()) {
+                        setCategoryTag2(ReadPairCategory2.TINY_PAIR.getTag());
+                    } else if(this.hasTooBigInsertSize()){
+                        setCategoryTag2(ReadPairCategory2.HUGE_PAIR.getTag());
+                    } else {
+                        setCategoryTag2(ReadPairCategory2.NEW_VALID_PAIR.getTag()); // only if hybrid fragment has the right size it is categorized as valid
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * @return Linear genomic distance between 5' end positions of the reads.
+     */
+    private int getDistanceBetweenFivePrimeEnds() {
+        if(isTrans()){
+            logger.error("Distance between 5' ends on different chromosomes is not defined!");
+            return -1;
+        } else {
+            if(this.getFivePrimeEndPosOfR1() < getFivePrimeEndPosOfR2()) {
+                return getFivePrimeEndPosOfR2()-getFivePrimeEndPosOfR1();
+            } else {
+                return getFivePrimeEndPosOfR1()-getFivePrimeEndPosOfR2();
+            }
+        }
+    }
+
 
     public Integer getForwardDigestStart() {return this.digestPair.forward().getStartpos();}
     public Integer getForwardDigestEnd() {return this.digestPair.forward().getEndpos();}

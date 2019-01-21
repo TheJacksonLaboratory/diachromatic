@@ -144,6 +144,17 @@ public class Aligner {
     private int n_valid_pairs =0;
     private int n_not_categorized=0;
 
+    private int n_new_valid_pair = 0;
+    private int n_un_ligated_pair = 0;
+    private int n_self_ligated_pair = 0;
+    private int n_tiny_valid_pair = 0;
+    private int n_huge_valid_pair = 0;
+
+    private int n_new_valid_dangling_pair = 0;
+    private int n_un_ligated_dangling_pair = 0;
+    private int n_self_ligated_dangling_pair = 0;
+
+    private int n_dangling_end_pair = 0;
     /**
      * Central customized auxiliary class of Diachromatic. Contains information about all restriction fragments of the
      * genome. Is contructed from the digest file produced using GOPHER.
@@ -280,6 +291,19 @@ public class Aligner {
                 if(pair.getCategoryTag().equals("VP")) {n_valid_pairs++;}
                 if(pair.getCategoryTag().equals("NA")) {n_not_categorized++;}
 
+                if(pair.getCategoryTag2().equals("NP")) {n_new_valid_pair++;}
+                if(pair.getCategoryTag2().equals("UP")) {n_un_ligated_pair++;}
+                if(pair.getCategoryTag2().equals("SP")) {n_self_ligated_pair++;}
+                if(pair.getCategoryTag2().equals("TP")) {n_tiny_valid_pair++;}
+                if(pair.getCategoryTag2().equals("HP")) {n_huge_valid_pair++;}
+
+                if(pair.isDanglingEnd()) {
+                    n_dangling_end_pair++;
+                    if(pair.getCategoryTag2().equals("NP")) {n_new_valid_dangling_pair++;}
+                    if(pair.getCategoryTag2().equals("UP")) {n_un_ligated_dangling_pair++;}
+                    if(pair.getCategoryTag2().equals("SP")) {n_self_ligated_dangling_pair++;}
+                }
+
                 if(pair.isTrans()) {
                     n_paired_unique_trans++;
                 }
@@ -399,9 +423,22 @@ public class Aligner {
         logger.trace(String.format("n_religation=%d", n_religation));
         logger.trace(String.format("n_contiguous=%d\n", n_contiguous));
         logger.trace(String.format("n_not_categorized=%d\n", n_not_categorized));
-
         logger.trace(String.format("n_insert_too_long=%d  (%.1f%%)", n_insert_too_long, (100.0 * n_insert_too_long / n_paired_unique)));
         logger.trace(String.format("n_insert_too_short=%d  (%.1f%%)\n", n_insert_too_short, (100.0 * n_insert_too_short / n_paired_unique)));
+
+        logger.trace("----\n");
+        logger.trace(String.format("n_new_valid_pair=%d", n_new_valid_pair));
+        logger.trace(String.format("n_un_ligated_pair=%d", n_un_ligated_pair));
+        logger.trace(String.format("n_self_ligated_pair=%d", n_self_ligated_pair));
+       logger.trace(String.format("n_tiny_valid_pair=%d", n_tiny_valid_pair));
+        logger.trace(String.format("n_huge_valid_pair=%d", n_huge_valid_pair));
+        logger.trace(String.format("n_total=%d", n_new_valid_pair+n_tiny_valid_pair+n_huge_valid_pair+n_un_ligated_pair+n_self_ligated_pair));
+        logger.trace("----\n");
+        logger.trace(String.format("n_dangling_end_pair=%d", n_dangling_end_pair));
+        logger.trace(String.format("n_new_valid_dangling_pair=%d", n_new_valid_dangling_pair));
+        logger.trace(String.format("n_un_ligated_dangling_pair=%d", n_un_ligated_dangling_pair));
+        logger.trace(String.format("n_self_ligated_dangling_pair=%d", n_self_ligated_dangling_pair));
+        logger.trace("----\n");
 
         logger.trace(String.format("n_valid_pairs=%d (%.1f%%)", n_valid_pairs, (100.0 * n_valid_pairs / n_paired_unique)));
         logger.trace("");

@@ -78,6 +78,9 @@ ChIP-seq reads. Within Diachromatic, inward pointing read pairs for which the di
 the specified threshold are categorized as un-ligated pairs, whereas outward pointing read pairs with a calculated size
 smaller than the threshold are categorized as self-ligated pairs.
 
+.. figure:: img/fragment_categories.png
+    :align: center
+
 .. _peak caller Q: http://charite.github.io/Q/
 
 Valid read pairs arising from genuine chromatin-chromatin interactions cannot be distinguished from those arising from
