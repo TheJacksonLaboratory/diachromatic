@@ -1,5 +1,4 @@
-package org.jax.diachromatic.io;
-
+package org.jax.diachromatic.util;
 
 /**
  * A simple status bar that only work on terminals where "\r" has an affect.
@@ -53,7 +52,6 @@ public final class ProgressBar {
         if (pos == max)
             System.err.println();
     }
-
 
     public void finish() {
         System.err.println();

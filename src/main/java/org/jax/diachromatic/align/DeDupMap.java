@@ -121,7 +121,7 @@ public class DeDupMap {
                      dedupmap.get(stringKey).get(intKey).add(intVal); // add to set
                      second_coord_num++;
                      insertion_num++;
-                     logger.trace(stringKey + "\t" + intKey + "\t" + intVal);
+                     //logger.trace(stringKey + "\t" + intKey + "\t" + intVal);
                      return false;
                  }
              }
@@ -133,7 +133,7 @@ public class DeDupMap {
                  first_coord_num++;
                  second_coord_num++;
                  insertion_num++;
-                 logger.trace(stringKey + "\t" + intKey + "\t" + intVal);
+                 //logger.trace(stringKey + "\t" + intKey + "\t" + intVal);
                  return false;
              }
          } else {
@@ -146,7 +146,7 @@ public class DeDupMap {
              first_coord_num++;
              second_coord_num++;
              insertion_num++;
-             logger.trace(stringKey + "\t" + intKey + "\t" + intVal);
+             //logger.trace(stringKey + "\t" + intKey + "\t" + intVal);
              return false;
          }
      }
@@ -170,5 +170,17 @@ public class DeDupMap {
 
     public int getNumOfSecondCoords() {
         return second_coord_num;
+    }
+
+    public void printDeDupStatistics(int n_paired_duplicated) {
+        logger.trace("" );
+        logger.trace("Deduplication statitics:" );
+        logger.trace("n_duplicate: " + n_paired_duplicated);
+        logger.trace("getNumOfChrPairKeys(): " + getNumOfChrPairKeys());
+        logger.trace("getNumOfQueries(): " + getNumOfQueries());
+        logger.trace("getNumOfInsertions(): " + getNumOfInsertions());
+        logger.trace("getNumOfFirstCoords(): " + getNumOfFirstCoords());
+        logger.trace("getNumOfSecondCoords(): " + getNumOfSecondCoords());
+        logger.trace("" );
     }
 }

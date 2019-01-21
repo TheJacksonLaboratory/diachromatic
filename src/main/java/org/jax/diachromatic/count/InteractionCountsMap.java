@@ -247,9 +247,6 @@ public class InteractionCountsMap {
             oriTag="S"; // simple loop
         }
 
-
-
-
         hashKey += ";";
         hashKey += oriTag;
 
@@ -461,7 +458,7 @@ public class InteractionCountsMap {
         Iterator it = interaction_counts_map.entrySet().iterator();
         while (it.hasNext()) {
             cnt++;
-            if(cnt%1000==0) {logger.trace(cnt);}
+            if(cnt%10000==0) {logger.trace(cnt);}
             Map.Entry pair = (Map.Entry)it.next();
             String hashKey = pair.getKey().toString();
             String[] fragKey = hashKey.split(";");

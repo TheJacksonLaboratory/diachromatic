@@ -1,6 +1,5 @@
 package org.jax.diachromatic.util;
 
-
 /**
  * Yet another class for storing Pairs
  * @param <X>
@@ -25,7 +24,6 @@ public class Pair<X,Y> {
         return first.equals(other.first) && second.equals(other.second);
     }
 
-
     @Override
     public int hashCode() {
         int hash = 3;
@@ -35,4 +33,3 @@ public class Pair<X,Y> {
     }
 
 }
-

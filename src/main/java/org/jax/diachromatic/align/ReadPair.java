@@ -5,14 +5,7 @@ import htsjdk.samtools.SAMRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.exception.DiachromaticException;
-import org.jax.diachromatic.exception.DigestNotFoundException;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import static org.jax.diachromatic.align.ErrorCode.*;
 
 /**
  * This class represents a pair of reads R1 and R2 of an illumina paired-end run.
@@ -55,10 +48,7 @@ import static org.jax.diachromatic.align.ErrorCode.*;
  */
 public class ReadPair {
     private static final Logger logger = LogManager.getLogger();
-    /**
-     * A set of Q/C criteria that this read pair did NOT pass.
-     */
-    private Set<ErrorCode> errorcodes;
+
     /**
      * First (forward) read in a read pair.
      */
@@ -177,12 +167,7 @@ public class ReadPair {
         }
     }
 
-    /**
-     * Key: chromosome; value: a list of {@link Digest} objects on the chromosome.
-     */
-    private Map<String, List<Digest>> digestmap = null;
 
-    private int n_could_not_assign_to_digest = 0;
 
 
     /**
@@ -204,19 +189,15 @@ public class ReadPair {
      *
      * @param f         forward read
      * @param r         reverse read
-     * @param digestmap a align of all digests
      * @throws DiachromaticException
      */
-    ReadPair(SAMRecord f, SAMRecord r, Map<String, List<Digest>> digestmap, DigestMap digestMap, Integer lowerFragSize, Integer upperFragSize, boolean stringentUnique) throws DiachromaticException {
+    ReadPair(SAMRecord f, SAMRecord r, DigestMap digestMap, Integer lowerFragSize, Integer upperFragSize, boolean stringentUnique) throws DiachromaticException {
 
         R1 = f;
         R2 = r;
 
         this.LOWER_SIZE_THRESHOLD = lowerFragSize;
         this.UPPER_SIZE_THRESHOLD = upperFragSize;
-
-        errorcodes = new HashSet<>();
-        this.digestmap = digestmap;
 
         // check if both reads could be mapped
         unmapped_read1 = false;
@@ -276,10 +257,6 @@ public class ReadPair {
             // try to find restriction digests that match the read pair
             //this.digestPair = getDigestPair(this);
             this.digestPair = digestMap.getDigestPair2(this.R1.getReferenceName(),getFivePrimeEndPosOfRead(this.R1),this.R2.getReferenceName(),getFivePrimeEndPosOfRead(this.R2));
-            if (this.digestPair == null) {
-                logger.trace("invalidDigest");
-                this.setInvalidDigest();
-            }
 
             // categorize ReadPair
             this.categorizeReadPair();
@@ -359,19 +336,6 @@ public class ReadPair {
         return R2;
     }
 
-    Set<ErrorCode> getErrorCodes() {
-        return errorcodes;
-    }
-
-    boolean isUnmapped() {
-        return errorcodes.contains(READPAIR_UNMAPPED);
-    }
-
-    boolean isMultimapped() {
-        return errorcodes.contains(READPAIR_MULTIMAPPED);
-    }
-
-
     /**
      * This function checks if the two reads are on the sam chromosome; if not, it
      * sets the {@code CT} user-defined attribute of the reads to {@code TRANS}.
@@ -425,7 +389,6 @@ public class ReadPair {
         int contigsize = Math.max(R2.getAlignmentStart() - R1.getAlignmentStart(),
                 R1.getAlignmentStart() - R2.getAlignmentStart());
         if (contigsize > LOWER_SIZE_THRESHOLD && contigsize < UPPER_SIZE_THRESHOLD) {  // TODO: Does this make sense?
-            errorcodes.add(CONTIGUOUS);
             return true;
         } else {
             return false;
@@ -446,7 +409,6 @@ public class ReadPair {
                 Math.abs(R1.getAlignmentStart() - digestPair.forward().getEndpos()) < DANGLING_THRESHOLD ||
                 Math.abs(R2.getAlignmentStart() - digestPair.forward().getStartpos()) < DANGLING_THRESHOLD ||
                 Math.abs(R2.getAlignmentStart() - digestPair.forward().getEndpos()) < DANGLING_THRESHOLD) {
-            errorcodes.add(SAME_DANGLING_END);
             return true;
         } else {
             return false;
@@ -463,18 +425,10 @@ public class ReadPair {
     boolean religation() {
         if (digestPair.isAdjacent() &&
                 (R1.getReadNegativeStrandFlag() != R2.getReadNegativeStrandFlag())) {
-            errorcodes.add(RELIGATION);
             return true;
         } else {
             return false;
         }
-    }
-
-    /**
-     * This function gets called if we cannot find valid digests for this readpair.
-     */
-    private void setInvalidDigest() {
-        errorcodes.add(COULD_NOT_ASSIGN_TO_DIGEST);
     }
 
     /**
@@ -495,7 +449,6 @@ public class ReadPair {
                 (reverse().getAlignmentStart() < forward().getAlignmentStart() &&
                         !forward().getReadNegativeStrandFlag() &&
                         reverse().getReadNegativeStrandFlag())) {
-            errorcodes.add(CIRCULARIZED_READ);
             return true;
         } else {
             return false;
@@ -567,11 +520,9 @@ public class ReadPair {
      }
 
     /**
-     * This function is called if the forward and reverse reads were found to be a valid pair
-     * by {@link #readPairUniquelyMapped()}. The function adjusts the SAM flags of each read to
+     * This  function adjusts the SAM flags of each read to
      * indicate that they are a valid read pair. Note that client code must call this algorithm after
-     * determining that the reads should be paired, it is not done automatically by
-     * {@link #readPairUniquelyMapped()}.
+     * determining that the reads should be paired.
      */
     void pairReads() {
         // This read pair is valid
@@ -596,49 +547,6 @@ public class ReadPair {
         reverse().setMateReferenceIndex(forward().getReferenceIndex());
         forward().setMateAlignmentStart(reverse().getAlignmentStart());
         reverse().setMateAlignmentStart(forward().getAlignmentStart());
-    }
-
-
-    /**
-     * Determine if both reads from a paired-end could be uniquely mapped. If so, return true. If not,
-     * add the corresponding enumeration constant from {@link ErrorCode} and return false. There are two
-     * things that can go wrong -- either one or both reads could not be mapped, or one or both reads were mapped
-     * to more than one locus in the genome. The XS attribute is used in bowtie2 to indicate that a read has
-     * been multimapped.
-     *
-     * @return true if both reads could be uniquely mapped.
-     */
-    boolean readPairUniquelyMapped() {
-        if (forward().getReadUnmappedFlag()) {
-            //read 1 could not be aligned
-            errorcodes.add(READ_1_UNMAPPED);
-            errorcodes.add(READPAIR_UNMAPPED);
-            if (reverse().getReadUnmappedFlag()) {
-                errorcodes.add(READ_2_UNMAPPED);
-            }
-            return false;
-        } else if (reverse().getReadUnmappedFlag()) {
-            // note read1 must be OK if we get here...
-            errorcodes.add(READ_2_UNMAPPED);
-            errorcodes.add(READPAIR_UNMAPPED);
-            return false;
-        } else if (forward().getAttribute("XS") != null) {
-            // Now look for multimapped reads.
-            // If a read has an XS attribute, then bowtie2 multi-mapped it.
-            errorcodes.add(READ_1_MULTIMAPPED);
-            errorcodes.add(READPAIR_MULTIMAPPED);
-            if (reverse().getAttribute("XS") != null) {
-                errorcodes.add(READ_2_MULTIMAPPED);
-            }
-            errorcodes.add(READPAIR_MULTIMAPPED);
-            return false;
-        } else if (reverse().getAttribute("XS") != null) {
-            // note if we are here, read1 was not multimapped
-            errorcodes.add(READ_2_MULTIMAPPED);
-            errorcodes.add(READPAIR_MULTIMAPPED);
-            return false;
-        }
-        return true;
     }
 
 
@@ -737,24 +645,6 @@ public class ReadPair {
         return(
                 Math.abs(fragSta-fwdReadFpep) <  DANGLING_THRESHOLD || Math.abs(fragEnd-fwdReadFpep) <  DANGLING_THRESHOLD ||
                 Math.abs(fragSta-revReadFpep) <  DANGLING_THRESHOLD || Math.abs(fragEnd-revReadFpep) <  DANGLING_THRESHOLD);
-
-
-
-        /*
-        int fwdReadSta = this.R1.getAlignmentStart();
-        int fwdReadEnd = this.R1.getAlignmentEnd();//
-        int revReadSta = this.R2.getAlignmentStart();
-        int revReadEnd = this.R2.getAlignmentEnd();
-        return (
-                Math.abs(fragSta - fwdReadSta) < DANGLING_THRESHOLD ||
-                        Math.abs(fragSta - fwdReadEnd) < DANGLING_THRESHOLD ||
-                        Math.abs(fragSta - revReadSta) < DANGLING_THRESHOLD ||
-                        Math.abs(fragSta - revReadEnd) < DANGLING_THRESHOLD ||
-                        Math.abs(fragEnd - fwdReadSta) < DANGLING_THRESHOLD ||
-                        Math.abs(fragEnd - fwdReadEnd) < DANGLING_THRESHOLD ||
-                        Math.abs(fragEnd - revReadSta) < DANGLING_THRESHOLD ||
-                        Math.abs(fragEnd - revReadEnd) < DANGLING_THRESHOLD);
-        */
     }
 
 
@@ -808,60 +698,6 @@ public class ReadPair {
                 }
             }
         }
-    }
-
-
-    /**
-     * THIS FUNCTION WAS COPIED FROM THE CLASS Aligner IN ORDER TO GET THE FUNCTION isValid RUNNING.
-     * IN CLASS Aligner THIS FUNCTION IS CALLED BY MULTIPLE TEST FUNCTIONS.
-     * IN THIS CLASS THIS FUNCTION IS NOT YET TESTED.
-     * ONE COULD MOVE THE TESTS TO THE TEST CLASS OF THIS CLASS,
-     * BUT IN THE MID TERM THIS FUNCTION SHOULD BE MOVED TO THE CLASS DigestPair AND BE TESTED THERE.
-     * <p>
-     * Get the restriction fragments ({@link Digest} objects) to which the reads align. TODO do we need a different algorithm
-     * Note this from hicup
-     * Using the terminal ends of a di-tag to position a read on the digested genome could be problematic because
-     * a restiction enzyme may not cut in the same position on both strands (i.e. creates sticky ends). Filling-in
-     * and truncating reads at the Hi-C junction makes this situation even more complex.
-     * To overcome this problem simply the script uses the position 10 bp upstream of the start of each read when
-     * assigning reads to a fragment in the digested genome.
-     *
-     * @param readpair Pair of reads (forward, reverse).
-     * @return the corresponding {@link DigestPair} object.
-     */
-    private DigestPair getDigestPair(ReadPair readpair) throws DiachromaticException {
-        String chrom1 = readpair.forward().getReferenceName();
-        int start1 = readpair.forward().getAlignmentStart();
-        int end1 = readpair.forward().getAlignmentEnd();
-        String chrom2 = readpair.reverse().getReferenceName();
-        int start2 = readpair.reverse().getAlignmentStart();
-        int end2 = readpair.reverse().getAlignmentEnd();
-        final int OFFSET = 10;
-        List<Digest> list = digestmap.get(chrom1);
-        if (list == null) {
-            n_could_not_assign_to_digest++; // should never happen
-            throw new DigestNotFoundException(String.format("Could not retrieve digest list for chromosome %s", chrom1));
-        }
-        int pos1 = start1 + OFFSET; // strand does not matter here.
-        Digest d1 = list.stream().filter(digest -> (digest.getStartpos() <= pos1 && pos1 <= digest.getEndpos())).findFirst().orElse(null);
-        if (d1 == null) {
-            n_could_not_assign_to_digest++; // should never happen
-            throw new DigestNotFoundException(String.format("Could not identify digest for read 1 at %s:%d-%d", chrom1, start1, end1));
-        }
-        list = digestmap.get(chrom2);
-        if (list == null) {
-            n_could_not_assign_to_digest++; // should never happen
-            throw new DigestNotFoundException(String.format("Could not retrieve digest list for chromosome %s", chrom2));
-        }
-        int pos2 = start2 + OFFSET;
-        Digest d2 = list.stream().filter(digest -> (digest.getStartpos() <= pos2 && pos2 <= digest.getEndpos())).findFirst().orElse(null);
-        if (d2 == null) {
-            n_could_not_assign_to_digest++; // should never happen
-            throw new DigestNotFoundException(String.format("Could not identify digest for read 2 at %s:%d-%d", chrom2, start2, end2));
-        }
-
-        return new DigestPair(d1, d2);
-
     }
 
     public Integer getForwardDigestStart() {return this.digestPair.forward().getStartpos();}

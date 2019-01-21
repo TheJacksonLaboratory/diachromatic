@@ -81,14 +81,13 @@ public class AlignCommand extends Command {
         String samFile1 = String.format("%s_%s_1.sam", this.outputPathPrefix, getRandomPrefix(7));
         String samFile2 = String.format("%s_%s_2.sam", this.outputPathPrefix, getRandomPrefix(7));
         logger.trace(String.format("About to read digests from %s",digestFile));
-        Map<String,List<Digest>> digestmap = Digest.readDigests(digestFile, activeDigestsFile);
         DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
         try {
             Bowtie2Runner runner = new Bowtie2Runner(bowtiepath,pathToBowtieIndex,pathToInputFastq1,samFile1,this.threadNum);
             runner.run();
             Bowtie2Runner runner2 = new Bowtie2Runner(bowtiepath,pathToBowtieIndex,pathToInputFastq2,samFile2,this.threadNum);
             runner2.run();
-            Aligner pairer = new Aligner(samFile1,samFile2,digestmap,outputRejectedReads,outputPathPrefix, digestMap, lowerFragSize, upperFragSize, filenamePrefix,useStringentUniqueSettings);
+            Aligner pairer = new Aligner(samFile1,samFile2, outputRejectedReads,outputPathPrefix, digestMap, lowerFragSize, upperFragSize, filenamePrefix,useStringentUniqueSettings);
             pairer.inputSAMfiles();
             pairer.printStatistics();
             File file = new File(samFile1);
