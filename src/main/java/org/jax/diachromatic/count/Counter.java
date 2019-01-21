@@ -137,6 +137,7 @@ public class Counter {
         }
         logger.trace("...done with counting!");
         logger.trace("About to print the results...");
+        logger.trace("interactionMap.getTotalNumberOfInteractionsForCondition(0): " + interactionMap.getTotalNumberOfInteractionsForCondition(0));
         interactionMap.printInteractionCountsMapAsCountTable(outputTsvInteractionCounts);
         //interactionMap.printFragmentInteractionCountsMapAsCountTable(outputTsvInteractingFragmentCounts);
         logger.trace("...done!");
