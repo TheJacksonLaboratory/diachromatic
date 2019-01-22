@@ -155,6 +155,9 @@ public class Aligner {
     private int n_self_ligated_dangling_pair = 0;
 
     private int n_dangling_end_pair = 0;
+
+    private int n_old_and_new_is_valid = 0;
+
     /**
      * Central customized auxiliary class of Diachromatic. Contains information about all restriction fragments of the
      * genome. Is contructed from the digest file produced using GOPHER.
@@ -251,6 +254,7 @@ public class Aligner {
 
         ReadPair pair;
 
+
         while ((pair = getNextPair())!= null) {
 
             n_total++;
@@ -306,6 +310,10 @@ public class Aligner {
 
                 if(pair.isTrans()) {
                     n_paired_unique_trans++;
+                }
+
+                if(pair.getCategoryTag().equals("VP") && pair.getCategoryTag2().equals("NP")) {
+                    n_old_and_new_is_valid++;
                 }
             }
 
@@ -438,6 +446,8 @@ public class Aligner {
         logger.trace(String.format("n_new_valid_dangling_pair=%d", n_new_valid_dangling_pair));
         logger.trace(String.format("n_un_ligated_dangling_pair=%d", n_un_ligated_dangling_pair));
         logger.trace(String.format("n_self_ligated_dangling_pair=%d", n_self_ligated_dangling_pair));
+
+        logger.trace("n_old_and_new_is_valid: " + n_old_and_new_is_valid);
         logger.trace("----\n");
 
         logger.trace(String.format("n_valid_pairs=%d (%.1f%%)", n_valid_pairs, (100.0 * n_valid_pairs / n_paired_unique)));
