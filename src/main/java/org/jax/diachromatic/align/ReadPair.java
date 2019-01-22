@@ -602,32 +602,36 @@ public class ReadPair {
 
     /* Helper functions for relative orientation of pairs */
 
-
     /**
-     * Check the relative orientation of the pair: -> <-.
+     * Check the relative orientation of the pair.
      *
-     * @return true if the reads point to one another.
+     * @return true if the reads point to one another (-> <-).
      */
     private boolean isInwardFacing() {
-        return ((!this.R1.getReadNegativeStrandFlag() &&
-                this.R2.getReadNegativeStrandFlag() &&
-                this.R1.getAlignmentStart() < this.R2.getAlignmentEnd()) // F1R2
-                ||
-                (!this.R2.getReadNegativeStrandFlag() &&
-                        this.R1.getReadNegativeStrandFlag() &&
-                        this.R2.getAlignmentStart() < this.R1.getAlignmentEnd())); // F2R1
-    }
-
-    private boolean isOutwardFacing() {
-        return ((!this.R1.getReadNegativeStrandFlag() && this.R2.getReadNegativeStrandFlag() &&
-                getFivePrimeEndPosOfRead(this.R2) <= getFivePrimeEndPosOfRead(this.R1))
-                ||
-                (!this.R2.getReadNegativeStrandFlag() && this.R1.getReadNegativeStrandFlag() &&
-                        getFivePrimeEndPosOfRead(this.R1) <= getFivePrimeEndPosOfRead(this.R2)));
+        if(getRelativeOrientationTag().equals("F1R2") || getRelativeOrientationTag().equals("F2R1")) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
-     * @return F1F2, F2F1, R1R2, R2R1, F1R2, F2R1, R2F1, R1F2
+     * Check the relative orientation of the pair.
+     *
+     * @return true if the reads point to opposite directions (<-->).
+     */
+    private boolean isOutwardFacing() {
+        if(getRelativeOrientationTag().equals("R2F1") || getRelativeOrientationTag().equals("R1F2")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Get relative orientation of the pair.
+     *
+     * @return F1F2, F2F1, R1R2, R2R1, F1R2, F2R1, R2F1 or R1F2
      */
     public String getRelativeOrientationTag() {
 
@@ -750,23 +754,17 @@ public class ReadPair {
         }
     }
 
+    /**
+     * Assigns this read pair to one of the following disjoint categories: Self-ligated, un-ligated, wrong size or valid.
+     *
+     * @throws DiachromaticException
+     */
     private void categorizeReadPair2() throws DiachromaticException {
 
-        // now subdivide all pairs in three disjoint categories: valid, self-ligated, un-ligated
-        if(this.isTrans()) {
-            // trans pairs cannot be distinguished from valid pairs
-            if(this.hasTooSmallInsertSize()) {
-                setCategoryTag2(ReadPairCategory2.TINY_PAIR.getTag());
-            } else if(this.hasTooBigInsertSize()){
-                setCategoryTag2(ReadPairCategory2.HUGE_PAIR.getTag());
-            } else {
-                setCategoryTag2(ReadPairCategory2.NEW_VALID_PAIR.getTag()); // only if hybrid fragment has the right size it is categorized as valid
-            }
-        } else {
-            // cis pairs may correspond to valid, un-ligated and self-ligated fragments
-            if(isOutwardFacing()) {
-                // pair is valid or self-ligated
-                if(this.getDistanceBetweenFivePrimeEnds()+this.getCalculatedInsertSize() < this.UPPER_SIZE_THRESHOLD) {
+        if(!this.isTrans() && (this.isInwardFacing()||this.isOutwardFacing())){
+            // inward and outward pointing read pairs may arise from  self- or un-ligated fragments
+            if(this.isOutwardFacing()) {
+                if(this.getDistanceBetweenFivePrimeEnds() < this.UPPER_SIZE_THRESHOLD) {
                     setCategoryTag2(ReadPairCategory2.SELF_LIGATED_PAIR.getTag());
                 } else {
                     if(this.hasTooSmallInsertSize()) {
@@ -778,7 +776,7 @@ public class ReadPair {
                     }
                 }
             } else {
-                // pair is valid or un-ligated
+                // pair is inward facing
                 if(this.getDistanceBetweenFivePrimeEnds() < this.UPPER_SIZE_THRESHOLD) {
                     setCategoryTag2(ReadPairCategory2.UN_LIGATED_PAIR.getTag());
                 } else {
@@ -791,8 +789,18 @@ public class ReadPair {
                     }
                 }
             }
+        } else {
+            // trans pairs and read pairs that are pointing in the same direction cannot arise from self- or un-ligated fragments
+            if(this.hasTooSmallInsertSize()) {
+                setCategoryTag2(ReadPairCategory2.TINY_PAIR.getTag());
+            } else if(this.hasTooBigInsertSize()){
+                setCategoryTag2(ReadPairCategory2.HUGE_PAIR.getTag());
+            } else {
+                setCategoryTag2(ReadPairCategory2.NEW_VALID_PAIR.getTag()); // only if hybrid fragment has the right size it is categorized as valid
+            }
         }
     }
+
 
     /**
      * @return Linear genomic distance between 5' end positions of the reads.
