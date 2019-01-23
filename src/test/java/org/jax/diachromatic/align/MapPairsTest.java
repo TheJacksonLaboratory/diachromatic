@@ -168,7 +168,7 @@ public class MapPairsTest {
     /**
      * We are testing the fourth pair of reads that self-circularizes. The first read
      * pair is from the same chromosome but does not self-circularize. (by manual inspection).
-     * The second and third pairs have distinct chromosomes and cnnot be tested for self circularization.
+     * The second and third pairs have distinct chromosomes and cannot be tested for self-circularizion.
      * @throws DiachromaticException
      */
     @Test
@@ -178,9 +178,9 @@ public class MapPairsTest {
         DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
         sampairer = new Aligner(sam1, sam2, outputRejectedReads,"test4", digestMap,150,800,"xxx",true);
         ReadPair readpair = readpairmap.get("1_uniquelyAlignedRead");
-        assertFalse(readpair.selfLigation());
+        assertFalse(readpair.getCategoryTag2().equals("SP"));
         readpair = readpairmap.get("4_selfLigation");//sampairer.getNextPair();// fourth read pair, self-ligation!
-        assertTrue(readpair.selfLigation());
+        assertTrue(readpair.getCategoryTag2().equals("SP"));
     }
 
     /* The fifth pair shows religation! */

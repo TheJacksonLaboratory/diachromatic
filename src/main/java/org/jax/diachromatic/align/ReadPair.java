@@ -95,7 +95,6 @@ public class ReadPair {
      * Set false, if read pair is an artifact.
      */
     private boolean isValid = false;
-    private boolean isNewValid = false;
 
     /**
      * A read pair belongs to one of the following categories: SL, DE, CD, CI, SI, RL, TS, TL, VP.
@@ -348,12 +347,6 @@ public class ReadPair {
         this.isValid = true;
     }
 
-    /**
-     * Mark this read pair as valid with:
-     */
-    private void setNewValid() {
-        this.isNewValid = true;
-    }
 
     /**
      * Check if read pair as valid with:
@@ -428,6 +421,8 @@ public class ReadPair {
      * The test demands that the contig size is above the lower threshold and below the upper threshold.
      *
      * @return true of the two reads are contiguous (artefact!)
+     *
+     * TODO: Remove as soon as old categorization has been removed
      */
     boolean isContiguous() {
         if (!R1.getReferenceName().equals(R2.getReferenceName())) {
@@ -446,59 +441,16 @@ public class ReadPair {
     }
 
     /**
-     * If ditags are on the same restriction fragment (which MUST be checked before calling this
-     * function), but not circularized and if the mapped end of one of the reads is near to the
-     * end of a restriction fragment, this is termed a dangling end. Note that we only need to
-     * check one Digest since by definition the reads have been found to both align to the same
-     * fragment.
-     *
-     * @return true if the two reads of on the same restriction frag with a dangling end (artefact!)
-     */
-    boolean danglingEnd() {
-        if (Math.abs(R1.getAlignmentStart() - digestPair.forward().getStartpos()) < DANGLING_THRESHOLD ||
-                Math.abs(R1.getAlignmentStart() - digestPair.forward().getEndpos()) < DANGLING_THRESHOLD ||
-                Math.abs(R2.getAlignmentStart() - digestPair.forward().getStartpos()) < DANGLING_THRESHOLD ||
-                Math.abs(R2.getAlignmentStart() - digestPair.forward().getEndpos()) < DANGLING_THRESHOLD) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-
-    /**
      * Adjacent fragments have the same orientation and thus the reads have opposite orientation
      * We know the fragments are adjacent because their fragment numbers differ by 1.
      *
      * @return true if the two read fragments are religated
+     *
+     * TODO: Remove as soon as old categorization has been removed
      */
     boolean religation() {
         if (digestPair.isAdjacent() &&
                 (R1.getReadNegativeStrandFlag() != R2.getReadNegativeStrandFlag())) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Check if a fragment self ligates (circularizes). The sequence insert spans the
-     * ligation site. Mapping the reads "flips" them, so that read 1 is before read2 and points in
-     * the opposite direction. Vice versa if read2 is before read 1.
-     *
-     * @return true if this read pair shows self-ligation
-     */
-    boolean selfLigation() {
-        if (!R1.getReferenceName().equals(R2.getReferenceName())) {
-            return false; // reads not on same chromosome, therefore, no self-ligation
-        }
-        if ((forward().getAlignmentStart() < reverse().getAlignmentStart() &&
-                forward().getReadNegativeStrandFlag() &&
-                (!reverse().getReadNegativeStrandFlag()))
-                ||
-                (reverse().getAlignmentStart() < forward().getAlignmentStart() &&
-                        !forward().getReadNegativeStrandFlag() &&
-                        reverse().getReadNegativeStrandFlag())) {
             return true;
         } else {
             return false;
@@ -760,6 +712,12 @@ public class ReadPair {
      * @throws DiachromaticException
      */
     private void categorizeReadPair2() throws DiachromaticException {
+
+        /* TODO: Check if pairs has a dangling ends.
+        Note that dangling ends is not a category because it may occur in each category.
+        Use function isDanglingEnd().
+
+         */
 
         if(!this.isTrans() && (this.isInwardFacing()||this.isOutwardFacing())){
             // inward and outward pointing read pairs may arise from  self- or un-ligated fragments

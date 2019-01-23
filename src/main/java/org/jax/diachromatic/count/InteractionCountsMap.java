@@ -445,7 +445,7 @@ public class InteractionCountsMap {
                 //printStream.print(interaction_counts_map.get(hashKey).get(i));
             }
             printStream.print("\n");
-            if(seenHashKeys.size()%10000==0) {logger.trace("seenHashKeys.size(): " + seenHashKeys.size());}
+            if(seenHashKeys.size()%1000000==0) {logger.trace("seenHashKeys.size(): " + seenHashKeys.size());}
         }
     }
 
