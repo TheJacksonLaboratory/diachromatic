@@ -143,7 +143,16 @@ public class Aligner {
     private int n_un_ligated_dangling = 0;
     private int n_self_ligated_dangling = 0;
     private int n_valid_dangling = 0;
+    private int n_valid_too_short_dangling = 0;
+    private int n_valid_too_long_dangling = 0;
 
+    private int n_total_trans = 0;
+
+    private int n_un_ligated_trans = 0;
+    private int n_self_ligated_trans = 0;
+    private int n_valid_trans = 0;
+    private int n_valid_too_short_trans = 0;
+    private int n_valid_too_long_trans = 0;
 
     /**
      * Central customized auxiliary class of Diachromatic. Contains information about all restriction fragments of the
@@ -182,10 +191,10 @@ public class Aligner {
         it2 = sam_reader_R2.iterator();
         this.digestMap = digestMap;
         outputRejectedReads = outputRejected;
-        this.lowerFragSize=lowerFragSize;
-        this.upperFragSize=upperFragSize;
-        this.filenamePrefix=filenamePrefix;
-        this.useStringentUniqueSettings=useStringentUniqueSettings;
+        this.lowerFragSize = lowerFragSize;
+        this.upperFragSize = upperFragSize;
+        this.filenamePrefix = filenamePrefix;
+        this.useStringentUniqueSettings = useStringentUniqueSettings;
 
         Arrays.fill(fragSizesAllPairs, 0);
         Arrays.fill(fragSizesHybridActivePairs, 0);
@@ -288,10 +297,24 @@ public class Aligner {
                         n_un_ligated_dangling++;}
                     if(pair.getCategoryTag().equals("SL")) {
                         n_self_ligated_dangling++;}
+                    if(pair.getCategoryTag().equals("TS")) {
+                        n_valid_too_short_dangling++;}
+                    if(pair.getCategoryTag().equals("TL")) {
+                        n_valid_too_long_dangling++;}
                 }
 
                 if(pair.isTrans()) {
                     n_paired_unique_trans++;
+                    if(pair.getCategoryTag().equals("VP")) {
+                        n_valid_trans++;}
+                    if(pair.getCategoryTag().equals("UL")) {
+                        n_un_ligated_trans++;}
+                    if(pair.getCategoryTag().equals("SL")) {
+                        n_self_ligated_trans++;}
+                    if(pair.getCategoryTag().equals("TS")) {
+                        n_valid_too_short_trans++;}
+                    if(pair.getCategoryTag().equals("TL")) {
+                        n_valid_too_long_trans++;}
                 }
             }
 
@@ -392,47 +415,40 @@ public class Aligner {
 
     public void printStatistics() throws FileNotFoundException {
 
-        logger.trace(String.format("n_total_input_read_pairs pairs=%d\n", n_total_input_read_pairs));
+        logger.trace(String.format("n_total_input_read_pairs pairs=%d", n_total_input_read_pairs));
+        logger.trace(String.format("n_paired=%d (%.1f%% of all input read pairs)", n_paired, (100.0 * n_paired / n_total_input_read_pairs)));
+        logger.trace(String.format("n_paired_unique=%d (%.1f%% of all input read pairs)\n", n_paired_unique, (100.0 * n_paired_unique / n_total_input_read_pairs)));
 
-        logger.trace(String.format("n_unmapped_R1=%d", n_unmapped_R1));
-        logger.trace(String.format("n_unmapped_R2=%d\n", n_unmapped_R2));
+        logger.trace("Disjoint categories:");
+        logger.trace(String.format("n_un_ligated_pair=%d  (%.1f%% of all unique paired read pairs)", n_un_ligated_pair, (100.0 * n_un_ligated_pair / n_paired_unique)));
+        logger.trace(String.format("n_self_ligated_pair=%d  (%.1f%% of all unique paired read pairs)", n_self_ligated_pair, (100.0 * n_self_ligated_pair / n_paired_unique)));
+        logger.trace(String.format("n_valid_too_long=%d  (%.1f%% of all unique paired read pairs)", n_valid_too_long, (100.0 * n_valid_too_long / n_paired_unique)));
+        logger.trace(String.format("n_valid_too_short=%d  (%.1f%% of all unique paired read pairs)", n_valid_too_short, (100.0 * n_valid_too_short / n_paired_unique)));
+        logger.trace(String.format("n_valid_pair=%d  (%.1f%% of all unique paired read pairs)", n_valid_pair, (100.0 * n_valid_pair/n_paired_unique)));
+        int sum_of_categories = n_un_ligated_pair + n_self_ligated_pair + n_valid_too_short + n_valid_too_long + n_valid_pair;
+        logger.trace(String.format("sum_of_categories=%d  (%.1f%% of all unique paired read pairs)\n", sum_of_categories, (100.0 * sum_of_categories/n_paired_unique)));
 
-        logger.trace(String.format("n_multimapped_R1=%d", n_multimapped_R1));
-        logger.trace(String.format("n_multimapped_R2=%d\n", n_multimapped_R2));
-        logger.trace(String.format("n_multimappedPair=%d\n", n_multimappedPair));
+        logger.trace("Fractions of dangling end pairs:");
+        logger.trace(String.format("n_un_ligated_dangling=%d (%.1f%% of all unique un-ligated pairs)", n_un_ligated_dangling, (100.0 * n_un_ligated_dangling/n_un_ligated_pair)));
+        logger.trace(String.format("n_self_ligated_dangling=%d (%.1f%% of all unique self-ligated pairs)", n_self_ligated_dangling, (100.0 * n_self_ligated_dangling/n_self_ligated_pair)));
+        logger.trace(String.format("n_valid_too_short_dangling=%d (%.1f%% of all unique valid too short pairs)", n_valid_too_short_dangling, (100.0 * n_valid_too_short_dangling/n_valid_too_short)));
+        logger.trace(String.format("n_valid_too_long_dangling=%d (%.1f%% of all unique valid too long pairs)", n_valid_too_long_dangling, (100.0 * n_valid_too_long_dangling/n_valid_too_long)));
+        logger.trace(String.format("n_valid_dangling=%d (%.1f%% of all unique valid pairs)", n_valid_dangling, (100.0 * n_valid_dangling/n_valid_pair)));
+        logger.trace(String.format("n_total_dangling=%d (%.1f%% of all unique paired read pairs)\n", n_total_dangling, (100.0 * n_total_dangling/n_paired_unique)));
 
-        logger.trace(String.format("n_paired=%d (%.1f%%)\n", n_paired, (100.0 * n_paired / n_total_input_read_pairs)));
+        logger.trace("Fractions of trans pairs:");
+        logger.trace(String.format("n_un_ligated_trans=%d (%.1f%% of all unique un-ligated pairs)", n_un_ligated_trans, (100.0 * n_un_ligated_trans/n_un_ligated_pair)));
+        logger.trace(String.format("n_self_ligated_trans=%d (%.1f%% of all unique self-ligated pairs)", n_self_ligated_trans, (100.0 * n_self_ligated_trans/n_self_ligated_pair)));
+        logger.trace(String.format("n_valid_too_short_trans=%d (%.1f%% of all unique valid too short pairs)", n_valid_too_short_trans, (100.0 * n_valid_too_short_trans/n_valid_too_short)));
+        logger.trace(String.format("n_valid_too_long_trans=%d (%.1f%% of all unique valid too long pairs)", n_valid_too_long_trans, (100.0 * n_valid_too_long_trans/n_valid_too_long)));
+        logger.trace(String.format("n_valid_trans=%d (%.1f%% of all unique valid pairs)", n_valid_trans, (100.0 * n_valid_trans/n_valid_pair)));
+        logger.trace(String.format("n_total_trans=%d (%.1f%% of all unique paired read pairs)", n_paired_unique_trans, (100.0 * n_paired_unique_trans/n_paired_unique)));
 
-        logger.trace(String.format("n_total_dangling=%d", n_total_dangling));
 
-
-
-        logger.trace(String.format("n_valid_too_long=%d  (%.1f%%)", n_valid_too_long, (100.0 * n_valid_too_long / n_paired_unique)));
-        logger.trace(String.format("n_valid_too_short=%d  (%.1f%%)\n", n_valid_too_short, (100.0 * n_valid_too_short / n_paired_unique)));
-
-        logger.trace("----\n");
-        logger.trace(String.format("n_valid_pair=%d", n_valid_pair));
-        logger.trace(String.format("n_un_ligated_pair=%d", n_un_ligated_pair));
-        logger.trace(String.format("n_self_ligated_pair=%d", n_self_ligated_pair));
-       logger.trace(String.format("n_valid_too_short=%d", n_valid_too_short));
-        logger.trace(String.format("n_valid_too_long=%d", n_valid_too_long));
-        logger.trace(String.format("n_total_input_read_pairs=%d", n_valid_pair + n_valid_too_short + n_valid_too_long +n_un_ligated_pair+n_self_ligated_pair));
-        logger.trace("----\n");
-        logger.trace(String.format("n_total_dangling=%d", n_total_dangling));
-        logger.trace(String.format("n_valid_dangling=%d", n_valid_dangling));
-        logger.trace(String.format("n_un_ligated_dangling=%d", n_un_ligated_dangling));
-        logger.trace(String.format("n_self_ligated_dangling=%d", n_self_ligated_dangling));
-
-        logger.trace("----\n");
-
-        logger.trace(String.format("n_valid_pair=%d (%.1f%%)", n_valid_pair, (100.0 * n_valid_pair /n_paired_unique)));
-        logger.trace("");
-        logger.trace("Total number of pairs: " + (n_un_ligated_pair+n_self_ligated_pair+n_valid_too_short+n_valid_too_long+n_valid_pair));
-        logger.trace("");
-        logger.trace("\t" + "Enrichment Coefficients:");
+        logger.trace("\n\t" + "Enrichment Coefficients:");
         logger.trace("\t\t" + "Yield of Valid Pairs (YVP): " + String.format("%.2f%%", 100.0* n_valid_pair / n_total_input_read_pairs));
         logger.trace("\t\t" + "Cross-ligation coefficient (CLC): " + String.format("%.2f%%", 100.0* n_paired_unique_trans /n_paired_unique));
-        logger.trace("\t\t" + "Re-ligation coefficient (RLC): " + String.format("%.2f%%", 100.0*(n_paired_unique- n_total_dangling)/n_paired_unique));
+        logger.trace("\t\t" + "Re-ligation coefficient (RLC): " + String.format("%.2f%%", 100.0*(n_paired_unique-n_total_dangling)/n_paired_unique));
         logger.trace("\t\t" + "Pair duplication rate: " + String.format("%.2f%%", 100.0*n_paired_duplicated/n_paired));
         logger.trace("n_duplicate: " + n_paired_duplicated);
         logger.trace("");
