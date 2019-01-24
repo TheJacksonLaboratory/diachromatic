@@ -355,8 +355,8 @@ public class ReadPair {
         int max_possible_insert_size = digestPair.getMaximumPossibleInsertSize();
         // calculate the effective size of the insert depending on whether read 1 is mapped upstream of read 2 or vice versa
         int effective_size = R1.getAlignmentStart() < R2.getAlignmentStart() ?
-                digestPair.reverse().getEndpos() - digestPair.forward().getStartpos() - max_possible_insert_size :
-                digestPair.forward().getEndpos() - digestPair.reverse().getStartpos() - max_possible_insert_size;
+                digestPair.reverse().getDigestEndPosition() - digestPair.forward().getDigestStartPosition() - max_possible_insert_size :
+                digestPair.forward().getDigestEndPosition() - digestPair.reverse().getDigestStartPosition() - max_possible_insert_size;
         // decide whether the reads are close or far.
         if (effective_size > 10_000) {
             R1.setAttribute("CT", "FAR");
@@ -405,10 +405,10 @@ public class ReadPair {
      * @return true if the two reads of on the same restriction frag with a dangling end (artefact!)
      */
     boolean danglingEnd() {
-        if (Math.abs(R1.getAlignmentStart() - digestPair.forward().getStartpos()) < DANGLING_THRESHOLD ||
-                Math.abs(R1.getAlignmentStart() - digestPair.forward().getEndpos()) < DANGLING_THRESHOLD ||
-                Math.abs(R2.getAlignmentStart() - digestPair.forward().getStartpos()) < DANGLING_THRESHOLD ||
-                Math.abs(R2.getAlignmentStart() - digestPair.forward().getEndpos()) < DANGLING_THRESHOLD) {
+        if (Math.abs(R1.getAlignmentStart() - digestPair.forward().getDigestStartPosition()) < DANGLING_THRESHOLD ||
+                Math.abs(R1.getAlignmentStart() - digestPair.forward().getDigestEndPosition()) < DANGLING_THRESHOLD ||
+                Math.abs(R2.getAlignmentStart() - digestPair.forward().getDigestStartPosition()) < DANGLING_THRESHOLD ||
+                Math.abs(R2.getAlignmentStart() - digestPair.forward().getDigestEndPosition()) < DANGLING_THRESHOLD) {
             return true;
         } else {
             return false;
@@ -504,17 +504,17 @@ public class ReadPair {
 
          int d1;
          if(!R1.getReadNegativeStrandFlag()) {
-             d1 = digestPair.forward().getEndpos() - getFivePrimeEndPosOfRead(R1) + 1;
+             d1 = digestPair.forward().getDigestEndPosition() - getFivePrimeEndPosOfRead(R1) + 1;
          }
          else {
-             d1 = getFivePrimeEndPosOfRead(R1) - digestPair.forward().getStartpos() + 1;
+             d1 = getFivePrimeEndPosOfRead(R1) - digestPair.forward().getDigestStartPosition() + 1;
          }
          int d2;
          if(!R2.getReadNegativeStrandFlag()) {
-             d2 = digestPair.reverse().getEndpos() - getFivePrimeEndPosOfRead(R2) + 1;
+             d2 = digestPair.reverse().getDigestEndPosition() - getFivePrimeEndPosOfRead(R2) + 1;
          }
          else {
-             d2 = getFivePrimeEndPosOfRead(R2) - digestPair.reverse().getStartpos() + 1;
+             d2 = getFivePrimeEndPosOfRead(R2) - digestPair.reverse().getDigestStartPosition() + 1;
          }
          return d1 + d2;
      }
@@ -637,8 +637,8 @@ public class ReadPair {
      * @return true if this is the case.
      */
     private boolean readOverlapsCutSite() {
-        int fragSta = this.digestPair.forward().getStartpos();
-        int fragEnd = this.digestPair.forward().getEndpos();
+        int fragSta = this.digestPair.forward().getDigestStartPosition();
+        int fragEnd = this.digestPair.forward().getDigestEndPosition();
 
         int fwdReadFpep = getFivePrimeEndPosOfRead(this.R1);
         int revReadFpep = getFivePrimeEndPosOfRead(this.R2);
@@ -700,13 +700,13 @@ public class ReadPair {
         }
     }
 
-    public Integer getForwardDigestStart() {return this.digestPair.forward().getStartpos();}
-    public Integer getForwardDigestEnd() {return this.digestPair.forward().getEndpos();}
-    public boolean forwardDigestIsActive() {return this.digestPair.forward().isActive();}
+    public Integer getForwardDigestStart() {return this.digestPair.forward().getDigestStartPosition();}
+    public Integer getForwardDigestEnd() {return this.digestPair.forward().getDigestEndPosition();}
+    public boolean forwardDigestIsActive() {return this.digestPair.forward().isSelected();}
 
-    public Integer getReverseDigestStart() {return this.digestPair.reverse().getStartpos();}
-    public Integer getReverseDigestEnd() {return this.digestPair.reverse().getEndpos();}
-    public boolean reverseDigestIsActive() {return this.digestPair.reverse().isActive();}
+    public Integer getReverseDigestStart() {return this.digestPair.reverse().getDigestStartPosition();}
+    public Integer getReverseDigestEnd() {return this.digestPair.reverse().getDigestEndPosition();}
+    public boolean reverseDigestIsActive() {return this.digestPair.reverse().isSelected();}
 
 
 
