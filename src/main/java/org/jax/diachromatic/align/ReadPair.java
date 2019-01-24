@@ -50,33 +50,28 @@ public class ReadPair {
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * First (forward) read in a read pair.
+     * First (forward) and second (reverse) read in a read pair.
      */
     private SAMRecord R1=null;
-    /**
-     * Second (reverse) read in a read pair.
-     */
     private SAMRecord R2=null;
-    /**
-     * Smallest allowable size of the insert of a read pair.
-     */
-    private static int LOWER_SIZE_THRESHOLD = 150;
 
     /**
-     * Largest allowable size of the insert of a read pair. This size corresponds to the average size of fragments
-     * after sonication. For capture Hi-C, an average sizes from 300 to 500 bp are recommended. Therefore, a default
-     * threshold of 800 seems to be reasonable.
+     * These two thresholds define the range of fragment sizes that result from sonication. For capture Hi-C, an average
+     * sizes from 300 to 500 bp are recommended.
      *
-     * For inward pointing read pairs, the linear genomic distance between the two 5' ends (d) is compared to this threshold.
-     * If this distance is smaller, the read pair is categorized as un-ligated.
+     * Inward-pointing read pairs whose 5' end positions have a distance d smaller than the defined upper threshold will
+     * be categorized as un-ligated.
      *
-     * For outward pointing read pairs, the calculated size of the hybrid fragment d' is added to d.
-     * If d+d' is smaller than the threshold, the read pair is categorized as self-ligated.
+     * Valid read pairs for which the calculated hybrid fragment sizes d' is outside the specified range will be
+     * categorized as too small or too large.
      *
-     * Trans pairs (reads map to different chromosomes) cannot be explained neither by un-ligated fragments nor by
-     * self-ligated fragments.
+     * For outward pointing read pairs, the calculated size of the hybrid fragment d' is added to d in order to calculate
+     * the size of the corresponding self-ligated fragment d''. If d'' is smaller than the upper threshold, the read pair
+     * will be categorized as self-ligated.
      *
+     * TODO: Discuss if there should be a separate threshold for selfligation.
      */
+    private static int LOWER_SIZE_THRESHOLD = 150;
     private static int UPPER_SIZE_THRESHOLD = 800;
 
     /**
@@ -91,58 +86,60 @@ public class ReadPair {
      * Tag to indicate relative orientation of read pair ()
      */
     private final static String ORIENTATION_ATTRIBUTE = "RO";
-    /**
-     * Set false, if read pair is an artifact.
-     */
-    private boolean isValid = false;
 
     /**
-     * A read pair belongs to one of the following categories: SL, DE, CD, CI, SI, RL, TS, TL, VP.
+     * A read pair belongs to one of the following categories: UL, SL, VP,
      */
     private String categoryTag = "NA";
-    private String categoryTag2 = "NA";
-    /**
-     * True if read 1 is unmapped.
-     */
-    private boolean unmapped_read1;
-    /**
-     * True if read 2 is unmapped.
-     */
-    private boolean unmapped_read2;
 
     /**
-     * @return True if read 1 is unmapped.
+     * True, if read R1 or R2 is unmapped.
+     */
+    private boolean unmapped_R1;
+    private boolean unmapped_R2;
+
+    /**
+     * @return True, if R1 is unmapped.
      */
     boolean isUnMappedR1() {
-        return unmapped_read1;
+        return unmapped_R1;
     }
 
     /**
-     * @return True if read 2 is unmapped.
+     * @return True, if R2 is unmapped.
      */
     boolean isUnMappedR2() {
-        return unmapped_read2;
+        return unmapped_R2;
     }
 
     /**
-     * True if read 1 is multimapped.
+     * True, if read R1 or R2 is multi-mapped.
      */
-    private boolean multimapped_read1;
-    /**
-     * True if read 2 is multimapped.
-     */
-    private boolean multimapped_read2;
+    private boolean multimapped_R1;
+    private boolean multimapped_R2;
 
+    /**
+     * @return True, if R1 is multi-mapped.
+     */
     boolean isMultiMappedR1() {
-        return multimapped_read1;
+        return multimapped_R1;
     }
 
+    /**
+     * @return @return True, if R1 is multi-mapped.
+     */
     boolean isMultiMappedR2() {
-        return multimapped_read2;
+        return multimapped_R2;
     }
 
+    /**
+     * This field is set to true, if both reads of the pair can be uniquely mapped.
+     */
     private boolean isPaired = true;
 
+    /**
+     * @return True, if both reads of the pair can be uniquely mapped.
+     */
     boolean isPaired() {
         return this.isPaired;
     }
@@ -152,24 +149,18 @@ public class ReadPair {
      * an in silico digest. A {@link DigestPair} consists of two {@link Digest} objects, one for each read. Note that
      * if both reads were mapped to the same fragment, the {@link Digest} objects are identical to each other.
      */
-    private DigestPair digestPair=null;
+    private DigestPair digestPair = null;
+
 
     /**
-     * If both reads of the pair were mapped uniquely,
-     * the pair must belong to one of the categories.
-     * <p>
-     * Use as follows: ReadPairCategory.SELF_LIGATION.getTag() returns "SL"
+     * Paired reads belong to one of the following disjoint categories.
      */
     private enum ReadPairCategory {
-        SAME_INTERNAL("SI"),
-        DANGLING_END("DE"),
-        CIRULARIZED_DANGLING("CD"),
-        CIRULARIZED_INTERNAL("CI"),
-        RE_LIGATION("RL"),
-        CONTIGUOUS("CT"),
-        INSERT_TOO_SMALL("TS"),
-        INSERT_TOO_LONG("TL"),
-        VALID_PAIR("VP");
+        UN_LIGATED("UL"),
+        SELF_LIGATED("SL"),
+        VALID_PAIR("VP"),
+        VALID_TOO_SHORT("TS"),
+        VALID_TOO_LONG("TL");
 
         private String tag;
 
@@ -182,30 +173,16 @@ public class ReadPair {
         }
     }
 
-    private enum ReadPairCategory2 {
-        NEW_VALID_PAIR("NP"),
-        UN_LIGATED_PAIR("UP"),
-        SELF_LIGATED_PAIR("SP"),
-        TINY_PAIR("TP"),
-        HUGE_PAIR("HP");
 
-        private String tag;
-
-        ReadPairCategory2(String readPairTypeTag) {
-            this.tag = readPairTypeTag;
-        }
-
-        public String getTag() {
-            return tag;
-        }
-    }
-
-
-
-
-    /**
-     * Simpler constructor for interaction counting.
+     /**
+     * Simple constructor for interaction counting.
+      *
+     * @param f
+     * @param r
+     * @param digestMap
+     * @throws DiachromaticException
      */
+
     public ReadPair(SAMRecord f, SAMRecord r, DigestMap digestMap) throws DiachromaticException {
 
         R1 = f;
@@ -224,6 +201,17 @@ public class ReadPair {
      * @param r         reverse read
      * @throws DiachromaticException
      */
+
+    /**
+     *
+     * @param f SAMRecord for R1.
+     * @param r SAMRecord for R2.
+     * @param digestMap structure containing all digests.
+     * @param lowerFragSize lower size threshold for fragments after sonication.
+     * @param upperFragSize upper size threshold for fragments after sonication.
+     * @param stringentUnique If true, more  stringent definition of uniquely mapped is used.
+     * @throws DiachromaticException
+     */
     ReadPair(SAMRecord f, SAMRecord r, DigestMap digestMap, Integer lowerFragSize, Integer upperFragSize, boolean stringentUnique) throws DiachromaticException {
 
         R1 = f;
@@ -233,30 +221,30 @@ public class ReadPair {
         this.UPPER_SIZE_THRESHOLD = upperFragSize;
 
         // check if both reads could be mapped
-        unmapped_read1 = false;
-        unmapped_read2 = false;
+        unmapped_R1 = false;
+        unmapped_R2 = false;
         if (R1.getReadUnmappedFlag()) {
-            unmapped_read1 = true;
+            unmapped_R1 = true;
             this.isPaired = false;
         }
         if (R2.getReadUnmappedFlag()) {
-            unmapped_read2 = true;
+            unmapped_R2 = true;
             this.isPaired = false;
         }
 
         // check if both reads could be uniquely mapped
-        multimapped_read1 = false;
-        multimapped_read2 = false;
+        multimapped_R1 = false;
+        multimapped_R2 = false;
 
         if (R1.getAttribute("XS") != null) {
             // there is more than one alignment
             if(stringentUnique) {
                 // in the stringent mode this enough to be multi-mapped
-                multimapped_read1 = true;
+                multimapped_R1 = true;
                 this.isPaired = false;
             } else {
                 if(R1.getMappingQuality()<30 || (int)R1.getAttribute("AS")-(int)R1.getAttribute("XS")<10) {
-                    multimapped_read1 = true;
+                    multimapped_R1 = true;
                     this.isPaired = false;
                 }
             }
@@ -265,11 +253,11 @@ public class ReadPair {
             // there is more than one alignment
             if(stringentUnique) {
                 // in the stringent mode this enough to be multi-mapped
-                multimapped_read2 = true;
+                multimapped_R2 = true;
                 this.isPaired = false;
             } else {
                 if(R2.getMappingQuality()<30 || (int)R2.getAttribute("AS")-(int)R2.getAttribute("XS")<10) {
-                    multimapped_read2 = true;
+                    multimapped_R2 = true;
                     this.isPaired = false;
                 }
             }
@@ -279,8 +267,6 @@ public class ReadPair {
         if (R1.getReferenceName().contains("_") || R2.getReferenceName().contains("_")) {
             this.isPaired = false;
         }
-
-
 
         if (this.isPaired) {
 
@@ -293,8 +279,7 @@ public class ReadPair {
 
             // categorize ReadPair
             this.categorizeReadPair();
-            this.categorizeReadPair2();
-            if (!this.isValid) {
+            if (!this.getCategoryTag().equals("VP")) {
                 this.R1.setAttribute(BADREAD_ATTRIBUTE, this.categoryTag);
                 this.R2.setAttribute(BADREAD_ATTRIBUTE, this.categoryTag);
             }
@@ -311,7 +296,7 @@ public class ReadPair {
 
     /**
      * @param samRecord
-     * @return The genomic position that corresponds to the 5' end position of the mapped read
+     * @return The genomic position that corresponds to the 5' end position of the mapped read.
      */
     private Integer getFivePrimeEndPosOfRead(SAMRecord samRecord) {
         if(!samRecord.getReadNegativeStrandFlag()) {
@@ -340,35 +325,12 @@ public class ReadPair {
         }
     }
 
-    /**
-     * Mark this read pair as valid with:
-     */
-    private void setValid() {
-        this.isValid = true;
-    }
-
-
-    /**
-     * Check if read pair as valid with:
-     */
-    public boolean isValid() {
-        return this.isValid;
-    }
-
     private void setCategoryTag(String categoryTag) {
         this.categoryTag = categoryTag;
     }
 
     String getCategoryTag() {
         return this.categoryTag;
-    }
-
-    private void setCategoryTag2(String categoryTag) {
-        this.categoryTag2 = categoryTag;
-    }
-
-    String getCategoryTag2() {
-        return this.categoryTag2;
     }
 
     public SAMRecord forward() {
@@ -386,6 +348,9 @@ public class ReadPair {
      * @param digestPair The pair of digests corresponding to the read pair. If the
      *                   reads are on the same chromosome, it decides whether they are {@code CLOSE}
      *                   or {@code FAR} and sets the {@code CT} tag accordingly.
+     *
+     * TODO: Discuss the usefulness of the function below and discard or use.
+     *
      */
     public void characterizeReadSeparation(DigestPair digestPair) {
         if (!R1.getReferenceName().equals(R2.getReferenceName())) {
@@ -407,53 +372,6 @@ public class ReadPair {
         } else {
             R1.setAttribute("CT", "CLOSE");
             R2.setAttribute("CT", "CLOSE");
-        }
-    }
-
-    /**
-     * <From: Wingett S et al. HiCUP: pipeline for mapping and processing Hi-C data. F1000Research 2015, 4:1310>
-     * The Hi-C protocol does not prevent entirely two adjacent restriction fragments re-ligating,
-     * but HiCUP discards such di-tags since they provide no useful three-dimensional proximity information.
-     * Similarly, multiple fragments could re-ligate forming a contig, but here paired reads will not align to
-     * adjacent genomic restriction fragments
-     * This function is called if the two reads are on different fragments that are not direct neighbors. If they are located
-     * within one expected fragment size, then they are contiguous sequences that were not properly digested.
-     * The test demands that the contig size is above the lower threshold and below the upper threshold.
-     *
-     * @return true of the two reads are contiguous (artefact!)
-     *
-     * TODO: Remove as soon as old categorization has been removed
-     */
-    boolean isContiguous() {
-        if (!R1.getReferenceName().equals(R2.getReferenceName())) {
-            return false; // reads not on same chromosome, therefore, not contiguous
-        }
-        if((R1.getReadNegativeStrandFlag() == R2.getReadNegativeStrandFlag())) {
-            return false;
-        }
-        int contigsize = Math.max(R2.getAlignmentStart() - R1.getAlignmentStart(),
-                R1.getAlignmentStart() - R2.getAlignmentStart());
-        if (contigsize > LOWER_SIZE_THRESHOLD && contigsize < UPPER_SIZE_THRESHOLD) {  // TODO: Does this make sense?
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Adjacent fragments have the same orientation and thus the reads have opposite orientation
-     * We know the fragments are adjacent because their fragment numbers differ by 1.
-     *
-     * @return true if the two read fragments are religated
-     *
-     * TODO: Remove as soon as old categorization has been removed
-     */
-    boolean religation() {
-        if (digestPair.isAdjacent() &&
-                (R1.getReadNegativeStrandFlag() != R2.getReadNegativeStrandFlag())) {
-            return true;
-        } else {
-            return false;
         }
     }
 
@@ -522,9 +440,9 @@ public class ReadPair {
      }
 
     /**
-     * This  function adjusts the SAM flags of each read to
-     * indicate that they are a valid read pair. Note that client code must call this algorithm after
-     * determining that the reads should be paired.
+     * The two reads of given pairs are independently mapped to the genome as if they were single-end reads.
+     * If both reads could be mapped uniquely, this function is used in order to adjust the SAM fields of the two reads
+     * so as they can be recognized as mapped paired-end read.
      */
     void pairReads() {
         // This read pair is valid
@@ -557,7 +475,7 @@ public class ReadPair {
     /**
      * Check the relative orientation of the pair.
      *
-     * @return true if the reads point to one another (-> <-).
+     * @return True, if the reads point to one another.
      */
     private boolean isInwardFacing() {
         if(getRelativeOrientationTag().equals("F1R2") || getRelativeOrientationTag().equals("F2R1")) {
@@ -567,10 +485,11 @@ public class ReadPair {
         }
     }
 
+
     /**
      * Check the relative orientation of the pair.
      *
-     * @return true if the reads point to opposite directions (<-->).
+     * @return True, if the reads point to opposite directions.
      */
     private boolean isOutwardFacing() {
         if(getRelativeOrientationTag().equals("R2F1") || getRelativeOrientationTag().equals("R1F2")) {
@@ -579,6 +498,7 @@ public class ReadPair {
             return false;
         }
     }
+
 
     /**
      * Get relative orientation of the pair.
@@ -654,107 +574,49 @@ public class ReadPair {
     }
 
 
-    private void categorizeReadPair() throws DiachromaticException {
-
-        // 1: Determine category for read pair
-        // -----------------------------------
-
-        if (this.digestPair.forward().equals(this.digestPair.reverse())) {
-            // both reads are mapped to the same fragment
-            if (!this.isOutwardFacing()) {
-                // reads point inwards
-                if (this.isDanglingEnd()) {
-                    // at least one read overlaps cutting site
-                    setCategoryTag(ReadPairCategory.DANGLING_END.getTag());
-                } else {
-                    // no read overlaps cutting site
-                    setCategoryTag(ReadPairCategory.SAME_INTERNAL.getTag());
-                }
-            } else {
-                // reads point outwards
-                if (this.isDanglingEnd()) {
-                    // at least one read overlaps cutting site
-                    setCategoryTag(ReadPairCategory.CIRULARIZED_DANGLING.getTag());
-                } else {
-                    // no read overlaps cutting site
-                    setCategoryTag(ReadPairCategory.CIRULARIZED_INTERNAL.getTag());
-                }
-            }
-        } else {
-            // reads are mapped to different fragments
-            if (this.religation()) {
-                // reads are mapped to adjacent fragments
-                setCategoryTag(ReadPairCategory.RE_LIGATION.getTag());
-            } else {
-                // reads are mapped to non adjacent fragments
-                if (this.isContiguous()) {
-                    // reads are located within a distance of an expected fragment size (between upper and lower threshold)
-                    setCategoryTag(ReadPairCategory.CONTIGUOUS.getTag());
-                } else {
-                    // reads are located in a proper distance
-                    if (this.hasTooSmallInsertSize()) {
-                        setCategoryTag(ReadPairCategory.INSERT_TOO_SMALL.getTag());
-                    } else if (this.hasTooBigInsertSize()) {
-                        setCategoryTag(ReadPairCategory.INSERT_TOO_LONG.getTag());
-                    } else {
-                        // read pair has correct insert size
-                        setCategoryTag(ReadPairCategory.VALID_PAIR.getTag());
-                        this.setValid();
-                    }
-                }
-            }
-        }
-    }
-
     /**
      * Assigns this read pair to one of the following disjoint categories: Self-ligated, un-ligated, wrong size or valid.
      *
      * @throws DiachromaticException
      */
-    private void categorizeReadPair2() throws DiachromaticException {
-
-        /* TODO: Check if pairs has a dangling ends.
-        Note that dangling ends is not a category because it may occur in each category.
-        Use function isDanglingEnd().
-
-         */
+    private void categorizeReadPair() throws DiachromaticException {
 
         if(!this.isTrans() && (this.isInwardFacing()||this.isOutwardFacing())){
             // inward and outward pointing read pairs may arise from  self- or un-ligated fragments
             if(this.isOutwardFacing()) {
                 if(this.getDistanceBetweenFivePrimeEnds() < this.UPPER_SIZE_THRESHOLD) {
-                    setCategoryTag2(ReadPairCategory2.SELF_LIGATED_PAIR.getTag());
+                    setCategoryTag(ReadPairCategory.SELF_LIGATED.getTag());
                 } else {
                     if(this.hasTooSmallInsertSize()) {
-                        setCategoryTag2(ReadPairCategory2.TINY_PAIR.getTag());
+                        setCategoryTag(ReadPairCategory.VALID_TOO_SHORT.getTag());
                     } else if(this.hasTooBigInsertSize()){
-                        setCategoryTag2(ReadPairCategory2.HUGE_PAIR.getTag());
+                        setCategoryTag(ReadPairCategory.VALID_TOO_LONG.getTag());
                     } else {
-                        setCategoryTag2(ReadPairCategory2.NEW_VALID_PAIR.getTag()); // only if hybrid fragment has the right size it is categorized as valid
+                        setCategoryTag(ReadPairCategory.VALID_PAIR.getTag()); // only if hybrid fragment has the right size it is categorized as valid
                     }
                 }
             } else {
                 // pair is inward facing
                 if(this.getDistanceBetweenFivePrimeEnds() < this.UPPER_SIZE_THRESHOLD) {
-                    setCategoryTag2(ReadPairCategory2.UN_LIGATED_PAIR.getTag());
+                    setCategoryTag(ReadPairCategory.UN_LIGATED.getTag());
                 } else {
                     if(this.hasTooSmallInsertSize()) {
-                        setCategoryTag2(ReadPairCategory2.TINY_PAIR.getTag());
+                        setCategoryTag(ReadPairCategory.VALID_TOO_SHORT.getTag());
                     } else if(this.hasTooBigInsertSize()){
-                        setCategoryTag2(ReadPairCategory2.HUGE_PAIR.getTag());
+                        setCategoryTag(ReadPairCategory.VALID_TOO_LONG.getTag());
                     } else {
-                        setCategoryTag2(ReadPairCategory2.NEW_VALID_PAIR.getTag()); // only if hybrid fragment has the right size it is categorized as valid
+                        setCategoryTag(ReadPairCategory.VALID_PAIR.getTag()); // only if hybrid fragment has the right size it is categorized as valid
                     }
                 }
             }
         } else {
             // trans pairs and read pairs that are pointing in the same direction cannot arise from self- or un-ligated fragments
             if(this.hasTooSmallInsertSize()) {
-                setCategoryTag2(ReadPairCategory2.TINY_PAIR.getTag());
+                setCategoryTag(ReadPairCategory.VALID_TOO_SHORT.getTag());
             } else if(this.hasTooBigInsertSize()){
-                setCategoryTag2(ReadPairCategory2.HUGE_PAIR.getTag());
+                setCategoryTag(ReadPairCategory.VALID_TOO_LONG.getTag());
             } else {
-                setCategoryTag2(ReadPairCategory2.NEW_VALID_PAIR.getTag()); // only if hybrid fragment has the right size it is categorized as valid
+                setCategoryTag(ReadPairCategory.VALID_PAIR.getTag()); // only if hybrid fragment has the right size it is categorized as valid
             }
         }
     }

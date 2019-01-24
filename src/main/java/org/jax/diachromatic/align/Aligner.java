@@ -5,7 +5,6 @@ import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.util.Log;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jax.diachromatic.count.InteractionCountsMap;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.io.Commandline;
 import java.io.*;
@@ -16,7 +15,7 @@ import java.util.*;
  * truncated FASTQ files produced by {@link org.jax.diachromatic.command.TruncateCommand}. Its purpose
  * is to rejoin the pairs of reads that correspond to the chimeric fragments in the input files and
  * to perform Q/C and filtering on the reads to remove characteristic Hi-C artefacts.
- * Note that we have made several of the functions in this class package access for testing purposes
+ * Note that we have made several of the functions in this class package access for testing purposes.
  *
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
@@ -48,7 +47,7 @@ public class Aligner {
     private int n_unmapped_R2 = 0;
 
     /**
-     * Number of read pairs where either one or two reads were unmapped.
+     * Number of read pairs for which at least one read is unmapped.
      */
     private int  n_unmappedPair = 0;
 
@@ -59,7 +58,7 @@ public class Aligner {
     private int n_multimapped_R2 = 0;
 
     /**
-     * Number of read pairs where either one or two reads were multi-mapped.
+     * Number of read pairs for which at least one read is multi-mapped.
      */
     private int n_multimappedPair = 0;
 
@@ -69,7 +68,7 @@ public class Aligner {
     private int n_paired = 0;
 
     /**
-     * Number of paired pairs, i.e. same as 'n_paired' but after removal of duplicates.
+     * Number of unique paired pairs, i.e. same as 'n_paired' but after removal of duplicates.
      */
     private int n_paired_unique = 0;
 
@@ -84,39 +83,40 @@ public class Aligner {
      */
     private int n_paired_unique_trans = 0;
 
-
     /**
      * Total number of truncated read pairs that passed to Diachromatic with the subcommand align.
      */
-    private int n_total = 0;
-
+    private int n_total_input_read_pairs = 0;
 
     /**
      * Lower and upper bounds for sizes of hybrid fragments. Are passed as arguments to the constructor of {@link ReadPair}
      * and compared to the calculated insert size in order to categorize given read pairs as 'too short' or 'too long'.
-     * These categories are HiCUP-like.
      */
     private Integer lowerFragSize;
     private Integer upperFragSize;
 
     /**
-     * Largest calculated insert size representable in Diachromatic.
+     * Largest calculated insert size represented in the distribution of fragment sizes.
      */
     private static int FRAG_SIZE_LIMIT = 10000;
+
+    /**
+     * Arrays that represent size distributions.
+     */
     private int[] fragSizesAllPairs =  new int[FRAG_SIZE_LIMIT+1];
     private int[] fragSizesHybridActivePairs =  new int[FRAG_SIZE_LIMIT+1];
 
     /**
-     * If TRUE, multi-mapped reads are defined as those for which a score of a second best hit is reported by bowtie2,
+     * If true, multi-mapped reads are defined as those for which a score of a second best hit is reported by bowtie2,
      * i.e. the corresponding SAM record has an XS attribute.
      *
-     * If FALSE, a less stringent criterion for uniqueness is used. Reads for which the XS attribute is reported are
+     * If false, a less stringent criterion for uniqueness is used. Reads for which the XS attribute is reported are
      * still categorized as unique, if they have a MAPQ of at least 30 and the difference between AS and XS at least 10.
      */
     private boolean useStringentUniqueSettings;
 
     /**
-     * If TRUE, rejected read pairs are output to an extra BAM file {@link #outputBAMrejected}.
+     * If true, rejected read pairs are output to an extra BAM file {@link #outputBAMrejected}.
      */
     private final boolean outputRejectedReads;
 
@@ -129,34 +129,21 @@ public class Aligner {
 
 
     /**
-     * HiCUP-like artifact counts.
-     *
-     * TODO: Replace this with streamlined definitions of artifacts after revision of ReadPair class.
+     * Count variables for different read pair categories.
      */
-    private int n_same_internal = 0;
-    private int n_same_dangling_end = 0;
-    private int n_same_circularized_internal = 0;
-    private int n_same_circularized_dangling = 0;
-    private int n_religation = 0;
-    private int n_contiguous = 0;
-    private int n_insert_too_short = 0;
-    private int n_insert_too_long = 0;
-    private int n_valid_pairs =0;
-    private int n_not_categorized=0;
-
-    private int n_new_valid_pair = 0;
     private int n_un_ligated_pair = 0;
     private int n_self_ligated_pair = 0;
-    private int n_tiny_valid_pair = 0;
-    private int n_huge_valid_pair = 0;
 
-    private int n_new_valid_dangling_pair = 0;
-    private int n_un_ligated_dangling_pair = 0;
-    private int n_self_ligated_dangling_pair = 0;
+    private int n_valid_pair = 0;
+    private int n_valid_too_short = 0;
+    private int n_valid_too_long = 0;
 
-    private int n_dangling_end_pair = 0;
+    private int n_total_dangling = 0;
 
-    private int n_old_and_new_is_valid = 0;
+    private int n_un_ligated_dangling = 0;
+    private int n_self_ligated_dangling = 0;
+    private int n_valid_dangling = 0;
+
 
     /**
      * Central customized auxiliary class of Diachromatic. Contains information about all restriction fragments of the
@@ -257,7 +244,7 @@ public class Aligner {
 
         while ((pair = getNextPair())!= null) {
 
-            n_total++;
+            n_total_input_read_pairs++;
 
             // first check whether both reads were mapped
             if(pair.isUnMappedR1()) {
@@ -284,36 +271,27 @@ public class Aligner {
 
                 n_paired_unique++;
 
-                if(pair.getCategoryTag().equals("SI")) {n_same_internal++;}
-                if(pair.getCategoryTag().equals("DE")) {n_same_dangling_end++;}
-                if(pair.getCategoryTag().equals("CI")) {n_same_circularized_internal++;}
-                if(pair.getCategoryTag().equals("CD")) {n_same_circularized_dangling++;}
-                if(pair.getCategoryTag().equals("RL")) {n_religation++;}
-                if(pair.getCategoryTag().equals("CT")) {n_contiguous++;}
-                if(pair.getCategoryTag().equals("TS")) {n_insert_too_short++;}
-                if(pair.getCategoryTag().equals("TL")) {n_insert_too_long++;}
-                if(pair.getCategoryTag().equals("VP")) {n_valid_pairs++;}
-                if(pair.getCategoryTag().equals("NA")) {n_not_categorized++;}
-
-                if(pair.getCategoryTag2().equals("NP")) {n_new_valid_pair++;}
-                if(pair.getCategoryTag2().equals("UP")) {n_un_ligated_pair++;}
-                if(pair.getCategoryTag2().equals("SP")) {n_self_ligated_pair++;}
-                if(pair.getCategoryTag2().equals("TP")) {n_tiny_valid_pair++;}
-                if(pair.getCategoryTag2().equals("HP")) {n_huge_valid_pair++;}
+                if(pair.getCategoryTag().equals("VP")) {
+                    n_valid_pair++;}
+                if(pair.getCategoryTag().equals("UL")) {n_un_ligated_pair++;}
+                if(pair.getCategoryTag().equals("SL")) {n_self_ligated_pair++;}
+                if(pair.getCategoryTag().equals("TS")) {
+                    n_valid_too_short++;}
+                if(pair.getCategoryTag().equals("TL")) {
+                    n_valid_too_long++;}
 
                 if(pair.isDanglingEnd()) {
-                    n_dangling_end_pair++;
-                    if(pair.getCategoryTag2().equals("NP")) {n_new_valid_dangling_pair++;}
-                    if(pair.getCategoryTag2().equals("UP")) {n_un_ligated_dangling_pair++;}
-                    if(pair.getCategoryTag2().equals("SP")) {n_self_ligated_dangling_pair++;}
+                    n_total_dangling++;
+                    if(pair.getCategoryTag().equals("VP")) {
+                        n_valid_dangling++;}
+                    if(pair.getCategoryTag().equals("UL")) {
+                        n_un_ligated_dangling++;}
+                    if(pair.getCategoryTag().equals("SL")) {
+                        n_self_ligated_dangling++;}
                 }
 
                 if(pair.isTrans()) {
                     n_paired_unique_trans++;
-                }
-
-                if(pair.getCategoryTag().equals("VP") && pair.getCategoryTag2().equals("NP")) {
-                    n_old_and_new_is_valid++;
                 }
             }
 
@@ -331,7 +309,7 @@ public class Aligner {
                 fragSizesHybridActivePairs[incrementFragSize]++;
             }
 
-            if(pair.isValid()){
+            if(pair.getCategoryTag().equals("VP")){
 
                 validReadsWriter.addAlignment(pair.forward());
                 validReadsWriter.addAlignment(pair.reverse());
@@ -414,7 +392,7 @@ public class Aligner {
 
     public void printStatistics() throws FileNotFoundException {
 
-        logger.trace(String.format("n_total pairs=%d\n", n_total));
+        logger.trace(String.format("n_total_input_read_pairs pairs=%d\n", n_total_input_read_pairs));
 
         logger.trace(String.format("n_unmapped_R1=%d", n_unmapped_R1));
         logger.trace(String.format("n_unmapped_R2=%d\n", n_unmapped_R2));
@@ -423,41 +401,38 @@ public class Aligner {
         logger.trace(String.format("n_multimapped_R2=%d\n", n_multimapped_R2));
         logger.trace(String.format("n_multimappedPair=%d\n", n_multimappedPair));
 
-        logger.trace(String.format("n_paired=%d (%.1f%%)\n", n_paired, (100.0 * n_paired / n_total)));
+        logger.trace(String.format("n_paired=%d (%.1f%%)\n", n_paired, (100.0 * n_paired / n_total_input_read_pairs)));
 
-        logger.trace(String.format("n_same_internal=%d", n_same_internal));
-        logger.trace(String.format("n_same_dangling_end=%d", n_same_dangling_end));
-        logger.trace(String.format("n_same_circularized_read=%d", n_same_circularized_internal+n_same_circularized_dangling));
-        logger.trace(String.format("n_religation=%d", n_religation));
-        logger.trace(String.format("n_contiguous=%d\n", n_contiguous));
-        logger.trace(String.format("n_not_categorized=%d\n", n_not_categorized));
-        logger.trace(String.format("n_insert_too_long=%d  (%.1f%%)", n_insert_too_long, (100.0 * n_insert_too_long / n_paired_unique)));
-        logger.trace(String.format("n_insert_too_short=%d  (%.1f%%)\n", n_insert_too_short, (100.0 * n_insert_too_short / n_paired_unique)));
+        logger.trace(String.format("n_total_dangling=%d", n_total_dangling));
+
+
+
+        logger.trace(String.format("n_valid_too_long=%d  (%.1f%%)", n_valid_too_long, (100.0 * n_valid_too_long / n_paired_unique)));
+        logger.trace(String.format("n_valid_too_short=%d  (%.1f%%)\n", n_valid_too_short, (100.0 * n_valid_too_short / n_paired_unique)));
 
         logger.trace("----\n");
-        logger.trace(String.format("n_new_valid_pair=%d", n_new_valid_pair));
+        logger.trace(String.format("n_valid_pair=%d", n_valid_pair));
         logger.trace(String.format("n_un_ligated_pair=%d", n_un_ligated_pair));
         logger.trace(String.format("n_self_ligated_pair=%d", n_self_ligated_pair));
-       logger.trace(String.format("n_tiny_valid_pair=%d", n_tiny_valid_pair));
-        logger.trace(String.format("n_huge_valid_pair=%d", n_huge_valid_pair));
-        logger.trace(String.format("n_total=%d", n_new_valid_pair+n_tiny_valid_pair+n_huge_valid_pair+n_un_ligated_pair+n_self_ligated_pair));
+       logger.trace(String.format("n_valid_too_short=%d", n_valid_too_short));
+        logger.trace(String.format("n_valid_too_long=%d", n_valid_too_long));
+        logger.trace(String.format("n_total_input_read_pairs=%d", n_valid_pair + n_valid_too_short + n_valid_too_long +n_un_ligated_pair+n_self_ligated_pair));
         logger.trace("----\n");
-        logger.trace(String.format("n_dangling_end_pair=%d", n_dangling_end_pair));
-        logger.trace(String.format("n_new_valid_dangling_pair=%d", n_new_valid_dangling_pair));
-        logger.trace(String.format("n_un_ligated_dangling_pair=%d", n_un_ligated_dangling_pair));
-        logger.trace(String.format("n_self_ligated_dangling_pair=%d", n_self_ligated_dangling_pair));
+        logger.trace(String.format("n_total_dangling=%d", n_total_dangling));
+        logger.trace(String.format("n_valid_dangling=%d", n_valid_dangling));
+        logger.trace(String.format("n_un_ligated_dangling=%d", n_un_ligated_dangling));
+        logger.trace(String.format("n_self_ligated_dangling=%d", n_self_ligated_dangling));
 
-        logger.trace("n_old_and_new_is_valid: " + n_old_and_new_is_valid);
         logger.trace("----\n");
 
-        logger.trace(String.format("n_valid_pairs=%d (%.1f%%)", n_valid_pairs, (100.0 * n_valid_pairs / n_paired_unique)));
+        logger.trace(String.format("n_valid_pair=%d (%.1f%%)", n_valid_pair, (100.0 * n_valid_pair /n_paired_unique)));
         logger.trace("");
-        logger.trace("Total number of pairs: " + (n_same_internal+n_same_dangling_end+n_same_circularized_internal+n_same_circularized_dangling+n_religation+n_contiguous+n_insert_too_long+n_insert_too_short+n_valid_pairs));
+        logger.trace("Total number of pairs: " + (n_un_ligated_pair+n_self_ligated_pair+n_valid_too_short+n_valid_too_long+n_valid_pair));
         logger.trace("");
         logger.trace("\t" + "Enrichment Coefficients:");
-        logger.trace("\t\t" + "Valid Interaction Enrichment Coefficient (VIEC): " + String.format("%.2f%%", 100.0*n_valid_pairs/n_total));
+        logger.trace("\t\t" + "Yield of Valid Pairs (YVP): " + String.format("%.2f%%", 100.0* n_valid_pair / n_total_input_read_pairs));
         logger.trace("\t\t" + "Cross-ligation coefficient (CLC): " + String.format("%.2f%%", 100.0* n_paired_unique_trans /n_paired_unique));
-        logger.trace("\t\t" + "Re-ligation coefficient (RLC): " + String.format("%.2f%%", 100.0*(n_paired_unique-n_same_dangling_end)/n_paired_unique));
+        logger.trace("\t\t" + "Re-ligation coefficient (RLC): " + String.format("%.2f%%", 100.0*(n_paired_unique- n_total_dangling)/n_paired_unique));
         logger.trace("\t\t" + "Pair duplication rate: " + String.format("%.2f%%", 100.0*n_paired_duplicated/n_paired));
         logger.trace("n_duplicate: " + n_paired_duplicated);
         logger.trace("");
@@ -471,49 +446,45 @@ public class Aligner {
         printStream.print("Alignment statistics\n");
         printStream.print("--------------------\n");
         printStream.print("\n");
-        printStream.print("Total number of read pairs processed:\t" + n_total + "\n");
+        printStream.print("Total number of read pairs processed:\t" + n_total_input_read_pairs + "\n");
 
-        printStream.print("Number of unmapped read pairs:\t" + n_unmappedPair + String.format(" (%.2f%%)", 100.0*n_unmappedPair/n_total) + "\n");
+        printStream.print("Number of unmapped read pairs:\t" + n_unmappedPair + String.format(" (%.2f%%)", 100.0*n_unmappedPair/ n_total_input_read_pairs) + "\n");
         printStream.print("\tNumber of unpapped R1 reads:\t" + n_unmapped_R1 + "\n");
         printStream.print("\tNumber of unpapped R2 reads:\t" + n_unmapped_R2 + "\n");
 
-        printStream.print("Number of multimapped read pairs:\t" + n_multimappedPair + String.format(" (%.2f%%)", 100.0*n_multimappedPair/n_total) + "\n");
+        printStream.print("Number of multimapped read pairs:\t" + n_multimappedPair + String.format(" (%.2f%%)", 100.0*n_multimappedPair/ n_total_input_read_pairs) + "\n");
         printStream.print("\tNumber of multimapped R1 reads:\t" + n_multimapped_R1 + "\n");
         printStream.print("\tNumber of multimapped R2 reads:\t" + n_multimapped_R2 + "\n");
         printStream.print("Note:\tThere may an overlap between unmapped and multimapped pairs." + "\n");
 
-        printStream.print("Number of paired read pairs:\t" + n_paired + String.format(" (%.2f%%)", 100.0*n_paired/n_total) + "\n");
+        printStream.print("Number of paired read pairs:\t" + n_paired + String.format(" (%.2f%%)", 100.0*n_paired/ n_total_input_read_pairs) + "\n");
         printStream.print("\tNumber of unique paired read pairs:\t" + n_paired_unique + "\n");
         printStream.print("\tNumber of duplicated pairs:\t" + n_paired_duplicated + "\n");
 
         printStream.print("\n");
-        printStream.print("Artifact statistics (HiCUP like)\n");
-        printStream.print("--------------------------------\n");
+        printStream.print("Artifact statistics\n");
+        printStream.print("-------------------\n");
         printStream.print("\n");
-        printStream.print("Valid:\t" + n_valid_pairs + String.format(" (%.2f%%)", 100.0*n_valid_pairs/n_paired_unique) + "\n");
-        printStream.print("Same internal:\t" + n_same_internal + String.format(" (%.2f%%)", 100.0*n_same_internal/n_paired_unique) + "\n");
-        printStream.print("Same dangling:\t" + n_same_dangling_end + String.format(" (%.2f%%)", 100.0*n_same_dangling_end/n_paired_unique) + "\n");
-        Integer n_same_circularized = n_same_circularized_internal+n_same_circularized_dangling;
-        printStream.print("Same circularized:\t" + n_same_circularized + String.format(" (%.2f%%)", 100.0*n_same_circularized/n_paired_unique) + "\n");
-        printStream.print("Re-ligation:\t" + n_religation + String.format(" (%.2f%%)", 100.0*n_religation/n_paired_unique) + "\n");
-        printStream.print("Contiguous:\t" + n_contiguous + String.format(" (%.2f%%)", 100.0*n_contiguous/n_paired_unique) + "\n");
-        printStream.print("Insert too short:\t" + n_insert_too_short + String.format(" (%.2f%%)", 100.0*n_insert_too_short/n_paired_unique) + "\n");
-        printStream.print("Insert too long:\t" + n_insert_too_long + String.format(" (%.2f%%)", 100.0*n_insert_too_long/n_paired_unique) + "\n");
-        printStream.print("Not categorized:\t" + n_not_categorized + String.format(" (%.2f%%)", 100.0*n_not_categorized/n_paired_unique) + "\n");
-        printStream.print("\n");
-        printStream.print("Artifact statistics (Diachromatic like)\n");
-        printStream.print("---------------------------------------\n");
-        printStream.print("\n");
-        printStream.print("\n");
-        printStream.print("Will be added soon.\n");
-        printStream.print("\n");
+
+        printStream.print("Dangling end total:\t" + n_total_dangling + String.format(" (%.2f%%)", 100.0* n_total_dangling /n_paired_unique) + "\n");
+        printStream.print("Note: Dangling ends may occur in all categories, and a read pair with a dangling end can still be valid." + "\n\n");
+
+
+        printStream.print("Un-ligated:\t" + n_un_ligated_pair + String.format(" (%.2f%%)", 100.0*n_un_ligated_pair/n_paired_unique) + "\n");
+        printStream.print("Self-ligated:\t" + n_self_ligated_pair + String.format(" (%.2f%%)", 100.0*n_self_ligated_pair/n_paired_unique) + "\n");
+        printStream.print("Calculated size of hybrid fragment too short:\t" + n_valid_too_short + String.format(" (%.2f%%)", 100.0* n_valid_too_short /n_paired_unique) + "\n");
+        printStream.print("Calculated size of hybrid fragment too long:\t" + n_valid_too_long + String.format(" (%.2f%%)", 100.0* n_valid_too_long /n_paired_unique) + "\n");
+        printStream.print("Valid:\t" + n_valid_pair + String.format(" (%.2f%%)", 100.0* n_valid_pair /n_paired_unique) + "\n");
+        printStream.print("Note: These five categories are disjoint subsets of the unique paired read pairs." + "\n\n");
+
         printStream.print("\n");
         printStream.print("Quality metrics for experimental trouble shooting \n");
         printStream.print("--------------------------------------------------\n");
         printStream.print("\n");
-        printStream.print("Yield of Valid Pairs (YVP):\t" + String.format("%.2f%%", 100.0*n_valid_pairs/n_total) + "\n");
+        printStream.print("Yield of Valid Pairs (YVP):\t" + String.format("%.2f%%", 100.0* n_valid_pair / n_total_input_read_pairs) + "\n");
         printStream.print("Cross-ligation coefficient (CLC):\t" + String.format("%.2f%%", 100.0* n_paired_unique_trans /n_paired_unique) + "\n");
-        printStream.print("Re-ligation coefficient (RLC):\t" + String.format("%.2f%%", 100.0*(n_paired_unique-n_same_dangling_end)/n_paired_unique) + "\n");
+        printStream.print("Re-ligation coefficient (RLC):\t" + String.format("%.2f%%", 100.0*(n_paired_unique-n_total_dangling)/n_paired_unique) + "\n");
+        printStream.print("Hi-C pair Duplication Rate (HPDR):\t" + String.format("%.2f%%", 100.0*n_paired_duplicated/n_paired) + "\n");
         printStream.print("\n");
     }
 

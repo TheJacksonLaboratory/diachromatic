@@ -178,9 +178,9 @@ public class MapPairsTest {
         DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
         sampairer = new Aligner(sam1, sam2, outputRejectedReads,"test4", digestMap,150,800,"xxx",true);
         ReadPair readpair = readpairmap.get("1_uniquelyAlignedRead");
-        assertFalse(readpair.getCategoryTag2().equals("SP"));
+        assertFalse(readpair.getCategoryTag().equals("SP"));
         readpair = readpairmap.get("4_selfLigation");//sampairer.getNextPair();// fourth read pair, self-ligation!
-        assertTrue(readpair.getCategoryTag2().equals("SP"));
+        assertTrue(readpair.getCategoryTag().equals("SP"));
     }
 
     /* The fifth pair shows religation! */
