@@ -183,36 +183,6 @@ public class MapPairsTest {
         assertTrue(readpair.getCategoryTag().equals("SP"));
     }
 
-    /* The fifth pair shows religation! */
-    @Test
-    public void testReligation() throws DiachromaticException {
-
-        ReadPair readpair  = readpairmap.get("1_uniquelyAlignedRead");
-        assertFalse(readpair.religation());
-        readpair = readpairmap.get("4_selfLigation");// fourth read pair, self-ligation--not religation
-        assertFalse(readpair.religation());
-        //chr13	31421583	31425191
-        //chr13	31425192	31425873
-        readpair = readpairmap.get("5_religation");// 5. religation!
-        assertEquals(readpair.forward().getReferenceName(),"chr13");// check we have right read!
-        assertEquals(readpair.reverse().getReferenceName(),"chr13");// check we have right read!
-        assertTrue(readpair.religation());
-    }
-
-    /** The sixth read pair is contiguous (by manual inspection) */
-    @Test
-    public void testIsContiguous() throws DiachromaticException {
-        ReadPair readpair  = readpairmap.get("1_uniquelyAlignedRead");
-        assertFalse(readpair.isContiguous());
-        readpair = readpairmap.get("5_religation"); //5 -- note readpair 5 was on adjacent fragments and
-        // thus is religation and not contiguous!
-        assertTrue(readpair.religation());
-        //assertFalse(sampairer.contiguous(readpair))
-        readpair = readpairmap.get("6_contiguous");//sampairer.getNextPair(); //6-- contiguous but not religated (not on adjacent digests)!
-        assertTrue(readpair.isContiguous());
-        assertFalse(readpair.religation());
-    }
-
     /** The insert of the third read pair is above threshold of 800. */
     @Test
     public void testInsertTooLarge() throws DiachromaticException {
@@ -222,7 +192,6 @@ public class MapPairsTest {
         //System.err.println("insert size = " + insertSize); 3823
         assertTrue(insertSize>THRESHOLD);
     }
-
 
     /** The insert of the seventh read pair is above threshold of 800. */
     @Test
