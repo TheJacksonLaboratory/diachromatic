@@ -186,26 +186,33 @@ public class Aligner {
     private String sam_path_R2;
 
     /**
-     * @param sam1    SAM file for the truncated "forward" reads
-     * @param sam2    SAM file for the truncated "reverse" reads
+     * Constructor of this class.
+     *
+     * @param sam1 SAM file for the truncated R1 reads
+     * @param sam2 SAM file for the truncated R2 reads
+     * @param outputRejected If true, an additional BAM file for rejected reads will be created.
+     * @param outputPathPrefix Path for output including path and file prefix.
+     * @param digestMap Custom class of Diachromatic containing information about all digests of the genome.
+     * @param lowerFragSize Lower threshold for fragments sizes consistent with sonication parameters.
+     * @param upperFragSize Upper threshold for fragments sizes consistent with sonication parameters.
+     * @param filenamePrefix Prefix for names of created files.
+     * @param useStringentUniqueSettings Use the more stringent definition of multi-mapped reads.
      */
     public Aligner(String sam1, String sam2, boolean outputRejected, String outputPathPrefix, DigestMap digestMap, Integer lowerFragSize, Integer upperFragSize, String filenamePrefix, boolean useStringentUniqueSettings) {
-        sam_path_R1 = sam1;
-        sam_path_R2 = sam2;
-        sam_reader_R1 = SamReaderFactory.makeDefault().open(new File(sam_path_R1));
-        sam_reader_R2 = SamReaderFactory.makeDefault().open(new File(sam_path_R2));
-        it1 = sam_reader_R1.iterator();
-        it2 = sam_reader_R2.iterator();
+        this.sam_path_R1 = sam1;
+        this.sam_path_R2 = sam2;
+        this.sam_reader_R1 = SamReaderFactory.makeDefault().open(new File(sam_path_R1));
+        this.sam_reader_R2 = SamReaderFactory.makeDefault().open(new File(sam_path_R2));
+        this.it1 = sam_reader_R1.iterator();
+        this.it2 = sam_reader_R2.iterator();
         this.digestMap = digestMap;
-        outputRejectedReads = outputRejected;
+        this.outputRejectedReads = outputRejected;
         this.lowerFragSize = lowerFragSize;
         this.upperFragSize = upperFragSize;
         this.filenamePrefix = filenamePrefix;
         this.useStringentUniqueSettings = useStringentUniqueSettings;
-
         Arrays.fill(fragSizesAllPairs, 0);
         Arrays.fill(fragSizesHybridActivePairs, 0);
-
         VERSION = Commandline.getVersion();
         createOutputNames(outputPathPrefix);
     }
@@ -230,7 +237,9 @@ public class Aligner {
     /**
      * Input the pair of truncated SAM files. We will add the PG groups of both
      * SAM files to the header of the output file, and also add a line about the Diachromatic processing.
-     * As a side effect, write invalid reads to .
+     *
+     * @throws IOException Required because of generation R script for fragment size distribution.
+     * @throws DiachromaticException Required because class ReadPair is used.
      */
     public void inputSAMfiles() throws IOException, DiachromaticException {
 
@@ -239,7 +248,7 @@ public class Aligner {
         // first add program records from the reverse SAM file
         List<SAMProgramRecord> pgList = header2.getProgramRecords();
         for (SAMProgramRecord spr : pgList) {
-            //header.addProgramRecord(spr);
+            //header.addProgramRecord(spr); // TODO: Why is this commented out? Repair or remove!
         }
         // add the new program record from Diachromatic
         String programGroupId = "Diachromatic\tPN:Diachromatic\tVN:" + VERSION;
@@ -272,7 +281,9 @@ public class Aligner {
                 n_multimapped_R2++;}
             if(pair.isMultiMappedR1()||pair.isMultiMappedR2()) {n_multimappedPair++;}
 
-            // count categories of pairs
+            // Note: Read pairs with unmapped or multi-mapped reads remain unpaired
+
+            // count categories of paired pairs
             if(pair.isPaired()) {
 
                 n_paired++;
@@ -427,7 +438,7 @@ public class Aligner {
     /**
      * This function prints summary statistics about the alignment step to the file: prefix.align.stats.txt
      *
-     * @throws FileNotFoundException
+     * @throws FileNotFoundException required because of FileOutputStream.
      */
     public void printStatistics() throws FileNotFoundException {
 

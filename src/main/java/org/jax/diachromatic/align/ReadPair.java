@@ -1,44 +1,33 @@
 package org.jax.diachromatic.align;
 
-
 import htsjdk.samtools.SAMRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.exception.DiachromaticException;
 
-
 /**
- * This class represents a pair of reads R1 and R2 of an illumina paired-end run.
+ * This class represents a pair of reads R1 and R2 of an Illumina paired-end run for a Hi-C library.
  * <p>
- * For Hi-C,  a read pair is classified as valid (i.e. it has emerged from a DNA-DNA interaction),
- * if it fulfills the following criteria:
+ * The two reads represent the ends of fragments that are ideally valid Hi-C hybrid fragments arising from functional
+ * interactions and consisting of two pieces of DNA originating from two interacting loci. However, there are
+ * various sources of artifacts that lead to un-ligated or self-ligated fragments and corresponding read pairs.
+ * Furthermore, there are hybrid fragments whose size is inconsistent with parameters chosen for sonication.
+ * Based on this, Diachromatic subdivides the set of uniquely mapping pairs into five categories:
  * <ul>
- * <li> Both reads were mapped uniquely to the genome. </li>
- * <li> The pair does not show characteristics of known Hi-C artifacts including: </li>
- * <ul>
- * <li> <b>Same internal</b> - Both reads were mapped to the same restriction fragment. The 3' ends of the reads face one another and no read overlaps a cutting site. </li>
- * <li> <b>Same dangling end</b> - Both reads were mapped to the same restriction fragment. The 3' ends of the reads face one another and at least one read overlaps a cutting site. </li>
- * <li> <b>Same circularized alias self-ligation</b>  - Both reads were mapped to the same restriction fragment and the 5' ends of the reads face one another. This category can be further subdivided into </li>
- * <ul>
- * <li> <b>Same circularized internal</b> - No read overlaps a cutting site.
- * <li> <b>Same circularized dangling</b> - At least read overlaps a cutting site.
- * </ul>
- * <li> <b>Re-ligation</b> - Reads align to adjacent restriction fragments. </li>
- * <li> <b>Contiguous</b> - Reads align to different fragments that are not direct neighbors. But the distance between the reads is within one expected fragment size. </li>
- * <li> <b>Wrong size</b> - The calculated length of the fragment (di-tag length) is not within the limits set by the size-selection step in the experimental protocol. </li>
- * <ul>
- * <li> <b>Too small</b> - Di-tag length is smaller than a given lower threshold. </li>
- * <li> <b>Too big</b> - Di-tag length is bigger than a given lower threshold. </li>
- * </ul>
- * </ul>
+ * <li> <b>Un-ligated</b> - The 5' end positions of the mapped reads have distance that is consistent with fragment sizes that result from sonication. </li>
+ * <li> <b>Self-ligated</b> - The calculated size of the hypothetical self-ligated fragment is smaller than a given threshold. </li>
+ * <li> <b>Too short</b>  - The read pair was not categorized as un-ligated or self-ligated, but the calculated size of the corresponding hybrid fragment is too small. </li>
+ * <li> <b>Too long</b> - Same as for <i>too long</i> Reads align to adjacent restriction fragments. </li>
+ * <li> <b>Valid</b> - All remaining pairs are categorized as valid pairs that can be used for downstream analysis. </li>
  * </ul>
  * <p>
- * The insert size or di-tag length must be calculated differently for artifacts and valid pairs.
- * For artifacts the insert size is the distance between the outermost ends of mapped reads,
- * whereas for valid pairs it is the sum of the two distances from the 5' ends of mapped reads to the next occurrence of a cutting site.
+ * There two further features of read pairs that do not affect categorization. If one of the 5' end positions of the
+ * mapped reads coincides with a restriction enzyme cutting site the read pair is referred to as <b>dangling end read
+ * pairs</b>. Large numbers of dangling end pairs indicate problems re-ligation conditions. The second feature relates
+ * to cross-ligation between the digested protein-DNA complexes that result in <b>trans read pairs</b> for which the two
+ * reads map to different chromosomes. of a cutting site.
  * <p>
- * This class provides all required fields and functions to assign each pair of reads (R1,R2) unambiguously to one of the categories,
- * given a align of restriction fragments ({@link Digest}) for each and the two SAMRecords of the pair.
+ * See documentation on read the docs or manuscript.
  * <p>
  * The categorization is done upon initialization.
  *
@@ -56,8 +45,8 @@ public class ReadPair {
     private SAMRecord R2=null;
 
     /**
-     * These two thresholds define the range of fragment sizes that result from sonication. For capture Hi-C, an average
-     * sizes from 300 to 500 bp are recommended.
+     * These two thresholds define the range of fragment sizes that are considered to be consistent with the chosen
+     * parameters for sonication. For capture Hi-C, an average sizes from 300 to 500 bp are recommended.
      *
      * Inward-pointing read pairs whose 5' end positions have a distance d smaller than the defined upper threshold will
      * be categorized as un-ligated.
@@ -69,28 +58,25 @@ public class ReadPair {
      * the size of the corresponding self-ligated fragment d''. If d'' is smaller than the upper threshold, the read pair
      * will be categorized as self-ligated.
      *
-     * TODO: Discuss if there should be a separate threshold for selfligation.
+     * TODO: Discuss if there should be a separate threshold for self-ligation.
      */
     private static int LOWER_SIZE_THRESHOLD = 150;
     private static int UPPER_SIZE_THRESHOLD = 800;
 
     /**
-     * Length threshold in nucleotides for the end of a read being near to a restriction fragment/ligation sequence
+     * Length threshold in nucleotides for the end of a read being near to a restriction fragment/ligation sequence.
      */
     private static int DANGLING_THRESHOLD = 7;
+
     /**
      * Tag to use to mark invalid reads to output to BAM file.
      */
     private final static String BADREAD_ATTRIBUTE = "YY";
+
     /**
      * Tag to indicate relative orientation of read pair ()
      */
     private final static String ORIENTATION_ATTRIBUTE = "RO";
-
-    /**
-     * A read pair belongs to one of the following categories: UL, SL, VP,
-     */
-    private String categoryTag = "NA";
 
     /**
      * True, if read R1 or R2 is unmapped.
@@ -151,6 +137,10 @@ public class ReadPair {
      */
     private DigestPair digestPair = null;
 
+    /**
+     * A read pair belongs to one of the following categories: UL, SL, TS, TL or VP.
+     */
+    private String categoryTag = "NA";
 
     /**
      * Paired reads belong to one of the following disjoint categories.
@@ -173,16 +163,22 @@ public class ReadPair {
         }
     }
 
+    private void setCategoryTag(String categoryTag) {
+        this.categoryTag = categoryTag;
+    }
 
-     /**
-     * Simple constructor for interaction counting.
-      *
-     * @param f
-     * @param r
-     * @param digestMap
-     * @throws DiachromaticException
+    String getCategoryTag() {
+        return this.categoryTag;
+    }
+
+    /**
+     * Simple constructor that is used for counting of interactions.
+     *
+     * @param f SAM record for R1
+     * @param r SAM record for R2
+     * @param digestMap Custom class for storing all digests of the genome.
+     * @throws DiachromaticException Required because getDigestPair2 is used.
      */
-
     public ReadPair(SAMRecord f, SAMRecord r, DigestMap digestMap) throws DiachromaticException {
 
         R1 = f;
@@ -190,17 +186,8 @@ public class ReadPair {
 
         // create digest pair
         this.digestPair = digestMap.getDigestPair2(f.getReferenceName(),getFivePrimeEndPosOfRead(f),r.getReferenceName(),getFivePrimeEndPosOfRead(r));
-
     }
 
-
-    /**
-     * Constructor for filtering and categorization
-     *
-     * @param f         forward read
-     * @param r         reverse read
-     * @throws DiachromaticException
-     */
 
     /**
      *
@@ -274,7 +261,6 @@ public class ReadPair {
             this.pairReads();
 
             // try to find restriction digests that match the read pair
-            //this.digestPair = getDigestPair(this);
             this.digestPair = digestMap.getDigestPair2(this.R1.getReferenceName(),getFivePrimeEndPosOfRead(this.R1),this.R2.getReferenceName(),getFivePrimeEndPosOfRead(this.R2));
 
             // categorize ReadPair
@@ -323,14 +309,6 @@ public class ReadPair {
         else {
             return this.R2.getAlignmentEnd();
         }
-    }
-
-    private void setCategoryTag(String categoryTag) {
-        this.categoryTag = categoryTag;
-    }
-
-    String getCategoryTag() {
-        return this.categoryTag;
     }
 
     public SAMRecord forward() {
@@ -392,7 +370,7 @@ public class ReadPair {
     }
 
     /**
-     * @return true if both reads are on the same chromosome, else false
+     * @return True, if both reads are on the same chromosome.
      */
     public boolean isTrans() {
         if(!R1.getReferenceName().equals(R2.getReferenceName())) {
@@ -406,20 +384,20 @@ public class ReadPair {
      * Mapped reads always "point towards" the ligation sequence. We can infer that the actually (physical) size of the
      * insert goes from the 5' end of a read to the ligation sequence (for each read of the ditag). We calculate this
      * size and will filter out reads whose size is substantially above what we expect given the reported experimental
-     * size selection step.
+     * size selection step. TODO: Revise!
      *
-     * @return the insert size of chimeric and also same internal read pairs
+     * @return The insert size for chimeric hybrid fragments and also for un-ligated read pairs.
      */
-     public Integer getCalculatedInsertSize() throws DiachromaticException {
+    public Integer getCalculatedInsertSize() {
 
          SAMRecord R1 = forward();
          SAMRecord R2 = reverse();
 
          /*
-          Innies on the same fragment cannot be ligation products.
+         For un-ligated read pairs the size corresponds to the distance between the 5' end postions of the mapped reads.
            */
-         if(digestPair.forward().equals(digestPair.reverse()) && (getRelativeOrientationTag().equals("F1R2") || getRelativeOrientationTag().equals("F2R1"))) {
-            return Math.abs(getFivePrimeEndPosOfRead(R1)-getFivePrimeEndPosOfRead(R2));
+         if(this.getCategoryTag().equals("UL")) {
+             return this.getDistanceBetweenFivePrimeEnds();
          }
 
          int d1;
@@ -438,6 +416,7 @@ public class ReadPair {
          }
          return d1 + d2;
      }
+
 
     /**
      * The two reads of given pairs are independently mapped to the genome as if they were single-end reads.
@@ -503,7 +482,7 @@ public class ReadPair {
     /**
      * Get relative orientation of the pair.
      *
-     * @return F1F2, F2F1, R1R2, R2R1, F1R2, F2R1, R2F1 or R1F2
+     * @return F1F2, F2F1, R1R2, R2R1, F1R2, F2R1, R2F1 or R1F2.
      */
     public String getRelativeOrientationTag() {
 
@@ -638,7 +617,6 @@ public class ReadPair {
         }
     }
 
-
     public Integer getForwardDigestStart() {return this.digestPair.forward().getStartpos();}
     public Integer getForwardDigestEnd() {return this.digestPair.forward().getEndpos();}
     public boolean forwardDigestIsActive() {return this.digestPair.forward().isActive();}
@@ -646,7 +624,4 @@ public class ReadPair {
     public Integer getReverseDigestStart() {return this.digestPair.reverse().getStartpos();}
     public Integer getReverseDigestEnd() {return this.digestPair.reverse().getEndpos();}
     public boolean reverseDigestIsActive() {return this.digestPair.reverse().isActive();}
-
-
-
 }
