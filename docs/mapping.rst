@@ -4,7 +4,7 @@ Mapping and categorization of Hi-C paired-end reads
 Independent mapping of forward and reverse paired-end reads using bowtie2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The two reads of any given valid Hi-C read pair stem from two different interacting genomic regions that can be
+The two reads of a valid Hi-C read pair come from two different interacting genomic regions that can be
 separated by a large number of nucleotides within the same chromosome (**cis interactions**) or even be located on
 different chromosomes (**trans interactions**). For this reason, the distance between the two 5' ends of the reads can
 no longer be interpreted as the *insert size*, and the truncated forward (R1) and reverse (R2) reads have to be mapped
@@ -13,25 +13,25 @@ independently.
 Diachromatic executes ``bowtie2`` separately for R1 and R2 with the ``--very-sensitive`` option. Individual reads mapping
 to multiple locations are typically discarded. Diachromatic provides two levels of stringency
 for the definition of multi-mapped reads:
-    1. **Very stringent definition:** There is no second best alignment for the given read. In this case the line in the SAM record produced by ``bowtie2`` contains no ``XS`` tag. Use Diachromatic's ``--bowtie-stringent-unique`` or ``-bsu`` option in order to use this level of stringency.
-    2. **Less stringent definition:** There can be a second best alignment, but the score of the alignment (MAPQ) needs to e greater or equal than 30 and the difference of the mapping scores between the best and second best alignment must be greater or equal than 10. This definition was borrowed from HiCUP (version v0.6.0 and higher). Diachromatic uses this option by default.
+    1. **Very stringent mapping:** There is no second best alignment for the given read. In this case the line in the SAM record produced by ``bowtie2`` contains no ``XS`` tag. Use Diachromatic's ``--bowtie-stringent-unique`` or ``-bsu`` option in order to use this level of stringency.
+    2. **Less stringent mapping:** There can be a second best alignment, but the score of the alignment (MAPQ) needs to e greater or equal than 30 and the difference of the mapping scores between the best and second best alignment must be greater or equal than 10 (c.f. `HiCUP <https://www.bioinformatics.babraham.ac.uk/projects/hicup/>`_). Diachromatic uses this option by default.
 
 
 Pairing of properly mapped read pairs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The independently mapped reads are written to two temporary SAM files, whereby the order of read records in the
-truncated FASTQ files is retained by using bowtie2's option ``--reorder``. I a next step, Diachromatic iterates
+truncated FASTQ files is retained by using bowtie2's option ``--reorder``. In the next step, Diachromatic iterates
 simultaneously over the two SAM files. Pairs for which at least one read could not be mapped uniquely are discarded,
-whereas all other pairs are futher subdivided into different categories comprising valid interaction and artefactual
-read pairs arising from shortcomings of the Hi-C protocol.
+and all other pairs are futher subdivided into valid and artefactual read pairs.
 
 Categorization of mapped read pairs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Hi-C fragments arise from cross-linked chromatin passing through three successive experimental processing steps:
-*restriction digest*, *re-ligation* and *shearing* (see illustration below). Different fragments differ with regard to their
-formation history.
+Hi-C fragments arise from cross-linked chromatin that is processed in three successive experimental steps:
+*restriction digest*, *re-ligation* and *shearing* (see illustration below). It is important to understand these steps
+in order to understand how Diachromatic determines is a readpair is valid or artefactual.
+
 
 .. figure:: img/fragment_formation.png
     :align: center
@@ -48,7 +48,7 @@ In total, three categories of fragments are distinguished within Diachromatic: *
 re-ligation between ends of different restriction fragments and two artifact types that correspond to single
 restriction fragments whose ends failed to re-ligate with other fragments, either because both ends remained **un-ligated**
 or **self-ligated** with each other. Hybrid fragments correspond to valid interactions but also to cross-ligation
-artifacts depending on whether the re-ligtion occurred within the same protein-DNA complex or between different complexes.
+artifacts depending on whether the re-ligation occurred within the same protein-DNA complex or between different complexes.
 Paired-end sequencing of hybrid fragments may results in all possible relative orientations, i.e. reads of given pairs
 may pointing *inwards*, *outwards* or in the *same direction*.
 In contrast to that, sequencing of un-ligated fragments results in inward pointing pairs only, and sequencing of
@@ -71,7 +71,7 @@ However, the determination of this distribution is not straightforward.
 
 For hybrid fragments the size *d'* is calculated as the sum of the two distances between the 5' ends of the mapped reads and
 the next occurrence of a cutting motif in 3' direction which is assumed to correspond to the ligation junction
-(Wingett 2015).
+(`Wingett 2015 <https://www.ncbi.nlm.nih.gov/pubmed/26835000/>`_).
 
 The problem with this approach is that in fact the ligation junction cannot be unambiguously determined,
 because the digestion of genome is not necessarily complete, i.e. there may be restriction fragments containing uncut
@@ -83,14 +83,12 @@ first occurrence of a cutting motif is interpreted as the one that corresponds t
 Therefore, Diachromatic does not use this approach but requires this parameter to be specified
 using the ``-l <size>`` option.
 
-We recommend to use external tool such as the `peak caller Q`_ for fragment size
-estimation.
-
-Even though the Hamming distance method implemented in Q is intended for ChIP-seq data, it is also suitable
+We recommend to use an external tool such as the `peak caller Q`_ for fragment size
+estimation. Even though the Hamming distance method implemented in Q is intended for ChIP-seq data, it is also suitable
 for Hi-C, because at restriction sites, the reads distribute in a strand specific fashion that is similar to that
 observed for ChIP-seq reads.
 
-Within Diachromatic, inward pointing read pairs for which the distance between the 5' ends *d*
+With Diachromatic, inward pointing read pairs for which the distance between the 5' ends *d*
 is less than the specified threshold *Tu* are categorized as un-ligated pairs.
 
 
@@ -146,7 +144,7 @@ Running Diachromatic's align subcommand
 
 Use the following command to run the alignment and counting step. ::
 
-    $ java -jar target/diachromatic-0.0.2.jar map -b /usr/bin/bowtie2 -i /data/bt_indices/hg38 -q prefix.truncated_R1.fq.gz -r prefix.truncated_R2.fq.gz -d hg38_DpnII_DigestedGenome.txt
+    $ java -jar target/Diachromatic.jar map -b /usr/bin/bowtie2 -i /data/bt_indices/hg38 -q prefix.truncated_R1.fq.gz -r prefix.truncated_R2.fq.gz -d hg38_DpnII_DigestedGenome.txt
 
 
 +--------------+----------------------+--------------------------------------------------------+----------+----------------------------------------------------------------------+---------+

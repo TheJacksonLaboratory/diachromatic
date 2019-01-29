@@ -12,7 +12,7 @@ of either one or two restriction enzyme cutting motifs.
 .. figure:: img/sticky_and_blunt_ends.png
     :align: center
 
-It may happen that the sonication step of the Hi-C protocol introduces breakpoints near restriction enzyme cutting
+The sonication step of the Hi-C protocol may introduce breakpoints near restriction enzyme cutting
 sites. If the breakpoint occurs at a distance smaller than one read length, this will result in a chimeric read that
 cannot be mapped to the reference sequence.
 
@@ -56,8 +56,7 @@ The default names of the truncated and gzipped FASTQ files are:
     * prefix.truncated_R1.fastq.gz
     * prefix.truncated_R2.fastq.gz
 
-In addition, a file
+In addition, a file is produced that contains summary statistics about the truncation step.
 
     * prefix.truncation.stats.txt
 
-is produced that contains summary statistics about the truncation step.
