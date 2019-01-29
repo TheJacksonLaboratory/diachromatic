@@ -168,7 +168,7 @@ public class MapPairsTest {
     /**
      * We are testing the fourth pair of reads that self-circularizes. The first read
      * pair is from the same chromosome but does not self-circularize. (by manual inspection).
-     * The second and third pairs have distinct chromosomes and cnnot be tested for self circularization.
+     * The second and third pairs have distinct chromosomes and cannot be tested for self-circularizion.
      * @throws DiachromaticException
      */
     @Test
@@ -178,39 +178,9 @@ public class MapPairsTest {
         DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
         sampairer = new Aligner(sam1, sam2, outputRejectedReads,"test4", digestMap,150,800,"xxx",true);
         ReadPair readpair = readpairmap.get("1_uniquelyAlignedRead");
-        assertFalse(readpair.selfLigation());
+        assertFalse(readpair.getCategoryTag().equals("SP"));
         readpair = readpairmap.get("4_selfLigation");//sampairer.getNextPair();// fourth read pair, self-ligation!
-        assertTrue(readpair.selfLigation());
-    }
-
-    /* The fifth pair shows religation! */
-    @Test
-    public void testReligation() throws DiachromaticException {
-
-        ReadPair readpair  = readpairmap.get("1_uniquelyAlignedRead");
-        assertFalse(readpair.religation());
-        readpair = readpairmap.get("4_selfLigation");// fourth read pair, self-ligation--not religation
-        assertFalse(readpair.religation());
-        //chr13	31421583	31425191
-        //chr13	31425192	31425873
-        readpair = readpairmap.get("5_religation");// 5. religation!
-        assertEquals(readpair.forward().getReferenceName(),"chr13");// check we have right read!
-        assertEquals(readpair.reverse().getReferenceName(),"chr13");// check we have right read!
-        assertTrue(readpair.religation());
-    }
-
-    /** The sixth read pair is contiguous (by manual inspection) */
-    @Test
-    public void testIsContiguous() throws DiachromaticException {
-        ReadPair readpair  = readpairmap.get("1_uniquelyAlignedRead");
-        assertFalse(readpair.isContiguous());
-        readpair = readpairmap.get("5_religation"); //5 -- note readpair 5 was on adjacent fragments and
-        // thus is religation and not contiguous!
-        assertTrue(readpair.religation());
-        //assertFalse(sampairer.contiguous(readpair))
-        readpair = readpairmap.get("6_contiguous");//sampairer.getNextPair(); //6-- contiguous but not religated (not on adjacent digests)!
-        assertTrue(readpair.isContiguous());
-        assertFalse(readpair.religation());
+        assertTrue(readpair.getCategoryTag().equals("SP"));
     }
 
     /** The insert of the third read pair is above threshold of 800. */
@@ -222,7 +192,6 @@ public class MapPairsTest {
         //System.err.println("insert size = " + insertSize); 3823
         assertTrue(insertSize>THRESHOLD);
     }
-
 
     /** The insert of the seventh read pair is above threshold of 800. */
     @Test

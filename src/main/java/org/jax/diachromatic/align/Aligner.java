@@ -5,18 +5,18 @@ import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.util.Log;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jax.diachromatic.count.InteractionCountsMap;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.io.Commandline;
 import java.io.*;
 import java.util.*;
 
 /**
- * This class takes as input two SAM files that have been created by {@code bowtie2} from the
- * truncated FASTQ files produced by {@link org.jax.diachromatic.command.TruncateCommand}. Its purpose
- * is to rejoin the pairs of reads that correspond to the chimeric fragments in the input files and
- * to perform Q/C and filtering on the reads to remove characteristic Hi-C artefacts.
- * Note that we have made several of the functions in this class package access for testing purposes
+ * This class takes as input two SAM files that have been created by {@code bowtie2} from the truncated FASTQ files
+ * produced by {@link org.jax.diachromatic.command.TruncateCommand}. Its purpose is to rejoin the pairs of reads that
+ * correspond to the chimeric fragments in the input files and to perform Q/C and filtering on the reads to remove
+ * characteristic Hi-C artifacts.
+ *
+ * Note that we have made several of the functions in this class package access for testing purposes.
  *
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
@@ -34,32 +34,30 @@ public class Aligner {
     private static String VERSION = "0.0";
 
     /**
-     * Path to the SAM file representing the forward (R1) and reverse (R2) read of a paired end experiment.
-     * The SAM files should have been processed with the truncate command of this package.
+     * Total number of truncated read pairs that passed to Diachromatic with the subcommand align.
      */
-    private String sam_path_R1;
-    private String sam_path_R2;
+    private int n_total_input_read_pairs = 0;
 
     /**
-     * Number of unmapped forward reads (SAM flag==4 for unmapped). Note: SAM flag is also 4 for the reverse read,
-     * because the reads are mapped independently as single-end reads.
+     * Numbers of unmapped forward and reverse reads (SAM flag==4 for unmapped). Note: SAM flag is also 4 for the
+     * reverse read, because the reads are mapped independently as single-end reads.
      */
     private int n_unmapped_R1 = 0;
     private int n_unmapped_R2 = 0;
 
     /**
-     * Number of read pairs where either one or two reads were unmapped.
+     * Number of read pairs for which at least one read is unmapped.
      */
     private int  n_unmappedPair = 0;
 
     /**
-     * Number of forward reads that were multi-mapped (had an XS tag).
+     * Numbers of forward and reverse reads that were multi-mapped (had an XS tag).
      */
     private int n_multimapped_R1 = 0;
     private int n_multimapped_R2 = 0;
 
     /**
-     * Number of read pairs where either one or two reads were multi-mapped.
+     * Number of read pairs for which at least one read is multi-mapped.
      */
     private int n_multimappedPair = 0;
 
@@ -69,7 +67,7 @@ public class Aligner {
     private int n_paired = 0;
 
     /**
-     * Number of paired pairs, i.e. same as 'n_paired' but after removal of duplicates.
+     * Number of unique paired pairs, i.e. same as 'n_paired' but after removal of duplicates.
      */
     private int n_paired_unique = 0;
 
@@ -79,44 +77,62 @@ public class Aligner {
     private int n_paired_duplicated = 0;
 
     /**
-     * Number trans read pairs, i.e. the two reads map to different chromosomes. Trans read pairs are counted after
-     * removal of duplicates only.
+     * Count variables for disjoint read pair categories (see documentation on read the docs).
      */
-    private int n_paired_unique_trans = 0;
+    private int n_paired_unique_un_ligated = 0; // rejected
+    private int n_paired_unique_self_ligated = 0;
+    private int n_paired_unique_too_short = 0;
+    private int n_paired_unique_too_long = 0;
+    private int n_paired_unique_valid = 0;
 
 
     /**
-     * Total number of truncated read pairs that passed to Diachromatic with the subcommand align.
+     * Number trans read pairs, i.e. the two reads of a given pair map to different chromosomes. Trans read pairs are
+     * counted after removal of duplicates only. Trans read pairs cannot be un-ligated or self-ligated by definition.
      */
-    private int n_total = 0;
+    private int n_paired_unique_trans = 0;
 
+    /**
+     * Number of dangling end read pairs. A read pairs is categorized as dangling end pair if the 5' end position of at
+     * least one of the two reads occurs at a distance of at most DANGLING_THRESHOLD = 7 from the next restriction
+     * enzyme cutting site. Dangling end read pairs are counted after removal of duplicates only. Dangling end read
+     * pairs may occur in all read pair categories.
+     */
+    private int n_paired_unique_dangling = 0;
+
+    /**
+     * Additional experimental count variable for more detailed characterization and sanity checks.
+     */
+    private int n_paired_unique_un_ligated_dangling = 0;
+    private int n_paired_unique_self_ligated_dangling = 0;
+    private int n_paired_unique_too_short_dangling = 0;
+    private int n_paired_unique_too_long_dangling = 0;
+    private int n_paired_unique_valid_dangling = 0;
+
+    private int n_paired_unique_un_ligated_trans = 0; // should never be incremented
+    private int n_paired_unique_self_ligated_trans = 0; // should never be incremented
+    private int n_paired_unique_too_short_trans = 0;
+    private int n_paired_unique_too_long_trans = 0;
+    private int n_paired_unique_valid_trans = 0;
 
     /**
      * Lower and upper bounds for sizes of hybrid fragments. Are passed as arguments to the constructor of {@link ReadPair}
      * and compared to the calculated insert size in order to categorize given read pairs as 'too short' or 'too long'.
-     * These categories are HiCUP-like.
      */
     private Integer lowerFragSize;
     private Integer upperFragSize;
 
     /**
-     * Largest calculated insert size representable in Diachromatic.
-     */
-    private static int FRAG_SIZE_LIMIT = 10000;
-    private int[] fragSizesAllPairs =  new int[FRAG_SIZE_LIMIT+1];
-    private int[] fragSizesHybridActivePairs =  new int[FRAG_SIZE_LIMIT+1];
-
-    /**
-     * If TRUE, multi-mapped reads are defined as those for which a score of a second best hit is reported by bowtie2,
+     * If true, multi-mapped reads are defined as those for which a score of a second best hit is reported by bowtie2,
      * i.e. the corresponding SAM record has an XS attribute.
      *
-     * If FALSE, a less stringent criterion for uniqueness is used. Reads for which the XS attribute is reported are
+     * If false, a less stringent criterion for uniqueness is used. Reads for which the XS attribute is reported are
      * still categorized as unique, if they have a MAPQ of at least 30 and the difference between AS and XS at least 10.
      */
     private boolean useStringentUniqueSettings;
 
     /**
-     * If TRUE, rejected read pairs are output to an extra BAM file {@link #outputBAMrejected}.
+     * If true, rejected read pairs are output to an extra BAM file {@link #outputBAMrejected}.
      */
     private final boolean outputRejectedReads;
 
@@ -127,28 +143,22 @@ public class Aligner {
     private String outputBAMvalid, outputBAMrejected, outputTxtStats, outputFragSizesCountsRscript;
     private String filenamePrefix;
 
-
-    /**
-     * HiCUP-like artifact counts.
-     *
-     * TODO: Replace this with streamlined definitions of artifacts after revision of ReadPair class.
-     */
-    private int n_same_internal = 0;
-    private int n_same_dangling_end = 0;
-    private int n_same_circularized_internal = 0;
-    private int n_same_circularized_dangling = 0;
-    private int n_religation = 0;
-    private int n_contiguous = 0;
-    private int n_insert_too_short = 0;
-    private int n_insert_too_long = 0;
-    private int n_valid_pairs =0;
-    private int n_not_categorized=0;
-
     /**
      * Central customized auxiliary class of Diachromatic. Contains information about all restriction fragments of the
-     * genome. Is contructed from the digest file produced using GOPHER.
+     * genome. Is constructed from the digest file produced using GOPHER.
      */
     private  DigestMap digestMap;
+
+    /**
+     * Largest calculated insert size represented in the distribution of fragment sizes.
+     */
+    private static int FRAG_SIZE_LIMIT = 10000;
+
+    /**
+     * Arrays that represent size distributions.
+     */
+    private int[] fragSizesAllPairs =  new int[FRAG_SIZE_LIMIT+1];
+    private int[] fragSizesHybridActivePairs =  new int[FRAG_SIZE_LIMIT+1];
 
     /**
      * HTS-JDK SAM reader objects for R1 and R2.
@@ -169,26 +179,40 @@ public class Aligner {
     final private Iterator<SAMRecord> it2;
 
     /**
-     * @param sam1    SAM file for the truncated "forward" reads
-     * @param sam2    SAM file for the truncated "reverse" reads
+     * Path to the SAM file representing the forward (R1) and reverse (R2) read of a paired end experiment.
+     * The SAM files should have been processed with the truncate command of this package.
+     */
+    private String sam_path_R1;
+    private String sam_path_R2;
+
+    /**
+     * Constructor of this class.
+     *
+     * @param sam1 SAM file for the truncated R1 reads
+     * @param sam2 SAM file for the truncated R2 reads
+     * @param outputRejected If true, an additional BAM file for rejected reads will be created.
+     * @param outputPathPrefix Path for output including path and file prefix.
+     * @param digestMap Custom class of Diachromatic containing information about all digests of the genome.
+     * @param lowerFragSize Lower threshold for fragments sizes consistent with sonication parameters.
+     * @param upperFragSize Upper threshold for fragments sizes consistent with sonication parameters.
+     * @param filenamePrefix Prefix for names of created files.
+     * @param useStringentUniqueSettings Use the more stringent definition of multi-mapped reads.
      */
     public Aligner(String sam1, String sam2, boolean outputRejected, String outputPathPrefix, DigestMap digestMap, Integer lowerFragSize, Integer upperFragSize, String filenamePrefix, boolean useStringentUniqueSettings) {
-        sam_path_R1 = sam1;
-        sam_path_R2 = sam2;
-        sam_reader_R1 = SamReaderFactory.makeDefault().open(new File(sam_path_R1));
-        sam_reader_R2 = SamReaderFactory.makeDefault().open(new File(sam_path_R2));
-        it1 = sam_reader_R1.iterator();
-        it2 = sam_reader_R2.iterator();
+        this.sam_path_R1 = sam1;
+        this.sam_path_R2 = sam2;
+        this.sam_reader_R1 = SamReaderFactory.makeDefault().open(new File(sam_path_R1));
+        this.sam_reader_R2 = SamReaderFactory.makeDefault().open(new File(sam_path_R2));
+        this.it1 = sam_reader_R1.iterator();
+        this.it2 = sam_reader_R2.iterator();
         this.digestMap = digestMap;
-        outputRejectedReads = outputRejected;
-        this.lowerFragSize=lowerFragSize;
-        this.upperFragSize=upperFragSize;
-        this.filenamePrefix=filenamePrefix;
-        this.useStringentUniqueSettings=useStringentUniqueSettings;
-
+        this.outputRejectedReads = outputRejected;
+        this.lowerFragSize = lowerFragSize;
+        this.upperFragSize = upperFragSize;
+        this.filenamePrefix = filenamePrefix;
+        this.useStringentUniqueSettings = useStringentUniqueSettings;
         Arrays.fill(fragSizesAllPairs, 0);
         Arrays.fill(fragSizesHybridActivePairs, 0);
-
         VERSION = Commandline.getVersion();
         createOutputNames(outputPathPrefix);
     }
@@ -213,7 +237,9 @@ public class Aligner {
     /**
      * Input the pair of truncated SAM files. We will add the PG groups of both
      * SAM files to the header of the output file, and also add a line about the Diachromatic processing.
-     * As a side effect, write invalid reads to .
+     *
+     * @throws IOException Required because of generation R script for fragment size distribution.
+     * @throws DiachromaticException Required because class ReadPair is used.
      */
     public void inputSAMfiles() throws IOException, DiachromaticException {
 
@@ -222,9 +248,9 @@ public class Aligner {
         // first add program records from the reverse SAM file
         List<SAMProgramRecord> pgList = header2.getProgramRecords();
         for (SAMProgramRecord spr : pgList) {
-            //header.addProgramRecord(spr);
+            //header.addProgramRecord(spr); // TODO: Why is this commented out? Repair or remove!
         }
-        // now add the new program record from Diachromatic
+        // add the new program record from Diachromatic
         String programGroupId = "Diachromatic\tPN:Diachromatic\tVN:" + VERSION;
         SAMProgramRecord programRecord = new SAMProgramRecord(programGroupId);
         header.addProgramRecord(programRecord);
@@ -237,14 +263,13 @@ public class Aligner {
         }
 
         DeDupMap dedup_map = new DeDupMap(true);
-
         ReadPair pair;
 
         while ((pair = getNextPair())!= null) {
 
-            n_total++;
+            n_total_input_read_pairs++;
 
-            // first check whether both reads were mapped
+            // first check whether both reads were mapped uniquely
             if(pair.isUnMappedR1()) {
                 n_unmapped_R1++;}
             if(pair.isUnMappedR2()) {
@@ -256,7 +281,9 @@ public class Aligner {
                 n_multimapped_R2++;}
             if(pair.isMultiMappedR1()||pair.isMultiMappedR2()) {n_multimappedPair++;}
 
-            // count categories of pairs
+            // Note: Read pairs with unmapped or multi-mapped reads remain unpaired
+
+            // count categories of paired pairs
             if(pair.isPaired()) {
 
                 n_paired++;
@@ -269,25 +296,47 @@ public class Aligner {
 
                 n_paired_unique++;
 
-                if(pair.getCategoryTag().equals("SI")) {n_same_internal++;}
-                if(pair.getCategoryTag().equals("DE")) {n_same_dangling_end++;}
-                if(pair.getCategoryTag().equals("CI")) {n_same_circularized_internal++;}
-                if(pair.getCategoryTag().equals("CD")) {n_same_circularized_dangling++;}
-                if(pair.getCategoryTag().equals("RL")) {n_religation++;}
-                if(pair.getCategoryTag().equals("CT")) {n_contiguous++;}
-                if(pair.getCategoryTag().equals("TS")) {n_insert_too_short++;}
-                if(pair.getCategoryTag().equals("TL")) {n_insert_too_long++;}
-                if(pair.getCategoryTag().equals("VP")) {n_valid_pairs++;}
-                if(pair.getCategoryTag().equals("NA")) {n_not_categorized++;}
+                if(pair.getCategoryTag().equals("VP")) {
+                    n_paired_unique_valid++;}
+                if(pair.getCategoryTag().equals("UL")) {
+                    n_paired_unique_un_ligated++;}
+                if(pair.getCategoryTag().equals("SL")) {
+                    n_paired_unique_self_ligated++;}
+                if(pair.getCategoryTag().equals("TS")) {
+                    n_paired_unique_too_short++;}
+                if(pair.getCategoryTag().equals("TL")) {
+                    n_paired_unique_too_long++;}
+
+                if(pair.isDanglingEnd()) {
+                    n_paired_unique_dangling++;
+                    if(pair.getCategoryTag().equals("VP")) {
+                        n_paired_unique_valid_dangling++;}
+                    if(pair.getCategoryTag().equals("UL")) {
+                        n_paired_unique_un_ligated_dangling++;}
+                    if(pair.getCategoryTag().equals("SL")) {
+                        n_paired_unique_self_ligated_dangling++;}
+                    if(pair.getCategoryTag().equals("TS")) {
+                        n_paired_unique_too_short_dangling++;}
+                    if(pair.getCategoryTag().equals("TL")) {
+                        n_paired_unique_too_long_dangling++;}
+                }
 
                 if(pair.isTrans()) {
                     n_paired_unique_trans++;
+                    if(pair.getCategoryTag().equals("VP")) {
+                        n_paired_unique_valid_trans++;}
+                    if(pair.getCategoryTag().equals("UL")) {
+                        n_paired_unique_un_ligated_trans++;}
+                    if(pair.getCategoryTag().equals("SL")) {
+                        n_paired_unique_self_ligated_trans++;}
+                    if(pair.getCategoryTag().equals("TS")) {
+                        n_paired_unique_too_short_trans++;}
+                    if(pair.getCategoryTag().equals("TL")) {
+                        n_paired_unique_too_long_trans++;}
                 }
+            } else {
+                continue;
             }
-
-            // Both reads were uniquely mapped, otherwise the this pair is not paired. If so, continue.
-            if(!pair.isPaired()) {continue;}
-
 
             // count sizes of all fragments
             Integer incrementFragSize = pair.getCalculatedInsertSize();
@@ -299,11 +348,11 @@ public class Aligner {
                 fragSizesHybridActivePairs[incrementFragSize]++;
             }
 
-            if(pair.isValid()){
-
+            // write pair to BAM file
+            if(pair.getCategoryTag().equals("VP")){
                 validReadsWriter.addAlignment(pair.forward());
                 validReadsWriter.addAlignment(pair.reverse());
-           } else {
+            } else {
                 if (outputRejectedReads) {
                     rejectedReadsWriter.addAlignment(pair.forward());
                     rejectedReadsWriter.addAlignment(pair.reverse());
@@ -317,13 +366,20 @@ public class Aligner {
         }
 
         printFragmentLengthDistributionRscript(fragSizesAllPairs, fragSizesHybridActivePairs);
-
         //dedup_map.printDeDupStatistics(n_paired_duplicated);
     }
 
+    /**
+     * This function generates an R script that can be used to create a pdf of the distribution of fragments sizes.
+     * The sizes for read pairs that belong to selected/active fragments are passed and plotted separately.
+     * The purpose of this is to investigate the relationship of fragment size and enrichment.
+     *
+     * @param fragSizesAllPairs integer array representing the distribution of sizes, e.g. fragSizesAllPairs[181] corrsponds to the number of fragments of size 180
+     * @param fragSizesHybridActivePairs same as fragSizesAllPairs but only for read pairs for which at least one read maps to an selected/active fragment
+     * @throws FileNotFoundException
+     */
     private void printFragmentLengthDistributionRscript(int[] fragSizesAllPairs, int[] fragSizesHybridActivePairs ) throws FileNotFoundException {
 
-        // create file for output
         PrintStream printStream = new PrintStream(new FileOutputStream(outputFragSizesCountsRscript));
 
         printStream.print("length<-c(");
@@ -379,43 +435,13 @@ public class Aligner {
         printStream.print("dev.off()\n");
     }
 
-
+    /**
+     * This function prints summary statistics about the alignment step to the file: prefix.align.stats.txt
+     *
+     * @throws FileNotFoundException required because of FileOutputStream.
+     */
     public void printStatistics() throws FileNotFoundException {
 
-        logger.trace(String.format("n_total pairs=%d\n", n_total));
-
-        logger.trace(String.format("n_unmapped_R1=%d", n_unmapped_R1));
-        logger.trace(String.format("n_unmapped_R2=%d\n", n_unmapped_R2));
-
-        logger.trace(String.format("n_multimapped_R1=%d", n_multimapped_R1));
-        logger.trace(String.format("n_multimapped_R2=%d\n", n_multimapped_R2));
-        logger.trace(String.format("n_multimappedPair=%d\n", n_multimappedPair));
-
-        logger.trace(String.format("n_paired=%d (%.1f%%)\n", n_paired, (100.0 * n_paired / n_total)));
-
-        logger.trace(String.format("n_same_internal=%d", n_same_internal));
-        logger.trace(String.format("n_same_dangling_end=%d", n_same_dangling_end));
-        logger.trace(String.format("n_same_circularized_read=%d", n_same_circularized_internal+n_same_circularized_dangling));
-        logger.trace(String.format("n_religation=%d", n_religation));
-        logger.trace(String.format("n_contiguous=%d\n", n_contiguous));
-        logger.trace(String.format("n_not_categorized=%d\n", n_not_categorized));
-
-        logger.trace(String.format("n_insert_too_long=%d  (%.1f%%)", n_insert_too_long, (100.0 * n_insert_too_long / n_paired_unique)));
-        logger.trace(String.format("n_insert_too_short=%d  (%.1f%%)\n", n_insert_too_short, (100.0 * n_insert_too_short / n_paired_unique)));
-
-        logger.trace(String.format("n_valid_pairs=%d (%.1f%%)", n_valid_pairs, (100.0 * n_valid_pairs / n_paired_unique)));
-        logger.trace("");
-        logger.trace("Total number of pairs: " + (n_same_internal+n_same_dangling_end+n_same_circularized_internal+n_same_circularized_dangling+n_religation+n_contiguous+n_insert_too_long+n_insert_too_short+n_valid_pairs));
-        logger.trace("");
-        logger.trace("\t" + "Enrichment Coefficients:");
-        logger.trace("\t\t" + "Valid Interaction Enrichment Coefficient (VIEC): " + String.format("%.2f%%", 100.0*n_valid_pairs/n_total));
-        logger.trace("\t\t" + "Cross-ligation coefficient (CLC): " + String.format("%.2f%%", 100.0* n_paired_unique_trans /n_paired_unique));
-        logger.trace("\t\t" + "Re-ligation coefficient (RLC): " + String.format("%.2f%%", 100.0*(n_paired_unique-n_same_dangling_end)/n_paired_unique));
-        logger.trace("\t\t" + "Pair duplication rate: " + String.format("%.2f%%", 100.0*n_paired_duplicated/n_paired));
-        logger.trace("n_duplicate: " + n_paired_duplicated);
-        logger.trace("");
-
-        // create file for output
         PrintStream printStream = new PrintStream(new FileOutputStream(outputTxtStats));
 
         printStream.print("Summary statistics\n");
@@ -424,52 +450,77 @@ public class Aligner {
         printStream.print("Alignment statistics\n");
         printStream.print("--------------------\n");
         printStream.print("\n");
-        printStream.print("Total number of read pairs processed:\t" + n_total + "\n");
+        printStream.print("Total number of read pairs processed:\t" + n_total_input_read_pairs + "\n");
 
-        printStream.print("Number of unmapped read pairs:\t" + n_unmappedPair + String.format(" (%.2f%%)", 100.0*n_unmappedPair/n_total) + "\n");
+        printStream.print("Number of unmapped read pairs:\t" + n_unmappedPair + String.format(" (%.2f%%)", 100.0*n_unmappedPair/ n_total_input_read_pairs) + "\n");
         printStream.print("\tNumber of unpapped R1 reads:\t" + n_unmapped_R1 + "\n");
         printStream.print("\tNumber of unpapped R2 reads:\t" + n_unmapped_R2 + "\n");
 
-        printStream.print("Number of multimapped read pairs:\t" + n_multimappedPair + String.format(" (%.2f%%)", 100.0*n_multimappedPair/n_total) + "\n");
+        printStream.print("Number of multimapped read pairs:\t" + n_multimappedPair + String.format(" (%.2f%%)", 100.0*n_multimappedPair/ n_total_input_read_pairs) + "\n");
         printStream.print("\tNumber of multimapped R1 reads:\t" + n_multimapped_R1 + "\n");
         printStream.print("\tNumber of multimapped R2 reads:\t" + n_multimapped_R2 + "\n");
         printStream.print("Note:\tThere may an overlap between unmapped and multimapped pairs." + "\n");
 
-        printStream.print("Number of paired read pairs:\t" + n_paired + String.format(" (%.2f%%)", 100.0*n_paired/n_total) + "\n");
+        printStream.print("Number of paired read pairs:\t" + n_paired + String.format(" (%.2f%%)", 100.0*n_paired/ n_total_input_read_pairs) + "\n");
         printStream.print("\tNumber of unique paired read pairs:\t" + n_paired_unique + "\n");
         printStream.print("\tNumber of duplicated pairs:\t" + n_paired_duplicated + "\n");
+        printStream.print("\n");
+        printStream.print("\n");
+        printStream.print("Artifact statistics\n");
+        printStream.print("-------------------\n");
+        printStream.print("\n");
+
+        printStream.print("Disjoint categories:\n");
+        printStream.print("Un-ligated:\t" + n_paired_unique_un_ligated + String.format(" (%.2f%%)", 100.0* n_paired_unique_un_ligated /n_paired_unique) + "\n");
+        printStream.print("Self-ligated:\t" + n_paired_unique_self_ligated + String.format(" (%.2f%%)", 100.0* n_paired_unique_self_ligated /n_paired_unique) + "\n");
+        printStream.print("Calculated size of hybrid fragment too short:\t" + n_paired_unique_too_short + String.format(" (%.2f%%)", 100.0* n_paired_unique_too_short /n_paired_unique) + "\n");
+        printStream.print("Calculated size of hybrid fragment too long:\t" + n_paired_unique_too_long + String.format(" (%.2f%%)", 100.0* n_paired_unique_too_long /n_paired_unique) + "\n");
+        printStream.print("Valid:\t" + n_paired_unique_valid + String.format(" (%.2f%%)", 100.0* n_paired_unique_valid /n_paired_unique) + "\n");
+        printStream.print("Note: These five categories are disjoint subsets of all unique paired read pairs, and percentages refer to this superset." + "\n\n");
+
+        printStream.print("Dangling end pairs total:\t" + n_paired_unique_dangling + String.format(" (%.2f%%)", 100.0* n_paired_unique_dangling /n_paired_unique) + "\n");
+        printStream.print("Note: Dangling end pairs may occur in all categories, and a read pair with a dangling end can still be valid." + "\n\n");
+
+        printStream.print("Trans pairs total:\t" + n_paired_unique_trans + String.format(" (%.2f%%)", 100.0* n_paired_unique_trans /n_paired_unique) + "\n");
+        printStream.print("Note: Trans pairs may not occur in the categories un-ligated and self-ligated but all others." + "\n\n");
 
         printStream.print("\n");
-        printStream.print("Artifact statistics (HiCUP like)\n");
-        printStream.print("--------------------------------\n");
+        printStream.print("Quality metrics for experimental trouble shooting\n");
+        printStream.print("-------------------------------------------------\n");
         printStream.print("\n");
-        printStream.print("Valid:\t" + n_valid_pairs + String.format(" (%.2f%%)", 100.0*n_valid_pairs/n_paired_unique) + "\n");
-        printStream.print("Same internal:\t" + n_same_internal + String.format(" (%.2f%%)", 100.0*n_same_internal/n_paired_unique) + "\n");
-        printStream.print("Same dangling:\t" + n_same_dangling_end + String.format(" (%.2f%%)", 100.0*n_same_dangling_end/n_paired_unique) + "\n");
-        Integer n_same_circularized = n_same_circularized_internal+n_same_circularized_dangling;
-        printStream.print("Same circularized:\t" + n_same_circularized + String.format(" (%.2f%%)", 100.0*n_same_circularized/n_paired_unique) + "\n");
-        printStream.print("Re-ligation:\t" + n_religation + String.format(" (%.2f%%)", 100.0*n_religation/n_paired_unique) + "\n");
-        printStream.print("Contiguous:\t" + n_contiguous + String.format(" (%.2f%%)", 100.0*n_contiguous/n_paired_unique) + "\n");
-        printStream.print("Insert too short:\t" + n_insert_too_short + String.format(" (%.2f%%)", 100.0*n_insert_too_short/n_paired_unique) + "\n");
-        printStream.print("Insert too long:\t" + n_insert_too_long + String.format(" (%.2f%%)", 100.0*n_insert_too_long/n_paired_unique) + "\n");
-        printStream.print("Not categorized:\t" + n_not_categorized + String.format(" (%.2f%%)", 100.0*n_not_categorized/n_paired_unique) + "\n");
+        printStream.print("Yield of Valid Pairs (YVP):\t" + String.format("%.2f%%", 100.0* n_paired_unique_valid / n_total_input_read_pairs) + "\n");
+        printStream.print("Cross-ligation coefficient (CLC):\t" + String.format("%.2f%%", 100.0* n_paired_unique_trans /n_paired_unique) + "\n");
+        printStream.print("Re-ligation coefficient (RLC):\t" + String.format("%.2f%%", 100.0*(n_paired_unique- n_paired_unique_dangling)/n_paired_unique) + "\n");
+        printStream.print("Hi-C pair Duplication Rate (HPDR):\t" + String.format("%.2f%%", 100.0*n_paired_duplicated/n_paired) + "\n");
         printStream.print("\n");
-        printStream.print("Artifact statistics (Diachromatic like)\n");
+
+
+        printStream.print("\n");
+        printStream.print("More detailed results and sanity checks\n");
         printStream.print("---------------------------------------\n");
         printStream.print("\n");
+
+        printStream.print("Fractions of dangling end pairs:\n");
+        printStream.print(String.format("n_paired_unique_un_ligated_dangling=%d (%.2f%% of all unique un-ligated pairs)\n", n_paired_unique_un_ligated_dangling, (100.0 * n_paired_unique_un_ligated_dangling / n_paired_unique_un_ligated)));
+        printStream.print(String.format("n_paired_unique_self_ligated_dangling=%d (%.2f%% of all unique self-ligated pairs)\n", n_paired_unique_self_ligated_dangling, (100.0 * n_paired_unique_self_ligated_dangling / n_paired_unique_self_ligated)));
+        printStream.print(String.format("n_paired_unique_too_short_dangling=%d (%.2f%% of all unique valid too short pairs)\n", n_paired_unique_too_short_dangling, (100.0 * n_paired_unique_too_short_dangling / n_paired_unique_too_short)));
+        printStream.print(String.format("n_paired_unique_too_long_dangling=%d (%.2f%% of all unique valid too long pairs)\n", n_paired_unique_too_long_dangling, (100.0 * n_paired_unique_too_long_dangling / n_paired_unique_too_long)));
+        printStream.print(String.format("n_paired_unique_valid_dangling=%d (%.2f%% of all unique valid pairs)\n", n_paired_unique_valid_dangling, (100.0 * n_paired_unique_valid_dangling / n_paired_unique_valid)));
         printStream.print("\n");
-        printStream.print("Will be added soon.\n");
-        printStream.print("\n");
-        printStream.print("\n");
-        printStream.print("Quality metrics for experimental trouble shooting \n");
-        printStream.print("--------------------------------------------------\n");
-        printStream.print("\n");
-        printStream.print("Yield of Valid Pairs (YVP):\t" + String.format("%.2f%%", 100.0*n_valid_pairs/n_total) + "\n");
-        printStream.print("Cross-ligation coefficient (CLC):\t" + String.format("%.2f%%", 100.0* n_paired_unique_trans /n_paired_unique) + "\n");
-        printStream.print("Re-ligation coefficient (RLC):\t" + String.format("%.2f%%", 100.0*(n_paired_unique-n_same_dangling_end)/n_paired_unique) + "\n");
-        printStream.print("\n");
+        printStream.print("Fractions of trans pairs:\n");
+        printStream.print(String.format("n_paired_unique_un_ligated_trans=%d (%.2f%% of all unique un-ligated pairs)\n", n_paired_unique_un_ligated_trans, (100.0 * n_paired_unique_un_ligated_trans / n_paired_unique_un_ligated)));
+        printStream.print(String.format("n_paired_unique_self_ligated_trans=%d (%.2f%% of all unique self-ligated pairs)\n", n_paired_unique_self_ligated_trans, (100.0 * n_paired_unique_self_ligated_trans / n_paired_unique_self_ligated)));
+        printStream.print(String.format("n_paired_unique_too_short_trans=%d (%.2f%% of all unique valid too short pairs)\n", n_paired_unique_too_short_trans, (100.0 * n_paired_unique_too_short_trans / n_paired_unique_too_short)));
+        printStream.print(String.format("n_paired_unique_too_long_trans=%d (%.2f%% of all unique valid too long pairs)\n", n_paired_unique_too_long_trans, (100.0 * n_paired_unique_too_long_trans / n_paired_unique_too_long)));
+        printStream.print(String.format("n_paired_unique_valid_trans=%d (%.2f%% of all unique valid pairs)\n", n_paired_unique_valid_trans, (100.0 * n_paired_unique_valid_trans / n_paired_unique_valid)));
+        printStream.print(String.format("n_total_trans=%d (%.2f%% of all unique paired read pairs)\n", n_paired_unique_trans, (100.0 * n_paired_unique_trans/n_paired_unique)));
     }
 
+    /**
+     * This function assembles the names of all output files.
+     *
+     * @param outputPathPrefix
+     */
     private void createOutputNames(String outputPathPrefix) {
         outputBAMvalid = String.format("%s.%s", outputPathPrefix, "valid_pairs.aligned.bam");
         outputBAMrejected = String.format("%s.%s", outputPathPrefix, "rejected_pairs.aligned.bam");

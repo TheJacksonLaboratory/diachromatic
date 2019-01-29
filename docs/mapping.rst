@@ -52,33 +52,78 @@ artifacts depending on whether the re-ligtion occurred within the same protein-D
 Paired-end sequencing of hybrid fragments may results in all possible relative orientations, i.e. reads of given pairs
 may pointing *inwards*, *outwards* or in the *same direction*.
 In contrast to that, sequencing of un-ligated fragments results in inward pointing pairs only, and sequencing of
-self-ligated fragments results in outward pointing pairs only.
+self-ligated fragments results in outward pointing pairs only. Due to the fact that the read pair orientations overlap
+for the different categories, the identification of read pairs arising from un-ligated or self-ligated fragments
+additionally requires the definition of size thresholds.
 
-Due to the fact that the read pair orientations overlap for the different categories, the identification of read pairs
-arising from un-ligated or self-ligated fragments additionally requires the definition of a size threshold that
-corresponds to the **average size of fragments of the Hi-C library**.
-Roughly speaking, the underlying idea is that such pairs can be assumed to span distances not much larger than this
-threshold only.
-However, the determination of the size of a given fragment is not straightforward for Hi-C for several reasons.
-First, the size has to be calculated differently depending the category of the fragment.
-For un-ligated fragments, the size corresponds to the distance between the 5’ end mapping positions of the two reads as
-usual, whereas for self-ligation and hybrid fragments the size is calculated as the sum of the two distances between
-the 5' ends of the mapped reads and the next occurrence of a cutting motif in 3' direction which is assumed to correspond
-to the ligation junction (Wingett 2015).
-The problem with this approach is that in fact the ligation junction cannot be unambiguously determined, because the
-digestion of genome is not necessarily complete, i.e. there may be restriction fragments containing uncut restriction
-sites (in the illustration marked with asterisk).
-In such cases, the size is underestimated, because, for lack of further information, simply the first occurrence of a cutting
-motif is interpreted as the one that corresponds to the ligation junction.
-Therefore, Diachromatic does not use this approach but requires this parameter to be specified using the ``-l <size>`` option.
-We recommend to use external tool such as the `peak caller Q`_ for fragment size estimation.
-Even though the Hamming distance method implemented in Q is intended for ChIP-seq data, it is also suitable for Hi-C,
-because at restriction sites, the reads distribute in a strand specific fashion that is similar to that observed for
-ChIP-seq reads. Within Diachromatic, inward pointing read pairs for which the distance between the 5' ends is less than
-the specified threshold are categorized as un-ligated pairs, whereas outward pointing read pairs with a calculated size
-smaller than the threshold are categorized as self-ligated pairs.
+
+Size threshold for un-ligated fragments
+---------------------------------------
+
+Reads arising from un-ligated fragments must point inwards and the size of the sequenced fragment corresponds to
+the distance between the 5' end positions of the two reads. This distance is referred to as *d*.
+
+We recommend to use an un-ligation threshold *Td* that corresponds to the **average size of fragments of the Hi-C library**.
+
+The size distribution of un-ligated fragments should be the same as for hybrid fragments.
+
+However, the determination of this distribution is not straightforward.
+
+For hybrid fragments the size *d'* is calculated as the sum of the two distances between the 5' ends of the mapped reads and
+the next occurrence of a cutting motif in 3' direction which is assumed to correspond to the ligation junction
+(Wingett 2015).
+
+The problem with this approach is that in fact the ligation junction cannot be unambiguously determined,
+because the digestion of genome is not necessarily complete, i.e. there may be restriction fragments containing uncut
+restriction sites (in the illustration marked with asterisk).
+
+In such cases, the size of hybrid fragments is underestimated, because, for lack of further information, simply the
+first occurrence of a cutting motif is interpreted as the one that corresponds to the ligation junction.
+
+Therefore, Diachromatic does not use this approach but requires this parameter to be specified
+using the ``-l <size>`` option.
+
+We recommend to use external tool such as the `peak caller Q`_ for fragment size
+estimation.
+
+Even though the Hamming distance method implemented in Q is intended for ChIP-seq data, it is also suitable
+for Hi-C, because at restriction sites, the reads distribute in a strand specific fashion that is similar to that
+observed for ChIP-seq reads.
+
+Within Diachromatic, inward pointing read pairs for which the distance between the 5' ends *d*
+is less than the specified threshold *Tu* are categorized as un-ligated pairs.
+
+
+Size threshold for self-ligated fragments
+-----------------------------------------
+
+Unlike reads arising from un-ligated fragments, reads arising from self-ligated must point outwards.
+
+Furthermore, self-ligating fragments have a different size distribution than hybrid and un-ligated fragments.
+
+The relevant size is no longer the size of the sequenced fragments that results from sonication but the
+favourable size at which fragments tend to self-ligate.
+
+Very short fragments might not self-ligate because of steric hindrance, whereas the ends of very long fragments might
+be unlikely to become located in sufficient physical proximity in order to ligate.
+
+Within Diachromatic, the size of self-ligating fragments is calculated as the sum *ds=d+d'*,
+where *d* is the distance between the 5' end positions of the two reads, and *d'* is the sum of the two distances between
+the 5' ends of the mapped reads and the next occurrence of a cutting motif in 3' direction (see illustration
+below).
+
+Within Diachromatic, outward pointing read pairs for which the calculated size of the self-ligating fragment *ds* is
+less than the specified threshold *Ts* are categorized as self-ligated pairs.
+
+
+.. figure:: img/fragment_categories.png
+    :align: center
 
 .. _peak caller Q: http://charite.github.io/Q/
+
+
+Quality metrics
+~~~~~~~~~~~~~~~
 
 Valid read pairs arising from genuine chromatin-chromatin interactions cannot be distinguished from those arising from
 **cross-ligation** events.

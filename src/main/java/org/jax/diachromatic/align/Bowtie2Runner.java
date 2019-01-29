@@ -53,8 +53,8 @@ public class Bowtie2Runner {
     }
 
     /**
-     * Run bowtie
-     * /usr/bin/bowtie2 --very-sensitive  -x [path to bowtie index] --no-unal -p 1 [path to input fastq] -S [outname.sam]
+     * Run bowtie.
+     *
      * @throws DiachromaticException
      */
     public void run() throws DiachromaticException {
@@ -102,11 +102,7 @@ public class Bowtie2Runner {
             String msg = String.format("Could not run bowtie [%s]",e.getMessage());
             throw new DiachromaticException(msg);
         }
-
         System.out.println("STDOUT="+stdin);
         System.out.println("STDERR="+stderr);
     }
-
-
-
 }

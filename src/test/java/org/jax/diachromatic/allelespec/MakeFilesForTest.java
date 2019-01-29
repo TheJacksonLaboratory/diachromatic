@@ -23,9 +23,9 @@ import static junit.framework.TestCase.assertTrue;
  * $ bwa index -a bwtsw genome.small.fa
  * Use the following readgroup info
  *
- * @RG\tID:rg1\tSM:sample1\tPL:illumina\tLB:lib1\tPU:H7APS:1:TAAGGCGA $ bwa mem -R'@RG\tID:rg1\tSM:sample1\tPL:illumina\tLB:lib1\tPU:H7APS:1:TAAGGCGA' genome.small.fa sample1.fq sample2.fq >sample.sam
- * $ samtools view -Sb sample.sam > sample.bam
- * $ samtools sort -T sample.sorted sample.bam > sample.sorted.bam
+ * @RG\tID:rg1\tSM:sample1\tPL:illumina\tLB:lib1\tPU:H7APS:1:TAAGGCGA $ bwa mem -R'@RG\tID:rg1\tSM:sample1\tPL:illumina\tLB:lib1\tPU:H7APS:1:TAAGGCGA' genome.small.fa sample1.fq sample2.fq {@literal >} sample.sam
+ * $ samtools view -Sb sample.sam {@literal >} sample.bam
+ * $ samtools sort -T sample.sorted sample.bam {@literal >} sample.sorted.bam
  * $ samtools index sample.sorted.bam
  *
  *
