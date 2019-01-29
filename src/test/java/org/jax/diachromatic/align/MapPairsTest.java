@@ -71,8 +71,8 @@ public class MapPairsTest {
         String outdir = "results";
         String outprefix = "results";
         String digestFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
-        String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
-        DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
+       // String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
+        DigestMap digestMap = new DigestMap(digestFile);
         sampairer = new Aligner(sam1, sam2, outputRejectedReads,"test1", digestMap, 150, 800, "xxx",true);
         ReadPair pair;
         while ((pair = sampairer.getNextPair())!=null) {
@@ -90,7 +90,7 @@ public class MapPairsTest {
      * @return list of "fake" Digest object
      */
     @SafeVarargs
-    private static List<Digest> makeFakeDigestList(String chrom,Pair<Integer,Integer> ...pos_pair) {
+    private static List<Digest> makeFakeDigestList(String chrom,Pair<Integer,Integer> ...pos_pair) throws DiachromaticException {
         List<Digest> dlist = new ArrayList<>();
         for (Pair<Integer,Integer> p : pos_pair) {
             Digest d = makeFakeDigest(chrom,p.first,p.second);
@@ -106,7 +106,7 @@ public class MapPairsTest {
      * @param frompos end position of digest
      * @return one fake {@link Digest} object (See {@link #makeFakeDigestList(String, Pair[])}).
      */
-    private static Digest makeFakeDigest(String chr, int frompos, int topos) {
+    private static Digest makeFakeDigest(String chr, int frompos, int topos) throws  DiachromaticException{
         String fields[]=new String[6];
         fields[0]=chr;
         fields[1]=String.valueOf(frompos);
@@ -136,8 +136,8 @@ public class MapPairsTest {
         int UPPER_SIZE_THRESHOLD=800;
         int LOWER_SIZE_THRESHOLD=150;
         String digestFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
-        String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
-        DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
+       // String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
+        DigestMap digestMap = new DigestMap(digestFile);
         sampairer = new Aligner(sam1, sam2, outputRejectedReads,"test3", digestMap,150,800,"xxx",true);
         ReadPair readpair =readpairmap.get("1_uniquelyAlignedRead");
         assertNotNull(readpair);
@@ -155,8 +155,8 @@ public class MapPairsTest {
         int UPPER_SIZE_THRESHOLD=800;
         int LOWER_SIZE_THRESHOLD=150;
         String digestFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
-        String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
-        DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
+      //  String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
+        DigestMap digestMap = new DigestMap(digestFile);
         sampairer = new Aligner(sam1, sam2, outputRejectedReads,"test2", digestMap,150,800,"xxx",true);
         ReadPair readpair = readpairmap.get("2_multiplyAlignedRead");
         assertNotNull(readpair);
@@ -174,8 +174,8 @@ public class MapPairsTest {
     @Test
     public void testSelfLigation() throws DiachromaticException {
         String digestFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
-        String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
-        DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
+        //String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
+        DigestMap digestMap = new DigestMap(digestFile);
         sampairer = new Aligner(sam1, sam2, outputRejectedReads,"test4", digestMap,150,800,"xxx",true);
         ReadPair readpair = readpairmap.get("1_uniquelyAlignedRead");
         assertFalse(readpair.getCategoryTag().equals("SP"));

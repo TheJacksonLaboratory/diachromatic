@@ -22,6 +22,7 @@ public class CountCommand extends Command {
     private String digestFile = null;
 
     /** Path to BED file containing the coordinates of active digests. */
+    @Deprecated
     private String activeDigestsFile = null;
 
     private String outputPathPrefix = null;
@@ -39,7 +40,7 @@ public class CountCommand extends Command {
 
     public void execute() throws DiachromaticException {
         logger.trace(String.format("About to read digests from %s",digestFile));
-        DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
+        DigestMap digestMap = new DigestMap(digestFile);
 
         Counter counter = new Counter(validPairsBamFile, digestMap, outputPathPrefix, filenamePrefix);
         try {

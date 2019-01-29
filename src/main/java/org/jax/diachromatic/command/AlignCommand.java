@@ -59,6 +59,22 @@ public class AlignCommand extends Command {
 
     private boolean useStringentUniqueSettings = false;
 
+    /**
+     * TODO REMOVE ACTIVE DIGEST FILE
+     * @param bowtie
+     * @param btIndexPath
+     * @param inputFastqPath1
+     * @param inputFastqPath2
+     * @param digest
+     * @param activeDigests
+     * @param outputRejected
+     * @param outputPathPrefix
+     * @param threadNum
+     * @param lowerFragSize
+     * @param upperFragSize
+     * @param filenamePrefix
+     * @param useStringentUniqueSettings
+     */
     public AlignCommand(String bowtie, String btIndexPath, String inputFastqPath1, String inputFastqPath2, String digest, String activeDigests,
                         boolean outputRejected, String outputPathPrefix, Integer threadNum, Integer lowerFragSize, Integer upperFragSize, String filenamePrefix, boolean useStringentUniqueSettings) {
         this.bowtiepath =bowtie;
@@ -81,7 +97,7 @@ public class AlignCommand extends Command {
         String samFile1 = String.format("%s_%s_1.sam", this.outputPathPrefix, getRandomPrefix(7));
         String samFile2 = String.format("%s_%s_2.sam", this.outputPathPrefix, getRandomPrefix(7));
         logger.trace(String.format("About to read digests from %s",digestFile));
-        DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
+        DigestMap digestMap = new DigestMap(digestFile);
         try {
             Bowtie2Runner runner = new Bowtie2Runner(bowtiepath,pathToBowtieIndex,pathToInputFastq1,samFile1,this.threadNum);
             runner.run();

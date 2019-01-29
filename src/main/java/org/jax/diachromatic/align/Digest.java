@@ -162,9 +162,8 @@ public class Digest {
      * TODO do we need this??
      * Parse in the digest file for details on file format).
      * The align has the chromosome as a key and a list of {@link Digest} objects on the chromosome as the value
-     * @param digestFilePath path to the digest file.
-     * @return
-     */
+
+
     @Deprecated
     public static Map<String,List<Digest>> readDigests(String digestFilePath, String activeDigestsFile) {
         Map<String,List<Digest>> map = new HashMap<>();
@@ -249,6 +248,7 @@ public class Digest {
         }
         return map;
     }
+     */
 
     @Override
     public String toString() {

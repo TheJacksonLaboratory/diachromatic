@@ -45,117 +45,27 @@ public class DigestMap {
     private static final Logger logger = LogManager.getLogger();
     private static final htsjdk.samtools.util.Log log = Log.getInstance(Aligner.class);
 
-    private HashMap<String,ArrayPair> digestMap = null; // key: chromosome name, value: pair of arrays (start coordinate of digest and active state)
     /** NEW VERSION */
-    private HashMap<String,ArrayPair2> digestMap2;
+    private final HashMap<String, Chromosome2DigestArray> digestMap;
 
-    public DigestMap(String digestFilePath, String activeDigestsFile) throws DiachromaticException {
-
+    public DigestMap(String digestFilePath) throws DiachromaticException {
+        this.digestMap = new HashMap<>();
         try {
-
-            // create hash map from the file for active digests
-            Set<String> activeDigests = new HashSet<>();
-
-            if (activeDigestsFile == null) {
-                logger.trace(String.format("No file for active digests available. Will set all digests to inactive."));
-            }
-            else {
-                logger.trace(String.format("File for active digests available. Reading file..."));
-
-                File af = new File(activeDigestsFile);
-                BufferedReader br = new BufferedReader(new FileReader(activeDigestsFile));
-                String line;
-                while ((line=br.readLine())!=null) {
-                    String fields[] = line.split("\t");
-                    if (fields.length < 3) {
-                        logger.fatal(String.format("Malformed line with %d fields (required: at least 3): %s",fields.length,line ));
-                        System.exit(1); // TODO: Add proper exception handling
-                    }
-                    String key=fields[0];
-                    key += ":";
-                    key += fields[2]; // end coordinate
-                    if(activeDigestsFile != null) {
-                        activeDigests.add(key);
-                    }
-                }
-            }
-
-            // read all digest coordinates and fill array digestEndPosition
-            // ------------------------------------------------------------
-
-            digestMap = new HashMap<String,ArrayPair>();
-
-            File f = new File(digestFilePath);
-            if (! f.exists()) {
-                logger.error(String.format("Could not find digest file at %s", f.getAbsolutePath() ));
-                System.exit(1);
-            }
-            else {
-                logger.trace("File for all digests available. Reading file...");
-            }
-
-            BufferedReader br = new BufferedReader(new FileReader(digestFilePath));
-            String line;
-            while ((line=br.readLine())!=null) {
-                if (line.startsWith("Chromosome")) continue; // the header line
-                String fields[] = line.split("\t");
-                if (fields.length< 6) {
-                    logger.fatal(String.format("Malformed line with %d fields (required: at least 6): %s",fields.length,line ));
-                    System.exit(1); // todo throw exception
-                }
-                String chromosome = fields[0];
-                Integer digestEnd = Integer.parseInt(fields[2]);
-                if (!digestMap.containsKey(chromosome)) {
-                    digestMap.put(chromosome,new ArrayPair());
-                }
-
-                digestMap.get(chromosome).addCoord(digestEnd);
-                String key = chromosome;
-                key += ":";
-                key += digestEnd;
-                if(activeDigests.contains(key))
-                {
-                    digestMap.get(chromosome).addActiveStateCoord(digestEnd);
-                }
-
-                /*
-                 An additional file for active digests passed with -a option overwrites infos in columns 11 of the
-                 digest file. Only if no file for active fragments is given, the information in column 11 is used.
-                  */
-                if(activeDigestsFile == null) {
-                    if(fields[11].equals("T")) {
-                        digestMap.get(chromosome).addActiveStateCoord(digestEnd);
-                    }
-                }
-            }
-            br.close();
-
-
-            // sort position arrays for each chromosome and init activeState arrays
-            // --------------------------------------------------------------------
-
-            for (String key : digestMap.keySet()) {
-                digestMap.get(key).finalizeArrayPair();
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1); // todo throw exception
+            parseDigestFile(digestFilePath);
+        } catch (IOException e){
+            throw new DiachromaticException(String.format("Could not parse %s: %s",digestFilePath,e.getMessage()));
         }
     }
 
 
 
     public void parseDigestFile(String digestFilePath) throws IOException, DiachromaticException {
-        digestMap2 = new HashMap<>();
-
         File f = new File(digestFilePath);
         if (! f.exists()) {
-            logger.error(String.format("Could not find digest file at %s", f.getAbsolutePath() ));
-            System.exit(1);
+            throw new DiachromaticException(String.format("Could not find digest file at %s", f.getAbsolutePath() ));
         }
         else {
-            logger.trace("File for all digests available. Reading file...");
+            logger.trace("Found digest file at {}.",digestFilePath);
         }
 
         BufferedReader br = new BufferedReader(new FileReader(digestFilePath));
@@ -164,15 +74,14 @@ public class DigestMap {
             if (line.startsWith("Chromosome")) continue; // the header line
             String fields[] = line.split("\t");
             if (fields.length!=Digest.TOTAL_NUMBER_OF_FIELDS) {
-                logger.fatal(String.format("Malformed line with %d fields (required: %d): %s",
+                throw new DiachromaticException(String.format("Malformed line with %d fields (required: %d): %s",
                         Digest.TOTAL_NUMBER_OF_FIELDS,fields.length,line ));
-                System.exit(1); // todo throw exception
             }
             Digest digest = new Digest(fields);
             String chromosome = digest.getChromosome();
             Integer digestEnd = digest.getDigestEndPosition();
-            digestMap2.putIfAbsent(chromosome,new ArrayPair2());
-            digestMap2.get(chromosome).addDigest(digest);
+            digestMap.putIfAbsent(chromosome,new Chromosome2DigestArray());
+            digestMap.get(chromosome).addDigest(digest);
         }
         br.close();
         /*
@@ -189,163 +98,50 @@ public class DigestMap {
 
 
 
-
-    public DigestPair getDigestPair2(String chrom1, Integer coord1, String chrom2, Integer coord2) {
-
+    public DigestPair getDigestPair(String chrom1, int coord1, String chrom2, int coord2) {
         // handle exception with unknown reference IDs see test
         int index = Collections.binarySearch(this.digestMap.get(chrom1).coordArray, coord1);
-        String d1[] = new String[6];
-        d1[0] = chrom1;
-        Integer staCoord, endCoord;
-        if(0 <= index) {
-            // coord1 is in the list and corresponds to digest end position
-            endCoord = this.digestMap.get(chrom1).coordArray.get(index);
-            if(index == 0) {
-                // this is the first digest
-                staCoord = 1;
-            } else {
-                staCoord = this.digestMap.get(chrom1).coordArray.get(index-1) + 1;
-            }
-        } else {
-            // coord1 is not in the list and would be inserted at i=(index+1)*(-1)
-            int i = (index+1)*(-1);
-            //logger.trace("index: " + index + " i: " + i);
-            endCoord = this.digestMap.get(chrom1).coordArray.get(i);
-            if(i == 0) {
-                // this is the first digest
-                staCoord = 0;
-            } else {
-                staCoord = this.digestMap.get(chrom1).coordArray.get(i-1) + 1;
-            }
-        }
-        d1[1] = staCoord.toString();
-        d1[2] = endCoord.toString();
-        d1[3] = "42";
-        d1[4] = "Dpn2";
-        d1[5] = "Dpn2";
-        /*
-        Digest digest1 = new Digest(d1);
-        if(this.digestMap.get(chrom1).activeStateCoordSet.contains(endCoord)) {
-            digest1.setSelected();
-        }
-        index = Collections.binarySearch(this.digestMap.get(chrom2).coordArray, coord2);
-        String d2[] = new String[6];
-        d2[0] = chrom2;
-        if(0 <= index) {
-            // coord1 is in the list and corresponds to digest end position
-            endCoord = this.digestMap.get(chrom2).coordArray.get(index);
-            if(index == 0) {
-                // this is the first digest
-                staCoord = 1;
-            } else {
-                staCoord = this.digestMap.get(chrom2).coordArray.get(index-1) + 1;
-            }
-        } else {
-            // coord1 is not in the list and would be inserted at i=(index+1)*(-1)
-            int i = (index+1)*(-1);
-            //logger.trace("index: " + index + " i: " + i);
-            endCoord = this.digestMap.get(chrom2).coordArray.get(i);
-            if(i == 0) {
-                // this is the first digest
-                staCoord = 0;
-            } else {
-                staCoord = this.digestMap.get(chrom2).coordArray.get(i-1) + 1;
-            }
-        }
-        d2[1] = staCoord.toString();
-        d2[2] = endCoord.toString();
-        d2[3] = "43";
-        d2[4] = "Dpn2";
-        d2[5] = "Dpn2";
-        Digest digest2 = new Digest(d2);
-        if(this.digestMap.get(chrom2).activeStateCoordSet.contains(endCoord)) {
-            digest2.setSelected();
-        }
-        return new DigestPair(digest1, digest2);
-        */
-        return null;
-    }
-
-
-    public DigestPair getDigestPairNewAndImproved(String chrom1, int coord1, String chrom2, int coord2) {
-        // handle exception with unknown reference IDs see test
-        int index = Collections.binarySearch(this.digestMap2.get(chrom1).coordArray, coord1);
         Digest digest1, digest2;
         if(0 <= index) {
             // coord1 is in the list and corresponds to digest end position
-            digest1 = this.digestMap2.get(chrom1).digestArray.get(index);
+            digest1 = this.digestMap.get(chrom1).digestArray.get(index);
         } else {
             // coord1 is not in the list and would be inserted at i=(index+1)*(-1)
             int i = (index+1)*(-1);
             //logger.trace("index: " + index + " i: " + i);
-            digest1 = this.digestMap2.get(chrom1).digestArray.get(i);
+            digest1 = this.digestMap.get(chrom1).digestArray.get(i);
         }
-        int index2 = Collections.binarySearch(this.digestMap2.get(chrom2).coordArray, coord2);
+        int index2 = Collections.binarySearch(this.digestMap.get(chrom2).coordArray, coord2);
         if(0 <= index2) {
             // coord1 is in the list and corresponds to digest end position
-            digest2 = this.digestMap2.get(chrom2).digestArray.get(index2);
+            digest2 = this.digestMap.get(chrom2).digestArray.get(index2);
         } else {
             // coord1 is not in the list and would be inserted at i=(index+1)*(-1)
             int i = (index2+1)*(-1);
             //logger.trace("index: " + index + " i: " + i);
-            digest2 = this.digestMap2.get(chrom2).digestArray.get(i);
+            digest2 = this.digestMap.get(chrom2).digestArray.get(i);
         }
         return new DigestPair(digest1, digest2);
     }
 
 
-
-    private class ArrayPair {
-
+    /**
+     * This class stores all of the digests that are located on one chromosome (or scaffold). It additionally
+     * stores an array of locations (the end positions) of each of the digests so that we can find the correct
+     * digest given a position quicly using a binary search. The class is intended to be used with a map whose
+     * key stores the name of the chromosome; the values of the map are objects of this class (one per chromosome).
+     */
+    private static class Chromosome2DigestArray {
+        /** List of the chromosomal positions of the digests on this chromosome. The end position is stored for each digest.*/
         private ArrayList<Integer> coordArray;
-        private ArrayList<Integer> stateArray;
-        Set<Integer> activeStateCoordSet;
-
-        ArrayPair() {
-            coordArray = new ArrayList<Integer>();
-            stateArray = new ArrayList<Integer>();
-            activeStateCoordSet = new HashSet<>();
-        }
-
-        public void addCoord(Integer x) {
-            coordArray.add(x);
-        }
-
-        public Integer getCoord(Integer index) {
-            return coordArray.get(index);
-        }
-
-        public void addActiveStateCoord(Integer x) {
-            activeStateCoordSet.add(x);
-        }
-
-        public void finalizeArrayPair() {
-
-            Collections.sort(coordArray);
-
-            for(int i = 0; i < coordArray.size(); i++) {
-                if(activeStateCoordSet.contains(coordArray.get(i))) {
-                    stateArray.add(1);
-                }
-                else {
-                    stateArray.add(0);
-                }
-            }
-        }
-    }
-
-
-
-    private static class ArrayPair2 {
-
-        private ArrayList<Integer> coordArray;
-        private ArrayList<Integer> stateArray;
+        /** List of {@link Digest} objects corresponding to this chromosome. */
         private ArrayList<Digest> digestArray;
+        /** Set of coordinates of all of the active digests. TODO do we need this???????????? */
+        @Deprecated
         Set<Integer> activeStateCoordSet;
 
-        ArrayPair2() {
+        Chromosome2DigestArray() {
             coordArray = new ArrayList<>();
-            stateArray = new ArrayList<>();
             digestArray = new ArrayList<>();
             activeStateCoordSet = new HashSet<>();
         }
@@ -353,9 +149,10 @@ public class DigestMap {
         void addDigest(Digest digest) {
             digestArray.add(digest);
             coordArray.add(digest.getDigestEndPosition());
-            if (digest.isSelected()) {
-                activeStateCoordSet.add(digest.getDigestEndPosition());
-            }
+            // TODO DO WE NEED THIS?????
+//            if (digest.isSelected()) {
+//                activeStateCoordSet.add(digest.getDigestEndPosition());
+//            }
         }
 
         /*  REPLACED BY addDigest
@@ -377,15 +174,15 @@ public class DigestMap {
         public void finalizeArrayPair() {
 
             Collections.sort(coordArray);
-
-            for(int i = 0; i < coordArray.size(); i++) {
-                if(activeStateCoordSet.contains(coordArray.get(i))) {
-                    stateArray.add(1);
-                }
-                else {
-                    stateArray.add(0);
-                }
-            }
+// Note we now store the "activity" within the digest object.
+//            for(int i = 0; i < coordArray.size(); i++) {
+//                if(activeStateCoordSet.contains(coordArray.get(i))) {
+//                    stateArray.add(1);
+//                }
+//                else {
+//                    stateArray.add(0);
+//                }
+//            }
         }
     }
 
