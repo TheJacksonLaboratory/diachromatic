@@ -6,7 +6,6 @@ import org.jax.diachromatic.digest.RestrictionEnzyme;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.truncation.Truncator;
 
-import java.util.Collections;
 import java.util.List;
 
 import static org.jax.diachromatic.digest.RestrictionEnzyme.parseRestrictionEnzymes;

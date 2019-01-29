@@ -4,12 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.exception.DiachromaticException;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.*;
-
 /**
  * A class to represent a restriction fragment resulting from an in silico digestion of the genome.
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
@@ -42,9 +36,9 @@ public class Digest {
 
     private final double three_prime_repeat;
 
-    private final double five_prime_probe_count;
+    private final int five_prime_probe_count;
 
-    private final double three_prime_probe_count;
+    private final int three_prime_probe_count;
 
 
     /** If true, then this digest has been selected for enrichment by a capture probe. */
@@ -129,6 +123,30 @@ public class Digest {
         return threePrimeRestrictionSite;
     }
 
+    public double getFivePrimeGcContent() {
+        return five_prime_GC;
+    }
+
+    public double getThreePrimeGcContent() {
+        return three_prime_GC;
+    }
+
+    public double getFivePrimeRepeatContent() {
+        return five_prime_repeat;
+    }
+
+    public double getThreePrimeRepeatContent() {
+        return three_prime_repeat;
+    }
+
+    public int getFivePrimeProbeCount() {
+        return five_prime_probe_count;
+    }
+
+    public int getThreePrimeProbeCount() {
+        return three_prime_probe_count;
+    }
+
 
     public int getSize() {
         return digestEndPosition - digestStartPosition + 1;
@@ -145,6 +163,8 @@ public class Digest {
 
     /** Note -- by the way these objects are created in this program, it is sufficient to check whether
      * the chromosome and the start position are equal in order to know whether the objects are equal.
+     * Note that we do not test all of the member variables of Digest for equality because by design there
+     * cannot be multiple Digests at the same position with different values for a valid Digest file.
      * @param o the Object being compared with this.
      * @return true if o and this are equal
      */
@@ -154,102 +174,15 @@ public class Digest {
         if (! (o instanceof Digest) ) return false;
         Digest other = (Digest) o;
         return (chromosome.equals(other.chromosome) &&
-        digestStartPosition ==other.digestStartPosition);
+        digestStartPosition ==other.digestStartPosition &&
+        digestEndPosition==other.digestEndPosition);
     }
 
 
     /**
-     * TODO do we need this??
-     * Parse in the digest file for details on file format).
-     * The align has the chromosome as a key and a list of {@link Digest} objects on the chromosome as the value
-
-
-    @Deprecated
-    public static Map<String,List<Digest>> readDigests(String digestFilePath, String activeDigestsFile) {
-        Map<String,List<Digest>> map = new HashMap<>();
-        try {
-
-            Set<String> activeDigests = new HashSet<>();
-
-            File f = new File(digestFilePath);
-            if (! f.exists()) {
-                logger.error(String.format("Could not find digest file at %s", f.getAbsolutePath() ));
-                System.exit(1);
-            }
-
-            if (activeDigestsFile == null) {
-                logger.trace(String.format("No file for active digests available. Will set all digests to inactive."));
-            }
-            else {
-                logger.trace(String.format("File for active digests available. Reading file..."));
-
-                File af = new File(activeDigestsFile);
-                BufferedReader br = new BufferedReader(new FileReader(activeDigestsFile));
-                String line;
-                while ((line=br.readLine())!=null) {
-                    String[] fields = line.split("\t");
-                    if (fields.length < 3) {
-                        logger.fatal(String.format("Malformed line with %d fields (required: at least 3): %s",fields.length,line ));
-                        System.exit(1); // TODO: Add proper exception handling
-                    }
-                    String key=fields[0];
-                    key += ":";
-                    key += fields[1];
-                    key += "-";
-                    key += fields[2];
-                    if(activeDigestsFile != null) {
-                        activeDigests.add(key);
-                    }
-                }
-            }
-
-            BufferedReader br = new BufferedReader(new FileReader(digestFilePath));
-            String line;
-            while ((line=br.readLine())!=null) {
-                //System.out.println(line);
-                if (line.startsWith("Chromosome")) continue; // the header line
-                String[] fields = line.split("\t");
-                if (fields.length< 6) {
-                    logger.fatal(String.format("Malformed line with %d fields (required: at least 6): %s",fields.length,line ));
-                    System.exit(1); // todo throw exception
-                }
-                Digest dig;
-                try {
-                    dig = new Digest(fields);
-                } catch (DiachromaticException e) {
-                    e.printStackTrace();
-                    continue;
-                }
-                String chrom = dig.getChromosome();
-
-                List<Digest> dlist;
-                if (map.containsKey(chrom)) {
-                    dlist=map.get(chrom);
-                } else {
-                    dlist=new ArrayList<>();
-                    map.put(chrom,dlist);
-                }
-
-                // check if digest is active
-                String key = dig.getChromosome();
-                key += ":";
-                key += dig.getDigestStartPosition();
-                key += "-";
-                key += dig.getDigestEndPosition();
-                if(activeDigestsFile != null && activeDigests.contains(key)) {
-                    dig.setSelected();
-                }
-                dlist.add(dig);
-            }
-            br.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1); // todo throw exception
-        }
-        return map;
-    }
+     * TODO -- MAYBE ADD OTHER VARIABLES?
+     * @return
      */
-
     @Override
     public String toString() {
         return String.format("Digest at %s:%d-%d [frag. %d;%s/%s]",

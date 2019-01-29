@@ -177,9 +177,8 @@ public class ReadPair {
      * @param f SAM record for R1
      * @param r SAM record for R2
      * @param digestMap Custom class for storing all digests of the genome.
-     * @throws DiachromaticException Required because getDigestPair2 is used.
      */
-    public ReadPair(SAMRecord f, SAMRecord r, DigestMap digestMap) throws DiachromaticException {
+    public ReadPair(SAMRecord f, SAMRecord r, DigestMap digestMap) {
 
         R1 = f;
         R2 = r;
@@ -356,7 +355,7 @@ public class ReadPair {
     /**
      * Check if insert size is too small.
      */
-    private boolean hasTooSmallInsertSize() throws DiachromaticException{
+    private boolean hasTooSmallInsertSize() {
         int insertSize = getCalculatedInsertSize();
         return insertSize < LOWER_SIZE_THRESHOLD;
     }
@@ -364,7 +363,7 @@ public class ReadPair {
     /**
      * Check if insert size is too big.
      */
-    private boolean hasTooBigInsertSize() throws DiachromaticException {
+    private boolean hasTooBigInsertSize() {
         int insertSize = getCalculatedInsertSize();
         return UPPER_SIZE_THRESHOLD < insertSize;
     }
@@ -373,11 +372,7 @@ public class ReadPair {
      * @return True, if both reads are on the same chromosome.
      */
     public boolean isTrans() {
-        if(!R1.getReferenceName().equals(R2.getReferenceName())) {
-            return true;
-        } else {
-            return false;
-        }
+        return !R1.getReferenceName().equals(R2.getReferenceName());
     }
 
     /**
@@ -457,11 +452,7 @@ public class ReadPair {
      * @return True, if the reads point to one another.
      */
     private boolean isInwardFacing() {
-        if(getRelativeOrientationTag().equals("F1R2") || getRelativeOrientationTag().equals("F2R1")) {
-            return true;
-        } else {
-            return false;
-        }
+        return getRelativeOrientationTag().equals("F1R2") || getRelativeOrientationTag().equals("F2R1");
     }
 
 
@@ -471,11 +462,7 @@ public class ReadPair {
      * @return True, if the reads point to opposite directions.
      */
     private boolean isOutwardFacing() {
-        if(getRelativeOrientationTag().equals("R2F1") || getRelativeOrientationTag().equals("R1F2")) {
-            return true;
-        } else {
-            return false;
-        }
+        return getRelativeOrientationTag().equals("R2F1") || getRelativeOrientationTag().equals("R1F2");
     }
 
 

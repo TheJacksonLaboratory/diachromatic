@@ -2,15 +2,11 @@ package org.jax.diachromatic.command;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jax.diachromatic.align.Digest;
 import org.jax.diachromatic.align.DigestMap;
 import org.jax.diachromatic.count.Counter;
 import org.jax.diachromatic.exception.DiachromaticException;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 public class CountCommand extends Command {
     private static final Logger logger = LogManager.getLogger();

@@ -7,7 +7,6 @@ import org.mockito.Mockito;
 
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Matchers.booleanThat;
 import static org.mockito.Mockito.when;
 
 class DeDupMapTest {

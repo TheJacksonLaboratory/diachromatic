@@ -21,9 +21,9 @@ public class Bowtie2Runner {
 
     private Integer threadNum = 1;
 
-    String stdin = null;
+    private String stdin = null;
 
-    String stderr = null;
+    private String stderr = null;
 
 
     public Bowtie2Runner(String bowtiepath, String btIndexPath, String inputFastqPath, String outnam, Integer threadNum) throws DiachromaticException {
@@ -58,7 +58,7 @@ public class Bowtie2Runner {
      * @throws DiachromaticException
      */
     public void run() throws DiachromaticException {
-        String args[]=new String[11];
+        String[] args = new String[11];
         args[0]=pathToBowtie2;
         args[1]="--very-sensitive";
         //args[2]="--no-unal";

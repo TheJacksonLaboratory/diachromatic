@@ -6,12 +6,9 @@ import org.jax.diachromatic.align.DigestMap;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.align.Aligner;
 import org.jax.diachromatic.align.Bowtie2Runner;
-import org.jax.diachromatic.align.Digest;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 /**

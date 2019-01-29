@@ -46,7 +46,7 @@ public class DigestMap {
     private static final htsjdk.samtools.util.Log log = Log.getInstance(Aligner.class);
 
     /** NEW VERSION */
-    private final HashMap<String, Chromosome2DigestArray> digestMap;
+    private final Map<String, Chromosome2DigestArray> digestMap;
 
     public DigestMap(String digestFilePath) throws DiachromaticException {
         this.digestMap = new HashMap<>();
@@ -57,7 +57,9 @@ public class DigestMap {
         }
     }
 
-
+    public Map<String, Chromosome2DigestArray> getDigestMap() {
+        return digestMap;
+    }
 
     public void parseDigestFile(String digestFilePath) throws IOException, DiachromaticException {
         File f = new File(digestFilePath);
@@ -72,7 +74,7 @@ public class DigestMap {
         String line;
         while ((line=br.readLine())!=null) {
             if (line.startsWith("Chromosome")) continue; // the header line
-            String fields[] = line.split("\t");
+            String[] fields = line.split("\t");
             if (fields.length!=Digest.TOTAL_NUMBER_OF_FIELDS) {
                 throw new DiachromaticException(String.format("Malformed line with %d fields (required: %d): %s",
                         Digest.TOTAL_NUMBER_OF_FIELDS,fields.length,line ));
@@ -96,31 +98,21 @@ public class DigestMap {
     }
 
 
-
-
+    /**
+     * Get the pair of digests that correspond to the two positions defined by (chrom1,coord1) and (chrom2,coord2)
+     * @param chrom1
+     * @param coord1
+     * @param chrom2
+     * @param coord2
+     * @return DigestPair object corresponding to these position.
+     */
     public DigestPair getDigestPair(String chrom1, int coord1, String chrom2, int coord2) {
         // handle exception with unknown reference IDs see test
         int index = Collections.binarySearch(this.digestMap.get(chrom1).coordArray, coord1);
-        Digest digest1, digest2;
-        if(0 <= index) {
-            // coord1 is in the list and corresponds to digest end position
-            digest1 = this.digestMap.get(chrom1).digestArray.get(index);
-        } else {
-            // coord1 is not in the list and would be inserted at i=(index+1)*(-1)
-            int i = (index+1)*(-1);
-            //logger.trace("index: " + index + " i: " + i);
-            digest1 = this.digestMap.get(chrom1).digestArray.get(i);
-        }
-        int index2 = Collections.binarySearch(this.digestMap.get(chrom2).coordArray, coord2);
-        if(0 <= index2) {
-            // coord1 is in the list and corresponds to digest end position
-            digest2 = this.digestMap.get(chrom2).digestArray.get(index2);
-        } else {
-            // coord1 is not in the list and would be inserted at i=(index+1)*(-1)
-            int i = (index2+1)*(-1);
-            //logger.trace("index: " + index + " i: " + i);
-            digest2 = this.digestMap.get(chrom2).digestArray.get(i);
-        }
+        Chromosome2DigestArray chrom2array1 = this.digestMap.get(chrom1);
+        Digest digest1 = chrom2array1.getDigestAt(coord1);
+        Chromosome2DigestArray chrom2array2 = this.digestMap.get(chrom2);
+        Digest digest2 = chrom2array2.getDigestAt(coord2);
         return new DigestPair(digest1, digest2);
     }
 
@@ -131,7 +123,7 @@ public class DigestMap {
      * digest given a position quicly using a binary search. The class is intended to be used with a map whose
      * key stores the name of the chromosome; the values of the map are objects of this class (one per chromosome).
      */
-    private static class Chromosome2DigestArray {
+    static class Chromosome2DigestArray {
         /** List of the chromosomal positions of the digests on this chromosome. The end position is stored for each digest.*/
         private ArrayList<Integer> coordArray;
         /** List of {@link Digest} objects corresponding to this chromosome. */
@@ -155,34 +147,38 @@ public class DigestMap {
 //            }
         }
 
-        /*  REPLACED BY addDigest
-        public void addCoord(Integer x) {
-            coordArray.add(x);
-        }*/
 
-        public Integer getCoord(Integer index) {
-            return coordArray.get(index);
+
+        /**
+         * Collections.binary search returns the index of a key for a list tyhat is sorted in ascending order.
+         * If a key is not present, the method returns "(-(insertion point) - 1), whereby the insertion point is
+         * defined as the point at which the key would be inserted into the list. The expression in the
+         * "else" statement reverse this. We therefore get the right digest whether the search is made with
+         * the actual END POSITION (which is stored in the array) or whether an INTERNAL POSITION is used.
+         * @param coordinate
+         * @return
+         */
+        public Digest getDigestAt(int coordinate){
+            int index = Collections.binarySearch(this.coordArray, coordinate);
+            Digest digest;
+            if(0 <= index) {
+                // coord1 is in the list and corresponds to digest end position
+                digest = digestArray.get(index);
+            } else {
+                // coord1 is not in the list and would be inserted at i=(index+1)*(-1)
+                int i = (index+1)*(-1);
+                //logger.trace("index: " + index + " i: " + i);
+                digest = digestArray.get(i);
+            }
+            return digest;
         }
 
-        /*  REPLACED BY addDigest
-        public void addActiveStateCoord(Integer x) {
-            activeStateCoordSet.add(x);
-        }*/
+
 
         /* Koennen wir nicht annehmen dass die Digests sortiert sind? */
         @Deprecated
         public void finalizeArrayPair() {
-
             Collections.sort(coordArray);
-// Note we now store the "activity" within the digest object.
-//            for(int i = 0; i < coordArray.size(); i++) {
-//                if(activeStateCoordSet.contains(coordArray.get(i))) {
-//                    stateArray.add(1);
-//                }
-//                else {
-//                    stateArray.add(0);
-//                }
-//            }
         }
     }
 

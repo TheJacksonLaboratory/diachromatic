@@ -139,7 +139,7 @@ public class DeDupMap {
          } else {
              // a read pair has not yet been seen for this pair of chromosomes
              HashMap<Integer,Set<Integer>> newIntHashMap = new HashMap<>(); // create new integer HashMap
-             Set newSet = new HashSet<Integer>(); // create new integer set
+             Set<Integer> newSet = new HashSet<>(); // create new integer set
              newSet.add(intVal); /// add coordinate to set
              newIntHashMap.put(intKey,newSet);  // put set on integer HashMap
              dedupmap.put(stringKey,newIntHashMap); // put integer HashMap on string HashMap

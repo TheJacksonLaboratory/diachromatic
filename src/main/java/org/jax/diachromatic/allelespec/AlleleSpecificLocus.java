@@ -1,6 +1,5 @@
 package org.jax.diachromatic.allelespec;
 
-import htsjdk.samtools.util.SamLocusIterator;
 import org.apache.commons.math3.stat.inference.AlternativeHypothesis;
 import org.apache.commons.math3.stat.inference.BinomialTest;
 

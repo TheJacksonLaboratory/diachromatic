@@ -1,7 +1,6 @@
 package org.jax.diachromatic.align;
 
 import htsjdk.samtools.*;
-import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.util.Log;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

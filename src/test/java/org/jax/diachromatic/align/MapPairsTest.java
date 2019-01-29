@@ -107,7 +107,7 @@ public class MapPairsTest {
      * @return one fake {@link Digest} object (See {@link #makeFakeDigestList(String, Pair[])}).
      */
     private static Digest makeFakeDigest(String chr, int frompos, int topos) throws  DiachromaticException{
-        String fields[]=new String[6];
+        String[] fields = new String[6];
         fields[0]=chr;
         fields[1]=String.valueOf(frompos);
         fields[2]=String.valueOf(topos);
@@ -185,7 +185,7 @@ public class MapPairsTest {
 
     /** The insert of the third read pair is above threshold of 800. */
     @Test
-    public void testInsertTooLarge() throws DiachromaticException {
+    public void testInsertTooLarge() {
         int THRESHOLD=800;
         ReadPair readpair  = readpairmap.get("3_tooBig");//1
         int insertSize=readpair.getCalculatedInsertSize();
@@ -195,7 +195,7 @@ public class MapPairsTest {
 
     /** The insert of the seventh read pair is above threshold of 800. */
     @Test
-    public void testSetSamFlagsForCorrectPair() throws DiachromaticException {
+    public void testSetSamFlagsForCorrectPair() {
         ReadPair readpair =readpairmap.get("7_validRead1");
         SamBitflagFilter.debugDisplayBitflag(readpair.forward().getFlags());
         // before we pair, the flags are set only to zero.
