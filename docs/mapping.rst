@@ -57,13 +57,17 @@ for the different categories, the identification of read pairs arising from un-l
 additionally requires the definition of size thresholds.
 
 
-Size threshold for un-ligated fragments
----------------------------------------
+Size and size threshold for un-ligated fragments
+------------------------------------------------
 
 Reads arising from un-ligated fragments must point inwards and the size of the sequenced fragment corresponds to
-the distance between the 5' end positions of the two reads. This distance is referred to as *d*.
+the distance between the 5' end positions of the two reads. This distance is here referred to as *d*.
 
-We recommend to use an un-ligation threshold *Td* that corresponds to the **average size of fragments of the Hi-C library**.
+
+
+We recommend to use an un-ligation threshold T\ :sub:`d` that corresponds to the **average size of fragments of the Hi-C library**.
+
+
 
 The size distribution of un-ligated fragments should be the same as for hybrid fragments.
 
@@ -159,8 +163,6 @@ Use the following command to run the alignment and counting step. ::
 | -i           | bowtie2-index        | /data/indices/bowtie2/hg38/hg38                        | yes      | Path to bowtie2 index of the corresponding genome.                   |    --   |
 +--------------+----------------------+--------------------------------------------------------+----------+----------------------------------------------------------------------+---------+
 | -d           | --digest-file        | /data/GOPHER/hg38_DpnII_DigestedGenome.txt             | yes      | Path to the digest file produced with GOPHER.                        |    --   |
-+--------------+----------------------+--------------------------------------------------------+----------+----------------------------------------------------------------------+---------+
-| -a           | --active-digest-file | /data/GOPHER/hg38_DpnII_active_digests_cd4v2_genes.bed | no       | Path to a BED file containing the coordinates of active digests.     |    --   |
 +--------------+----------------------+--------------------------------------------------------+----------+----------------------------------------------------------------------+---------+
 | -od          | --out-directory      | cd4v2                                                  | no       | Directory containing the output of the align subcommand.             | results |
 +--------------+----------------------+--------------------------------------------------------+----------+----------------------------------------------------------------------+---------+
