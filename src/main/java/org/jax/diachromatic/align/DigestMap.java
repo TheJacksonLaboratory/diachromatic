@@ -77,7 +77,7 @@ public class DigestMap {
             String[] fields = line.split("\t");
             if (fields.length!=Digest.TOTAL_NUMBER_OF_FIELDS) {
                 throw new DiachromaticException(String.format("Malformed line with %d fields (required: %d): %s",
-                        Digest.TOTAL_NUMBER_OF_FIELDS,fields.length,line ));
+                        fields.length,Digest.TOTAL_NUMBER_OF_FIELDS,line ));
             }
             Digest digest = new Digest(fields);
             String chromosome = digest.getChromosome();
