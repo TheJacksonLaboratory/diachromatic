@@ -57,47 +57,62 @@ for the different categories, the identification of read pairs arising from un-l
 additionally requires the definition of size thresholds.
 
 
-Size and size threshold for un-ligated fragments
-------------------------------------------------
+Sizes of hybrid fragments
+-------------------------
 
-Reads arising from un-ligated fragments must point inwards and the size of the sequenced fragment corresponds to
-the distance between the 5' end positions of the two reads. This distance is here referred to as *d*.
+Read pairs arising hybrid fragments may have all possible relative orientations, and the size needs to be calculated in
+consideration of the Hi-C protocol.
+This size is here referred to as d\ :sub:`h` and calculated as the sum of the two distances between the 5' ends of the
+mapped reads and the next occurrence of a cutting motif in 3' direction which is assumed to correspond to the ligation
+junction (`Wingett 2015 <https://www.ncbi.nlm.nih.gov/pubmed/26835000/>`_).
 
-
-
-We recommend to use an un-ligation threshold T\ :sub:`d` that corresponds to the **average size of fragments of the Hi-C library**.
-
-
-
-The size distribution of un-ligated fragments should be the same as for hybrid fragments.
-
-However, the determination of this distribution is not straightforward.
-
-For hybrid fragments the size *d'* is calculated as the sum of the two distances between the 5' ends of the mapped reads and
-the next occurrence of a cutting motif in 3' direction which is assumed to correspond to the ligation junction
-(`Wingett 2015 <https://www.ncbi.nlm.nih.gov/pubmed/26835000/>`_).
+.. figure:: img/fragment_size_hybrid.png
+    :align: center
 
 The problem with this approach is that in fact the ligation junction cannot be unambiguously determined,
 because the digestion of genome is not necessarily complete, i.e. there may be restriction fragments containing uncut
-restriction sites (in the illustration marked with asterisk).
-
+restriction sites (in the illustration of different types fragments and read pairs marked with asterisk).
 In such cases, the size of hybrid fragments is underestimated, because, for lack of further information, simply the
 first occurrence of a cutting motif is interpreted as the one that corresponds to the ligation junction.
 
-Therefore, Diachromatic does not use this approach but requires this parameter to be specified
-using the ``-l <size>`` option.
-
-We recommend to use an external tool such as the `peak caller Q`_ for fragment size
-estimation. Even though the Hamming distance method implemented in Q is intended for ChIP-seq data, it is also suitable
+We assume that size distribution of hybrid fragments results from the parameters used for sonication.
+Diachromatic uses upper and lower thresholds T\ :sub:`l` and T\ :sub:`u` for valid fragments sizes that need to be
+specified by the user.
+We we refrained from using the distribution of calculated sizes because of the problem with underestimation.
+Instead, we recommend to set these thresholds according to the sonication parameters or by using external tools for
+fragment size estimation such as the peak caller `peak caller Q`_.
+Even though the Hamming distance method implemented in Q is intended for ChIP-seq data, it is also suitable
 for Hi-C, because at restriction sites, the reads distribute in a strand specific fashion that is similar to that
 observed for ChIP-seq reads.
 
+
+
+Sizes of un-ligated fragments
+-----------------------------
+
+Read pairs arising from un-ligated fragments must point inwards, and the fragment size simply corresponds to the
+distance between the 5' end positions of the two reads. This distance is here referred to as d\ :sub:`u`.
+
+.. figure:: img/fragment_size_unligated.png
+    :align: center
+
+In order to distinguish between read pairs arising from hybrid and un-ligated fragments, Diachromatic uses an upper
+threshold T\ :sub:`u` for the size of un-ligated.
+
+
+
+We assume the size distributions of hybrid and un-ligated fragments to be the same because they result from the same
+sonication treatment.
+
+We recommend to use an un-ligation threshold T\ :sub:`u` that corresponds to the **average size of fragments of the Hi-C library**.
+
+
+
 With Diachromatic, inward pointing read pairs for which the distance between the 5' ends *d*
-is less than the specified threshold *Tu* are categorized as un-ligated pairs.
+is less than the specified threshold *Tu* are categorized as un-ligated pairs
 
-
-Size threshold for self-ligated fragments
------------------------------------------
+Sizes of self-ligated fragments
+-------------------------------
 
 Unlike reads arising from un-ligated fragments, reads arising from self-ligated must point outwards.
 
@@ -114,8 +129,16 @@ where *d* is the distance between the 5' end positions of the two reads, and *d'
 the 5' ends of the mapped reads and the next occurrence of a cutting motif in 3' direction (see illustration
 below).
 
+.. figure:: img/fragment_size_selfligated.png
+    :align: center
+
+
 Within Diachromatic, outward pointing read pairs for which the calculated size of the self-ligating fragment *ds* is
 less than the specified threshold *Ts* are categorized as self-ligated pairs.
+
+
+
+.
 
 
 .. figure:: img/fragment_categories.png
