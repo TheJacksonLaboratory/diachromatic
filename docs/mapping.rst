@@ -25,29 +25,27 @@ truncated FASTQ files is retained by using bowtie2's option ``--reorder``. In th
 simultaneously over the two SAM files. Pairs for which at least one read could not be mapped uniquely are discarded,
 and all other pairs are futher subdivided into valid and artefactual read pairs.
 
-Categorization of mapped read pairs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Categorization of fragments
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Hi-C fragments arise from cross-linked chromatin that is processed in three successive experimental steps:
 *restriction digest*, *re-ligation* and *shearing* (see illustration below). It is important to understand these steps
-in order to understand how Diachromatic determines is a readpair is valid or artefactual.
-
+in order to understand how Diachromatic determines whether a read pair is valid or artefactual.
 
 .. figure:: img/fragment_formation.png
     :align: center
 
-
 For Hi-C, cross-linked chromatin is digested using one or more restriction enzymes,
 which results in restriction fragments whose ends re-ligate thereby forming ligation junctions.
-The shearing step further increases the diversity of fragments by introducing DNA breakpoints representing a second type
-of ends in addition those introduced by digestion.
+The shearing step introduces DNA breakpoints representing a second type of fragment ends in addition those introduced
+by digestion.
 Fragment ends corresponding to restriction enzyme cutting sites are generally referred to as *dangling ends* because
 they failed to re-ligate.
-
-In total, three categories of fragments are distinguished within Diachromatic: **hybrid fragments** that arise from
+In total, four categories of fragments are distinguished within Diachromatic: **hybrid fragments** that arise from
 re-ligation between ends of different restriction fragments and two artifact types that correspond to single
 restriction fragments whose ends failed to re-ligate with other fragments, either because both ends remained **un-ligated**
-or **self-ligated** with each other. Hybrid fragments correspond to valid interactions but also to cross-ligation
+or **self-ligated** with each other.
+Hybrid fragments may correspond to valid interactions but also to cross-ligation
 artifacts depending on whether the re-ligation occurred within the same protein-DNA complex or between different complexes.
 Paired-end sequencing of hybrid fragments may results in all possible relative orientations, i.e. reads of given pairs
 may pointing *inwards*, *outwards* or in the *same direction*.
@@ -60,8 +58,8 @@ additionally requires the definition of size thresholds.
 Sizes of hybrid fragments
 -------------------------
 
-Read pairs arising hybrid fragments may have all possible relative orientations, and the size needs to be calculated in
-consideration of the Hi-C protocol.
+Read pairs arising from hybrid fragments may have all possible relative orientations, and the size needs to be calculated
+in consideration of the Hi-C protocol.
 This size is here referred to as d\ :sub:`h` and calculated as the sum of the two distances between the 5' ends of the
 mapped reads and the next occurrence of a cutting motif in 3' direction which is assumed to correspond to the ligation
 junction (`Wingett 2015 <https://www.ncbi.nlm.nih.gov/pubmed/26835000/>`_).
@@ -69,23 +67,28 @@ junction (`Wingett 2015 <https://www.ncbi.nlm.nih.gov/pubmed/26835000/>`_).
 .. figure:: img/fragment_size_hybrid.png
     :align: center
 
-The problem with this approach is that in fact the ligation junction cannot be unambiguously determined,
-because the digestion of genome is not necessarily complete, i.e. there may be restriction fragments containing uncut
-restriction sites (in the illustration of different types fragments and read pairs marked with asterisk).
+We assume that size distribution of hybrid fragments results from the parameters used for sonication
+and thus corresponds to overall fragments size distribution in the sequencing library.
+Diachromatic uses an upper threshold T\ :sub:`1` for valid sizes of hybrid fragments that need
+to be specified by the user.
+Read pairs arising from hybrid fragments with calculated insert size d\ :sub:`h` greater than T\ :sub:`u` are
+categorized as wrong size artifacts.
+We do not know what causes this kind of artifacts.
+
+A problem with the calculation of hybrid fragment sizes is that in fact the ligation junction cannot be unambiguously
+determined, because the digestion of genome is not necessarily complete, i.e. there may be restriction fragments
+containing uncut restriction sites (in the illustration of different types fragments and read pairs marked with asterisk).
 In such cases, the size of hybrid fragments is underestimated, because, for lack of further information, simply the
 first occurrence of a cutting motif is interpreted as the one that corresponds to the ligation junction.
+Therefore, we refrained from using the distribution of calculated hybrid fragment sizes in order to define size
+thresholds.
+Instead, we recommend to make an educated guess based on the parameters used for shearing.
+Alternatively, external tools for ChIP-seq fragment size estimation can be used, for instance, the Hamming distance
+method of the `peak caller Q`_.
+We believe that those methods are also suitable for Hi-C, because at restriction sites, the reads distribute in a
+strand specific fashion that is similar to that observed for ChIP-seq reads.
 
-We assume that size distribution of hybrid fragments results from the parameters used for sonication.
-Diachromatic uses upper and lower thresholds T\ :sub:`l` and T\ :sub:`u` for valid fragments sizes that need to be
-specified by the user.
-We we refrained from using the distribution of calculated sizes because of the problem with underestimation.
-Instead, we recommend to set these thresholds according to the sonication parameters or by using external tools for
-fragment size estimation such as the peak caller `peak caller Q`_.
-Even though the Hamming distance method implemented in Q is intended for ChIP-seq data, it is also suitable
-for Hi-C, because at restriction sites, the reads distribute in a strand specific fashion that is similar to that
-observed for ChIP-seq reads.
-
-
+.. _peak caller Q: http://charite.github.io/Q/
 
 Sizes of un-ligated fragments
 -----------------------------
@@ -96,20 +99,16 @@ distance between the 5' end positions of the two reads. This distance is here re
 .. figure:: img/fragment_size_unligated.png
     :align: center
 
-In order to distinguish between read pairs arising from hybrid and un-ligated fragments, Diachromatic uses an upper
-threshold T\ :sub:`u` for the size of un-ligated.
+In order to distinguish between read pairs arising from hybrid and un-ligated fragments, Diachromatic uses the same
+upper threshold T\ :sub:`1` that is also used for the categorization of too large hybrid fragments.
+This is because we assume the size distributions of hybrid and un-ligated fragments result from the same shearing
+treatment.
+Inward pointing read pairs for which d\ :sub:`u` is smaller than the specified threshold T\ :sub:`1` are categorized as
+un-ligated pairs.
 
+Idea: We could plot the distribution of d\ :sub:`u` for all inward pointing cis pairs. The distribution of short sizes
+(up to 1000 bp) should reflect the unbiased size distribution.
 
-
-We assume the size distributions of hybrid and un-ligated fragments to be the same because they result from the same
-sonication treatment.
-
-We recommend to use an un-ligation threshold T\ :sub:`u` that corresponds to the **average size of fragments of the Hi-C library**.
-
-
-
-With Diachromatic, inward pointing read pairs for which the distance between the 5' ends *d*
-is less than the specified threshold *Tu* are categorized as un-ligated pairs
 
 Sizes of self-ligated fragments
 -------------------------------
@@ -118,37 +117,106 @@ Unlike reads arising from un-ligated fragments, reads arising from self-ligated 
 
 Furthermore, self-ligating fragments have a different size distribution than hybrid and un-ligated fragments.
 
-The relevant size is no longer the size of the sequenced fragments that results from sonication but the
+The relevant size is no longer the size of the sequenced fragments that results from shearing but the
 favourable size at which fragments tend to self-ligate.
 
 Very short fragments might not self-ligate because of steric hindrance, whereas the ends of very long fragments might
 be unlikely to become located in sufficient physical proximity in order to ligate.
 
-Within Diachromatic, the size of self-ligating fragments is calculated as the sum *ds=d+d'*,
-where *d* is the distance between the 5' end positions of the two reads, and *d'* is the sum of the two distances between
-the 5' ends of the mapped reads and the next occurrence of a cutting motif in 3' direction (see illustration
-below).
+Within Diachromatic, the size of self-ligating fragments is calculated as the sum d\ :sub:`s` = d\ :sub:`h` + d\ :sub:`u`,
+where d\ :sub:`u` is the distance between the 5' end positions of the two reads, and d\ :sub:`h` is the sum of the two
+distances between the 5' ends of the mapped reads and the next occurrence of a cutting motif in 3' direction.
 
 .. figure:: img/fragment_size_selfligated.png
     :align: center
 
-
-Within Diachromatic, outward pointing read pairs for which the calculated size of the self-ligating fragment *ds* is
-less than the specified threshold *Ts* are categorized as self-ligated pairs.
-
+Within Diachromatic, outward pointing read pairs for which the calculated size of the self-ligating fragment d\ :sub:`s` is
+smaller than the specified threshold T\ :sub:`2` are categorized as self-ligated pairs.
 
 
-.
+Categorization of read pairs
+----------------------------
 
+The illustration below shows the decision tree for the categorization of read pairs.
 
 .. figure:: img/fragment_categories.png
     :align: center
 
-.. _peak caller Q: http://charite.github.io/Q/
+The next four paragraphs explain the categorization along the bullets points 1 to 4 (blue):
+
+1. Read pairs that map to different chromosomes or point in the same direction cannot originate from un-ligated or
+self-ligated fragments.
+
+2. Read pairs that point inwards might originate from un-ligated fragments.
+In such cases, the distance between the 5' end positions of the mapped reads d\ :sub:`u` corresponds to the size of the
+ sequenced fragment.
+In order to assign read pairs to the un-ligated category, we use an upper size threshold T\ :sub:`1` that should reflect
+ the maximum credible size of sheared fragments.
+
+3. Read pairs that point outwards might originate from self-ligated fragments.
+In such cases, the size d\ :sub:`s` of the potentially underlying self-ligated fragment is calculated as described above,
+ and compared to an upper size threshold T\ :sub:`2` for self-ligated fragments.
+Outward pointing read pairs with d\ :sub:`s` smaller than T\ :sub:`2` are assigned to the self-ligated category.
+
+4. Read pairs arising from hybrid fragments (not un- or self-ligated) are further distinguished
+
+We discard read pairs with size d' outside the size range of sheared fragments.
+But note: Assuming complete digestion, i.e. the genome is cut at each occurrence of the cutting motif, d' corresponds to
+ the size of hybrid fragments.
+However, since this assumption is not valid, d' should often be samller than the actual size of the hybrid fragment.
+Therefore, some read pairs will be erroneously categorized as too small,
+and some reads will be erroneously categorized as valid, even though they are too large.
+
+The next four paragraphs explain the categorization alon the bullets points A to H (green):
+
+A. This leaf stands for read pairs that point towards the same direction.
+The two reads of a given pair may be on the same chormosome (cis) or on different chromosomes (trans).
+The calculated size d\ :sub:`h` of the underlying hybrid fragment is smaller or equal than the upper size threshold
+T\ :sub:`1` for sheared fragments.
+
+B. This leaf stands for read pairs that point towards the same direction.
+The two reads of a given pair may be on the same chormosome (cis) or on different chromosomes (trans).
+The calculated size d\ :sub:`h` of the underlying hybrid fragment is greater than the upper size threshold T\ :sub:`1`
+for sheared fragments.
+
+C. This leaf stands for read pairs that map to the same chromosome (cis) and point inwards.
+The corresponding classical insert size d\ :sub:`u` is smaller than than the upper size threshold T\ :sub:`1` for
+sheared fragments.
+
+D. This leaf stands for read pairs that map to the same chromosome (cis) and point inwards.
+The corresponding classical insert size d\ :sub:`u` is greater or equal than than the upper size threshold T\ :sub:`1`
+for sheared fragments.
+The calculated size d\ :sub:`h` of the underlying hybrid fragment is smaller or equal than the upper size threshold
+T\ :sub:`1` for sheared fragments.
+
+E. This leaf stands for read pairs that map to the same chromosome (cis) and point inwards.
+The corresponding classical insert size d\ :sub:`u` is greater or equal than than the upper size threshold T\ :sub:`1`
+for sheared fragments.
+The calculated size d\ :sub:`h` of the underlying hybrid fragment is greater than the upper size threshold T\ :sub:`1`
+for sheared fragments.
+
+F. This leaf stands for read pairs that map to the same chromosome (cis) and point outwards.
+The calculated size of the underlying and potentially self-ligated fragment d\ :sub:`s` is smaller or equal than a size
+threshold T\ :sub:`2` for self-ligating fragments.
+
+G. This leaf stands for read pairs that map to the same chromosome (cis) and point outwards.
+The calculated size of the underlying and potentially self-ligated fragment d\ :sub:`s` is greater than a size
+threshold T\ :sub:`2` for self-ligating fragments.
+The calculated size d\ :sub:`h` of the underlying hybrid fragment is smaller or equal than the upper size threshold
+T\ :sub:`1` for sheared fragments.
+
+H. This leaf stands for read pairs that map to the same chromosome (cis) and point outwards.
+The calculated size of the underlying and potentially self-ligated fragment d\ :sub:`s` is greater than a size
+threshold T\ :sub:`2` for self-ligating fragments.
+The calculated size d\ :sub:`h` of the underlying hybrid fragment is greater than the upper size threshold
+T\ :sub:`1` for sheared fragments.
 
 
 Quality metrics
 ~~~~~~~~~~~~~~~
+
+Cross-ligation coefficient (CLC)
+--------------------------------
 
 Valid read pairs arising from genuine chromatin-chromatin interactions cannot be distinguished from those arising from
 **cross-ligation** events.
@@ -157,13 +225,17 @@ Based on the assumption that cross-ligation between DNA fragments of different c
 as compared to cross-ligation between DNA fragments of the same chromosome (cis), the ratio of the numbers of cis
 and trans read pairs is taken as an indicator of poor Hi-C libraries that contain lots of false positive interaction
 pairs arising from spurious cross-ligation events (Wingett 2015, Nagano 2015).
-However, it has been pointed out that this quality measure depends also on other factors such as the genome size and
-number of chromosomes of the analyzed species (Wingett 2015). Diachromatic provides an alternative and more robust quality metric that
+
+Fraction of singleton interactions (FSI)
+----------------------------------------
+
+It has been pointed out that the Cis/Trans ratio quality measure depends also on other factors such as the genome size and
+number of chromosomes of the analyzed species (Wingett 2015). Diachromatic provides an alternative and possibly more robust quality metric that
 can be used to access the extent of cross-ligation. Amongst the trans read pairs, we generally observe a large proportion
 of restriction fragments that are connected by single read pairs only. The number of all possible different cross-ligation
 events (including cis and trans) can roughly be estimated as the square number of all restriction fragments across the
 entire genome. Given this huge number, we reasoned that it is very unlikely that the same cross-ligation event occurs
-twice. Therefore, we defined a **cross-ligation coefficient (CLC)** as the ratio of singleton read pairs and all read pairs.
+twice. Therefore, we defined the fraction of singleton interactions as the ratio of singleton read pairs and all read pairs.
 
 
 Running Diachromatic's align subcommand
