@@ -158,6 +158,8 @@ public class Aligner {
      */
     private int[] fragSizesAllPairs =  new int[FRAG_SIZE_LIMIT+1];
     private int[] fragSizesHybridActivePairs =  new int[FRAG_SIZE_LIMIT+1];
+    private int[] fragSizesUnLigatedPairs =  new int[FRAG_SIZE_LIMIT+1];
+    private int[] fragSizesSelfLigatedPairs =  new int[FRAG_SIZE_LIMIT+1];
 
     /**
      * HTS-JDK SAM reader objects for R1 and R2.
@@ -212,6 +214,9 @@ public class Aligner {
         this.useStringentUniqueSettings = useStringentUniqueSettings;
         Arrays.fill(fragSizesAllPairs, 0);
         Arrays.fill(fragSizesHybridActivePairs, 0);
+        Arrays.fill(fragSizesUnLigatedPairs, 0);
+        Arrays.fill(fragSizesSelfLigatedPairs, 0);
+
         VERSION = Commandline.getVersion();
         createOutputNames(outputPathPrefix);
     }
@@ -338,13 +343,29 @@ public class Aligner {
             }
 
             // count sizes of all fragments
-            Integer incrementFragSize = pair.getCalculatedInsertSize();
+            Integer incrementFragSize = pair.getHybridFragmentSize();
             if(FRAG_SIZE_LIMIT<incrementFragSize) { incrementFragSize = FRAG_SIZE_LIMIT; }
-            fragSizesAllPairs[incrementFragSize]++;
+            if(pair.getCategoryTag().equals("VP")||pair.getCategoryTag().equals("TS")||pair.getCategoryTag().equals("TL")) {
+                fragSizesAllPairs[incrementFragSize]++;
+            }
 
             // count sizes of all hybrid active fragments
             if((pair.forwardDigestIsActive() & !pair.reverseDigestIsActive()) || (!pair.forwardDigestIsActive() & pair.reverseDigestIsActive())) {
-                fragSizesHybridActivePairs[incrementFragSize]++;
+                if(pair.getCategoryTag().equals("VP")||pair.getCategoryTag().equals("TS")||pair.getCategoryTag().equals("TL")) {
+                    fragSizesHybridActivePairs[incrementFragSize]++;
+                }
+            }
+
+            // count sizes of un-ligated fragments
+            if(pair.getCategoryTag().equals("UL")) {
+                fragSizesUnLigatedPairs[incrementFragSize]++;
+            }
+
+            if(pair.getCategoryTag().equals("SL")) {
+                incrementFragSize = pair.getSelfLigationFragmentSize();
+                if(FRAG_SIZE_LIMIT<incrementFragSize) { incrementFragSize = FRAG_SIZE_LIMIT; }
+                fragSizesSelfLigatedPairs[incrementFragSize]++;
+                logger.trace(incrementFragSize);
             }
 
             // write pair to BAM file
@@ -364,7 +385,7 @@ public class Aligner {
             rejectedReadsWriter.close();
         }
 
-        printFragmentLengthDistributionRscript(fragSizesAllPairs, fragSizesHybridActivePairs);
+        printFragmentLengthDistributionRscript(fragSizesAllPairs, fragSizesHybridActivePairs, fragSizesUnLigatedPairs, fragSizesSelfLigatedPairs);
         //dedup_map.printDeDupStatistics(n_paired_duplicated);
     }
 
@@ -377,7 +398,7 @@ public class Aligner {
      * @param fragSizesHybridActivePairs same as fragSizesAllPairs but only for read pairs for which at least one read maps to an selected/active fragment
      * @throws FileNotFoundException
      */
-    private void printFragmentLengthDistributionRscript(int[] fragSizesAllPairs, int[] fragSizesHybridActivePairs ) throws FileNotFoundException {
+    private void printFragmentLengthDistributionRscript(int[] fragSizesAllPairs, int[] fragSizesHybridActivePairs, int[] fragSizesUnLigatedPairs, int[] fragSizesSelfLigatedPairs) throws FileNotFoundException {
 
         PrintStream printStream = new PrintStream(new FileOutputStream(outputFragSizesCountsRscript));
 
@@ -399,10 +420,24 @@ public class Aligner {
         }
         printStream.print(fragSizesHybridActivePairs[FRAG_SIZE_LIMIT-1] + ")\n");
 
+        printStream.print("fragSizesUnLigatedPairs<-c(");
+        for(int i=0; i<FRAG_SIZE_LIMIT-1; i++) {
+            printStream.print(fragSizesUnLigatedPairs[i] + ",");
+        }
+        printStream.print(fragSizesUnLigatedPairs[FRAG_SIZE_LIMIT-1] + ")\n");
+
+        printStream.print("fragSizesSelfLigatedPairs<-c(");
+        for(int i=0; i<FRAG_SIZE_LIMIT-1; i++) {
+            printStream.print(fragSizesSelfLigatedPairs[i] + ",");
+        }
+        printStream.print(fragSizesSelfLigatedPairs[FRAG_SIZE_LIMIT-1] + ")\n");
+
         printStream.print("\n");
         printStream.print("cairo_pdf(\"");
         printStream.print(filenamePrefix);
-        printStream.print(".pdf\")\n");
+        printStream.print(".pdf\", height=7, width=14)\n");
+
+        printStream.print("par(mfrow=c(1,2))\n");
 
         printStream.print("MAIN=\"");
         printStream.print(filenamePrefix);
@@ -413,6 +448,10 @@ public class Aligner {
         printStream.print("YLIM<-max(max(fragSizesAllPairs[10:1000]),max(fragSizesHybridActivePairs[10:1000]))\n");
 
         printStream.print("plot(length, fragSizesAllPairs, xlim=XLIM, type=\"l\", ylim=c(0,YLIM), ylab=NA, xlab=NA, axes=FALSE)\n");
+
+        printStream.print("par(new=TRUE)\n");
+
+        printStream.print("plot(length, fragSizesUnLigatedPairs, xlim=XLIM, type=\"l\", ylim=c(0,YLIM), ylab=NA, xlab=NA, axes=FALSE, col=\"blue\")\n");
 
         printStream.print("par(new=TRUE)\n");
 
@@ -429,7 +468,9 @@ public class Aligner {
 
         printStream.print("LEGEND_ALL<-paste(\"All fragments (\",PREDOM_FRAG_SIZE,\")\",sep=\"\")\n");
         printStream.print("LEGEND_HYBRID_ACTIVE<-paste(\"Hybrid active fragments (\",PREDOM_ACTIVE_FRAG_SIZE,\")\",sep=\"\")\n");
-        printStream.print("legend(\"topright\",legend=c(LEGEND_ALL, LEGEND_HYBRID_ACTIVE), col=c(\"black\", \"red\"), lty=1, bg = \"white\")\n");
+        printStream.print("legend(\"topright\",legend=c(LEGEND_ALL, LEGEND_HYBRID_ACTIVE), col=c(\"black\", \"red\"), lty=1, bg = \"white\")\n\n");
+
+        printStream.print("hist(fragSizesSelfLigatedPairs[which(fragSizesSelfLigatedPairs>0)]*which(fragSizesSelfLigatedPairs>0),100, main=\"Distribution of self-ligated fragment sizes\",xlab=\"Size (nt)\")\n");
 
         printStream.print("dev.off()\n");
     }

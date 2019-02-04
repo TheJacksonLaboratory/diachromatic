@@ -6,13 +6,13 @@ Independent mapping of forward and reverse paired-end reads using bowtie2
 
 The two reads of a valid Hi-C read pair come from two different interacting genomic regions that can be
 separated by a large number of nucleotides within the same chromosome (**cis interactions**) or even be located on
-different chromosomes (**trans interactions**). For this reason, the distance between the two 5' ends of the reads can
-no longer be interpreted as the *insert size*, and the truncated forward (R1) and reverse (R2) reads have to be mapped
-independently.
+different chromosomes (**trans interactions**). For this reason, the distance between the two 5' end positions of the
+mapped reads can no longer be interpreted as the classical *insert size*, and the truncated forward (R1) and reverse
+(R2) reads have to be mapped independently.
 
-Diachromatic executes ``bowtie2`` separately for R1 and R2 with the ``--very-sensitive`` option. Individual reads mapping
-to multiple locations are typically discarded. Diachromatic provides two levels of stringency
-for the definition of multi-mapped reads:
+Diachromatic executes ``bowtie2`` separately for R1 and R2 with the ``--very-sensitive`` option.
+Read pairs for which at least one read cannot be mapped uniquely are discarded.
+Diachromatic provides two levels of stringency for the definition of multi-mapped reads:
     1. **Very stringent mapping:** There is no second best alignment for the given read. In this case the line in the SAM record produced by ``bowtie2`` contains no ``XS`` tag. Use Diachromatic's ``--bowtie-stringent-unique`` or ``-bsu`` option in order to use this level of stringency.
     2. **Less stringent mapping:** There can be a second best alignment, but the score of the alignment (MAPQ) needs to e greater or equal than 30 and the difference of the mapping scores between the best and second best alignment must be greater or equal than 10 (c.f. `HiCUP <https://www.bioinformatics.babraham.ac.uk/projects/hicup/>`_). Diachromatic uses this option by default.
 
@@ -22,15 +22,19 @@ Pairing of properly mapped read pairs
 
 The independently mapped reads are written to two temporary SAM files, whereby the order of read records in the
 truncated FASTQ files is retained by using bowtie2's option ``--reorder``. In the next step, Diachromatic iterates
-simultaneously over the two SAM files. Pairs for which at least one read could not be mapped uniquely are discarded,
-and all other pairs are futher subdivided into valid and artefactual read pairs.
+simultaneously over the two SAM files.
+Read pairs for which both reads can be mapped uniquely are paired, i.e. the two SAM records for single-end reads are
+combined into one paired-end record with appropriate SAM flags reflecting the relative orientation of the reads.
+
 
 Categorization of fragments
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Paired read pairs are futher subdivided into valid and artefactual read pairs.
+In order to understand how Diachromatic determines whether a read pair is valid or artefactual, it is important to think
+through the formation process on the fragment level.
 Hi-C fragments arise from cross-linked chromatin that is processed in three successive experimental steps:
-*restriction digest*, *re-ligation* and *shearing* (see illustration below). It is important to understand these steps
-in order to understand how Diachromatic determines whether a read pair is valid or artefactual.
+*restriction digest*, *re-ligation* and *shearing* (see illustration below).
 
 .. figure:: img/fragment_formation.png
     :align: center
@@ -38,21 +42,21 @@ in order to understand how Diachromatic determines whether a read pair is valid 
 For Hi-C, cross-linked chromatin is digested using one or more restriction enzymes,
 which results in restriction fragments whose ends re-ligate thereby forming ligation junctions.
 The shearing step introduces DNA breakpoints representing a second type of fragment ends in addition those introduced
-by digestion.
-Fragment ends corresponding to restriction enzyme cutting sites are generally referred to as *dangling ends* because
-they failed to re-ligate.
-In total, four categories of fragments are distinguished within Diachromatic: **hybrid fragments** that arise from
-re-ligation between ends of different restriction fragments and two artifact types that correspond to single
+by digestion. Fragment ends corresponding to restriction enzyme cutting sites are generally referred to as
+*dangling ends* because they failed to re-ligate.
+
+Essentially, three fragment categories are distinguished within Diachromatic: **hybrid fragments** that arise from
+re-ligation between ends of different restriction fragments and two artifact categories that correspond to single
 restriction fragments whose ends failed to re-ligate with other fragments, either because both ends remained **un-ligated**
-or **self-ligated** with each other.
-Hybrid fragments may correspond to valid interactions but also to cross-ligation
-artifacts depending on whether the re-ligation occurred within the same protein-DNA complex or between different complexes.
+or **self-ligated** with each other. Hybrid fragments may correspond to valid interactions but also to cross-ligation
+artifacts depending on whether the re-ligation occurred within the same protein-DNA complex or between different complexes, respectively.
 Paired-end sequencing of hybrid fragments may results in all possible relative orientations, i.e. reads of given pairs
-may pointing *inwards*, *outwards* or in the *same direction*.
+may point *inwards*, *outwards* or in the *same direction*.
 In contrast to that, sequencing of un-ligated fragments results in inward pointing pairs only, and sequencing of
-self-ligated fragments results in outward pointing pairs only. Due to the fact that the read pair orientations overlap
+self-ligated fragments results in outward pointing pairs only.
+Due to the fact that the read pair orientations overlap
 for the different categories, the identification of read pairs arising from un-ligated or self-ligated fragments
-additionally requires the definition of size thresholds.
+additionally requires the definition of size thresholds that will be introduced below.
 
 
 Sizes of hybrid fragments
@@ -67,26 +71,28 @@ junction (`Wingett 2015 <https://www.ncbi.nlm.nih.gov/pubmed/26835000/>`_).
 .. figure:: img/fragment_size_hybrid.png
     :align: center
 
-We assume that size distribution of hybrid fragments results from the parameters used for sonication
-and thus corresponds to overall fragments size distribution in the sequencing library.
-Diachromatic uses an upper threshold T\ :sub:`1` for valid sizes of hybrid fragments that need
-to be specified by the user.
-Read pairs arising from hybrid fragments with calculated insert size d\ :sub:`h` greater than T\ :sub:`u` are
-categorized as wrong size artifacts.
-We do not know what causes this kind of artifacts.
-
 A problem with the calculation of hybrid fragment sizes is that in fact the ligation junction cannot be unambiguously
 determined, because the digestion of genome is not necessarily complete, i.e. there may be restriction fragments
 containing uncut restriction sites (in the illustration of different types fragments and read pairs marked with asterisk).
 In such cases, the size of hybrid fragments is underestimated, because, for lack of further information, simply the
 first occurrence of a cutting motif is interpreted as the one that corresponds to the ligation junction.
-Therefore, we refrained from using the distribution of calculated hybrid fragment sizes in order to define size
-thresholds.
+
+We assume that the size distribution of hybrid fragments results from the parameters used for shearing
+and thus corresponds to overall fragment size distribution in the sequencing library.
+Diachromatic uses an upper threshold T\ :sub:`1` for valid sizes of hybrid fragments that needs to be specified by the user.
+Read pairs arising from hybrid fragments with calculated insert size d\ :sub:`h` greater than T\ :sub:`1` are
+categorized as too large hybrid fragment artifacts.
+We have no idea what could cause this kind of artifact.
+
+Because of the problem with underestimated fragment sizes due to incomplete digestion, we refrained from using the
+distribution of d\ :sub:`h` in order to define T\ :sub:`1`.
 Instead, we recommend to make an educated guess based on the parameters used for shearing.
 Alternatively, external tools for ChIP-seq fragment size estimation can be used, for instance, the Hamming distance
 method of the `peak caller Q`_.
 We believe that those methods are also suitable for Hi-C, because at restriction sites, the reads distribute in a
 strand specific fashion that is similar to that observed for ChIP-seq reads.
+
+
 
 .. _peak caller Q: http://charite.github.io/Q/
 

@@ -353,19 +353,19 @@ public class ReadPair {
     }
 
     /**
-     * Check if insert size is too small.
+     * Check if size of hybrid fragment is too small.
      */
-    private boolean hasTooSmallInsertSize() {
-        int insertSize = getCalculatedInsertSize();
-        return insertSize < LOWER_SIZE_THRESHOLD;
+    private boolean hasTooSmallHybridFragmentSize() {
+        int hybridSize = getHybridFragmentSize();
+        return hybridSize < LOWER_SIZE_THRESHOLD;
     }
 
     /**
-     * Check if insert size is too big.
+     * Check if size of hybrid fragment is too big.
      */
-    private boolean hasTooBigInsertSize() {
-        int insertSize = getCalculatedInsertSize();
-        return UPPER_SIZE_THRESHOLD < insertSize;
+    private boolean hasTooBigHybridFragmentSize() {
+        int hybridSize = getHybridFragmentSize();
+        return UPPER_SIZE_THRESHOLD < hybridSize;
     }
 
     /**
@@ -383,13 +383,14 @@ public class ReadPair {
      *
      * @return The insert size for chimeric hybrid fragments and also for un-ligated read pairs.
      */
-    public Integer getCalculatedInsertSize() {
+    public Integer getHybridFragmentSize() {
 
          SAMRecord R1 = forward();
+
          SAMRecord R2 = reverse();
 
          /*
-         For un-ligated read pairs the size corresponds to the distance between the 5' end postions of the mapped reads.
+         For un-ligated read pairs the size corresponds to the distance between the 5' end position of the mapped reads.
            */
          if(this.getCategoryTag().equals("UL")) {
              return this.getDistanceBetweenFivePrimeEnds();
@@ -410,6 +411,24 @@ public class ReadPair {
              d2 = getFivePrimeEndPosOfRead(R2) - digestPair.reverse().getDigestStartPosition() + 1;
          }
          return d1 + d2;
+     }
+
+
+    /**
+     * This function returns the size of a potentially underlying self-ligated fragment. This size is the sum of the
+     * calculated hybrid size plus the distance between the 5' end positions of the mapped reads.
+     *
+     * The self-ligation size is only defined for read pairs mapping to the same chromosome and pointing outwards.
+     *
+     * @return
+     */
+    public int getSelfLigationFragmentSize() {
+        if (this.isTrans() || !this.isOutwardFacing()) {
+            logger.error("Size of self ligated fragment is undefined for this read pair.");
+            return -1;
+        } else {
+            return this.getHybridFragmentSize() + this.getDistanceBetweenFivePrimeEnds();
+        }
      }
 
 
@@ -553,9 +572,9 @@ public class ReadPair {
                 if(this.getDistanceBetweenFivePrimeEnds() < this.UPPER_SIZE_THRESHOLD) {
                     setCategoryTag(ReadPairCategory.SELF_LIGATED.getTag());
                 } else {
-                    if(this.hasTooSmallInsertSize()) {
+                    if(this.hasTooSmallHybridFragmentSize()) {
                         setCategoryTag(ReadPairCategory.VALID_TOO_SHORT.getTag());
-                    } else if(this.hasTooBigInsertSize()){
+                    } else if(this.hasTooBigHybridFragmentSize()){
                         setCategoryTag(ReadPairCategory.VALID_TOO_LONG.getTag());
                     } else {
                         setCategoryTag(ReadPairCategory.VALID_PAIR.getTag()); // only if hybrid fragment has the right size it is categorized as valid
@@ -566,9 +585,9 @@ public class ReadPair {
                 if(this.getDistanceBetweenFivePrimeEnds() < this.UPPER_SIZE_THRESHOLD) {
                     setCategoryTag(ReadPairCategory.UN_LIGATED.getTag());
                 } else {
-                    if(this.hasTooSmallInsertSize()) {
+                    if(this.hasTooSmallHybridFragmentSize()) {
                         setCategoryTag(ReadPairCategory.VALID_TOO_SHORT.getTag());
-                    } else if(this.hasTooBigInsertSize()){
+                    } else if(this.hasTooBigHybridFragmentSize()){
                         setCategoryTag(ReadPairCategory.VALID_TOO_LONG.getTag());
                     } else {
                         setCategoryTag(ReadPairCategory.VALID_PAIR.getTag()); // only if hybrid fragment has the right size it is categorized as valid
@@ -577,9 +596,9 @@ public class ReadPair {
             }
         } else {
             // trans pairs and read pairs that are pointing in the same direction cannot arise from self- or un-ligated fragments
-            if(this.hasTooSmallInsertSize()) {
+            if(this.hasTooSmallHybridFragmentSize()) {
                 setCategoryTag(ReadPairCategory.VALID_TOO_SHORT.getTag());
-            } else if(this.hasTooBigInsertSize()){
+            } else if(this.hasTooBigHybridFragmentSize()){
                 setCategoryTag(ReadPairCategory.VALID_TOO_LONG.getTag());
             } else {
                 setCategoryTag(ReadPairCategory.VALID_PAIR.getTag()); // only if hybrid fragment has the right size it is categorized as valid
