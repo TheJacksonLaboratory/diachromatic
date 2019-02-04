@@ -15,11 +15,7 @@ GOPHER digest file
 
 Due to the fact that the counts are determined on the restriction fragment level, the digest file `initially produced
 using GOPHER`_ needs to be passed to ``Diachromatic count``. If the captured viewpoints were designed with GOPHER,
-this file also includes information about active and inactive restriction fragments. If this is not the case,
-you can pass an additional BED file containing the coordinates of active digests. Note that the coordinates must exactly
-match the coordinates in the digest file. The coordinates in GOPHER's digest file are 1-based. Therefore, the BED file
-for active fragments does strictly speaking not comply with the BED format that has 0-based start coordinates and
-1-based end coordinates.
+this file also includes information about active and inactive restriction fragments.
 
 .. _initially produced using GOPHER: digest.html
 
@@ -66,8 +62,6 @@ Use the following command to run the counting step. ::
 +--------------+----------------------+--------------------------------------------------------+----------+------------------------------------------------------------------+---------+
 | -d           | --digest-file        | /data/GOPHER/hg38_DpnII_DigestedGenome.txt             | yes      | Path to the digest file produced with GOPHER.                    |    --   |
 +--------------+----------------------+--------------------------------------------------------+----------+------------------------------------------------------------------+---------+
-| -a           | --active-digest-file | /data/GOPHER/hg38_DpnII_active_digests_cd4v2_genes.bed | no       | Path to a BED file containing the coordinates of active digests. |    --   |
-+--------------+----------------------+--------------------------------------------------------+----------+------------------------------------------------------------------+---------+
 | -od          | --out-directory      | cd4v2                                                  | no       | Directory containing the output of the align subcommand.         | results |
 +--------------+----------------------+--------------------------------------------------------+----------+------------------------------------------------------------------+---------+
 | -op          | --out-prefix         | stim_rep1                                              | no       | Prefix for all generated files in output directory.              | prefix  |
@@ -94,8 +88,8 @@ Consider the following example:
 
 The first three columns contain the coordinates of a restriction fragment on chromosome 7. The ``A`` in column 4
 indicates that this fragment is defined to be active, i.e. it is part of a viewpoint that was enriched using capture technology.
-The information about active states of fragments originates either from the GOPHER digest file passed to Diachromatic
-using the ``-d`` option or from the additional input file passed using the ``-a`` option.
+The information about active states of fragments originates from the GOPHER digest file passed to Diachromatic
+using the ``-d`` option.
 
 Read counts at interacting fragments
 ------------------------------------

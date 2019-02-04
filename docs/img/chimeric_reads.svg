@@ -15,7 +15,10 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="chimeric_reads.svg">
+   sodipodi:docname="chimeric_reads.svg"
+   inkscape:export-filename="/home/peter/IdeaProjects/diachromatic/docs/img/chimeric_reads.png"
+   inkscape:export-xdpi="400"
+   inkscape:export-ydpi="400">
   <defs
      id="defs4">
     <marker
@@ -276,6 +279,21 @@
          style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
          transform="scale(0.8,0.8)" />
     </marker>
+    <marker
+       inkscape:stockid="TriangleOutL"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="TriangleOutL-2-3"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4465-2-6"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
+         transform="scale(0.8,0.8)" />
+    </marker>
   </defs>
   <sodipodi:namedview
      id="base"
@@ -284,9 +302,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.086401"
-     inkscape:cx="285.08512"
-     inkscape:cy="354.44655"
+     inkscape:zoom="1.4157285"
+     inkscape:cx="191.59267"
+     inkscape:cy="228.55364"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -441,14 +459,14 @@
        inkscape:connector-curvature="0" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:15px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;opacity:0.97000002;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       x="115.26924"
+       style="font-style:normal;font-weight:normal;font-size:12.5px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;opacity:0.97000002;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="125.26924"
        y="892.23419"
        id="text5724"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan5726"
-         x="115.26924"
+         x="125.26924"
          y="892.23419">Ligation junction</tspan></text>
     <path
        style="opacity:0.97000002;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleOutL)"
@@ -457,19 +475,19 @@
        inkscape:connector-curvature="0" />
     <path
        style="opacity:0.97000002;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleOutL-2)"
-       d="m 177.07898,1034.8123 c 0,-30 0,-30 0,-30"
+       d="m 161.07898,1034.8123 c 0,-30 0,-30 0,-30"
        id="path5962-8"
        inkscape:connector-curvature="0" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:15px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;opacity:0.97000002;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       x="124.78712"
+       style="font-style:normal;font-weight:normal;font-size:12.5px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;opacity:0.97000002;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="116.78712"
        y="1050.1498"
        id="text5724-9"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan5726-7"
-         x="124.78712"
+         x="116.78712"
          y="1050.1498">Chimeric read</tspan></text>
     <path
        style="opacity:0.97000002;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleOutL-3)"
@@ -478,14 +496,14 @@
        inkscape:connector-curvature="0" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:15px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;opacity:0.97000002;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       x="187.66924"
+       style="font-style:normal;font-weight:normal;font-size:12.5px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;opacity:0.97000002;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="199.66924"
        y="851.23419"
        id="text5724-3"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan5726-1"
-         x="187.66924"
+         x="199.66924"
          y="851.23419">Chimeric fragment</tspan></text>
     <text
        xml:space="preserve"
@@ -500,14 +518,14 @@
          y="652.18005">...</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:15px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;opacity:0.97000002;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       x="244.27283"
+       style="font-style:normal;font-weight:normal;font-size:12.5px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;opacity:0.97000002;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="251.67319"
        y="451.07452"
        id="text9105"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan9107"
-         x="244.27283"
+         x="251.67319"
          y="451.07452">Interaction</tspan></text>
     <path
        style="opacity:0.97000002;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleOutL-9)"
@@ -521,14 +539,14 @@
        inkscape:connector-curvature="0" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:15px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;opacity:0.97000002;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       x="386.30017"
+       style="font-style:normal;font-weight:normal;font-size:12.5px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;opacity:0.97000002;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="388.30017"
        y="957.00903"
        id="text5724-32"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan5726-0"
-         x="386.30017"
+         x="388.30017"
          y="957.00903">Breakpoint</tspan></text>
     <path
        style="opacity:0.97000002;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleOutL-2-5)"
@@ -537,14 +555,14 @@
        inkscape:connector-curvature="0" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:15px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;opacity:0.97000002;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       x="394.78714"
+       style="font-style:normal;font-weight:normal;font-size:12.5px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;opacity:0.97000002;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="408.08719"
        y="716.14978"
        id="text5724-9-6"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan5726-7-5"
-         x="394.78714"
+         x="408.08719"
          y="716.14978">Restriction fragment</tspan></text>
     <path
        style="opacity:0.97000002;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleOutL-2-5-6)"
@@ -553,18 +571,18 @@
        inkscape:connector-curvature="0" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:15px;line-height:125%;font-family:sans-serif;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;opacity:0.97000002;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       x="176.99197"
+       style="font-style:normal;font-weight:normal;font-size:12.5px;line-height:125%;font-family:sans-serif;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;opacity:0.97000002;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="176.592"
        y="724.14978"
        id="text5724-9-6-7"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan5726-7-5-4"
-         x="176.99197"
+         x="176.592"
          y="724.14978">Restriction enzyme</tspan><tspan
          sodipodi:role="line"
-         x="176.99197"
-         y="742.89978"
+         x="176.592"
+         y="739.77478"
          id="tspan10626">cutting site</tspan></text>
     <g
        id="g10632"
@@ -583,5 +601,28 @@
          id="rect10630"
          style="fill:#4d4d4d;fill-opacity:1;stroke:none;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
     </g>
+    <ellipse
+       style="opacity:0.97000002;fill:none;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="path4320"
+       cx="202.25304"
+       cy="983.86041"
+       rx="15.849397"
+       ry="15.849537" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:15px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif Bold';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="247.43655"
+       y="1032.8463"
+       id="text4322"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4324"
+         x="247.43655"
+         y="1032.8463">truncated</tspan></text>
+    <path
+       style="opacity:0.97000002;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleOutL-2-3)"
+       d="m 243.99181,1023.5324 c -22.5796,-19.7525 -22.5796,-19.7525 -22.5796,-19.7525"
+       id="path5962-8-75"
+       inkscape:connector-curvature="0" />
   </g>
 </svg>

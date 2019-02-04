@@ -15,12 +15,13 @@ of either one or two restriction enzyme cutting motifs.
 The sonication step of the Hi-C protocol may introduce breakpoints near restriction enzyme cutting
 sites. If the breakpoint occurs at a distance smaller than one read length, this will result in a chimeric read that
 cannot be mapped to the reference sequence.
+The truncation step of the pipeline attempts to address this situation by deleting the sequence that is downstream of
+the enzyme recognition site.
 
 .. figure:: img/chimeric_reads.png
     :align: center
 
-The truncation step of the pipeline attempts to address this situation by deleting the sequence that is downstream of
-the enzyme recognition site.
+
 
 Running Diachromatic's truncation subcommand
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

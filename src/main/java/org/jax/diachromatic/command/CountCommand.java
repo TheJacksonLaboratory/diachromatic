@@ -17,19 +17,14 @@ public class CountCommand extends Command {
     /** Path to the genome digest file produced by GOPHER. */
     private String digestFile = null;
 
-    /** Path to BED file containing the coordinates of active digests. */
-    @Deprecated
-    private String activeDigestsFile = null;
-
     private String outputPathPrefix = null;
 
     private String filenamePrefix;
 
 
-    public CountCommand(String validPairsBamFile, String digestFile, String activeDigestsFile, String outputPathPrefix, String filenamePrefix) {
+    public CountCommand(String validPairsBamFile, String digestFile, String outputPathPrefix, String filenamePrefix) {
         this.validPairsBamFile = validPairsBamFile;
         this.digestFile = digestFile;
-        this.activeDigestsFile = activeDigestsFile;
         this.outputPathPrefix = outputPathPrefix;
         this.filenamePrefix = filenamePrefix;
     }
