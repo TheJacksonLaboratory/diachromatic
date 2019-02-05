@@ -156,8 +156,8 @@ public class Aligner {
     /**
      * Arrays that represent size distributions.
      */
-    private int[] fragSizesAllPairs =  new int[FRAG_SIZE_LIMIT+1];
-    private int[] fragSizesHybridActivePairs =  new int[FRAG_SIZE_LIMIT+1];
+    private int[] fragSizesHybridPairs =  new int[FRAG_SIZE_LIMIT+1];
+    private int[] fragSizesActiveHybridPairs =  new int[FRAG_SIZE_LIMIT+1];
     private int[] fragSizesUnLigatedPairs =  new int[FRAG_SIZE_LIMIT+1];
     private int[] fragSizesSelfLigatedPairs =  new int[FRAG_SIZE_LIMIT+1];
 
@@ -212,8 +212,8 @@ public class Aligner {
         this.upperFragSize = upperFragSize;
         this.filenamePrefix = filenamePrefix;
         this.useStringentUniqueSettings = useStringentUniqueSettings;
-        Arrays.fill(fragSizesAllPairs, 0);
-        Arrays.fill(fragSizesHybridActivePairs, 0);
+        Arrays.fill(fragSizesHybridPairs, 0);
+        Arrays.fill(fragSizesActiveHybridPairs, 0);
         Arrays.fill(fragSizesUnLigatedPairs, 0);
         Arrays.fill(fragSizesSelfLigatedPairs, 0);
 
@@ -346,13 +346,13 @@ public class Aligner {
             Integer incrementFragSize = pair.getHybridFragmentSize();
             if(FRAG_SIZE_LIMIT<incrementFragSize) { incrementFragSize = FRAG_SIZE_LIMIT; }
             if(pair.getCategoryTag().equals("VP")||pair.getCategoryTag().equals("TS")||pair.getCategoryTag().equals("TL")) {
-                fragSizesAllPairs[incrementFragSize]++;
+                fragSizesHybridPairs[incrementFragSize]++;
             }
 
             // count sizes of all hybrid active fragments
             if((pair.forwardDigestIsActive() & !pair.reverseDigestIsActive()) || (!pair.forwardDigestIsActive() & pair.reverseDigestIsActive())) {
                 if(pair.getCategoryTag().equals("VP")||pair.getCategoryTag().equals("TS")||pair.getCategoryTag().equals("TL")) {
-                    fragSizesHybridActivePairs[incrementFragSize]++;
+                    fragSizesActiveHybridPairs[incrementFragSize]++;
                 }
             }
 
@@ -385,7 +385,7 @@ public class Aligner {
             rejectedReadsWriter.close();
         }
 
-        printFragmentLengthDistributionRscript(fragSizesAllPairs, fragSizesHybridActivePairs, fragSizesUnLigatedPairs, fragSizesSelfLigatedPairs);
+        printFragmentLengthDistributionRscript(fragSizesHybridPairs, fragSizesActiveHybridPairs, fragSizesUnLigatedPairs, fragSizesSelfLigatedPairs);
         //dedup_map.printDeDupStatistics(n_paired_duplicated);
     }
 
@@ -394,8 +394,8 @@ public class Aligner {
      * The sizes for read pairs that belong to selected/active fragments are passed and plotted separately.
      * The purpose of this is to investigate the relationship of fragment size and enrichment.
      *
-     * @param fragSizesAllPairs integer array representing the distribution of sizes, e.g. fragSizesAllPairs[181] corrsponds to the number of fragments of size 180
-     * @param fragSizesHybridActivePairs same as fragSizesAllPairs but only for read pairs for which at least one read maps to an selected/active fragment
+     * @param fragSizesAllPairs integer array representing the distribution of sizes, e.g. fragSizesHybridPairs[181] corrsponds to the number of fragments of size 180
+     * @param fragSizesHybridActivePairs same as fragSizesHybridPairs but only for read pairs for which at least one read maps to an selected/active fragment
      * @throws FileNotFoundException
      */
     private void printFragmentLengthDistributionRscript(int[] fragSizesAllPairs, int[] fragSizesHybridActivePairs, int[] fragSizesUnLigatedPairs, int[] fragSizesSelfLigatedPairs) throws FileNotFoundException {
@@ -408,13 +408,13 @@ public class Aligner {
         }
         printStream.print(FRAG_SIZE_LIMIT-1 + ")\n");
 
-        printStream.print("fragSizesAllPairs<-c(");
+        printStream.print("fragSizesHybridPairs<-c(");
         for(int i=0; i<FRAG_SIZE_LIMIT-1; i++) {
             printStream.print(fragSizesAllPairs[i] + ",");
         }
         printStream.print(fragSizesAllPairs[FRAG_SIZE_LIMIT-1] + ")\n");
 
-        printStream.print("fragSizesHybridActivePairs<-c(");
+        printStream.print("fragSizesActiveHybridPairs<-c(");
         for(int i=0; i<FRAG_SIZE_LIMIT-1; i++) {
             printStream.print(fragSizesHybridActivePairs[i] + ",");
         }
@@ -435,9 +435,10 @@ public class Aligner {
         printStream.print("\n");
         printStream.print("cairo_pdf(\"");
         printStream.print(filenamePrefix);
-        printStream.print(".pdf\", height=7, width=14)\n");
+        printStream.print(".pdf\", height=4, width=11)\n");
 
-        printStream.print("par(mfrow=c(1,2))\n");
+        printStream.print("par(mfrow=c(1,3),oma = c(0, 0, 2, 0))\n");
+
 
         printStream.print("MAIN=\"");
         printStream.print(filenamePrefix);
@@ -445,9 +446,9 @@ public class Aligner {
 
         printStream.print("XLIM<-c(0,1000)\n");
 
-        printStream.print("YLIM<-max(max(fragSizesAllPairs[10:1000]),max(fragSizesHybridActivePairs[10:1000]))\n");
+        printStream.print("YLIM<-max(max(fragSizesHybridPairs[10:1000]),max(fragSizesActiveHybridPairs[10:1000]))\n"); // TODO: Find out why lengths 1 to 10 are omitted
 
-        printStream.print("plot(length, fragSizesAllPairs, xlim=XLIM, type=\"l\", ylim=c(0,YLIM), ylab=NA, xlab=NA, axes=FALSE)\n");
+        printStream.print("plot(length, fragSizesHybridPairs, xlim=XLIM, type=\"l\", ylim=c(0,YLIM), ylab=NA, xlab=NA, axes=FALSE)\n");
 
         printStream.print("par(new=TRUE)\n");
 
@@ -455,22 +456,32 @@ public class Aligner {
 
         printStream.print("par(new=TRUE)\n");
 
-        printStream.print("plot(length,fragSizesHybridActivePairs,main=MAIN, xlim=XLIM,type=\"l\", ylim=c(0,YLIM),col=\"red\",xlab=\"Size (nt)\",ylab=\"Fragment count\")\n");
+        printStream.print("plot(length,fragSizesActiveHybridPairs,main=\"Size distribution of hybrid and un-ligated fragments\", xlim=XLIM,type=\"l\", ylim=c(0,YLIM),col=\"red\",xlab=\"Size (nt)\",ylab=\"Fragment count\")\n");
 
-        printStream.print("PREDOM_FRAG_SIZE<-which(max(fragSizesAllPairs)==fragSizesAllPairs)\n");
-        printStream.print("abline(v=PREDOM_FRAG_SIZE)\n");
+        printStream.print("PREDOM_FRAG_SIZE<-which(max(fragSizesHybridPairs)==fragSizesHybridPairs)\n");
+        printStream.print("abline(v=PREDOM_FRAG_SIZE,col=\"black\")\n");
+
+        printStream.print("PREDOM_UNLIGATED_FRAG_SIZE<-which(max(fragSizesUnLigatedPairs)==fragSizesUnLigatedPairs)\n");
+        printStream.print("abline(v=PREDOM_UNLIGATED_FRAG_SIZE,col=\"blue\")\n");
 
         printStream.print("PREDOM_ACTIVE_FRAG_SIZE<-numeric()\n");
-        printStream.print("if(0<sum(fragSizesHybridActivePairs)) {\n");
-        printStream.print("PREDOM_ACTIVE_FRAG_SIZE<-which(max(fragSizesHybridActivePairs)==fragSizesHybridActivePairs)\n");
-        printStream.print("abline(v=PREDOM_ACTIVE_FRAG_SIZE)\n");
+        printStream.print("if(0<sum(fragSizesActiveHybridPairs)) {\n");
+        printStream.print("PREDOM_ACTIVE_FRAG_SIZE<-which(max(fragSizesActiveHybridPairs)==fragSizesActiveHybridPairs)\n");
+        printStream.print("abline(v=PREDOM_ACTIVE_FRAG_SIZE,col=\"red\")\n");
         printStream.print("} else {PREDOM_ACTIVE_FRAG_SIZE <-0}\n");
 
-        printStream.print("LEGEND_ALL<-paste(\"All fragments (\",PREDOM_FRAG_SIZE,\")\",sep=\"\")\n");
-        printStream.print("LEGEND_HYBRID_ACTIVE<-paste(\"Hybrid active fragments (\",PREDOM_ACTIVE_FRAG_SIZE,\")\",sep=\"\")\n");
-        printStream.print("legend(\"topright\",legend=c(LEGEND_ALL, LEGEND_HYBRID_ACTIVE), col=c(\"black\", \"red\"), lty=1, bg = \"white\")\n\n");
 
-        printStream.print("hist(fragSizesSelfLigatedPairs[which(fragSizesSelfLigatedPairs>0)]*which(fragSizesSelfLigatedPairs>0),100, main=\"Distribution of self-ligated fragment sizes\",xlab=\"Size (nt)\")\n");
+        printStream.print("LEGEND_HYBRID<-paste(\"Hybrid fragments (\",PREDOM_FRAG_SIZE,\")\",sep=\"\")\n");
+        printStream.print("LEGEND_UNLIGATED<-paste(\"Un-ligated fragments (\",PREDOM_UNLIGATED_FRAG_SIZE,\")\",sep=\"\")\n");
+        printStream.print("LEGEND_ACTIVE<-paste(\"Active fragments (\",PREDOM_ACTIVE_FRAG_SIZE,\")\",sep=\"\")\n");
+
+        printStream.print("legend(\"topright\",legend=c(LEGEND_HYBRID, LEGEND_UNLIGATED, LEGEND_ACTIVE), col=c(\"black\", \"blue\", \"red\"), lty=1, bg = \"white\")\n\n");
+
+        printStream.print("hist(rep(1:10000,fragSizesSelfLigatedPairs),200,main=\"Size distribution of self-ligated fragments (<3000)\",ylab=\"Fragment count\",xlab=\"Size (nt)\", xlim=c(0,3000))\n");
+        printStream.print("hist(rep(1:10000,fragSizesSelfLigatedPairs),200,main=\"Size distribution of self-ligated fragments (<10000)\",ylab=\"Fragment count\",xlab=\"Size (nt)\")\n");
+
+
+        printStream.print("mtext(MAIN, outer = TRUE, cex = 1.5)\n");
 
         printStream.print("dev.off()\n");
     }
