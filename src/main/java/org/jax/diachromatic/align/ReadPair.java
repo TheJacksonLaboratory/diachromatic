@@ -424,8 +424,9 @@ public class ReadPair {
      */
     public int getSelfLigationFragmentSize() {
         if (this.isTrans() || !this.isOutwardFacing()) {
-            logger.error("Size of self ligated fragment is undefined for this read pair.");
-            return -1;
+            //logger.error("Size of self ligated fragment is undefined for this read pair.");
+            //return -1;
+            return this.getHybridFragmentSize() + this.getDistanceBetweenFivePrimeEnds();
         } else {
             return this.getHybridFragmentSize() + this.getDistanceBetweenFivePrimeEnds();
         }
@@ -470,7 +471,7 @@ public class ReadPair {
      *
      * @return True, if the reads point to one another.
      */
-    private boolean isInwardFacing() {
+    public boolean isInwardFacing() {
         return getRelativeOrientationTag().equals("F1R2") || getRelativeOrientationTag().equals("F2R1");
     }
 
@@ -480,7 +481,7 @@ public class ReadPair {
      *
      * @return True, if the reads point to opposite directions.
      */
-    private boolean isOutwardFacing() {
+    public boolean isOutwardFacing() {
         return getRelativeOrientationTag().equals("R2F1") || getRelativeOrientationTag().equals("R1F2");
     }
 
@@ -610,7 +611,7 @@ public class ReadPair {
     /**
      * @return Linear genomic distance between 5' end positions of the reads.
      */
-    private int getDistanceBetweenFivePrimeEnds() {
+    public int getDistanceBetweenFivePrimeEnds() {
         if(isTrans()){
             logger.error("Distance between 5' ends on different chromosomes is not defined!");
             return -1;
