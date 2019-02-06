@@ -381,7 +381,7 @@ public class ReadPair {
      * size and will filter out reads whose size is substantially above what we expect given the reported experimental
      * size selection step. TODO: Revise!
      *
-     * @return The insert size for chimeric hybrid fragments and also for un-ligated read pairs.
+     * @return The insert size for chimeric hybrid fragments.
      */
     public Integer getHybridFragmentSize() {
 
@@ -389,14 +389,7 @@ public class ReadPair {
 
          SAMRecord R2 = reverse();
 
-         /*
-         For un-ligated read pairs the size corresponds to the distance between the 5' end position of the mapped reads.
-           */
-         if(this.getCategoryTag().equals("UL")) {
-             return this.getDistanceBetweenFivePrimeEnds();
-         }
-
-         int d1;
+       int d1;
          if(!R1.getReadNegativeStrandFlag()) {
              d1 = digestPair.forward().getDigestEndPosition() - getFivePrimeEndPosOfRead(R1) + 1;
          }
@@ -410,6 +403,8 @@ public class ReadPair {
          else {
              d2 = getFivePrimeEndPosOfRead(R2) - digestPair.reverse().getDigestStartPosition() + 1;
          }
+         //logger.trace("d1: " + d1);
+         //logger.trace("d2: " + d2);
          return d1 + d2;
      }
 
