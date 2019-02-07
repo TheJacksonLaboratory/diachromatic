@@ -297,7 +297,7 @@ public class Aligner {
                 n_paired++;
 
                 // de-duplication starts with paired pairs
-                if(dedup_map.hasSeen(pair)) {
+                if(dedup_map.hasSeen(pair) || pair.isDanglingEnd()) {
                     n_paired_duplicated++;
                     continue;
                 }
