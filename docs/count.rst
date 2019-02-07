@@ -111,6 +111,21 @@ whereby ``A`` means active and ``I`` inactive. The fifth column contains the rea
 interactions that end in the corresponding fragment. For better understanding, compare these counts to the two
 interactions given above.
 
+Quality metrics
+~~~~~~~~~~~~~~~
+
+Fraction of singleton interactions (FSI)
+----------------------------------------
+
+It has been pointed out that the Cis/Trans ratio quality measure depends also on other factors such as the genome size and
+number of chromosomes of the analyzed species (Wingett 2015). Diachromatic provides an alternative and possibly more robust quality metric that
+can be used to access the extent of cross-ligation. Amongst the trans read pairs, we generally observe a large proportion
+of restriction fragments that are connected by single read pairs only. The number of all possible different cross-ligation
+events (including cis and trans) can roughly be estimated as the square number of all restriction fragments across the
+entire genome. Given this huge number, we reasoned that it is very unlikely that the same cross-ligation event occurs
+twice. Therefore, we defined the fraction of singleton interactions as the ratio of singleton read pairs and all read pairs.
+
+
 Interaction count statistics
 ----------------------------
 

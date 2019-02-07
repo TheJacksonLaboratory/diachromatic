@@ -349,7 +349,9 @@ public class Aligner {
             // count sizes of all hybrid fragments including valid, too short and too long
             Integer incrementFragSize = pair.getHybridFragmentSize();
             if(FRAG_SIZE_LIMIT<incrementFragSize) { incrementFragSize = FRAG_SIZE_LIMIT; }
-            if(pair.getCategoryTag().equals("VP")||pair.getCategoryTag().equals("TS")||pair.getCategoryTag().equals("TL"))   {
+            //if(pair.getCategoryTag().equals("VP")||pair.getCategoryTag().equals("TS")||pair.getCategoryTag().equals("TL"))   {
+            if(pair.isTrans()){ // trans pairs can only be hybrids!
+
                 fragSizesHybridPairs[incrementFragSize]++;
                 /*
                 if(incrementFragSize>50 && incrementFragSize<80) {
@@ -506,7 +508,6 @@ public class Aligner {
         printStream.print("LEGEND_ACTIVE<-paste(\"Active fragments (\",PREDOM_ACTIVE_FRAG_SIZE,\")\",sep=\"\")\n");
 
         printStream.print("legend(\"topright\",legend=c(LEGEND_HYBRID, LEGEND_UNLIGATED, LEGEND_ACTIVE), col=c(\"black\", \"blue\", \"red\"), lty=1, bg = \"white\")\n\n");
-
 
         printStream.print("NUMBER_OF_BINS<-round(FRAG_SIZE_LIMIT/200)\n");
 

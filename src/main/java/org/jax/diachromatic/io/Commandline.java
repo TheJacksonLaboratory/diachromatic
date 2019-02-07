@@ -364,7 +364,6 @@ public class Commandline {
         "\t\t<bowtie-stringent-unique>: use stringent settings for definition of uniquely mapped reads\n" +
         "\t\t<forward.truncated.fq.gz>: path to the truncated forward gzipped FASTQ file\n" +
         "\t\t<reverse.truncated.fq.gz>: path to the truncated reverse gzipped FASTQ file\n" +
-        "\t\t<enzyme>: symbol of the restriction enzyme (e.g., DpnII or HindIII)\n" +
         "\t\t<lower-frag-size-limit>: lower limit for fragment size (Default: 150)\n" +
         "\t\t<upper-frag-size-limit>: upper limit for fragment size (Default: 800)\n" +
         "\t\t<digest-file>: path to the digest file produced with GOPHER\n" +

@@ -60,8 +60,11 @@ public class ReadPair {
      *
      * TODO: Discuss if there should be a separate threshold for self-ligation.
      */
-    private static int LOWER_SIZE_THRESHOLD = 150;
+    private static int LOWER_SIZE_THRESHOLD = 50;
     private static int UPPER_SIZE_THRESHOLD = 800;
+
+    private static int UPPER_SIZE_SELF_LIGATION_THRESHOLD = 2500;
+
 
     /**
      * Length threshold in nucleotides for the end of a read being near to a restriction fragment/ligation sequence.
@@ -558,9 +561,9 @@ public class ReadPair {
     private void categorizeReadPair() throws DiachromaticException {
 
         if(!this.isTrans() && (this.isInwardFacing()||this.isOutwardFacing())){
-            // inward and outward pointing read pairs may arise from  self- or un-ligated fragments
+            // inward and outward pointing read pairs may arise from self- or un-ligated fragments
             if(this.isOutwardFacing()) {
-                if(this.getDistanceBetweenFivePrimeEnds() < this.UPPER_SIZE_THRESHOLD) {
+                if(this.getSelfLigationFragmentSize() < this.UPPER_SIZE_SELF_LIGATION_THRESHOLD) {
                     setCategoryTag(ReadPairCategory.SELF_LIGATED.getTag());
                 } else {
                     if(this.hasTooSmallHybridFragmentSize()) {
