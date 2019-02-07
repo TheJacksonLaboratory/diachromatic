@@ -139,12 +139,21 @@ The next four paragraphs explain the categorization along the bullets points 1 t
 Quality metrics
 ~~~~~~~~~~~~~~~
 
+Percentage of paired read pairs
+-------------------------------
+
+Percentage of truncated input read pairs that were paired, i.e. both read could be uniquely mapped to the genome.
+Typical values range between 40% and 60%.
+
+
 Hi-C pair duplication rate (HPDR)
 ---------------------------------
 
 For Hi-C, the removal of duplicates must take into account the chimeric nature of the underlying fragments.
 The HPDR is defined as the percentage of paired read pairs that were removed because they were recognized to be *Hi-C duplicates*.
+As usual, high duplication rates indicate sequencing libraies of low complexity.
 Typical values range between 1% and 50%.
+
 
 Percentage of a given categories
 --------------------------------
@@ -158,11 +167,11 @@ troubleshooting.
 
 **Percentage of self-ligated read pairs:** In practice self-ligation seem to occur very often. Typical values are below 1%. In theory, however, this category may provide interesting insights about the length at which fragment ends preferably ligate. Which might be uselful for the choice of the restriction enzyme or enzymes.
 
-**Percentage of too short hybrid read pairs:** XXX
+**Percentage of too short hybrid read pairs:** A high percentage of too short hybrid fragments may indicate that either the chosen lower threshold does not match the experimental settings, or inversely, the parameters for shearing need to adjusted. Typical values are smaller than 10%.
 
-**Percentage of too short hybrid read pairs:** XXX
+**Percentage of too short hybrid read pairs:** Essentially, the same applies as for too short. For the data of Andrey et al. 2016, we observed an extra peak for very large fragment sizes. Typical values are smaller than 10%.
 
-**Percentage of valid read pairs:** XXX
+**Percentage of valid read pairs:** The more, the better. Typical values range between 65% and 85%.
 
 Yield of valid pairs (YVP)
 --------------------------
@@ -170,8 +179,6 @@ Yield of valid pairs (YVP)
 Percentage of truncated input read pairs that were finally categorized as valid pairs usable for downstream analysis.
 The YVP is intended to reflect the overall efficiency of the Hi-C protocol.
 Typical values range between 10% and 40%.
-
-
 
 
 Cross-ligation coefficient (CLC)
@@ -184,6 +191,15 @@ Based on the assumption that cross-ligation between DNA fragments of different c
 as compared to cross-ligation between DNA fragments of the same chromosome (cis), the ratio of the numbers of cis
 and trans read pairs is taken as an indicator of poor Hi-C libraries that contain lots of false positive interaction
 pairs arising from spurious cross-ligation events (Wingett 2015, Nagano 2015).
+
+
+Re-ligation coefficient (RLC)
+-----------------------------
+
+Percentage of unique paired read pairs that did not arise from fragments with dangling-ends, i.e. ends that correspond
+to un-ligated restriction enzyme cutting sites.
+The RLC is intended to reflect the efficiency of the re-ligation step and could possibly be used to improve experimental
+conditions for re-ligation.
 
 
 Running Diachromatic's align subcommand
