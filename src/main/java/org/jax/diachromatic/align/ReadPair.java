@@ -418,14 +418,9 @@ public class ReadPair {
      * @return
      */
     public int getSelfLigationFragmentSize() {
-        if (this.isTrans() || !this.isOutwardFacing()) {
-            //logger.error("Size of self ligated fragment is undefined for this read pair.");
-            //return -1;
-            return this.getHybridFragmentSize() + this.getDistanceBetweenFivePrimeEnds();
-        } else {
-            return this.getHybridFragmentSize() + this.getDistanceBetweenFivePrimeEnds();
+        return this.getHybridFragmentSize() + this.getDistanceBetweenFivePrimeEnds();
         }
-     }
+
 
 
     /**

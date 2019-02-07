@@ -160,7 +160,7 @@ public class Aligner {
     private int[] fragSizesActiveHybridPairs =  new int[FRAG_SIZE_LIMIT+1];
     private int[] fragSizesUnLigatedPairs =  new int[FRAG_SIZE_LIMIT+1];
     private int[] selfLigationFragSizesForCisOuties =  new int[FRAG_SIZE_LIMIT+1];
-    private int[] selfLigationfragSizesForCisInnies =  new int[FRAG_SIZE_LIMIT+1];
+    private int[] selfLigationFragSizesForCisCommies =  new int[FRAG_SIZE_LIMIT+1];
 
 
     /**
@@ -218,7 +218,7 @@ public class Aligner {
         Arrays.fill(fragSizesActiveHybridPairs, 0);
         Arrays.fill(fragSizesUnLigatedPairs, 0);
         Arrays.fill(selfLigationFragSizesForCisOuties, 0);
-        Arrays.fill(selfLigationfragSizesForCisInnies, 0);
+        Arrays.fill(selfLigationFragSizesForCisCommies, 0);
 
 
         VERSION = Commandline.getVersion();
@@ -297,7 +297,7 @@ public class Aligner {
                 n_paired++;
 
                 // de-duplication starts with paired pairs
-                if(dedup_map.hasSeen(pair) || pair.isDanglingEnd()) {
+                if(dedup_map.hasSeen(pair)) {
                     n_paired_duplicated++;
                     continue;
                 }
@@ -346,7 +346,7 @@ public class Aligner {
                 continue;
             }
 
-            // count sizes of all hybrid fragments
+            // count sizes of all hybrid fragments including valid, too short and too long
             Integer incrementFragSize = pair.getHybridFragmentSize();
             if(FRAG_SIZE_LIMIT<incrementFragSize) { incrementFragSize = FRAG_SIZE_LIMIT; }
             if(pair.getCategoryTag().equals("VP")||pair.getCategoryTag().equals("TS")||pair.getCategoryTag().equals("TL"))   {
@@ -360,17 +360,15 @@ public class Aligner {
                     logger.trace(pair.reverse().getReadName());
                     logger.trace(pair.reverse().getReferenceName() + ":" + pair.reverse().getAlignmentStart() + "-" + pair.reverse().getAlignmentEnd());
                 }*/
-            }
 
-            // count sizes of all active fragments
-            if((pair.forwardDigestIsActive() & !pair.reverseDigestIsActive()) || (!pair.forwardDigestIsActive() & pair.reverseDigestIsActive())) {
-                if(pair.getCategoryTag().equals("VP")||pair.getCategoryTag().equals("TS")||pair.getCategoryTag().equals("TL")) {
+                // count sizes of all active hybrid fragments
+                if((pair.forwardDigestIsActive() & !pair.reverseDigestIsActive()) || (!pair.forwardDigestIsActive() & pair.reverseDigestIsActive())) {
                     fragSizesActiveHybridPairs[incrementFragSize]++;
                 }
             }
 
             // count sizes of potentially un-ligated fragments (don't use thresholds to avoid circular argument)
-            if(pair.isInwardFacing() && !pair.isTrans()){ //pair.getCategoryTag().equals("UL")) {
+            if(pair.isInwardFacing() && !pair.isTrans()){
                 incrementFragSize=pair.getDistanceBetweenFivePrimeEnds();
                 if(FRAG_SIZE_LIMIT<incrementFragSize) { incrementFragSize = FRAG_SIZE_LIMIT; }
                 fragSizesUnLigatedPairs[incrementFragSize]++;
@@ -383,11 +381,11 @@ public class Aligner {
                 selfLigationFragSizesForCisOuties[incrementFragSize]++;
             }
 
-            // count self-ligation sizes for inward pointing read pairs on the same chromosome
-            if(pair.isInwardFacing() && !pair.isTrans()) { //pair.getCategoryTag().equals("SL")) {
+            // count self-ligation sizes also for cis read pairs pointing in the same direction and on the same chromosome (sanity check)
+            if(!pair.isOutwardFacing() && !pair.isInwardFacing() && !pair.isTrans()) {
                 incrementFragSize = pair.getSelfLigationFragmentSize();
                 if(FRAG_SIZE_LIMIT<incrementFragSize) { incrementFragSize = FRAG_SIZE_LIMIT; }
-                selfLigationfragSizesForCisInnies[incrementFragSize]++;
+                selfLigationFragSizesForCisCommies[incrementFragSize]++;
             }
 
             // write pair to BAM file
@@ -454,11 +452,11 @@ public class Aligner {
         }
         printStream.print(selfLigationFragSizesForCisOuties[FRAG_SIZE_LIMIT] + ")\n");
 
-        printStream.print("selfLigationFragSizesForCisInnies<-c(");
+        printStream.print("selfLigationFragSizesForCisCommies<-c(");
         for(int i=0; i<FRAG_SIZE_LIMIT; i++) {
-            printStream.print(selfLigationfragSizesForCisInnies[i] + ",");
+            printStream.print(selfLigationFragSizesForCisCommies[i] + ",");
         }
-        printStream.print(selfLigationfragSizesForCisInnies[FRAG_SIZE_LIMIT] + ")\n");
+        printStream.print(selfLigationFragSizesForCisCommies[FRAG_SIZE_LIMIT] + ")\n");
 
         printStream.print("\n");
         printStream.print("cairo_pdf(\"");
@@ -513,7 +511,7 @@ public class Aligner {
         printStream.print("NUMBER_OF_BINS<-round(FRAG_SIZE_LIMIT/200)\n");
 
         printStream.print("hist(rep(1:FRAG_SIZE_LIMIT,selfLigationFragSizesForCisOuties),NUMBER_OF_BINS,main=\"Self-ligation sizes for OUTWARD pairs\",ylab=\"Fragment count\",xlab=\"Size (nt)\")\n");
-        printStream.print("hist(rep(1:FRAG_SIZE_LIMIT,selfLigationFragSizesForCisInnies),NUMBER_OF_BINS,main=\"Self-ligation sizes for INWARD pairs\",ylab=\"Fragment count\",xlab=\"Size (nt)\")\n");
+        printStream.print("hist(rep(1:FRAG_SIZE_LIMIT,selfLigationFragSizesForCisCommies),NUMBER_OF_BINS,main=\"Self-ligation sizes for SAME DIRECTION pairs\",ylab=\"Fragment count\",xlab=\"Size (nt)\")\n");
 
         printStream.print("plot(1:10)\n");
 
@@ -523,7 +521,7 @@ public class Aligner {
         printStream.print("YLIM=c(0,YMAX)\n");
 
         printStream.print("hist(rep(1:FRAG_SIZE_LIMIT,selfLigationFragSizesForCisOuties),NUMBER_OF_BINS,main=\"Self-ligation sizes for OUTWARD pairs\",ylab=\"Fragment count\",xlab=\"Size (nt)\",ylim=YLIM)\n");
-        printStream.print("hist(rep(1:FRAG_SIZE_LIMIT,selfLigationFragSizesForCisInnies),NUMBER_OF_BINS,main=\"Self-ligation sizes for INWARD pairs\",ylab=\"Fragment count\",xlab=\"Size (nt)\",ylim=YLIM)\n");
+        printStream.print("hist(rep(1:FRAG_SIZE_LIMIT,selfLigationFragSizesForCisCommies),NUMBER_OF_BINS,main=\"Self-ligation sizes for SAME DIRECTION pairs\",ylab=\"Fragment count\",xlab=\"Size (nt)\",ylim=YLIM)\n");
 
         printStream.print("mtext(MAIN, outer = TRUE, cex = 1.5)\n");
 
