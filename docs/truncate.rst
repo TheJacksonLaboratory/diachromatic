@@ -23,7 +23,7 @@ the enzyme recognition site.
 
 
 
-Running Diachromatic's truncation subcommand
+Running Diachromatic's *truncate* subcommand
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Use the following command to run the truncation step. ::
@@ -54,10 +54,10 @@ Output files
 
 The default names of the truncated and gzipped FASTQ files are:
 
-    * prefix.truncated_R1.fastq.gz
-    * prefix.truncated_R2.fastq.gz
+    * ``prefix.truncated_R1.fastq.gz``
+    * ``prefix.truncated_R2.fastq.gz``
 
 In addition, a file is produced that contains summary statistics about the truncation step.
 
-    * prefix.truncation.stats.txt
+    * ``prefix.truncation.stats.txt``
 

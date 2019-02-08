@@ -76,8 +76,8 @@ We assume that the size distribution of chimeric fragments results from the para
 and thus corresponds to overall fragment size distribution in the sequencing library.
 Diachromatic uses lower and upper thresholds T1\ :sub:`min` and T1\ :sub:`max` for valid sizes of sheared fragments that
 need to be specified by the user.
-Read pairs arising from chimeric fragments with a calculated size d\ :sub:`h` outside the specified range are categorized
-as *too small* or *too large* artifacts.
+Read pairs arising from chimeric fragments with a calculated size d\ :sub:`h` that is outside the specified range are
+categorized as *too small* or *too large* artifacts.
 All other read pairs arising from chimeric fragments are defined to be *valid pairs* that can be used for downstream
 analysis.
 
@@ -91,10 +91,10 @@ distance between the 5' end positions of the two reads. This distance is here re
 .. figure:: img/fragment_size_unligated.png
     :align: center
 
-In order to distinguish between read pairs arising from chimeric and un-ligated fragments, Diachromatic uses the same
-upper threshold T1\ :sub:`max` that is also used for the categorization of too large chimeric fragments.
-This is because we assume the size distributions of chimeric and un-ligated fragments result from the same shearing
-treatment.
+In order to distinguish between inward pointing read pairs arising from chimeric and un-ligated fragments, Diachromatic
+uses the same upper threshold T1\ :sub:`max` that is also used for the categorization of too large chimeric fragments.
+This is because we assume the size distributions both for chimeric and un-ligated fragments to be the result of the same shearing
+step.
 Inward pointing read pairs for which d\ :sub:`u` is smaller than the user defined threshold T1\ :sub:`max` are categorized as
 un-ligated pairs.
 
@@ -126,15 +126,15 @@ The illustration below shows the decision tree for the categorization of read pa
 .. figure:: img/fragment_categories.png
     :align: center
 
-The next four paragraphs explain the categorization along the bullets points 1 to 4 (blue):
+The next four paragraphs explain the categorization along the blue bullets points 1 to 4:
 
-**1.** Read pairs that map to different chromosomes or point in the same direction cannot originate from un-ligated or self-ligated fragments.
+**1.** Read pairs that map to different chromosomes or to the same strand cannot originate from un-ligated or self-ligated fragments.
 
-**2.** Read pairs that point inwards might originate from un-ligated fragments. In such cases, the distance between the 5' end positions of the mapped reads d\ :sub:`u` corresponds to the size of the  sequenced fragment. In order to assign read pairs to the un-ligated category, we use an upper size threshold T\ :sub:`1` that should reflect  the maximum credible size of sheared fragments.
+**2.** Read pairs that point inwards might originate from un-ligated fragments. In such cases, the distance between the 5' end positions of the mapped reads d\ :sub:`u` corresponds to the size of the  sequenced fragment. In order to assign read pairs to the un-ligated category, we use an upper size threshold T\ :sub:`1` that should reflect the maximum plausible size of sheared fragments.
 
 **3.** Read pairs that point outwards might originate from self-ligated fragments. In such cases, the size d\ :sub:`s` of the potentially underlying self-ligated fragment is calculated as described above, and compared to an upper size threshold T\ :sub:`2` for self-ligated fragments. Outward pointing read pairs with d\ :sub:`s` smaller than T\ :sub:`2` are assigned to the self-ligated category.
 
-**4.** Read pairs arising from chimeric fragments (not un- or self-ligated) are further distinguished. Read pairs with size d\ :sub:`s` outside the specified size range of sheared fragments will be categorizesd as wrong size.
+**4.** Read pairs arising from chimeric fragments (not un- or self-ligated) are further distinguished. Read pairs with size d\ :sub:`s` outside the specified size range of sheared fragments will be categorizesd as too small or too large.
 
 
 Quality metrics
@@ -152,27 +152,27 @@ Hi-C pair duplication rate (HPDR)
 
 For Hi-C, the removal of duplicates must take into account the chimeric nature of the underlying fragments.
 The HPDR is defined as the percentage of paired read pairs that were removed because they were recognized to be *Hi-C duplicates*.
-As usual, high duplication rates indicate sequencing libraies of low complexity.
+Usually, high duplication rates indicate sequencing libraies of low complexity.
 Typical values range between 1% and 50%.
 
 
-Percentage of a given categories
---------------------------------
+Percentages of different read pair categories
+---------------------------------------------
 
 The categorization scheme subdivides the set of all paired read pairs, i.e. unique pairs for which both reads can be uniquely
 mapped into disjoint subsets.
-The percentages of the different categories can provide valuable feedback that may be useful for experimental
-troubleshooting.
+The percentages of the different categories may be useful for experimental troubleshooting.
 
-**Percentage of un-ligated read pairs:** A high percentage of un-ligated pairs indicates poor enrichment for ligation junctions, i.e. the streptavidin Pull-down of biotinylated Hi-C ligation might to be improved. Typical values range between 5% and 15%.
+**Percentage of un-ligated read pairs:** A high percentages of un-ligated pairs indicate poor enrichment for ligation junctions, i.e. the streptavidin pull-down of biotinylated Hi-C ligation might to be improved. Typical values range between 5% and 15%.
 
-**Percentage of self-ligated read pairs:** In practice self-ligation seem to occur very often. Typical values are below 1%. In theory, however, this category may provide interesting insights about the length at which fragment ends preferably ligate. Which might be uselful for the choice of the restriction enzyme or enzymes.
+**Percentage of self-ligated read pairs:** In practice, self-ligation seem to occur not very often. Typical values are below 1%.
 
-**Percentage of too short chimeric read pairs:** A high percentage of too short chimeric fragments may indicate that either the chosen lower threshold does not match the experimental settings, or inversely, the parameters for shearing need to adjusted. Typical values are smaller than 10%.
+**Percentage of too short chimeric read pairs:** A high percentage of too short chimeric fragments may indicate that either the chosen lower threshold does not match the experimental settings, or inversely, the parameters for shearing need to be adjusted. Typical values are smaller than 10%.
 
-**Percentage of too short chimeric read pairs:** Essentially, the same applies as for too short. For the data of Andrey et al. 2016, we observed an extra peak for very large fragment sizes. Typical values are smaller than 10%.
+**Percentage of too large chimeric read pairs:** Essentially, the same applies as for the too short category.
 
 **Percentage of valid read pairs:** The more, the better. Typical values range between 65% and 85%.
+
 
 Yield of valid pairs (YVP)
 --------------------------
@@ -185,13 +185,12 @@ Typical values range between 10% and 40%.
 Cross-ligation coefficient (CLC)
 --------------------------------
 
-Valid read pairs arising from genuine chromatin-chromatin interactions cannot be distinguished from those arising from
-**cross-ligation** events.
-However, the overall extend of **cross-ligation** is estimated for given experiments.
-Based on the assumption that cross-ligation between DNA fragments of different chromosomes (trans) occurs more likely
-as compared to cross-ligation between DNA fragments of the same chromosome (cis), the ratio of the numbers of cis
-and trans read pairs is taken as an indicator of poor Hi-C libraries that contain lots of false positive interaction
-pairs arising from spurious cross-ligation events (Wingett 2015, Nagano 2015).
+Valid read pairs arising from genuine chromatin-chromatin interactions between different chromosomes cannot be
+distinguished from those arising from **cross-ligation** events.
+Based on the assumption that random cross-ligations between DNA fragments of different chromosomes (*trans*) occur more
+likely as compared to cross-ligations between DNA fragments of the same chromosome (*cis*), the ratio of the numbers of cis
+and trans read pairs is taken as an indicator of poor Hi-C libraries (Wingett 2015, Nagano 2015).
+Within Diachromatic, the CLC is calculated as proportion of trans read pairs amongst all unique paired read pairs.
 
 
 Re-ligation coefficient (RLC)
@@ -206,25 +205,31 @@ conditions for re-ligation.
 Size distribution of chimeric and un-ligated fragments
 ------------------------------------------------------
 
-Diachromatc also keeps track of the fragment sizes of chimeric and un-ligated fragments.
+The plot of fragment size distributions is intended to serve as a a kind of sanity check.
+Deviations from bell-shaped curve progressions should be thoroughly scrutinized.
+Furthermore, the plot might be useful for the adjustment of Diachromatic's size thresholds T1\ :sub:`min` and T1\ :sub:`max`.
+For instance, a high number of read pairs that are categorized as *too large* could indicate that the actual size of
+sheared fragments is larger on average.
+In such cases, the plot can be used to choose good thresholds.
 
-For the size distribution of chimeric fragments (black), the size is determined for all read pairs that were categorized
-as either valid, too short or too long.
-
-Active chimeric fragments (red) form a subset of all chimeric fragments, whereby either R1 or R2 is assigned to a digest
-that
+For the size distribution of chimeric fragments (**black**), the chimeric sizes of all read pairs that were categorized
+as either as *valid*, *too short* or *too long* are determined.
+Active chimeric fragments (**red**) form a subset of all chimeric fragments, whereby either the read R1 or R2 is assigned
+to a digest that is flagged as selected in the digest file passed to Diachromatic.
+For the size distribution of un-ligated fragments (**blue**) the distances between all inward pointing read pairs mapping
+too the same chromosome (*cis*) are determined.
 
 .. figure:: img/size_distribution_plot.png
     :align: center
 
 
 
-Running Diachromatic's align subcommand
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Running Diachromatic's *align* subcommand
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Use the following command to run the alignment step. ::
 
-    $ java -jar target/Diachromatic.jar map -b /usr/bin/bowtie2 -i /data/bt_indices/hg38 -q prefix.truncated_R1.fq.gz -r prefix.truncated_R2.fq.gz -d hg38_DpnII_DigestedGenome.txt
+    $ java -jar target/Diachromatic.jar align -b /usr/bin/bowtie2 -i /data/bt_indices/hg38 -q prefix.truncated_R1.fq.gz -r prefix.truncated_R2.fq.gz -d hg38_DpnII_DigestedGenome.txt
 
 
 The following table lists all possible arguments.
@@ -270,6 +275,7 @@ If ``--output-rejected`` is set, there will be second BAM file cointaing all rej
 
     * ``prefix.rejected_pairs.aligned.bam``
 
+
 The optional fields of the SAM records contain information about the read pair category:
 
     * chimeric valid (Tag: ``VP``)
@@ -278,10 +284,26 @@ The optional fields of the SAM records contain information about the read pair c
     * same dangling end (Tag: ``UL``)
     * same internal (Tag: ``SL``)
 
-Furthermore, there is an ``RO`` attribute that gives the relative orientation of the pair (``R1F2``, ``R2F1``, etc.).
 
-In addition, a file
+Furthermore, there is an ``RO`` attribute that indicates the relative orientation of the pair:
 
-    * ``prefix.align.stats.``
+    * Same strand right: ``F1F2``, ``F2F1``
+    * Same strand left: ``R1R2``, ``R2R1``
+    * Inwards: ``F1R2``, ``F2R1``
+    * Outwards: ``R2F1``, ``R1F2``
 
-is produced that contains summary statistics about the alignment step.
+
+In addition, a file ``prefix.align.stats.txt`` is produced that contains summary statistics about the alignment step.
+
+
+Finally, an R script ``prefix.frag.sizes.counts.script.R`` is generated that contains fragment size counts and can be
+used to generate a plot as shown above.
+In order to produce a PDF file execute the script as follows: ::
+
+    $ Rscript prefix.frag.sizes.counts.script.R
+
+Or source the script from the R environment: ::
+
+
+    > source("prefix.frag.sizes.counts.script.R")
+
