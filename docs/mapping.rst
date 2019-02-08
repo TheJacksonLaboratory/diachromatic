@@ -7,10 +7,10 @@ Independent mapping of forward and reverse paired-end reads using bowtie2
 The two reads of a valid Hi-C read pair come from two different interacting genomic regions that can be
 separated by a large number of nucleotides within the same chromosome (**cis interactions**) or even be located on
 different chromosomes (**trans interactions**). For this reason, the distance between the two 5' end positions of the
-mapped reads can no longer be interpreted as the classical *insert size*, and the truncated forward (R1) and reverse
-(R2) reads have to be mapped independently.
+mapped reads can no longer be interpreted as the classical *insert size* in all cases.
+Therefore, the truncated forward (R1) and reverse (R2) reads have to be mapped independently.
 
-Diachromatic executes ``bowtie2`` separately for R1 and R2 with the ``--very-sensitive`` option.
+Diachromatic separately executes ``bowtie2`` for R1 and R2 with the ``--very-sensitive`` option.
 Read pairs for which at least one read cannot be mapped uniquely are discarded.
 Diachromatic provides two levels of stringency for the definition of multi-mapped reads:
     1. **Very stringent mapping:** There is no second best alignment for the given read. In this case the line in the SAM record produced by ``bowtie2`` contains no ``XS`` tag. Use Diachromatic's ``--bowtie-stringent-unique`` or ``-bsu`` option in order to use this level of stringency.
@@ -44,13 +44,14 @@ which results in restriction fragments whose ends re-ligate thereby forming liga
 The shearing step introduces DNA breakpoints representing a second type of fragment ends in addition those introduced
 by digestion. Fragment ends corresponding to restriction enzyme cutting sites are generally referred to as
 *dangling ends* because they failed to re-ligate.
-
-Essentially, three fragment categories are distinguished within Diachromatic: **hybrid fragments** that arise from
-re-ligation between ends of different restriction fragments and two artifact categories that correspond to single
+Essentially, three fragment categories are distinguished within Diachromatic: **chimeric fragments** that arise from
+re-ligation between ends of different restriction fragments as well as two artifact categories that correspond to single
 restriction fragments whose ends failed to re-ligate with other fragments, either because both ends remained **un-ligated**
-or **self-ligated** with each other. Hybrid fragments may correspond to genuine interactions but also to cross-ligation
+or **self-ligated** with each other.
+Chimeric fragments may correspond to genuine interactions but also to *cross-ligation*
 artifacts depending on whether the re-ligation occurred within the same protein-DNA complex or between different complexes.
-Paired-end sequencing of hybrid fragments may results in all possible relative orientations, i.e. reads of given pairs
+
+Paired-end sequencing of chimeric fragments may results in all possible relative orientations, i.e. reads of given pairs
 may point *inwards*, *outwards* or in the *same direction*.
 In contrast to that, sequencing of un-ligated fragments results in inward pointing pairs only, and sequencing of
 self-ligated fragments results in outward pointing pairs only.
@@ -59,25 +60,25 @@ for the different categories, the identification of read pairs arising from un-l
 additionally requires the definition of size thresholds that will be introduced below.
 
 
-Sizes of hybrid fragments
--------------------------
+Sizes of chimeric fragments
+---------------------------
 
-Read pairs arising from hybrid fragments may have all possible relative orientations, and the size needs to be calculated
+Read pairs arising from chimeric fragments may have all possible relative orientations, and the size needs to be calculated
 in consideration of the Hi-C protocol.
 This size is here referred to as d\ :sub:`h` and calculated as the sum of the two distances between the 5' ends of the
 mapped reads and the next occurrence of a cutting motif in 3' direction which is assumed to correspond to the ligation
 junction (`Wingett 2015 <https://www.ncbi.nlm.nih.gov/pubmed/26835000/>`_).
 
-.. figure:: img/fragment_size_hybrid.png
+.. figure:: img/fragment_size_chimeric.png
     :align: center
 
-We assume that the size distribution of hybrid fragments results from the parameters used for shearing
+We assume that the size distribution of chimeric fragments results from the parameters used for shearing
 and thus corresponds to overall fragment size distribution in the sequencing library.
 Diachromatic uses lower and upper thresholds T1\ :sub:`min` and T1\ :sub:`max` for valid sizes of sheared fragments that
 need to be specified by the user.
-Read pairs arising from hybrid fragments with a calculated size d\ :sub:`h` outside the specified range are categorized
+Read pairs arising from chimeric fragments with a calculated size d\ :sub:`h` outside the specified range are categorized
 as *too small* or *too large* artifacts.
-All other read pairs arising from hybrid fragments are defined to be *valid pairs* that can be used for downstream
+All other read pairs arising from chimeric fragments are defined to be *valid pairs* that can be used for downstream
 analysis.
 
 
@@ -90,9 +91,9 @@ distance between the 5' end positions of the two reads. This distance is here re
 .. figure:: img/fragment_size_unligated.png
     :align: center
 
-In order to distinguish between read pairs arising from hybrid and un-ligated fragments, Diachromatic uses the same
-upper threshold T1\ :sub:`max` that is also used for the categorization of too large hybrid fragments.
-This is because we assume the size distributions of hybrid and un-ligated fragments result from the same shearing
+In order to distinguish between read pairs arising from chimeric and un-ligated fragments, Diachromatic uses the same
+upper threshold T1\ :sub:`max` that is also used for the categorization of too large chimeric fragments.
+This is because we assume the size distributions of chimeric and un-ligated fragments result from the same shearing
 treatment.
 Inward pointing read pairs for which d\ :sub:`u` is smaller than the user defined threshold T1\ :sub:`max` are categorized as
 un-ligated pairs.
@@ -102,7 +103,7 @@ Sizes of self-ligated fragments
 -------------------------------
 
 Unlike read pairs arising from un-ligated fragments, read pairs arising from self-ligated must point outwards.
-Furthermore, self-ligating fragments have a different size distribution than hybrid and un-ligated fragments.
+Furthermore, self-ligating fragments have a different size distribution than chimeric and un-ligated fragments.
 The relevant size is no longer the size of the sequenced fragments that results from shearing but the
 favourable size at which fragments tend to self-ligate.
 Very short fragments might not self-ligate because of steric hindrance, whereas the ends of very long fragments might
@@ -133,7 +134,7 @@ The next four paragraphs explain the categorization along the bullets points 1 t
 
 **3.** Read pairs that point outwards might originate from self-ligated fragments. In such cases, the size d\ :sub:`s` of the potentially underlying self-ligated fragment is calculated as described above, and compared to an upper size threshold T\ :sub:`2` for self-ligated fragments. Outward pointing read pairs with d\ :sub:`s` smaller than T\ :sub:`2` are assigned to the self-ligated category.
 
-**4.** Read pairs arising from hybrid fragments (not un- or self-ligated) are further distinguished. Read pairs with size d\ :sub:`s` outside the specified size range of sheared fragments will be categorizesd as wrong size.
+**4.** Read pairs arising from chimeric fragments (not un- or self-ligated) are further distinguished. Read pairs with size d\ :sub:`s` outside the specified size range of sheared fragments will be categorizesd as wrong size.
 
 
 Quality metrics
@@ -167,9 +168,9 @@ troubleshooting.
 
 **Percentage of self-ligated read pairs:** In practice self-ligation seem to occur very often. Typical values are below 1%. In theory, however, this category may provide interesting insights about the length at which fragment ends preferably ligate. Which might be uselful for the choice of the restriction enzyme or enzymes.
 
-**Percentage of too short hybrid read pairs:** A high percentage of too short hybrid fragments may indicate that either the chosen lower threshold does not match the experimental settings, or inversely, the parameters for shearing need to adjusted. Typical values are smaller than 10%.
+**Percentage of too short chimeric read pairs:** A high percentage of too short chimeric fragments may indicate that either the chosen lower threshold does not match the experimental settings, or inversely, the parameters for shearing need to adjusted. Typical values are smaller than 10%.
 
-**Percentage of too short hybrid read pairs:** Essentially, the same applies as for too short. For the data of Andrey et al. 2016, we observed an extra peak for very large fragment sizes. Typical values are smaller than 10%.
+**Percentage of too short chimeric read pairs:** Essentially, the same applies as for too short. For the data of Andrey et al. 2016, we observed an extra peak for very large fragment sizes. Typical values are smaller than 10%.
 
 **Percentage of valid read pairs:** The more, the better. Typical values range between 65% and 85%.
 
@@ -200,6 +201,22 @@ Percentage of unique paired read pairs that did not arise from fragments with da
 to un-ligated restriction enzyme cutting sites.
 The RLC is intended to reflect the efficiency of the re-ligation step and could possibly be used to improve experimental
 conditions for re-ligation.
+
+
+Size distribution of chimeric and un-ligated fragments
+------------------------------------------------------
+
+Diachromatc also keeps track of the fragment sizes of chimeric and un-ligated fragments.
+
+For the size distribution of chimeric fragments (black), the size is determined for all read pairs that were categorized
+as either valid, too short or too long.
+
+Active chimeric fragments (red) form a subset of all chimeric fragments, whereby either R1 or R2 is assigned to a digest
+that
+
+.. figure:: img/size_distribution_plot.png
+    :align: center
+
 
 
 Running Diachromatic's align subcommand
@@ -255,9 +272,9 @@ If ``--output-rejected`` is set, there will be second BAM file cointaing all rej
 
 The optional fields of the SAM records contain information about the read pair category:
 
-    * hybrid valid (Tag: ``VP``)
-    * hybrid too short (Tag: ``TS``)
-    * hybrid too long (Tag: ``TL``)
+    * chimeric valid (Tag: ``VP``)
+    * chimeric too short (Tag: ``TS``)
+    * chimeric too long (Tag: ``TL``)
     * same dangling end (Tag: ``UL``)
     * same internal (Tag: ``SL``)
 

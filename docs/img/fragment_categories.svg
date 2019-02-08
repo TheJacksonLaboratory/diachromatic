@@ -26,15 +26,15 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.3021692"
-     inkscape:cx="471.34531"
-     inkscape:cy="228.87068"
+     inkscape:zoom="1.6792829"
+     inkscape:cx="384"
+     inkscape:cy="322.45907"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
      inkscape:window-width="1920"
-     inkscape:window-height="1054"
-     inkscape:window-x="1920"
+     inkscape:window-height="1027"
+     inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
      units="px"
@@ -3371,7 +3371,7 @@
          sodipodi:role="line"
          id="tspan5690-2-9"
          x="228.53851"
-         y="618.15509">no</tspan></text>
+         y="618.15509">no*</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:8.6080513px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
@@ -3383,13 +3383,6 @@
          id="tspan5690-2-6-7"
          x="453.49557"
          y="618.15509">yes</tspan></text>
-    <rect
-       style="opacity:0.97000002;fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.14774013;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       id="rect20833-1-1"
-       width="91.819237"
-       height="45.909611"
-       x="113.55987"
-       y="659.7381" />
     <rect
        style="opacity:0.97000002;fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.14774013;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        id="rect20833-1-0-1"
@@ -3535,7 +3528,7 @@
          sodipodi:role="line"
          x="159.5683"
          y="671.32172"
-         id="tspan5192">Calculated hybrid</tspan><tspan
+         id="tspan5192">Calculated chimeric</tspan><tspan
          sodipodi:role="line"
          x="159.5683"
          y="680.28845"
@@ -3656,7 +3649,7 @@
          sodipodi:role="line"
          x="268.18646"
          y="798.05804"
-         id="tspan26834">Hybrid size too small</tspan><tspan
+         id="tspan26834">Chimeric size too small</tspan><tspan
          sodipodi:role="line"
          x="268.18646"
          y="807.02478"
@@ -4052,7 +4045,7 @@
          sodipodi:role="line"
          x="720.37567"
          y="920.53333"
-         id="tspan5803-2">to self-ligated fragment.</tspan></text>
+         id="tspan5803-2">to self-ligated fragment</tspan></text>
     <path
        style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.574;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="m 593.07228,933.15235 c -97.55791,63.1258 -97.55791,63.1258 -97.55791,63.1258"
@@ -4327,7 +4320,7 @@
          sodipodi:role="line"
          x="401.36633"
          y="1026.7948"
-         id="tspan26834-5">Hybrid size too small</tspan><tspan
+         id="tspan26834-5">Chimeric size too small</tspan><tspan
          sodipodi:role="line"
          x="401.36633"
          y="1035.7616"
@@ -4354,7 +4347,7 @@
          sodipodi:role="line"
          x="660.31531"
          y="1025.3518"
-         id="tspan26834-5-9">Hybrid size too small</tspan><tspan
+         id="tspan26834-5-9">Chimeric size too small</tspan><tspan
          sodipodi:role="line"
          x="660.31531"
          y="1034.3185"
@@ -4410,7 +4403,7 @@
          sodipodi:role="line"
          x="338.74829"
          y="898.92529"
-         id="tspan5192-2">Calculated hybrid</tspan><tspan
+         id="tspan5192-2">Calculated chimeric</tspan><tspan
          sodipodi:role="line"
          x="338.74829"
          y="907.89203"
@@ -4446,7 +4439,7 @@
          sodipodi:role="line"
          x="599.25531"
          y="898.92529"
-         id="tspan5192-2-3">Calculated hybrid</tspan><tspan
+         id="tspan5192-2-3">Calculated chimeric</tspan><tspan
          sodipodi:role="line"
          x="599.25531"
          y="907.89203"
@@ -4465,5 +4458,90 @@
    id="tspan6714-9-2">min, ..., </tspan>T1<tspan
    style="font-size:64.99999762%;baseline-shift:sub"
    id="tspan6712-2-8">max</tspan>]</tspan></text>
+    <rect
+       style="opacity:0.97000002;fill:none;fill-opacity:1;stroke:#a04600;stroke-width:4;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect20833-1-0-8-36"
+       width="91.819237"
+       height="45.909611"
+       x="113.986"
+       y="658.31158" />
+    <rect
+       style="opacity:0.97000002;fill:none;fill-opacity:1;stroke:#a04600;stroke-width:4;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect20833-1-0-8-7"
+       width="91.819237"
+       height="45.909611"
+       x="294.16599"
+       y="885.91559" />
+    <rect
+       style="opacity:0.97000002;fill:none;fill-opacity:1;stroke:#a04600;stroke-width:4;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect20833-1-0-8-5"
+       width="91.819237"
+       height="45.909611"
+       x="554.67297"
+       y="885.91559" />
+    <rect
+       style="opacity:0.97000002;fill:none;fill-opacity:1;stroke:#dc00b9;stroke-width:4;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect20833-1-0-8-9-3"
+       width="91.819237"
+       height="45.909611"
+       x="360.996"
+       y="772.28955" />
+    <rect
+       style="opacity:0.97000002;fill:none;fill-opacity:1;stroke:#be1e46;stroke-width:4;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect20833-1-0-8-9-8-5"
+       width="91.819237"
+       height="45.909611"
+       x="620.34698"
+       y="772.28955" />
+    <rect
+       style="opacity:0.97000002;fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.148;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect20833-1-0-6"
+       width="91.62014"
+       height="59.003899"
+       x="7.7767911"
+       y="556.16931" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:7.17337704px;line-height:125%;font-family:sans-serif;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="53.267239"
+       y="569.46869"
+       id="text24907-2"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         x="53.267239"
+         y="569.46869"
+         id="tspan6116-6">* ReadPair mappes to</tspan><tspan
+         sodipodi:role="line"
+         x="53.267239"
+         y="578.43542"
+         id="tspan5171-1">different  chromosomes</tspan><tspan
+         sodipodi:role="line"
+         x="53.267239"
+         y="587.40216"
+         id="tspan23981-8">OR</tspan><tspan
+         sodipodi:role="line"
+         x="53.267239"
+         y="596.36884"
+         id="tspan23983-7">ReadPair is mapped</tspan><tspan
+         sodipodi:role="line"
+         x="54.409096"
+         y="605.33557"
+         id="tspan23985-9">to the same strand </tspan><tspan
+         sodipodi:role="line"
+         x="53.267239"
+         y="614.30231"
+         id="tspan23975-2" /><tspan
+         sodipodi:role="line"
+         x="53.267239"
+         y="623.26904"
+         id="tspan23979-0" /><tspan
+         sodipodi:role="line"
+         x="53.267239"
+         y="632.23572"
+         id="tspan23977-2" /><tspan
+         sodipodi:role="line"
+         x="53.267239"
+         y="641.20245"
+         id="tspan6114-3" /></text>
   </g>
 </svg>

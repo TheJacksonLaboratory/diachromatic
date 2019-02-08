@@ -8,15 +8,15 @@ import org.jax.diachromatic.exception.DiachromaticException;
 /**
  * This class represents a pair of reads R1 and R2 of an Illumina paired-end run for a Hi-C library.
  * <p>
- * The two reads represent the ends of fragments that are ideally valid Hi-C hybrid fragments arising from functional
+ * The two reads represent the ends of fragments that are ideally valid Hi-C chimeric fragments arising from functional
  * interactions and consisting of two pieces of DNA originating from two interacting loci. However, there are
  * various sources of artifacts that lead to un-ligated or self-ligated fragments and corresponding read pairs.
- * Furthermore, there are hybrid fragments whose size is inconsistent with parameters chosen for sonication.
+ * Furthermore, there are chimeric fragments whose size is inconsistent with parameters chosen for sonication.
  * Based on this, Diachromatic subdivides the set of uniquely mapping pairs into five categories:
  * <ul>
  * <li> <b>Un-ligated</b> - The 5' end positions of the mapped reads have distance that is consistent with fragment sizes that result from sonication. </li>
  * <li> <b>Self-ligated</b> - The calculated size of the hypothetical self-ligated fragment is smaller than a given threshold. </li>
- * <li> <b>Too short</b>  - The read pair was not categorized as un-ligated or self-ligated, but the calculated size of the corresponding hybrid fragment is too small. </li>
+ * <li> <b>Too short</b>  - The read pair was not categorized as un-ligated or self-ligated, but the calculated size of the corresponding chimeric fragment is too small. </li>
  * <li> <b>Too long</b> - Same as for <i>too long</i> Reads align to adjacent restriction fragments. </li>
  * <li> <b>Valid</b> - All remaining pairs are categorized as valid pairs that can be used for downstream analysis. </li>
  * </ul>
@@ -51,20 +51,20 @@ public class ReadPair {
      * Inward-pointing read pairs whose 5' end positions have a distance d smaller than the defined upper threshold will
      * be categorized as un-ligated.
      *
-     * Valid read pairs for which the calculated hybrid fragment sizes d' is outside the specified range will be
+     * Valid read pairs for which the calculated chimeric fragment sizes d' is outside the specified range will be
      * categorized as too small or too large.
-     *
-     * For outward pointing read pairs, the calculated size of the hybrid fragment d' is added to d in order to calculate
-     * the size of the corresponding self-ligated fragment d''. If d'' is smaller than the upper threshold, the read pair
-     * will be categorized as self-ligated.
-     *
-     * TODO: Discuss if there should be a separate threshold for self-ligation.
      */
     private static int LOWER_SIZE_THRESHOLD = 50;
     private static int UPPER_SIZE_THRESHOLD = 800;
 
+    /**
+     * Upper threshold for the size of self-ligating fragments.
+     *
+     * For outward pointing read pairs, the calculated size of the chimeric fragment d' is added to d in order to infer
+     * the size of the corresponding self-ligated fragment d''. If d'' is smaller than the this threshold, the read pair
+     * will be categorized as self-ligated.
+     */
     private static int UPPER_SIZE_SELF_LIGATION_THRESHOLD = 2500;
-
 
     /**
      * Length threshold in nucleotides for the end of a read being near to a restriction fragment/ligation sequence.
@@ -355,21 +355,25 @@ public class ReadPair {
         }
     }
 
-    /**
-     * Check if size of hybrid fragment is too small.
-     */
-    private boolean hasTooSmallHybridFragmentSize() {
-        int hybridSize = getHybridFragmentSize();
-        return hybridSize < LOWER_SIZE_THRESHOLD;
-    }
 
     /**
-     * Check if size of hybrid fragment is too big.
+     * Check if size of chimeric fragment is too small.
      */
-    private boolean hasTooBigHybridFragmentSize() {
-        int hybridSize = getHybridFragmentSize();
-        return UPPER_SIZE_THRESHOLD < hybridSize;
+    private boolean hasTooSmallChimericFragmentSize() {
+        int chimericSize = getChimericFragmentSize();
+        return chimericSize < LOWER_SIZE_THRESHOLD;
     }
+
+
+    /**
+     * Check if size of chimeric fragment is too big.
+     */
+    private boolean hasTooBigChimericFragmentSize() {
+        int chimericSize = getChimericFragmentSize();
+        return UPPER_SIZE_THRESHOLD < chimericSize;
+    }
+
+
 
     /**
      * @return True, if both reads are on the same chromosome.
@@ -378,15 +382,16 @@ public class ReadPair {
         return !R1.getReferenceName().equals(R2.getReferenceName());
     }
 
+
     /**
      * Mapped reads always "point towards" the ligation sequence. We can infer that the actually (physical) size of the
-     * insert goes from the 5' end of a read to the ligation sequence (for each read of the ditag). We calculate this
+     * insert goes from the 5' end of a read to the ligation sequence (for each read of the pair). We calculate this
      * size and will filter out reads whose size is substantially above what we expect given the reported experimental
-     * size selection step. TODO: Revise!
+     * size selection step.
      *
-     * @return The insert size for chimeric hybrid fragments.
+     * @return The insert size for chimeric chimeric fragments.
      */
-    public Integer getHybridFragmentSize() {
+    public Integer getChimericFragmentSize() {
 
          SAMRecord R1 = forward();
 
@@ -414,16 +419,15 @@ public class ReadPair {
 
     /**
      * This function returns the size of a potentially underlying self-ligated fragment. This size is the sum of the
-     * calculated hybrid size plus the distance between the 5' end positions of the mapped reads.
+     * calculated chimeric size plus the distance between the 5' end positions of the mapped reads.
      *
      * The self-ligation size is only defined for read pairs mapping to the same chromosome and pointing outwards.
      *
      * @return
      */
     public int getSelfLigationFragmentSize() {
-        return this.getHybridFragmentSize() + this.getDistanceBetweenFivePrimeEnds();
+        return this.getChimericFragmentSize() + this.getDistanceBetweenFivePrimeEnds();
         }
-
 
 
     /**
@@ -561,17 +565,17 @@ public class ReadPair {
     private void categorizeReadPair() throws DiachromaticException {
 
         if(!this.isTrans() && (this.isInwardFacing()||this.isOutwardFacing())){
-            // inward and outward pointing read pairs may arise from self- or un-ligated fragments
+            // inward and outward pointing read pairs on the same chromosome may arise from self- or un-ligated fragments
             if(this.isOutwardFacing()) {
                 if(this.getSelfLigationFragmentSize() < this.UPPER_SIZE_SELF_LIGATION_THRESHOLD) {
                     setCategoryTag(ReadPairCategory.SELF_LIGATED.getTag());
                 } else {
-                    if(this.hasTooSmallHybridFragmentSize()) {
+                    if(this.hasTooSmallChimericFragmentSize()) {
                         setCategoryTag(ReadPairCategory.VALID_TOO_SHORT.getTag());
-                    } else if(this.hasTooBigHybridFragmentSize()){
+                    } else if(this.hasTooBigChimericFragmentSize()){
                         setCategoryTag(ReadPairCategory.VALID_TOO_LONG.getTag());
                     } else {
-                        setCategoryTag(ReadPairCategory.VALID_PAIR.getTag()); // only if hybrid fragment has the right size it is categorized as valid
+                        setCategoryTag(ReadPairCategory.VALID_PAIR.getTag()); // only if chimeric fragment has the right size it is categorized as valid pair
                     }
                 }
             } else {
@@ -579,23 +583,23 @@ public class ReadPair {
                 if(this.getDistanceBetweenFivePrimeEnds() < this.UPPER_SIZE_THRESHOLD) {
                     setCategoryTag(ReadPairCategory.UN_LIGATED.getTag());
                 } else {
-                    if(this.hasTooSmallHybridFragmentSize()) {
+                    if(this.hasTooSmallChimericFragmentSize()) {
                         setCategoryTag(ReadPairCategory.VALID_TOO_SHORT.getTag());
-                    } else if(this.hasTooBigHybridFragmentSize()){
+                    } else if(this.hasTooBigChimericFragmentSize()){
                         setCategoryTag(ReadPairCategory.VALID_TOO_LONG.getTag());
                     } else {
-                        setCategoryTag(ReadPairCategory.VALID_PAIR.getTag()); // only if hybrid fragment has the right size it is categorized as valid
+                        setCategoryTag(ReadPairCategory.VALID_PAIR.getTag()); // only if chimeric fragment has the right size it is categorized as valid
                     }
                 }
             }
         } else {
             // trans pairs and read pairs that are pointing in the same direction cannot arise from self- or un-ligated fragments
-            if(this.hasTooSmallHybridFragmentSize()) {
+            if(this.hasTooSmallChimericFragmentSize()) {
                 setCategoryTag(ReadPairCategory.VALID_TOO_SHORT.getTag());
-            } else if(this.hasTooBigHybridFragmentSize()){
+            } else if(this.hasTooBigChimericFragmentSize()){
                 setCategoryTag(ReadPairCategory.VALID_TOO_LONG.getTag());
             } else {
-                setCategoryTag(ReadPairCategory.VALID_PAIR.getTag()); // only if hybrid fragment has the right size it is categorized as valid
+                setCategoryTag(ReadPairCategory.VALID_PAIR.getTag()); // only if chimeric fragment has the right size it is categorized as valid
             }
         }
     }

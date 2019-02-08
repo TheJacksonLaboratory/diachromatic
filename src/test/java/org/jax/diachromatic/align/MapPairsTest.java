@@ -141,11 +141,11 @@ public class MapPairsTest {
         sampairer = new Aligner(sam1, sam2, outputRejectedReads,"test3", digestMap,150,800,"xxx",true);
         ReadPair readpair =readpairmap.get("1_uniquelyAlignedRead");
         assertNotNull(readpair);
-        int insertSize=  readpair.getHybridFragmentSize();
+        int insertSize=  readpair.getChimericFragmentSize();
         assertFalse(insertSize<LOWER_SIZE_THRESHOLD);
         assertFalse(insertSize>UPPER_SIZE_THRESHOLD);
         readpair = readpairmap.get("3_tooBig");
-        insertSize=  readpair.getHybridFragmentSize();
+        insertSize=  readpair.getChimericFragmentSize();
         assertTrue(insertSize>UPPER_SIZE_THRESHOLD);
     }
 
@@ -160,7 +160,7 @@ public class MapPairsTest {
         sampairer = new Aligner(sam1, sam2, outputRejectedReads,"test2", digestMap,150,800,"xxx",true);
         ReadPair readpair = readpairmap.get("2_multiplyAlignedRead");
         assertNotNull(readpair);
-        int insertSize=  readpair.getHybridFragmentSize();
+        int insertSize=  readpair.getChimericFragmentSize();
         assertFalse(insertSize<LOWER_SIZE_THRESHOLD);
         assertFalse(insertSize>UPPER_SIZE_THRESHOLD);
     }
@@ -188,7 +188,7 @@ public class MapPairsTest {
     public void testInsertTooLarge() {
         int THRESHOLD=800;
         ReadPair readpair  = readpairmap.get("3_tooBig");//1
-        int insertSize=readpair.getHybridFragmentSize();
+        int insertSize=readpair.getChimericFragmentSize();
         //System.err.println("insert size = " + insertSize); 3823
         assertTrue(insertSize>THRESHOLD);
     }
