@@ -76,7 +76,7 @@ public class ReadPairTest {
         when(mockDigestPair.forward()).thenReturn(digest);
         when(mockDigestPair.reverse()).thenReturn(digest);
 
-        when(mockDigestMap.getDigestPair2("fakeChromosome1", 200, "fakeChromosome2", 400)).thenReturn(mockDigestPair);
+        when(mockDigestMap.getDigestPair("fakeChromosome1", 200, "fakeChromosome2", 400)).thenReturn(mockDigestPair);
         int upperFragSize = 250;
         int lowerFragSize = 200;
         boolean stringent = false;

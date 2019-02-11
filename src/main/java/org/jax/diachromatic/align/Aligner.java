@@ -1,7 +1,6 @@
 package org.jax.diachromatic.align;
 
 import htsjdk.samtools.*;
-import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.util.Log;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -116,7 +115,7 @@ public class Aligner {
     private int n_paired_unique_valid_trans = 0;
 
     /**
-     * Lower and upper bounds for sizes of hybrid fragments. Are passed as arguments to the constructor of {@link ReadPair}
+     * Lower and upper bounds for sizes of chimeric fragments. Are passed as arguments to the constructor of {@link ReadPair}
      * and compared to the calculated insert size in order to categorize given read pairs as 'too short' or 'too long'.
      */
     private Integer lowerFragSize;
@@ -152,13 +151,17 @@ public class Aligner {
     /**
      * Largest calculated insert size represented in the distribution of fragment sizes.
      */
-    private static int FRAG_SIZE_LIMIT = 10000;
+    private static int FRAG_SIZE_LIMIT = 30000;
 
     /**
      * Arrays that represent size distributions.
      */
-    private int[] fragSizesAllPairs =  new int[FRAG_SIZE_LIMIT+1];
-    private int[] fragSizesHybridActivePairs =  new int[FRAG_SIZE_LIMIT+1];
+    private int[] fragSizesChimericPairs =  new int[FRAG_SIZE_LIMIT+1];
+    private int[] fragSizesActiveChimericPairs =  new int[FRAG_SIZE_LIMIT+1];
+    private int[] fragSizesUnLigatedPairs =  new int[FRAG_SIZE_LIMIT+1];
+    private int[] selfLigationFragSizesForCisOuties =  new int[FRAG_SIZE_LIMIT+1];
+    private int[] selfLigationFragSizesForCisCommies =  new int[FRAG_SIZE_LIMIT+1];
+
 
     /**
      * HTS-JDK SAM reader objects for R1 and R2.
@@ -211,8 +214,13 @@ public class Aligner {
         this.upperFragSize = upperFragSize;
         this.filenamePrefix = filenamePrefix;
         this.useStringentUniqueSettings = useStringentUniqueSettings;
-        Arrays.fill(fragSizesAllPairs, 0);
-        Arrays.fill(fragSizesHybridActivePairs, 0);
+        Arrays.fill(fragSizesChimericPairs, 0);
+        Arrays.fill(fragSizesActiveChimericPairs, 0);
+        Arrays.fill(fragSizesUnLigatedPairs, 0);
+        Arrays.fill(selfLigationFragSizesForCisOuties, 0);
+        Arrays.fill(selfLigationFragSizesForCisCommies, 0);
+
+
         VERSION = Commandline.getVersion();
         createOutputNames(outputPathPrefix);
     }
@@ -289,7 +297,7 @@ public class Aligner {
                 n_paired++;
 
                 // de-duplication starts with paired pairs
-                if(dedup_map.hasSeen(pair)) {
+                if(dedup_map.hasSeen(pair) || pair.isDanglingEnd()) {
                     n_paired_duplicated++;
                     continue;
                 }
@@ -338,14 +346,48 @@ public class Aligner {
                 continue;
             }
 
-            // count sizes of all fragments
-            Integer incrementFragSize = pair.getCalculatedInsertSize();
+            // count sizes of all chimeric fragments including valid, too short and too long
+            Integer incrementFragSize = pair.getChimericFragmentSize();
             if(FRAG_SIZE_LIMIT<incrementFragSize) { incrementFragSize = FRAG_SIZE_LIMIT; }
-            fragSizesAllPairs[incrementFragSize]++;
+            if(pair.getCategoryTag().equals("VP")||pair.getCategoryTag().equals("TS")||pair.getCategoryTag().equals("TL"))   {
+            //if(pair.isTrans()){ // trans pairs can only be chimeric!
 
-            // count sizes of all hybrid active fragments
-            if((pair.forwardDigestIsActive() & !pair.reverseDigestIsActive()) || (!pair.forwardDigestIsActive() & pair.reverseDigestIsActive())) {
-                fragSizesHybridActivePairs[incrementFragSize]++;
+                fragSizesChimericPairs[incrementFragSize]++;
+                /*
+                if(incrementFragSize>50 && incrementFragSize<80) {
+                    logger.trace(incrementFragSize);
+                    logger.trace(pair.forward().getReadName());
+                    logger.trace("pair.isDanglingEnd()" + pair.isDanglingEnd());
+                    logger.trace(pair.forward().getReferenceName() + ":" + pair.forward().getAlignmentStart() + "-" + pair.forward().getAlignmentEnd());
+                    logger.trace(pair.reverse().getReadName());
+                    logger.trace(pair.reverse().getReferenceName() + ":" + pair.reverse().getAlignmentStart() + "-" + pair.reverse().getAlignmentEnd());
+                }*/
+
+                // count sizes of all active chimeric fragments
+                if((pair.forwardDigestIsActive() & !pair.reverseDigestIsActive()) || (!pair.forwardDigestIsActive() & pair.reverseDigestIsActive())) {
+                    fragSizesActiveChimericPairs[incrementFragSize]++;
+                }
+            }
+
+            // count sizes of potentially un-ligated fragments (don't use thresholds to avoid circular argument)
+            if(pair.isInwardFacing() && !pair.isTrans()){
+                incrementFragSize=pair.getDistanceBetweenFivePrimeEnds();
+                if(FRAG_SIZE_LIMIT<incrementFragSize) { incrementFragSize = FRAG_SIZE_LIMIT; }
+                fragSizesUnLigatedPairs[incrementFragSize]++;
+            }
+
+            // count sizes of potentially self-ligated fragments (don't use thresholds to avoid circular argument)
+            if(pair.isOutwardFacing() && !pair.isTrans()){ //pair.getCategoryTag().equals("SL")) {
+                incrementFragSize = pair.getChimericFragmentSize();//pair.getSelfLigationFragmentSize();
+                if(FRAG_SIZE_LIMIT<incrementFragSize) { incrementFragSize = FRAG_SIZE_LIMIT; }
+                selfLigationFragSizesForCisOuties[incrementFragSize]++;
+            }
+
+            // count self-ligation sizes also for cis read pairs pointing in the same direction and on the same chromosome (sanity check)
+            if(pair.isOutwardFacing() &&  pair.isTrans()) {
+                incrementFragSize = pair.getChimericFragmentSize();//pair.getSelfLigationFragmentSize();
+                if(FRAG_SIZE_LIMIT<incrementFragSize) { incrementFragSize = FRAG_SIZE_LIMIT; }
+                selfLigationFragSizesForCisCommies[incrementFragSize]++;
             }
 
             // write pair to BAM file
@@ -354,6 +396,9 @@ public class Aligner {
                 validReadsWriter.addAlignment(pair.reverse());
             } else {
                 if (outputRejectedReads) {
+                    if(pair.getRelativeOrientationTag().equals("R1R2") && pair.getCategoryTag().equals("TS")) {
+                        logger.trace("Size: " + pair.getChimericFragmentSize());
+                    }
                     rejectedReadsWriter.addAlignment(pair.forward());
                     rejectedReadsWriter.addAlignment(pair.reverse());
                 }
@@ -365,7 +410,7 @@ public class Aligner {
             rejectedReadsWriter.close();
         }
 
-        printFragmentLengthDistributionRscript(fragSizesAllPairs, fragSizesHybridActivePairs);
+        printFragmentLengthDistributionRscript(fragSizesChimericPairs, fragSizesActiveChimericPairs, fragSizesUnLigatedPairs, selfLigationFragSizesForCisOuties);
         //dedup_map.printDeDupStatistics(n_paired_duplicated);
     }
 
@@ -374,36 +419,61 @@ public class Aligner {
      * The sizes for read pairs that belong to selected/active fragments are passed and plotted separately.
      * The purpose of this is to investigate the relationship of fragment size and enrichment.
      *
-     * @param fragSizesAllPairs integer array representing the distribution of sizes, e.g. fragSizesAllPairs[181] corrsponds to the number of fragments of size 180
-     * @param fragSizesHybridActivePairs same as fragSizesAllPairs but only for read pairs for which at least one read maps to an selected/active fragment
+     * @param fragSizesAllPairs integer array representing the distribution of sizes, e.g. fragSizesChimericPairs[181] corrsponds to the number of fragments of size 180
+     * @param fragSizesChimericActivePairs same as fragSizesChimericPairs but only for read pairs for which at least one read maps to an selected/active fragment
      * @throws FileNotFoundException
      */
-    private void printFragmentLengthDistributionRscript(int[] fragSizesAllPairs, int[] fragSizesHybridActivePairs ) throws FileNotFoundException {
+    private void printFragmentLengthDistributionRscript(int[] fragSizesAllPairs, int[] fragSizesChimericActivePairs, int[] fragSizesUnLigatedPairs, int[] fragSizesSelfLigatedPairs) throws FileNotFoundException {
 
         PrintStream printStream = new PrintStream(new FileOutputStream(outputFragSizesCountsRscript));
 
         printStream.print("length<-c(");
-        for(int i=0; i<FRAG_SIZE_LIMIT-1; i++) {
+        for(int i=0; i<FRAG_SIZE_LIMIT; i++) {
             printStream.print(i + ",");
         }
-        printStream.print(FRAG_SIZE_LIMIT-1 + ")\n");
+        printStream.print(FRAG_SIZE_LIMIT + ")\n");
 
-        printStream.print("fragSizesAllPairs<-c(");
-        for(int i=0; i<FRAG_SIZE_LIMIT-1; i++) {
+        printStream.print("fragSizesChimericPairs<-c(");
+        for(int i=0; i<FRAG_SIZE_LIMIT; i++) {
             printStream.print(fragSizesAllPairs[i] + ",");
         }
-        printStream.print(fragSizesAllPairs[FRAG_SIZE_LIMIT-1] + ")\n");
+        printStream.print(fragSizesAllPairs[FRAG_SIZE_LIMIT] + ")\n");
 
-        printStream.print("fragSizesHybridActivePairs<-c(");
-        for(int i=0; i<FRAG_SIZE_LIMIT-1; i++) {
-            printStream.print(fragSizesHybridActivePairs[i] + ",");
+        printStream.print("fragSizesActiveChimericPairs<-c(");
+        for(int i=0; i<FRAG_SIZE_LIMIT; i++) {
+            printStream.print(fragSizesChimericActivePairs[i] + ",");
         }
-        printStream.print(fragSizesHybridActivePairs[FRAG_SIZE_LIMIT-1] + ")\n");
+        printStream.print(fragSizesChimericActivePairs[FRAG_SIZE_LIMIT] + ")\n");
+
+        printStream.print("fragSizesUnLigatedPairs<-c(");
+        for(int i=0; i<FRAG_SIZE_LIMIT; i++) {
+            printStream.print(fragSizesUnLigatedPairs[i] + ",");
+        }
+        printStream.print(fragSizesUnLigatedPairs[FRAG_SIZE_LIMIT] + ")\n");
+
+        printStream.print("selfLigationFragSizesForCisOuties<-c(");
+        for(int i=0; i<FRAG_SIZE_LIMIT; i++) {
+            printStream.print(selfLigationFragSizesForCisOuties[i] + ",");
+        }
+        printStream.print(selfLigationFragSizesForCisOuties[FRAG_SIZE_LIMIT] + ")\n");
+
+        printStream.print("selfLigationFragSizesForCisCommies<-c(");
+        for(int i=0; i<FRAG_SIZE_LIMIT; i++) {
+            printStream.print(selfLigationFragSizesForCisCommies[i] + ",");
+        }
+        printStream.print(selfLigationFragSizesForCisCommies[FRAG_SIZE_LIMIT] + ")\n");
 
         printStream.print("\n");
         printStream.print("cairo_pdf(\"");
         printStream.print(filenamePrefix);
-        printStream.print(".pdf\")\n");
+        printStream.print(".pdf\", height=7, width=11)\n");
+
+        printStream.print("par(mfrow=c(2,3),oma = c(0, 0, 2, 0))\n");
+
+
+        printStream.print("FRAG_SIZE_LIMIT=");
+        printStream.print(FRAG_SIZE_LIMIT+1);
+        printStream.print("\n");
 
         printStream.print("MAIN=\"");
         printStream.print(filenamePrefix);
@@ -411,26 +481,53 @@ public class Aligner {
 
         printStream.print("XLIM<-c(0,1000)\n");
 
-        printStream.print("YLIM<-max(max(fragSizesAllPairs[10:1000]),max(fragSizesHybridActivePairs[10:1000]))\n");
+        printStream.print("YLIM<-max(max(fragSizesChimericPairs[10:1000]),max(fragSizesActiveChimericPairs[10:1000]))\n"); // TODO: Find out why lengths 1 to 10 are omitted
 
-        printStream.print("plot(length, fragSizesAllPairs, xlim=XLIM, type=\"l\", ylim=c(0,YLIM), ylab=NA, xlab=NA, axes=FALSE)\n");
+        printStream.print("plot(length, fragSizesChimericPairs, xlim=XLIM, type=\"l\", ylim=c(0,YLIM), ylab=NA, xlab=NA, axes=FALSE)\n");
 
         printStream.print("par(new=TRUE)\n");
 
-        printStream.print("plot(length,fragSizesHybridActivePairs,main=MAIN, xlim=XLIM,type=\"l\", ylim=c(0,YLIM),col=\"red\",xlab=\"Size (nt)\",ylab=\"Fragment count\")\n");
+        printStream.print("plot(length, fragSizesUnLigatedPairs, xlim=XLIM, type=\"l\", ylim=c(0,YLIM), ylab=NA, xlab=NA, axes=FALSE, col=\"blue\")\n");
 
-        printStream.print("PREDOM_FRAG_SIZE<-which(max(fragSizesAllPairs)==fragSizesAllPairs)\n");
-        printStream.print("abline(v=PREDOM_FRAG_SIZE)\n");
+        printStream.print("par(new=TRUE)\n");
 
-        printStream.print("PREDOM_ACTIVE_FRAG_SIZE<-numeric()\n");
-        printStream.print("if(0<sum(fragSizesHybridActivePairs)) {\n");
-        printStream.print("PREDOM_ACTIVE_FRAG_SIZE<-which(max(fragSizesHybridActivePairs)==fragSizesHybridActivePairs)\n");
-        printStream.print("abline(v=PREDOM_ACTIVE_FRAG_SIZE)\n");
-        printStream.print("} else {PREDOM_ACTIVE_FRAG_SIZE <-0}\n");
+        printStream.print("plot(length,fragSizesActiveChimericPairs,main=\"Size distribution of chimeric and un-ligated fragments\", xlim=XLIM,type=\"l\", ylim=c(0,YLIM),col=\"red\",xlab=\"Size (nt)\",ylab=\"Fragment count\")\n");
 
-        printStream.print("LEGEND_ALL<-paste(\"All fragments (\",PREDOM_FRAG_SIZE,\")\",sep=\"\")\n");
-        printStream.print("LEGEND_HYBRID_ACTIVE<-paste(\"Hybrid active fragments (\",PREDOM_ACTIVE_FRAG_SIZE,\")\",sep=\"\")\n");
-        printStream.print("legend(\"topright\",legend=c(LEGEND_ALL, LEGEND_HYBRID_ACTIVE), col=c(\"black\", \"red\"), lty=1, bg = \"white\")\n");
+        printStream.print("PREDOM_FRAG_SIZE<-which(max(fragSizesChimericPairs)==fragSizesChimericPairs)-1\n");
+        //printStream.print("abline(v=PREDOM_FRAG_SIZE,col=\"black\")\n");
+
+        printStream.print("PREDOM_UNLIGATED_FRAG_SIZE<-which(max(fragSizesUnLigatedPairs[1:1000])==fragSizesUnLigatedPairs[1:1000])-1\n");
+        //printStream.print((printStream.print("abline(v=PREDOM_UNLIGATED_FRAG_SIZE,col=\"blue\")\n");
+
+        //printStream.print("PREDOM_ACTIVE_FRAG_SIZE<-numeric()\n");
+        //printStream.print("if(0<sum(fragSizesActiveChimericPairs)) {\n");
+        printStream.print("PREDOM_ACTIVE_FRAG_SIZE<-which(max(fragSizesActiveChimericPairs)==fragSizesActiveChimericPairs)-1\n");
+        //printStream.print("abline(v=PREDOM_ACTIVE_FRAG_SIZE,col=\"red\")\n");
+        //printStream.print("} else {PREDOM_ACTIVE_FRAG_SIZE <-0}\n");
+
+
+        printStream.print("LEGEND_HYBRID<-paste(\"Chimeric fragments (\",PREDOM_FRAG_SIZE,\")\",sep=\"\")\n");
+        printStream.print("LEGEND_ACTIVE<-paste(\"Active chimeric fragments (\",PREDOM_ACTIVE_FRAG_SIZE,\")\",sep=\"\")\n");
+        printStream.print("LEGEND_UNLIGATED<-paste(\"Un-ligated fragments (\",PREDOM_UNLIGATED_FRAG_SIZE,\")\",sep=\"\")\n");
+
+        printStream.print("legend(\"topright\",legend=c(LEGEND_HYBRID, LEGEND_ACTIVE, LEGEND_UNLIGATED), col=c(\"black\", \"red\", \"blue\"), lty=1, bg = \"white\")\n\n");
+
+        printStream.print("NUMBER_OF_BINS<-round(FRAG_SIZE_LIMIT/50)\n");
+
+        printStream.print("hist(rep(1:FRAG_SIZE_LIMIT,selfLigationFragSizesForCisOuties),NUMBER_OF_BINS,main=\"Self-ligation sizes for OUTWARD pairs\",ylab=\"Fragment count\",xlab=\"Size (nt)\",xlim=c(0,5000))\n");
+        printStream.print("hist(rep(1:FRAG_SIZE_LIMIT,selfLigationFragSizesForCisCommies),NUMBER_OF_BINS,main=\"Self-ligation sizes for SAME DIRECTION pairs\",ylab=\"Fragment count\",xlab=\"Size (nt)\",xlim=c(0,5000))\n");
+
+        printStream.print("plot(1:10)\n");
+
+        printStream.print("FRAG_SIZE_LIMIT2=FRAG_SIZE_LIMIT-1\n");
+
+        printStream.print("YMAX<-max(hist(rep(1:(FRAG_SIZE_LIMIT-1),selfLigationFragSizesForCisOuties[1:FRAG_SIZE_LIMIT-1]),NUMBER_OF_BINS,plot=F)$counts)\n");
+        printStream.print("YLIM=c(0,YMAX)\n");
+
+        printStream.print("hist(rep(1:FRAG_SIZE_LIMIT,selfLigationFragSizesForCisOuties),NUMBER_OF_BINS,main=\"Self-ligation sizes for OUTWARD pairs\",ylab=\"Fragment count\",xlab=\"Size (nt)\",ylim=YLIM,xlim=c(0,1000))\n");
+        printStream.print("hist(rep(1:FRAG_SIZE_LIMIT,selfLigationFragSizesForCisCommies),NUMBER_OF_BINS,main=\"Self-ligation sizes for SAME DIRECTION pairs\",ylab=\"Fragment count\",xlab=\"Size (nt)\",ylim=YLIM,xlim=c(0,1000))\n");
+
+        printStream.print("mtext(MAIN, outer = TRUE, cex = 1.5)\n");
 
         printStream.print("dev.off()\n");
     }
@@ -473,8 +570,8 @@ public class Aligner {
         printStream.print("Disjoint categories:\n");
         printStream.print("Un-ligated:\t" + n_paired_unique_un_ligated + String.format(" (%.2f%%)", 100.0* n_paired_unique_un_ligated /n_paired_unique) + "\n");
         printStream.print("Self-ligated:\t" + n_paired_unique_self_ligated + String.format(" (%.2f%%)", 100.0* n_paired_unique_self_ligated /n_paired_unique) + "\n");
-        printStream.print("Calculated size of hybrid fragment too short:\t" + n_paired_unique_too_short + String.format(" (%.2f%%)", 100.0* n_paired_unique_too_short /n_paired_unique) + "\n");
-        printStream.print("Calculated size of hybrid fragment too long:\t" + n_paired_unique_too_long + String.format(" (%.2f%%)", 100.0* n_paired_unique_too_long /n_paired_unique) + "\n");
+        printStream.print("Calculated size of chimeric fragment too short:\t" + n_paired_unique_too_short + String.format(" (%.2f%%)", 100.0* n_paired_unique_too_short /n_paired_unique) + "\n");
+        printStream.print("Calculated size of chimeric fragment too long:\t" + n_paired_unique_too_long + String.format(" (%.2f%%)", 100.0* n_paired_unique_too_long /n_paired_unique) + "\n");
         printStream.print("Valid:\t" + n_paired_unique_valid + String.format(" (%.2f%%)", 100.0* n_paired_unique_valid /n_paired_unique) + "\n");
         printStream.print("Note: These five categories are disjoint subsets of all unique paired read pairs, and percentages refer to this superset." + "\n\n");
 

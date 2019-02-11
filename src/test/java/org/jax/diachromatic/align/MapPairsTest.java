@@ -71,8 +71,8 @@ public class MapPairsTest {
         String outdir = "results";
         String outprefix = "results";
         String digestFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
-        String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
-        DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
+       // String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
+        DigestMap digestMap = new DigestMap(digestFile);
         sampairer = new Aligner(sam1, sam2, outputRejectedReads,"test1", digestMap, 150, 800, "xxx",true);
         ReadPair pair;
         while ((pair = sampairer.getNextPair())!=null) {
@@ -90,7 +90,7 @@ public class MapPairsTest {
      * @return list of "fake" Digest object
      */
     @SafeVarargs
-    private static List<Digest> makeFakeDigestList(String chrom,Pair<Integer,Integer> ...pos_pair) {
+    private static List<Digest> makeFakeDigestList(String chrom,Pair<Integer,Integer> ...pos_pair) throws DiachromaticException {
         List<Digest> dlist = new ArrayList<>();
         for (Pair<Integer,Integer> p : pos_pair) {
             Digest d = makeFakeDigest(chrom,p.first,p.second);
@@ -106,8 +106,8 @@ public class MapPairsTest {
      * @param frompos end position of digest
      * @return one fake {@link Digest} object (See {@link #makeFakeDigestList(String, Pair[])}).
      */
-    private static Digest makeFakeDigest(String chr, int frompos, int topos) {
-        String fields[]=new String[6];
+    private static Digest makeFakeDigest(String chr, int frompos, int topos) throws  DiachromaticException{
+        String[] fields = new String[6];
         fields[0]=chr;
         fields[1]=String.valueOf(frompos);
         fields[2]=String.valueOf(topos);
@@ -136,16 +136,16 @@ public class MapPairsTest {
         int UPPER_SIZE_THRESHOLD=800;
         int LOWER_SIZE_THRESHOLD=150;
         String digestFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
-        String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
-        DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
+       // String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
+        DigestMap digestMap = new DigestMap(digestFile);
         sampairer = new Aligner(sam1, sam2, outputRejectedReads,"test3", digestMap,150,800,"xxx",true);
         ReadPair readpair =readpairmap.get("1_uniquelyAlignedRead");
         assertNotNull(readpair);
-        int insertSize=  readpair.getCalculatedInsertSize();
+        int insertSize=  readpair.getChimericFragmentSize();
         assertFalse(insertSize<LOWER_SIZE_THRESHOLD);
         assertFalse(insertSize>UPPER_SIZE_THRESHOLD);
         readpair = readpairmap.get("3_tooBig");
-        insertSize=  readpair.getCalculatedInsertSize();
+        insertSize=  readpair.getChimericFragmentSize();
         assertTrue(insertSize>UPPER_SIZE_THRESHOLD);
     }
 
@@ -155,12 +155,12 @@ public class MapPairsTest {
         int UPPER_SIZE_THRESHOLD=800;
         int LOWER_SIZE_THRESHOLD=150;
         String digestFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
-        String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
-        DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
+      //  String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
+        DigestMap digestMap = new DigestMap(digestFile);
         sampairer = new Aligner(sam1, sam2, outputRejectedReads,"test2", digestMap,150,800,"xxx",true);
         ReadPair readpair = readpairmap.get("2_multiplyAlignedRead");
         assertNotNull(readpair);
-        int insertSize=  readpair.getCalculatedInsertSize();
+        int insertSize=  readpair.getChimericFragmentSize();
         assertFalse(insertSize<LOWER_SIZE_THRESHOLD);
         assertFalse(insertSize>UPPER_SIZE_THRESHOLD);
     }
@@ -174,8 +174,8 @@ public class MapPairsTest {
     @Test
     public void testSelfLigation() throws DiachromaticException {
         String digestFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
-        String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
-        DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
+        //String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
+        DigestMap digestMap = new DigestMap(digestFile);
         sampairer = new Aligner(sam1, sam2, outputRejectedReads,"test4", digestMap,150,800,"xxx",true);
         ReadPair readpair = readpairmap.get("1_uniquelyAlignedRead");
         assertFalse(readpair.getCategoryTag().equals("SP"));
@@ -185,17 +185,17 @@ public class MapPairsTest {
 
     /** The insert of the third read pair is above threshold of 800. */
     @Test
-    public void testInsertTooLarge() throws DiachromaticException {
+    public void testInsertTooLarge() {
         int THRESHOLD=800;
         ReadPair readpair  = readpairmap.get("3_tooBig");//1
-        int insertSize=readpair.getCalculatedInsertSize();
+        int insertSize=readpair.getChimericFragmentSize();
         //System.err.println("insert size = " + insertSize); 3823
         assertTrue(insertSize>THRESHOLD);
     }
 
     /** The insert of the seventh read pair is above threshold of 800. */
     @Test
-    public void testSetSamFlagsForCorrectPair() throws DiachromaticException {
+    public void testSetSamFlagsForCorrectPair() {
         ReadPair readpair =readpairmap.get("7_validRead1");
         SamBitflagFilter.debugDisplayBitflag(readpair.forward().getFlags());
         // before we pair, the flags are set only to zero.

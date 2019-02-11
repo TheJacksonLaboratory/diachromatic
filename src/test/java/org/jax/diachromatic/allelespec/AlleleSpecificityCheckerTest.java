@@ -5,7 +5,6 @@ import org.junit.Test;
 
 import java.io.FileNotFoundException;
 import java.net.URL;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 

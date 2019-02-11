@@ -1,7 +1,5 @@
 package org.jax.diachromatic.normalization;
 
-import static org.junit.Assert.*;
-
 //import com.github.chen0040.data.frame.BasicDataFrame;
 //import com.github.chen0040.data.frame.DataRow;
 //import com.github.chen0040.glm.enums.GlmDistributionFamily;
@@ -32,7 +30,7 @@ public class PoissonRegressionTest {
      */
 
     @Test
-    public void reproduceHorseshoeCrabExample() throws FileNotFoundException {
+    public void reproduceHorseshoeCrabExample() {
 
         /* Read data provided for the tutorial: The structure of the file crab.txt provided by the tutorial is as follows:
 
@@ -52,7 +50,7 @@ public class PoissonRegressionTest {
             while ((line = br.readLine()) != null) {
 
                 String line2=line.trim();
-                String A[]=line2.split(" +");
+                String[] A = line2.split(" +");
 
                 Integer observation=Integer.parseInt(A[0]);
                 String color=A[1];

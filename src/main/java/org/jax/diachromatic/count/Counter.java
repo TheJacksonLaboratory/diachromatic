@@ -41,17 +41,19 @@ public class Counter {
     /**
      * Stores interaction counts.
      */
-    InteractionCountsMap interactionMap;
+    private InteractionCountsMap interactionMap;
 
     /**
      * Stores interaction counts.
      */
-    DigestMap digestMap;
+    private DigestMap digestMap;
 
     /**
      * Paths for output files.
      */
-    String outputTsvInteractingFragmentCounts, outputTsvInteractionCounts, outputTxtStats;
+    private String outputTsvInteractingFragmentCounts;
+    private String outputTsvInteractionCounts;
+    private String outputTxtStats;
 
     /**
      * A reader for the unique valid read pairs.

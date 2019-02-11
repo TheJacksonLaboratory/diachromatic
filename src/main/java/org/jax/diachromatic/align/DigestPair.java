@@ -33,11 +33,7 @@ public class DigestPair {
 
     public boolean isAdjacent() {
         if(this.forwardDigest.getChromosome().equals(this.reverseDigest.getChromosome())) {
-            if((this.forwardDigest.getEndpos() == reverseDigest.getStartpos()-1) || (this.reverseDigest.getEndpos() == forwardDigest.getStartpos()-1)) {
-                return true;
-            } else {
-                return  false;
-            }
+            return (this.forwardDigest.getDigestEndPosition() == reverseDigest.getDigestStartPosition() - 1) || (this.reverseDigest.getDigestEndPosition() == forwardDigest.getDigestStartPosition() - 1);
         } else {
             return false;
         }

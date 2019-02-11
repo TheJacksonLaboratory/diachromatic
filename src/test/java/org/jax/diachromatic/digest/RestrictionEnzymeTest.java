@@ -13,7 +13,7 @@ public class RestrictionEnzymeTest {
     private static List<RestrictionEnzyme> reList;
 
     @BeforeClass
-    public static void setup() throws Exception {
+    public static void setup() {
         hindIII = new RestrictionEnzyme("HindIII", "A^AGCTT");
         reList=RestrictionEnzyme.parseRestrictionEnzymes();
     }
