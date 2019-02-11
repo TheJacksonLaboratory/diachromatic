@@ -15,11 +15,7 @@ GOPHER digest file
 
 Due to the fact that the counts are determined on the restriction fragment level, the digest file `initially produced
 using GOPHER`_ needs to be passed to ``Diachromatic count``. If the captured viewpoints were designed with GOPHER,
-this file also includes information about active and inactive restriction fragments. If this is not the case,
-you can pass an additional BED file containing the coordinates of active digests. Note that the coordinates must exactly
-match the coordinates in the digest file. The coordinates in GOPHER's digest file are 1-based. Therefore, the BED file
-for active fragments does strictly speaking not comply with the BED format that has 0-based start coordinates and
-1-based end coordinates.
+this file also includes information about active and inactive restriction fragments.
 
 .. _initially produced using GOPHER: digest.html
 
@@ -66,8 +62,6 @@ Use the following command to run the counting step. ::
 +--------------+----------------------+--------------------------------------------------------+----------+------------------------------------------------------------------+---------+
 | -d           | --digest-file        | /data/GOPHER/hg38_DpnII_DigestedGenome.txt             | yes      | Path to the digest file produced with GOPHER.                    |    --   |
 +--------------+----------------------+--------------------------------------------------------+----------+------------------------------------------------------------------+---------+
-| -a           | --active-digest-file | /data/GOPHER/hg38_DpnII_active_digests_cd4v2_genes.bed | no       | Path to a BED file containing the coordinates of active digests. |    --   |
-+--------------+----------------------+--------------------------------------------------------+----------+------------------------------------------------------------------+---------+
 | -od          | --out-directory      | cd4v2                                                  | no       | Directory containing the output of the align subcommand.         | results |
 +--------------+----------------------+--------------------------------------------------------+----------+------------------------------------------------------------------+---------+
 | -op          | --out-prefix         | stim_rep1                                              | no       | Prefix for all generated files in output directory.              | prefix  |
@@ -94,8 +88,8 @@ Consider the following example:
 
 The first three columns contain the coordinates of a restriction fragment on chromosome 7. The ``A`` in column 4
 indicates that this fragment is defined to be active, i.e. it is part of a viewpoint that was enriched using capture technology.
-The information about active states of fragments originates either from the GOPHER digest file passed to Diachromatic
-using the ``-d`` option or from the additional input file passed using the ``-a`` option.
+The information about active states of fragments originates from the GOPHER digest file passed to Diachromatic
+using the ``-d`` option.
 
 Read counts at interacting fragments
 ------------------------------------
@@ -116,6 +110,21 @@ The first three columns contain the coordinates of interacting restriction fragm
 whereby ``A`` means active and ``I`` inactive. The fifth column contains the read counts aggregated from all
 interactions that end in the corresponding fragment. For better understanding, compare these counts to the two
 interactions given above.
+
+Quality metrics
+~~~~~~~~~~~~~~~
+
+Fraction of singleton interactions (FSI)
+----------------------------------------
+
+It has been pointed out that the Cis/Trans ratio quality measure depends also on other factors such as the genome size and
+number of chromosomes of the analyzed species (Wingett 2015). Diachromatic provides an alternative and possibly more robust quality metric that
+can be used to access the extent of cross-ligation. Amongst the trans read pairs, we generally observe a large proportion
+of restriction fragments that are connected by single read pairs only. The number of all possible different cross-ligation
+events (including cis and trans) can roughly be estimated as the square number of all restriction fragments across the
+entire genome. Given this huge number, we reasoned that it is very unlikely that the same cross-ligation event occurs
+twice. Therefore, we defined the fraction of singleton interactions as the ratio of singleton read pairs and all read pairs.
+
 
 Interaction count statistics
 ----------------------------
