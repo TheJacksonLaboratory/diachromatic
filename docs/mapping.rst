@@ -10,7 +10,7 @@ different chromosomes (**trans interactions**). For this reason, the distance be
 mapped reads can no longer be interpreted as the classical *insert size* in all cases.
 Therefore, the truncated forward (R1) and reverse (R2) reads have to be mapped independently.
 
-Diachromatic separately executes ``bowtie2`` for R1 and R2 with the ``--very-sensitive`` option.
+Diachromatic separately executes ``bowtie2``  with the ``--very-sensitive`` option for the truncated R1 and R2 reads.
 Read pairs for which at least one read cannot be mapped uniquely are discarded.
 Diachromatic provides two levels of stringency for the definition of multi-mapped reads:
     1. **Very stringent mapping:** There is no second best alignment for the given read. In this case the line in the SAM record produced by ``bowtie2`` contains no ``XS`` tag. Use Diachromatic's ``--bowtie-stringent-unique`` or ``-bsu`` option in order to use this level of stringency.
@@ -91,7 +91,7 @@ distance between the 5' end positions of the two reads. This distance is here re
 .. figure:: img/fragment_size_unligated.png
     :align: center
 
-In order to distinguish between inward pointing read pairs arising from chimeric and un-ligated fragments, Diachromatic
+In order decide whether a given read pair originates from a chimeric or an un-ligated fragment, Diachromatic
 uses the same upper threshold T1\ :sub:`max` that is also used for the categorization of too large chimeric fragments.
 This is because we assume the size distributions both for chimeric and un-ligated fragments to be the result of the same shearing
 step.
@@ -104,8 +104,8 @@ Sizes of self-ligated fragments
 
 Unlike read pairs arising from un-ligated fragments, read pairs arising from self-ligated must point outwards.
 Furthermore, self-ligating fragments have a different size distribution than chimeric and un-ligated fragments.
-The relevant size is no longer the size of the sequenced fragments that results from shearing but the
-favourable size at which fragments tend to self-ligate.
+The relevant sizes are no longer those of the sequenced fragments but the favourable size at which fragments tend to
+self-ligate.
 Very short fragments might not self-ligate because of steric hindrance, whereas the ends of very long fragments might
 be unlikely to become located in sufficient physical proximity in order to ligate.
 Within Diachromatic, the size of self-ligating fragments is calculated as the sum d\ :sub:`s` = d\ :sub:`h` + d\ :sub:`u`,
@@ -287,8 +287,8 @@ The optional fields of the SAM records contain information about the read pair c
 
 Furthermore, there is an ``RO`` attribute that indicates the relative orientation of the pair:
 
-    * Same strand right: ``F1F2``, ``F2F1``
-    * Same strand left: ``R1R2``, ``R2R1``
+    * Same strand forward: ``F1F2``, ``F2F1``
+    * Same strand reverse: ``R1R2``, ``R2R1``
     * Inwards: ``F1R2``, ``F2R1``
     * Outwards: ``R2F1``, ``R1F2``
 

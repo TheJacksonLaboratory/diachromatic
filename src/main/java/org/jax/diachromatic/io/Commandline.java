@@ -68,7 +68,7 @@ public class Commandline {
      * Lower and upper limit for size of valid pair fragments. Read pairs that correspond to hybrid fragments with
      * a size outside this range will be categorized as wrong size pairs and discarded.
      */
-    private Integer lowerFragSize = 150;
+    private Integer lowerFragSize = 50;
     private Integer upperFragSize = 800;
 
     private boolean useStringentUniqueSettings = false;

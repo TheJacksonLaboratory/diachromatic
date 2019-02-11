@@ -396,6 +396,9 @@ public class Aligner {
                 validReadsWriter.addAlignment(pair.reverse());
             } else {
                 if (outputRejectedReads) {
+                    if(pair.getRelativeOrientationTag().equals("R1R2") && pair.getCategoryTag().equals("TS")) {
+                        logger.trace("Size: " + pair.getChimericFragmentSize());
+                    }
                     rejectedReadsWriter.addAlignment(pair.forward());
                     rejectedReadsWriter.addAlignment(pair.reverse());
                 }

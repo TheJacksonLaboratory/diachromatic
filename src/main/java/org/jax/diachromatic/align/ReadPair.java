@@ -534,7 +534,6 @@ public class ReadPair {
                 }
             }
         }
-
         return tag;
     }
 
