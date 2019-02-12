@@ -2,16 +2,19 @@ package org.jax.diachromatic.align;
 
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.util.Pair;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+
 
 @Ignore("Broken because of new digest map.")
 public class MapPairsTest {
@@ -31,7 +34,7 @@ public class MapPairsTest {
 
     private static final boolean outputRejectedReads=false;
 
-    @BeforeClass
+    @BeforeAll
     public  static void init() throws DiachromaticException {
         ClassLoader classLoader = MapPairsTest.class.getClassLoader();
         sam1 = classLoader.getResource("data/sam/forwardtest.sam").getFile();
@@ -117,97 +120,6 @@ public class MapPairsTest {
        return new Digest(fields);
     }
 
-
-
-
-
-
-
-    /**
-     * We are testing the third pair of reads, which was extracted from the file
-     * {@code _wrong_size.filter.sam}. The first two
-     * reads should be OK. The digests are created to encompass these two reads
-     * from the corresponding digest file.
-     * We are testing the fragments are ok in size. Note that we have added the corresponding
-     * Digests for the first three fragments.
-     */
-    @Test
-    public void testFragmentToLarge() throws DiachromaticException {
-        int UPPER_SIZE_THRESHOLD=800;
-        int LOWER_SIZE_THRESHOLD=150;
-        String digestFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
-       // String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
-        DigestMap digestMap = new DigestMap(digestFile);
-        sampairer = new Aligner(sam1, sam2, outputRejectedReads,"test3", digestMap,150,800,"xxx",true);
-        ReadPair readpair =readpairmap.get("1_uniquelyAlignedRead");
-        assertNotNull(readpair);
-        int insertSize=  readpair.getChimericFragmentSize();
-        assertFalse(insertSize<LOWER_SIZE_THRESHOLD);
-        assertFalse(insertSize>UPPER_SIZE_THRESHOLD);
-        readpair = readpairmap.get("3_tooBig");
-        insertSize=  readpair.getChimericFragmentSize();
-        assertTrue(insertSize>UPPER_SIZE_THRESHOLD);
-    }
-
-    /** This should throw an exception because we cannot calculate the insert size for a multimapped read. */
-    @Test(expected =DiachromaticException.class)
-    public void testFragmentToLargeException() throws DiachromaticException {
-        int UPPER_SIZE_THRESHOLD=800;
-        int LOWER_SIZE_THRESHOLD=150;
-        String digestFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
-      //  String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
-        DigestMap digestMap = new DigestMap(digestFile);
-        sampairer = new Aligner(sam1, sam2, outputRejectedReads,"test2", digestMap,150,800,"xxx",true);
-        ReadPair readpair = readpairmap.get("2_multiplyAlignedRead");
-        assertNotNull(readpair);
-        int insertSize=  readpair.getChimericFragmentSize();
-        assertFalse(insertSize<LOWER_SIZE_THRESHOLD);
-        assertFalse(insertSize>UPPER_SIZE_THRESHOLD);
-    }
-
-    /**
-     * We are testing the fourth pair of reads that self-circularizes. The first read
-     * pair is from the same chromosome but does not self-circularize. (by manual inspection).
-     * The second and third pairs have distinct chromosomes and cannot be tested for self-circularizion.
-     * @throws DiachromaticException
-     */
-    @Test
-    public void testSelfLigation() throws DiachromaticException {
-        String digestFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
-        //String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
-        DigestMap digestMap = new DigestMap(digestFile);
-        sampairer = new Aligner(sam1, sam2, outputRejectedReads,"test4", digestMap,150,800,"xxx",true);
-        ReadPair readpair = readpairmap.get("1_uniquelyAlignedRead");
-        assertFalse(readpair.getCategoryTag().equals("SP"));
-        readpair = readpairmap.get("4_selfLigation");//sampairer.getNextPair();// fourth read pair, self-ligation!
-        assertTrue(readpair.getCategoryTag().equals("SP"));
-    }
-
-    /** The insert of the third read pair is above threshold of 800. */
-    @Test
-    public void testInsertTooLarge() {
-        int THRESHOLD=800;
-        ReadPair readpair  = readpairmap.get("3_tooBig");//1
-        int insertSize=readpair.getChimericFragmentSize();
-        //System.err.println("insert size = " + insertSize); 3823
-        assertTrue(insertSize>THRESHOLD);
-    }
-
-    /** The insert of the seventh read pair is above threshold of 800. */
-    @Test
-    public void testSetSamFlagsForCorrectPair() {
-        ReadPair readpair =readpairmap.get("7_validRead1");
-        SamBitflagFilter.debugDisplayBitflag(readpair.forward().getFlags());
-        // before we pair, the flags are set only to zero.
-        readpair.forward().setFlags(0);
-        readpair.reverse().setFlags(0);
-        assertEquals(0,readpair.forward().getFlags());
-        assertEquals(0,readpair.reverse().getFlags());
-        readpair.pairReads();
-        assertEquals(67,readpair.forward().getFlags());
-        assertEquals(131,readpair.reverse().getFlags());
-        SamBitflagFilter.debugDisplayBitflag(readpair.forward().getFlags());
-    }
 
 
 }

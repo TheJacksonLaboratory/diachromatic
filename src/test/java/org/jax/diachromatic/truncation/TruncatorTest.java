@@ -3,10 +3,16 @@ package org.jax.diachromatic.truncation;
 import org.jax.diachromatic.digest.RestrictionEnzyme;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.util.Pair;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+<<<<<<< HEAD
 import static org.junit.Assert.assertEquals;
+=======
+>>>>>>> master
 
 public class TruncatorTest {
 
@@ -15,7 +21,7 @@ public class TruncatorTest {
     private static String fastq_2;
     private static String ligationSequence;
 
-    @BeforeClass
+    @BeforeAll
     public  static void init() {
       ClassLoader classLoader = TruncatorTest.class.getClassLoader();
       fastq_1 = classLoader.getResource("data/fastq/test1.fastq").getFile();
