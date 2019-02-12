@@ -9,6 +9,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+<<<<<<< HEAD
+import static org.junit.Assert.assertEquals;
+=======
+>>>>>>> master
 
 public class TruncatorTest {
 

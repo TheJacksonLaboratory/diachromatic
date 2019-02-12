@@ -2,12 +2,10 @@ package org.jax.diachromatic.command;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jax.diachromatic.Diachromatic;
 import org.jax.diachromatic.digest.RestrictionEnzyme;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.truncation.Truncator;
 
-import java.util.Collections;
 import java.util.List;
 
 import static org.jax.diachromatic.digest.RestrictionEnzyme.parseRestrictionEnzymes;

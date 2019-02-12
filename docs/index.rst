@@ -9,19 +9,21 @@ Welcome to Diachromatic's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   In silico digest of the genome <digest>
+   In silico genome digest <digest>
    Truncation of chimeric Hi-C reads <truncate>
    Mapping paired-end Hi-C reads <mapping>
+   Calling SNPs on Hi-C reads <allelspec>
    testing
+   Counting unique valid pairs <count>
+
 
 
 Differential Analysis of Chromatin Interactions by Capture (Diachromatic)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Diachromatic_ implements a capture Hi-C preprocessing pipeline followed by analysis of differential chromatin interactions
-("loopings").  Diachromatic is a Java application. The preprocessing pipeline is based on the
-Perl scripts of HiCUP and produces comparable results. Diachromatic is designed to work
-with the capture probes as designed by GOPHER (see next section).
+Diachromatic_ is a Java application that implements a capture Hi-C preprocessing pipeline followed by analysis of differential chromatin interactions
+("loopings").  Diachromatic is designed to work
+with the capture probes as designed by `GOPHER <https://github.com/TheJacksonLaboratory/Gopher>`_ (see next section).
 
 .. _Diachromatic: https://github.com/TheJacksonLaboratory/diachromatic
 
@@ -43,7 +45,8 @@ HindIII.
 Quick start
 ~~~~~~~~~~~
 Diachromatic requires Java 8 or higher to run. The source code of Diachromatic can be downloaded
-from the Diachromatic GitHub repository and the application can be built using maven (see the GitHub page for instructions).
+from the Diachromatic GitHub repository and the application can be built using maven
+(see Diachromatic's `GitHub page <https://github.com/TheJacksonLaboratory/diachromatic>`_ for instructions).
 
 To build the application, clone the repository and create the Java app with maven. ::
 
@@ -53,10 +56,9 @@ To build the application, clone the repository and create the Java app with mave
 
 To test whether the build process was successful, enter the following command: ::
 
-    $ java -jar target/target/diachromatic-0.0.2.jar
+    $ java -jar target/Diachromatic.jar
 
-You should see a help message in the shell. In the following, we will refer to the diachromatic executable simply
-as ``Diachromatic.jar``. Please adjust your path accordingly.
+You should see a help message in the shell.
 
 
 The mapping step of the diachromatic pipeline relies on bowtie2
@@ -71,7 +73,7 @@ Preparation of the bowtie2 index
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The prebuilt ``bowtie2`` indices for human hg19 (3.5 GB) and other genome builds can be downloaded from the
-`bowtei2 website`_. Move the downloaded archive to an appropriate on your computer and unpack with: ::
+`bowtie2 website`_. Move the downloaded archive to an appropriate on your computer and unpack with: ::
 
     $ unzip hg19.zip
         Archive:  hg19.zip
@@ -85,8 +87,8 @@ The prebuilt ``bowtie2`` indices for human hg19 (3.5 GB) and other genome builds
 
 We will call the path to the directory where the index was unpacked **/path/to/bowtie2index/**.
 
-.. _bowtei2 website: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
+.. _bowtie2 website: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
 
 
-The remaining pages of this site provide detailed explanations and tips for the various steps of preprocessing and analyzing
+The remaining pages of this site provide detailed explanations for the various steps of preprocessing and analyzing
 capture Hi-C data with diachromatic.

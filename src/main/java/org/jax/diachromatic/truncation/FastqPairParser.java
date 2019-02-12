@@ -90,9 +90,8 @@ public class FastqPairParser {
      * create two {@link PotentiallyTruncatedFastQRecord} objects and place them in {@link #currentPair}. If there is any exception thrown
      * while constructing the {@link PotentiallyTruncatedFastQRecord} objects, the function will set {@link #currentPair} to null and return
      *
-     * @throws IOException if either of the FastqReaders has a problem
      */
-    private void movePairIterator() throws IOException {
+    private void movePairIterator() {
         if (fastQreader1.hasNext() && fastQreader2.hasNext()) {
             FastqRecord fq1 = fastQreader1.next();
             FastqRecord fq2 = fastQreader2.next();
@@ -129,11 +128,7 @@ public class FastqPairParser {
      */
     Pair<PotentiallyTruncatedFastQRecord, PotentiallyTruncatedFastQRecord> getNextPair() {
         Pair<PotentiallyTruncatedFastQRecord, PotentiallyTruncatedFastQRecord> tmp = currentPair;
-        try {
-            movePairIterator();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        movePairIterator();
         return tmp;
     }
 

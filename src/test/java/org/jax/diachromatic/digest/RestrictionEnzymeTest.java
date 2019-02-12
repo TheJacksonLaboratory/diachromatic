@@ -15,7 +15,11 @@ public class RestrictionEnzymeTest {
     private static RestrictionEnzyme hindIII;
     private static List<RestrictionEnzyme> reList;
 
+<<<<<<< HEAD
+    @BeforeClass
+=======
     @BeforeAll
+>>>>>>> master
     public static void setup() {
         hindIII = new RestrictionEnzyme("HindIII", "A^AGCTT");
         reList=RestrictionEnzyme.parseRestrictionEnzymes();

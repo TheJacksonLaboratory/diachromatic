@@ -8,10 +8,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 
-import org.jax.diachromatic.exception.DiachromaticException;
-import org.jax.diachromatic.util.Pair;
-
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -78,9 +74,9 @@ public class MapPairsTest {
         String outdir = "results";
         String outprefix = "results";
         String digestFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
-        String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
-        DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
-        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test1",digestMap, 150, 800, "xxx",true);
+       // String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
+        DigestMap digestMap = new DigestMap(digestFile);
+        sampairer = new Aligner(sam1, sam2, outputRejectedReads,"test1", digestMap, 150, 800, "xxx",true);
         ReadPair pair;
         while ((pair = sampairer.getNextPair())!=null) {
             readpairmap.put(pair.forward().getReadName(),pair);
@@ -97,7 +93,7 @@ public class MapPairsTest {
      * @return list of "fake" Digest object
      */
     @SafeVarargs
-    private static List<Digest> makeFakeDigestList(String chrom,Pair<Integer,Integer> ...pos_pair) {
+    private static List<Digest> makeFakeDigestList(String chrom,Pair<Integer,Integer> ...pos_pair) throws DiachromaticException {
         List<Digest> dlist = new ArrayList<>();
         for (Pair<Integer,Integer> p : pos_pair) {
             Digest d = makeFakeDigest(chrom,p.first,p.second);
@@ -113,8 +109,8 @@ public class MapPairsTest {
      * @param frompos end position of digest
      * @return one fake {@link Digest} object (See {@link #makeFakeDigestList(String, Pair[])}).
      */
-    private static Digest makeFakeDigest(String chr, int frompos, int topos) {
-        String fields[]=new String[6];
+    private static Digest makeFakeDigest(String chr, int frompos, int topos) throws  DiachromaticException{
+        String[] fields = new String[6];
         fields[0]=chr;
         fields[1]=String.valueOf(frompos);
         fields[2]=String.valueOf(topos);
@@ -122,149 +118,6 @@ public class MapPairsTest {
         fields[4]=restrictionsite;
         fields[5]=restrictionsite;
        return new Digest(fields);
-    }
-
-
-
-
-    /**
-     * An exception should be thrown if we look at a position that has no Digest.
-
-    @Test
-    public void testDigestNotFound() {
-        Assertions.assertThrows(DiachromaticException.class, () -> {
-            sampairer = new SAMPairer(sam1,sam2,digestmap,outputRejectedReads);
-            DigestPair pair = sampairer.getDigestPair("crazyChromosome1", 1, 2, "wrongChromosome2", 3, 4);
-        });
-    } */
-
-
-    /**
-     * We are testing the third pair of reads, which was extracted from the file
-     * {@code _wrong_size.filter.sam}. The first two
-     * reads should be OK. The digests are created to encompass these two reads
-     * from the corresponding digest file.
-     * We are testing the fragments are ok in size. Note that we have added the corresponding
-     * Digests for the first three fragments.
-     */
-    @Test
-    public void testFragmentToLarge() throws DiachromaticException {
-        int UPPER_SIZE_THRESHOLD=800;
-        int LOWER_SIZE_THRESHOLD=150;
-        String digestFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
-        String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
-        DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
-        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test3",digestMap,150,800,"xxx",true);
-        ReadPair readpair =readpairmap.get("1_uniquelyAlignedRead");
-        assertNotNull(readpair);
-        int insertSize=  readpair.getCalculatedInsertSize();
-        assertFalse(insertSize<LOWER_SIZE_THRESHOLD);
-        assertFalse(insertSize>UPPER_SIZE_THRESHOLD);
-        readpair = readpairmap.get("3_tooBig");
-        insertSize=  readpair.getCalculatedInsertSize();
-        assertTrue(insertSize>UPPER_SIZE_THRESHOLD);
-    }
-
-    /** This should throw an exception because we cannot calculate the insert size for a multimapped read. */
-    public void testFragmentToLargeException() throws DiachromaticException {
-        int UPPER_SIZE_THRESHOLD=800;
-        int LOWER_SIZE_THRESHOLD=150;
-        String digestFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
-        String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
-        Assertions.assertThrows(DiachromaticException.class, () -> {
-            DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
-            sampairer = new Aligner(sam1, sam2, digestmap, outputRejectedReads, "test2", digestMap, 150, 800, "xxx", true);
-            ReadPair readpair = readpairmap.get("2_multiplyAlignedRead");
-            assertNotNull(readpair);
-            int insertSize = readpair.getCalculatedInsertSize();
-            assertFalse(insertSize < LOWER_SIZE_THRESHOLD);
-            assertFalse(insertSize > UPPER_SIZE_THRESHOLD);
-        });
-    }
-
-    /**
-     * We are testing the fourth pair of reads that self-circularizes. The first read
-     * pair is from the same chromosome but does not self-circularize. (by manual inspection).
-     * The second and third pairs have distinct chromosomes and cnnot be tested for self circularization.
-     * @throws DiachromaticException
-     */
-    @Test
-    public void testSelfLigation() throws DiachromaticException {
-        String digestFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
-        String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
-        DigestMap digestMap = new DigestMap(digestFile, activeDigestsFile);
-        sampairer = new Aligner(sam1,sam2,digestmap,outputRejectedReads,"test4",digestMap,150,800,"xxx",true);
-        ReadPair readpair = readpairmap.get("1_uniquelyAlignedRead");
-        assertFalse(readpair.selfLigation());
-        readpair = readpairmap.get("4_selfLigation");//sampairer.getNextPair();// fourth read pair, self-ligation!
-        assertTrue(readpair.selfLigation());
-    }
-
-    /* The fifth pair shows religation! */
-    @Test
-    public void testReligation() throws DiachromaticException {
-
-        ReadPair readpair  = readpairmap.get("1_uniquelyAlignedRead");
-        assertFalse(readpair.religation());
-        readpair = readpairmap.get("4_selfLigation");// fourth read pair, self-ligation--not religation
-        assertFalse(readpair.religation());
-        //chr13	31421583	31425191
-        //chr13	31425192	31425873
-        readpair = readpairmap.get("5_religation");// 5. religation!
-        assertEquals(readpair.forward().getReferenceName(),"chr13");// check we have right read!
-        assertEquals(readpair.reverse().getReferenceName(),"chr13");// check we have right read!
-        assertTrue(readpair.religation());
-    }
-
-    /** The sixth read pair is contiguous (by manual inspection) */
-    @Test
-    public void testIsContiguous() throws DiachromaticException {
-        ReadPair readpair  = readpairmap.get("1_uniquelyAlignedRead");
-        assertFalse(readpair.isContiguous());
-        readpair = readpairmap.get("5_religation"); //5 -- note readpair 5 was on adjacent fragments and
-        // thus is religation and not contiguous!
-        assertTrue(readpair.religation());
-        //assertFalse(sampairer.contiguous(readpair))
-        readpair = readpairmap.get("6_contiguous");//sampairer.getNextPair(); //6-- contiguous but not religated (not on adjacent digests)!
-        assertTrue(readpair.isContiguous());
-        assertFalse(readpair.religation());
-    }
-
-    /** The insert of the third read pair is above threshold of 800. */
-    @Test
-    public void testInsertTooLarge() throws DiachromaticException {
-        int THRESHOLD=800;
-        ReadPair readpair  = readpairmap.get("3_tooBig");//1
-        int insertSize=readpair.getCalculatedInsertSize();
-        //System.err.println("insert size = " + insertSize); 3823
-        assertTrue(insertSize>THRESHOLD);
-    }
-
-
-    /** The insert of the seventh read pair is above threshold of 800. */
-    @Test
-    public void testSetSamFlagsForCorrectPair() {
-        ReadPair readpair =readpairmap.get("7_validRead1");
-        SamBitflagFilter.debugDisplayBitflag(readpair.forward().getFlags());
-        // before we pair, the flags are set only to zero.
-        readpair.forward().setFlags(0);
-        readpair.reverse().setFlags(0);
-        assertEquals(0,readpair.forward().getFlags());
-        assertEquals(0,readpair.reverse().getFlags());
-        readpair.pairReads();
-        assertEquals(67,readpair.forward().getFlags());
-        assertEquals(131,readpair.reverse().getFlags());
-        SamBitflagFilter.debugDisplayBitflag(readpair.forward().getFlags());
-    }
-
-
-    //TODO CHECK THIS TEST
-    @Test
-    public void testDuplicate() {
-        ReadPair readpair =readpairmap.get("7_validRead1");
-        assertFalse(DiTag.isDuplicate(readpair));
-        readpair=readpairmap.get("8_validRead1");
-//        assertTrue(DiTag.isDuplicate(readpair));
     }
 
 

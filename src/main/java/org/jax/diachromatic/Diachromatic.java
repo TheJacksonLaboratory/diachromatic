@@ -16,10 +16,10 @@ import org.apache.logging.log4j.Logger;
 public class Diachromatic {
     private static final Logger logger = LogManager.getLogger();
 
-    public static void main(String args[]) throws DiachromaticException {
+    public static void main(String[] args) throws DiachromaticException {
         Commandline clp = new Commandline(args);
         Command command = clp.getCommand();
-        logger.trace(String.format("running command %s",command));
+        logger.trace(String.format("Running command %s",command));
         command.execute();
     }
 }

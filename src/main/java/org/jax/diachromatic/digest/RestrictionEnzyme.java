@@ -98,7 +98,7 @@ public class RestrictionEnzyme implements Serializable {
             while ((line=br.readLine())!=null) {
                 if (line.startsWith("#"))
                     continue; // comment
-                String A[] = line.split("\\s+");
+                String[] A = line.split("\\s+");
                 if (A.length!=2) {
                     logger.error(String.format("Malformed restrtiction enzyme line-should have 2 fields but had %d (%s)",A.length,line));
                     continue;
