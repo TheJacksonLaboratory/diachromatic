@@ -277,6 +277,10 @@ public class Aligner {
 
             n_total_input_read_pairs++;
 
+            if(n_total_input_read_pairs%1000000==0) {
+                logger.trace("n_total_input_read_pairs: " + n_total_input_read_pairs);
+            }
+
             // first check whether both reads were mapped uniquely
             if(pair.isUnMappedR1()) {
                 n_unmapped_R1++;}

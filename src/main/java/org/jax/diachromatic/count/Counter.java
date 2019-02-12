@@ -122,6 +122,10 @@ public class Counter {
                     readPair.reverseDigestIsActive(),
                     readPair.getRelativeOrientationTag());
 
+            if(interactionMap.getTotalNumberOfInteractionsForCondition(0)%1000000==0) {
+                logger.trace("Number of Interactions: " + interactionMap.getTotalNumberOfInteractionsForCondition(0));
+            }
+
             if(readPair.getRelativeOrientationTag().equals("F1F2")) {n_F1F2++;}
             if(readPair.getRelativeOrientationTag().equals("F2F1")) {n_F2F1++;}
             if(readPair.getRelativeOrientationTag().equals("R1R2")) {n_R1R2++;}
