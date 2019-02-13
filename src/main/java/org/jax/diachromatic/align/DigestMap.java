@@ -64,7 +64,7 @@ public class DigestMap {
     public void parseDigestFile(String digestFilePath) throws IOException, DiachromaticException {
         File f = new File(digestFilePath);
         if (! f.exists()) {
-            throw new DiachromaticException(String.format("Could not find digest file at %s", f.getAbsolutePath() ));
+            throw new DiachromaticException(String.format("Could not find digest file at %s.", f.getAbsolutePath() ));
         }
         else {
             logger.trace("Found digest file at {}.",digestFilePath);

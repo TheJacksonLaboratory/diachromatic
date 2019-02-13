@@ -190,24 +190,25 @@ public class ReadPair {
         this.digestPair = digestMap.getDigestPair(f.getReferenceName(),getFivePrimeEndPosOfRead(f),r.getReferenceName(),getFivePrimeEndPosOfRead(r));
     }
 
+    static void setLengthThresholds(int lowerFragSize, int upperFragSize, int upperSelfLigationFragSize) {
+        LOWER_SIZE_THRESHOLD = lowerFragSize;
+        UPPER_SIZE_THRESHOLD = upperFragSize;
+        UPPER_SIZE_SELF_LIGATION_THRESHOLD = upperSelfLigationFragSize;
+    }
+
 
     /**
      *
      * @param f SAMRecord for R1.
      * @param r SAMRecord for R2.
      * @param digestMap structure containing all digests.
-     * @param lowerFragSize lower size threshold for fragments after sonication.
-     * @param upperFragSize upper size threshold for fragments after sonication.
      * @param stringentUnique If true, more  stringent definition of uniquely mapped is used.
      * @throws DiachromaticException
      */
-    ReadPair(SAMRecord f, SAMRecord r, DigestMap digestMap, Integer lowerFragSize, Integer upperFragSize, boolean stringentUnique) throws DiachromaticException {
+    ReadPair(SAMRecord f, SAMRecord r, DigestMap digestMap, boolean stringentUnique) throws DiachromaticException {
 
         R1 = f;
         R2 = r;
-
-        this.LOWER_SIZE_THRESHOLD = lowerFragSize;
-        this.UPPER_SIZE_THRESHOLD = upperFragSize;
 
         // check if both reads could be mapped
         unmapped_R1 = false;

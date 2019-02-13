@@ -201,7 +201,7 @@ public class Aligner {
      * @param filenamePrefix Prefix for names of created files.
      * @param useStringentUniqueSettings Use the more stringent definition of multi-mapped reads.
      */
-    public Aligner(String sam1, String sam2, boolean outputRejected, String outputPathPrefix, DigestMap digestMap, Integer lowerFragSize, Integer upperFragSize, String filenamePrefix, boolean useStringentUniqueSettings) {
+    public Aligner(String sam1, String sam2, boolean outputRejected, String outputPathPrefix, DigestMap digestMap, Integer lowerFragSize, Integer upperFragSize, Integer upperSelfLigationSize, String filenamePrefix, boolean useStringentUniqueSettings) {
         this.sam_path_R1 = sam1;
         this.sam_path_R2 = sam2;
         this.sam_reader_R1 = SamReaderFactory.makeDefault().open(new File(sam_path_R1));
@@ -214,6 +214,7 @@ public class Aligner {
         this.upperFragSize = upperFragSize;
         this.filenamePrefix = filenamePrefix;
         this.useStringentUniqueSettings = useStringentUniqueSettings;
+        ReadPair.setLengthThresholds(lowerFragSize,upperFragSize,upperSelfLigationSize);
         Arrays.fill(fragSizesChimericPairs, 0);
         Arrays.fill(fragSizesActiveChimericPairs, 0);
         Arrays.fill(fragSizesUnLigatedPairs, 0);
@@ -236,7 +237,7 @@ public class Aligner {
         if (it1.hasNext() && it2.hasNext()) {
             SAMRecord record1 = it1.next();
             SAMRecord record2 = it2.next();
-            return new ReadPair(record1, record2, digestMap, lowerFragSize, upperFragSize, useStringentUniqueSettings);
+            return new ReadPair(record1, record2, digestMap, useStringentUniqueSettings);
         } else {
             return null;
         }

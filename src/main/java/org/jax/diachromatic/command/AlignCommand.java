@@ -58,10 +58,11 @@ public class AlignCommand extends Command {
     @Parameter(names={"-p", "--thread-num"},description = "number of threads used by bowtie2")
     private int threadNum = 1;
     @Parameter(names={"-l", "--lower-frag-size-limit"},required = true,description = "lower limit for fragment size")
-    private int lowerFragSize;
+    private int lowerFragSize = 50;
     @Parameter(names={"-u", "--upper-frag-size-limit"},required = true,description = "upper limit for fragment size")
-    private int upperFragSize;
-
+    private int upperFragSize = 800;
+    @Parameter(names={"-s", "--self-ligation-frag-size-limit"},required = true,description = "upper limit for self-ligation fragment size")
+    private int upperSelfLigationFragSize = 3000;
     @Parameter(names={"-bsu","--bowtie-stringent-unique"}, description = "use stringent settings for definition of uniquely mapped reads")
     private boolean useStringentUniqueSettings = false;
 
@@ -105,14 +106,14 @@ public class AlignCommand extends Command {
 
         String samFile1 = String.format("%s_%s_1.sam", this.outputPathPrefix, getRandomPrefix(7));
         String samFile2 = String.format("%s_%s_2.sam", this.outputPathPrefix, getRandomPrefix(7));
-        logger.trace(String.format("About to read digests from %s",digestFile));
+        logger.trace(String.format("About to read digests from %s.",digestFile));
         DigestMap digestMap = new DigestMap(digestFile);
         try {
             Bowtie2Runner runner = new Bowtie2Runner(bowtiepath,pathToBowtieIndex,pathToInputFastq1,samFile1,this.threadNum);
             runner.run();
             Bowtie2Runner runner2 = new Bowtie2Runner(bowtiepath,pathToBowtieIndex,pathToInputFastq2,samFile2,this.threadNum);
             runner2.run();
-            Aligner pairer = new Aligner(samFile1,samFile2, outputRejectedReads,outputPathPrefix, digestMap, lowerFragSize, upperFragSize, filenamePrefix,useStringentUniqueSettings);
+            Aligner pairer = new Aligner(samFile1,samFile2, outputRejectedReads,outputPathPrefix, digestMap, lowerFragSize, upperFragSize, upperSelfLigationFragSize, filenamePrefix,useStringentUniqueSettings);
             pairer.inputSAMfiles();
             pairer.printStatistics();
             File file = new File(samFile1);
