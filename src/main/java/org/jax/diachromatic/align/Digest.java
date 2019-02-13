@@ -24,9 +24,9 @@ public class Digest {
     private final int digestLength;
 
 
-    private String fivePrimeRestrictionSite;
+    private final String fivePrimeRestrictionSite;
 
-    private String threePrimeRestrictionSite;
+    private final String threePrimeRestrictionSite;
 
     private final double five_prime_GC;
 
@@ -176,6 +176,26 @@ public class Digest {
         return (chromosome.equals(other.chromosome) &&
         digestStartPosition ==other.digestStartPosition &&
         digestEndPosition==other.digestEndPosition);
+    }
+
+    /** Hash code with lazily initialized value*/
+    private int hashCode;
+
+    /**
+     * Calculate the hash code based on the position of the Digest, the other values are not required
+     * to obtain uniqueness.
+     * @return hascode for this object.
+     */
+    @Override
+    public int hashCode() {
+        int result=hashCode;
+        if (result==0) {
+            result=chromosome.hashCode();
+            result=31*result+Integer.hashCode(digestStartPosition);
+            result=31*result+Integer.hashCode(digestEndPosition);
+            hashCode=result;
+        }
+        return result;
     }
 
 
