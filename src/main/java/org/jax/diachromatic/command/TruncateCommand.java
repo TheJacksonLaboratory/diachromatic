@@ -1,5 +1,7 @@
 package org.jax.diachromatic.command;
 
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.digest.RestrictionEnzyme;
@@ -33,28 +35,46 @@ import static org.jax.diachromatic.digest.RestrictionEnzyme.parseRestrictionEnzy
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
  * @version 0.0.2 (2018-01-05)
  */
+@Parameters(commandDescription = "truncate TODO-more text")
 public class TruncateCommand extends Command {
     private static final Logger logger = LogManager.getLogger();
 
-    private final String fastaqFile1;
-    private final String fastaqFile2;
+    @Parameter(names={"-q","fastq-r1"}, required = true,description = "path to forward FASTQ input file")
+    private String fastaqFile1;
+    @Parameter(names={"-r","fastq-r2"}, required = true,description = "path to reverse FASTQ input file")
+    private String fastaqFile2;
+    @Parameter(names={"-e", "--enzyme"}, required = true, description = "restriction enzyme name")
+    private String enzymeName;
+    @Parameter(names={"-s", "--sticky-ends"},description = "no fill-in of sticky ends was performed ")
+    private boolean stickyEnds=false;
+
+
     private Truncator truncator = null;
     private RestrictionEnzyme re = null;
-
-    public TruncateCommand (String file1, String file2, String enzymeName, boolean stickyEnds, String outputPathPrefix) throws DiachromaticException {
+/*
+    public TruncateCommand (String file1, String file2, String enzymeName, boolean stickyEnds, String outputPath) throws DiachromaticException {
         this.fastaqFile1=file1;
         this.fastaqFile2=file2;
+
+    }
+*/
+
+    public TruncateCommand(){}
+
+    private void init() throws DiachromaticException {
         List<RestrictionEnzyme>  enzymelist = parseRestrictionEnzymes();
         re=enzymelist.stream().filter(r->r.getName().equalsIgnoreCase(enzymeName)).findFirst().orElse(null);
         if (re==null) {
             throw new DiachromaticException(String.format("Could not identify restriction enzyme for \"%s\"",enzymeName));
         }
-        truncator = new Truncator(fastaqFile1,fastaqFile2, re, stickyEnds, outputPathPrefix);
+        truncator = new Truncator(fastaqFile1,fastaqFile2, re, stickyEnds, outputPath);
     }
+
 
     public void execute() {
         logger.trace(String.format("Starting truncate command on files %s and %s",fastaqFile1,fastaqFile2));
         try {
+            init();
             truncator.parseFASTQ();
         } catch (DiachromaticException e) {
             logger.fatal("Error encountered while truncating FASTQ reads: ", e);

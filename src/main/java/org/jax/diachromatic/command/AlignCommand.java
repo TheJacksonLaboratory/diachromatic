@@ -1,5 +1,7 @@
 package org.jax.diachromatic.command;
 
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.align.DigestMap;
@@ -18,39 +20,49 @@ import java.util.Random;
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
  * @version 0.0.3 (2018-03-20)
  */
+@Parameters(commandDescription = "Align Hi-C or capture Hi-C reads with bowtie2")
 public class AlignCommand extends Command {
     private static final Logger logger = LogManager.getLogger();
 
-    /** Path to the bowite2 exectuable, e.g., {@code /usr/bin/bowtie2}. */
-    private final String bowtiepath;
+    /** Path to the bowtie2 executable, e.g., {@code /usr/bin/bowtie2}. */
+    @Parameter(names={"-b","--bowtie-path"},required = true, description ="path to bowtie2" )
+    private String bowtiepath;
 
     /** Path to the bowtie2 index files. Note that the index is made up of multiple files, e.g.,
      * hg19.1.bt2,  hg19.3.bt2,  hg19.rev.1.bt2, hg19.2.bt2,  hg19.4.bt2,  hg19.rev.2.bt2. Assuming all files
      * are in a directory called {@code /path/to/index/}, this parameter should be {@code /path/to/index/hg19}.*/
-    private final String pathToBowtieIndex;
+
+    @Parameter(names={"-i", "--bowtie-index"}, required = true, description ="path to bowtie2 index")
+    private String pathToBowtieIndex;
 
     /** Path to the forward truncated FASTQ file produced by {@link org.jax.diachromatic.command.TruncateCommand}. */
+    @Parameter(names={"-q","fastq-r1"}, required = true,description = "path to forward FASTQ input file")
     private String pathToInputFastq1 = null;
 
     /** Path to the reverse truncated FASTQ file produced by {@link org.jax.diachromatic.command.TruncateCommand}. */
+    @Parameter(names={"-r","fastq-r2"}, required = true,description = "path to reverse FASTQ input file")
     private String pathToInputFastq2 = null;
 
 
     /** Path to the genome digest file produced by GOPHER.*/
+    @Parameter(names={"-d","--digest-file"}, required = true,description = "path to GOPHER digest file")
     private String digestFile = null;
 
     //** if this is set, an extra BAM file containg the rejected read pairs will be created */
-    private final boolean outputRejectedReads;
+    @Parameter(names={"-j", "--bad"}, description = "output bad (rejected) reads to separated file")
+    private boolean outputRejectedReads;
 
     private String outputPathPrefix = null;
 
     private String filenamePrefix;
+    @Parameter(names={"-p", "--thread-num"},description = "number of threads used by bowtie2")
+    private int threadNum = 1;
+    @Parameter(names={"-l", "--lower-frag-size-limit"},required = true,description = "lower limit for fragment size")
+    private int lowerFragSize;
+    @Parameter(names={"-u", "--upper-frag-size-limit"},required = true,description = "upper limit for fragment size")
+    private int upperFragSize;
 
-    private Integer threadNum = 1;
-
-    private Integer lowerFragSize;
-    private Integer upperFragSize;
-
+    @Parameter(names={"-bsu","--bowtie-stringent-unique"}, description = "use stringent settings for definition of uniquely mapped reads")
     private boolean useStringentUniqueSettings = false;
 
     /**
@@ -68,6 +80,7 @@ public class AlignCommand extends Command {
      * @param filenamePrefix
      * @param useStringentUniqueSettings
      */
+    @Deprecated // NOt needed now with JCOmmander.
     public AlignCommand(String bowtie, String btIndexPath, String inputFastqPath1, String inputFastqPath2, String digest,
                         boolean outputRejected, String outputPathPrefix, Integer threadNum, Integer lowerFragSize, Integer upperFragSize, String filenamePrefix, boolean useStringentUniqueSettings) {
         this.bowtiepath =bowtie;
@@ -83,6 +96,10 @@ public class AlignCommand extends Command {
         this.filenamePrefix = filenamePrefix;
         this.useStringentUniqueSettings = useStringentUniqueSettings;
     }
+
+    public AlignCommand(){}
+
+
 
     public void execute() throws DiachromaticException {
 

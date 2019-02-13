@@ -38,4 +38,26 @@ public class DigestPair {
             return false;
         }
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o==null) return false;
+        if (! (o instanceof DigestPair) ) return false;
+        DigestPair other = (DigestPair) o;
+        return other.forwardDigest.equals(this.forwardDigest) &&
+                other.reverseDigest.equals(this.reverseDigest);
+    }
+
+    /** Hash code with lazily initialized value*/
+    private int hashCode;
+    @Override
+    public int hashCode() {
+        int result=hashCode;
+        if (result==0) {
+            result=forwardDigest.hashCode();
+            result=31*result+reverseDigest.hashCode();
+            hashCode=result;
+        }
+        return result;
+    }
 }

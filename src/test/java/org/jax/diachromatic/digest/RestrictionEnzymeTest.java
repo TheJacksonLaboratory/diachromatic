@@ -11,26 +11,23 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
-public class RestrictionEnzymeTest {
+class RestrictionEnzymeTest {
     private static RestrictionEnzyme hindIII;
     private static List<RestrictionEnzyme> reList;
 
-<<<<<<< HEAD
-    @BeforeClass
-=======
+
     @BeforeAll
->>>>>>> master
-    public static void setup() {
+    static void setup() {
         hindIII = new RestrictionEnzyme("HindIII", "A^AGCTT");
         reList=RestrictionEnzyme.parseRestrictionEnzymes();
     }
     @Test
-    public void testGetName() {
+    void testGetName() {
         String expected="HindIII";
         assertEquals(expected, hindIII.getName());
     }
     @Test
-    public void testGetRestrictionSite() {
+    void testGetRestrictionSite() {
         String expected="A^AGCTT";
         assertEquals(expected, hindIII.getSite());
     }
@@ -40,12 +37,12 @@ public class RestrictionEnzymeTest {
      * 15
      */
     @Test
-    public void testGetAllEnzymesFromFile() {
+    void testGetAllEnzymesFromFile() {
         assertEquals(15,reList.size());
     }
 
     @Test
-    public void testContainsHindIII() {
+    void testContainsHindIII() {
         // this tests where the overridden "equals" method is working as expected
         // One HindIII object was created as above, and onbe was created from the file and placed into reList.
         assertTrue(reList.contains(hindIII));

@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import org.apache.commons.cli.*;
 import org.jax.diachromatic.command.Command;
 import org.jax.diachromatic.command.AlignCommand;
 import org.jax.diachromatic.command.CountCommand;
@@ -30,11 +29,36 @@ public class Commandline {
     private final static String DEFAULT_OUTPUT_DIRECTORY="results";
     private final static String DEFAULT_FILENAME_PREFIX="prefix";
 
+    /*
+     options.addOption("od", "out-dir", true, "path to output directory") // general option
+              // .addOption("op", "out-prefix", true, "outprefix for files in output directory") // general option
+              // .addOption("h", "help", false, "shows help for current command") // general option
 
+               .addOption("g", "genome", true, "path to genome FASTA file (with all chromosomes)") // digest specific option
+               .addOption("m", "margin", true,"margin size for calculating GC and repeat content (default: 250 bp)") // digest specific option
+
+               .addOption("e", "enzyme", true, "restriction enzyme name") // truncate specific option
+                .addOption("s", "sticky-ends", false, "no fill-in of sticky ends was performed ") // truncate specific option
+              / .addOption("q", "fastq-r1", true, "path to forward FASTQ input file") // truncate and align specific option
+              / .addOption("r", "fastq-r2", true, "path to reverse FASTQ input file") // truncate and align specific option
+               //.addOption("b", "bowtie-path", true, "path to bowtie2") // align specific option
+               //.addOption("i", "bowtie-index", true, "path to bowtie2 index") // align specific option
+             //  .addOption("bsu", "bowtie-stringent-unique", false, "use stringent settings for definition of uniquely mapped reads")
+             //  .addOption("j", "bad", false, "output bad (rejected) reads to separated file") // align specific option
+              // .addOption("d", "digest-file", true, "path to GOPHER digest file") // align (and count) specific option
+               .addOption("o", "out", true, "name/path of output file/directory")
+             //  .addOption("p", "thread-num", true, "number of threads used by bowtie2")
+              // .addOption("l", "lower-frag-size-limit", true, "lower limit for fragment size")
+              // .addOption("u", "upper-frag-size-limit", true, "upper limit for fragment size")
+              // .addOption("v", "valid-pairs-bam", true, "path to BAM file with unique valid pairs produced using the 'align' subcommand")
+
+     */
+
+    @Deprecated //TODO--this was moved to GOPHER??
     private String enzyme=null;
 
-    private String pathToInputFastq1 = null;
-    private String pathToInputFastq2 = null;
+//    private String pathToInputFastq1 = null;
+//    private String pathToInputFastq2 = null;
 
 
     /**
@@ -47,6 +71,7 @@ public class Commandline {
     private String outputDirectory = DEFAULT_OUTPUT_DIRECTORY;
     private String outputPathPrefix = null;
     private Integer threadNum=1;
+
     private boolean stickyEnds=false;
 
     private boolean filledEnds = true; //
@@ -54,26 +79,27 @@ public class Commandline {
     /**
      * align specific fields
      */
-    private boolean outputRejectedReads=false;
-    /** path to the bowtie2 executable. */
-    private String bowtiepath=null;
-    private int marginsize;
-    private String pathToDiachromaticDigestFile=null;
-    private String pathToBowtieIndex=null;
-
-    private String pathToValidPairsBamFile=null;
-    private String pathToGopherDigestFile=null;
-
-    /**
-     * Lower and upper limit for size of valid pair fragments. Read pairs that correspond to hybrid fragments with
-     * a size outside this range will be categorized as wrong size pairs and discarded.
-     */
-    private Integer lowerFragSize = 50;
-    private Integer upperFragSize = 800;
-
-    private boolean useStringentUniqueSettings = false;
+//    private boolean outputRejectedReads=false;
+//    /** path to the bowtie2 executable. */
+//    private String bowtiepath=null;
+//    private int marginsize;
+//    private String pathToDiachromaticDigestFile=null;
+//    private String pathToBowtieIndex=null;
+//
+//    private String pathToValidPairsBamFile=null;
+//    private String pathToGopherDigestFile=null;
+//
+//    /**
+//     * Lower and upper limit for size of valid pair fragments. Read pairs that correspond to hybrid fragments with
+//     * a size outside this range will be categorized as wrong size pairs and discarded.
+//     */
+//    private Integer lowerFragSize = 50;
+//    private Integer upperFragSize = 800;
+//
+//    private boolean useStringentUniqueSettings = false;
 
     public Commandline(String args[]) {
+        /*
         final CommandLineParser cmdLineGnuParser = new DefaultParser();
 
         final Options gnuOptions = constructOptions();
@@ -177,7 +203,7 @@ public class Commandline {
             makeOutdirectoryIfNeeded();
 
             // create prefix for output files including the path to the output directory
-            outputPathPrefix = String.format("%s%s%s", outputDirectory, File.separator, filenamePrefix);
+            outputPath = String.format("%s%s%s", outputDirectory, File.separator, filenamePrefix);
         }
         catch (ParseException parseException)  // checked exception
         {
@@ -194,7 +220,7 @@ public class Commandline {
         }
         try {
             if (mycommand.equalsIgnoreCase("truncate")) {
-                logger.trace(outputPathPrefix);
+                logger.trace(outputPath);
                 if (this.outputDirectory == null) {
                     this.outputDirectory=DEFAULT_OUTPUT_DIRECTORY;
                 } else if (this.pathToInputFastq1 == null) {
@@ -207,7 +233,7 @@ public class Commandline {
                 if (filenamePrefix==null) {
                     filenamePrefix=DEFAULT_FILENAME_PREFIX;
                 }
-                this.command = new TruncateCommand(pathToInputFastq1, pathToInputFastq2, enzyme, stickyEnds, outputPathPrefix);
+                this.command = new TruncateCommand(pathToInputFastq1, pathToInputFastq2, enzyme, stickyEnds, outputPath);
 
             } else if (mycommand.equalsIgnoreCase("align")) {
                 if (this.bowtiepath == null) {
@@ -235,7 +261,7 @@ public class Commandline {
                         pathToInputFastq2,
                         pathToDiachromaticDigestFile,
                         outputRejectedReads,
-                        outputPathPrefix,
+                        outputPath,
                         threadNum,
                         lowerFragSize,
                         upperFragSize,
@@ -252,9 +278,9 @@ public class Commandline {
                 logger.trace("=================");
                 logger.trace("pathToValidPairsBamFile: " + this.pathToValidPairsBamFile);
                 logger.trace("pathToGopherDigestFile: " + this.pathToGopherDigestFile);
-                logger.trace("outputPathPrefix: " + this.outputPathPrefix);
+                logger.trace("outputPath: " + this.outputPath);
                 logger.trace("filenamePrefix: " + this.filenamePrefix + "\n");
-                this.command=new CountCommand(this.pathToValidPairsBamFile,this.pathToGopherDigestFile,this.outputPathPrefix,this.filenamePrefix);
+                this.command=new CountCommand(this.pathToValidPairsBamFile,this.pathToGopherDigestFile,this.outputPath,this.filenamePrefix);
             } else {
                 printUsage(String.format("Did not recognize command: %s", mycommand));
             }
@@ -262,7 +288,9 @@ public class Commandline {
             de.printStackTrace();
             printUsage(de.getMessage());
         }
+         */
     }
+
 
 
     public Command getCommand() {
@@ -273,7 +301,7 @@ public class Commandline {
      * Construct and provide GNU-compatible Options.
      *
      * @return Options expected from command-line of GNU form.
-     */
+
     private static Options constructOptions()
     {
         final Options options = new Options();
@@ -301,7 +329,7 @@ public class Commandline {
 
         ;
         return options;
-    }
+    } */
 
     public static String getVersion() {
         String version="0.0.0";// default, should be overwritten by the following.
