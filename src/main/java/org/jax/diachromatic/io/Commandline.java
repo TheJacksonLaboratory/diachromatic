@@ -203,7 +203,7 @@ public class Commandline {
             makeOutdirectoryIfNeeded();
 
             // create prefix for output files including the path to the output directory
-            outputPathPrefix = String.format("%s%s%s", outputDirectory, File.separator, filenamePrefix);
+            outputPath = String.format("%s%s%s", outputDirectory, File.separator, filenamePrefix);
         }
         catch (ParseException parseException)  // checked exception
         {
@@ -220,7 +220,7 @@ public class Commandline {
         }
         try {
             if (mycommand.equalsIgnoreCase("truncate")) {
-                logger.trace(outputPathPrefix);
+                logger.trace(outputPath);
                 if (this.outputDirectory == null) {
                     this.outputDirectory=DEFAULT_OUTPUT_DIRECTORY;
                 } else if (this.pathToInputFastq1 == null) {
@@ -233,7 +233,7 @@ public class Commandline {
                 if (filenamePrefix==null) {
                     filenamePrefix=DEFAULT_FILENAME_PREFIX;
                 }
-                this.command = new TruncateCommand(pathToInputFastq1, pathToInputFastq2, enzyme, stickyEnds, outputPathPrefix);
+                this.command = new TruncateCommand(pathToInputFastq1, pathToInputFastq2, enzyme, stickyEnds, outputPath);
 
             } else if (mycommand.equalsIgnoreCase("align")) {
                 if (this.bowtiepath == null) {
@@ -261,7 +261,7 @@ public class Commandline {
                         pathToInputFastq2,
                         pathToDiachromaticDigestFile,
                         outputRejectedReads,
-                        outputPathPrefix,
+                        outputPath,
                         threadNum,
                         lowerFragSize,
                         upperFragSize,
@@ -278,9 +278,9 @@ public class Commandline {
                 logger.trace("=================");
                 logger.trace("pathToValidPairsBamFile: " + this.pathToValidPairsBamFile);
                 logger.trace("pathToGopherDigestFile: " + this.pathToGopherDigestFile);
-                logger.trace("outputPathPrefix: " + this.outputPathPrefix);
+                logger.trace("outputPath: " + this.outputPath);
                 logger.trace("filenamePrefix: " + this.filenamePrefix + "\n");
-                this.command=new CountCommand(this.pathToValidPairsBamFile,this.pathToGopherDigestFile,this.outputPathPrefix,this.filenamePrefix);
+                this.command=new CountCommand(this.pathToValidPairsBamFile,this.pathToGopherDigestFile,this.outputPath,this.filenamePrefix);
             } else {
                 printUsage(String.format("Did not recognize command: %s", mycommand));
             }

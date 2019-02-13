@@ -47,13 +47,12 @@ public class TruncateCommand extends Command {
     private String enzymeName;
     @Parameter(names={"-s", "--sticky-ends"},description = "no fill-in of sticky ends was performed ")
     private boolean stickyEnds=false;
-    @Parameter(names={"-op", "--out-prefix"},required = true,description = "outprefix for files in output directory")
-    private String outputPathPrefix;
+
 
     private Truncator truncator = null;
     private RestrictionEnzyme re = null;
 /*
-    public TruncateCommand (String file1, String file2, String enzymeName, boolean stickyEnds, String outputPathPrefix) throws DiachromaticException {
+    public TruncateCommand (String file1, String file2, String enzymeName, boolean stickyEnds, String outputPath) throws DiachromaticException {
         this.fastaqFile1=file1;
         this.fastaqFile2=file2;
 
@@ -68,7 +67,7 @@ public class TruncateCommand extends Command {
         if (re==null) {
             throw new DiachromaticException(String.format("Could not identify restriction enzyme for \"%s\"",enzymeName));
         }
-        truncator = new Truncator(fastaqFile1,fastaqFile2, re, stickyEnds, outputPathPrefix);
+        truncator = new Truncator(fastaqFile1,fastaqFile2, re, stickyEnds, outputPath);
     }
 
 

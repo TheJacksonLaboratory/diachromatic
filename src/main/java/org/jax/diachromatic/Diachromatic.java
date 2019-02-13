@@ -24,7 +24,7 @@ public class Diachromatic {
 
     @Parameter(names = {"-h", "--help"}, help = true, arity = 0,description = "display this help message")
     private boolean usageHelpRequested;
-    @Parameter(names={"-op","--out-prefix"}, required = true,description =  "outprefix for files in output directory")
+
 
     public static void main(String[] args) throws DiachromaticException {
 //        Commandline clp = new Commandline(args);

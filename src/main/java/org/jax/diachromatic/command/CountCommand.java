@@ -21,12 +21,6 @@ public class CountCommand extends Command {
     @Parameter(names={"-d","--digest-file"}, required = true,description = "path to GOPHER digest file")
     private String digestFile = null;
 
-    @Parameter(names={"-o", "--out"},required = true,description = "name/path of output file/directory")
-    private String outputPathPrefix;
-    //TODO -- can we chance to -x, --prefix ?
-    @Parameter(names={"-op", "--out-prefix"},required = true,description = "outprefix for files in output directory")
-    private String filenamePrefix;
-
 
     public CountCommand() {
     }
@@ -35,7 +29,7 @@ public class CountCommand extends Command {
         logger.trace(String.format("About to read digests from %s",digestFile));
         DigestMap digestMap = new DigestMap(digestFile);
 
-        Counter counter = new Counter(validPairsBamFile, digestMap, outputPathPrefix, filenamePrefix);
+        Counter counter = new Counter(validPairsBamFile, digestMap, outputPath, filenamePrefix);
         try {
             counter.countInteractions();
             counter.printStatistics();
