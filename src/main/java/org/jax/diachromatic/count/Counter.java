@@ -217,11 +217,11 @@ public class Counter {
 
 
 
-    public void printDigestPairsNEW() {
+    public void printInteractionCountsMapAsCountTableNEW() {
         for (DigestPair dp : this.dp2countsMap.keySet()) {
             CountsCounter cc = this.dp2countsMap.get(dp);
 
-            System.out.println(dp.toString() + " simple=" + cc.simple + " twisted="+cc.twisted);
+            System.out.println(dp.toString() + "\t" + cc.simple + ":" + cc.twisted);
         }
     }
 

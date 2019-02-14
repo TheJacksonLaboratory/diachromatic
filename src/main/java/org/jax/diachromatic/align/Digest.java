@@ -205,12 +205,14 @@ public class Digest {
      */
     @Override
     public String toString() {
-        return String.format("Digest at %s:%d-%d [frag. %d;%s/%s]",
+        String activeTag = "I";
+        if(active) {
+            activeTag = "A";
+        }
+        return String.format("%s\t%d\t%d\t%s",
                 chromosome,
                 digestStartPosition,
                 digestEndPosition,
-                digesttNumber,
-                fivePrimeRestrictionSite,
-                threePrimeRestrictionSite);
+                activeTag);
     }
 }
