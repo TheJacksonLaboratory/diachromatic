@@ -46,15 +46,11 @@ public class AlignCommand extends Command {
 
     /** Path to the genome digest file produced by GOPHER.*/
     @Parameter(names={"-d","--digest-file"}, required = true,description = "path to GOPHER digest file")
-    private String digestFile = null;
+    private String digestFile;
 
     //** if this is set, an extra BAM file containg the rejected read pairs will be created */
     @Parameter(names={"-j", "--bad"}, description = "output bad (rejected) reads to separated file")
     private boolean outputRejectedReads;
-
-    //private String outputPathPrefix = null;
-
-    private String filenamePrefix;
     @Parameter(names={"-p", "--thread-num"},description = "number of threads used by bowtie2")
     private int threadNum = 1;
     @Parameter(names={"-l", "--lower-frag-size-limit"},required = true,description = "lower limit for fragment size")
