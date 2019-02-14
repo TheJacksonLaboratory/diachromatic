@@ -33,6 +33,7 @@ public class CountCommand extends Command {
         try {
             counter.countInteractions();
             counter.printStatistics();
+            counter.printDigestPairsNEW();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
