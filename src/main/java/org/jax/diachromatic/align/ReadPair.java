@@ -628,4 +628,21 @@ public class ReadPair {
     public Integer getReverseDigestStart() {return this.digestPair.reverse().getDigestStartPosition();}
     public Integer getReverseDigestEnd() {return this.digestPair.reverse().getDigestEndPosition();}
     public boolean reverseDigestIsActive() {return this.digestPair.reverse().isSelected();}
+
+    public DigestPair getDigestPair() {
+        return digestPair;
+    }
+
+    public boolean isTwisted() {
+        String tag = this.getRelativeOrientationTag();
+        switch (tag) {
+            case "R1R2":
+            case "R2R1":
+            case "F1F2":
+            case "F2F1":
+                return true;
+        }
+        return false;
+    }
+
 }

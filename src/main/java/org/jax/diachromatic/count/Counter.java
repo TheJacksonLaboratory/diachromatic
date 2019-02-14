@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.align.Aligner;
 import org.jax.diachromatic.align.DigestMap;
+import org.jax.diachromatic.align.DigestPair;
 import org.jax.diachromatic.align.ReadPair;
 import org.jax.diachromatic.exception.DiachromaticException;
 
@@ -13,7 +14,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * This class is intended for counting read pairs for piars of restriction fragments and for counting reads at
@@ -42,6 +45,9 @@ public class Counter {
      * Stores interaction counts.
      */
     private InteractionCountsMap interactionMap;
+
+
+    private Map<DigestPair,CountsCounter> dp2countsMap;
 
     /**
      * Stores interaction counts.
@@ -93,7 +99,7 @@ public class Counter {
         this.digestMap=digestMap;
         this.it = reader.iterator();
         createOutputNames(outputPathPrefix);
-
+        this.dp2countsMap=new HashMap<>();
     }
 
     public void countInteractions() throws DiachromaticException, FileNotFoundException {
@@ -121,6 +127,15 @@ public class Counter {
                     readPair.getReverseDigestEnd(),
                     readPair.reverseDigestIsActive(),
                     readPair.getRelativeOrientationTag());
+
+            DigestPair dp = readPair.getDigestPair();
+            dp2countsMap.putIfAbsent(dp,new CountsCounter());
+            if (readPair.isTwisted()) {
+                dp2countsMap.get(dp).twisted++;
+            } else {
+                dp2countsMap.get(dp).simple++;
+            }
+
 
             if(interactionMap.getTotalNumberOfInteractions()%1000000==0) {
                 logger.trace("Number of Interactions: " + interactionMap.getTotalNumberOfInteractions());
@@ -198,6 +213,16 @@ public class Counter {
         outputTsvInteractingFragmentCounts = String.format("%s.%s", outputPathPrefix, "interacting.fragments.counts2.table.tsv");
         outputTsvInteractionCounts = String.format("%s.%s", outputPathPrefix, "interaction.counts2.table.tsv");
         outputTxtStats = String.format("%s.%s", outputPathPrefix, "count.stats.txt");
+    }
+
+
+
+    public void printDigestPairsNEW() {
+        for (DigestPair dp : this.dp2countsMap.keySet()) {
+            CountsCounter cc = this.dp2countsMap.get(dp);
+
+            System.out.println(dp.toString() + " simple=" + cc.simple + " twisted="+cc.twisted);
+        }
     }
 
 

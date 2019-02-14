@@ -60,4 +60,10 @@ public class DigestPair {
         }
         return result;
     }
+
+
+    @Override
+    public String toString() {
+        return forwardDigest.toString() + " and " + reverseDigest.toString();
+    }
 }
