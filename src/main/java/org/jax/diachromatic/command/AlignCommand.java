@@ -53,11 +53,11 @@ public class AlignCommand extends Command {
     private boolean outputRejectedReads;
     @Parameter(names={"-p", "--thread-num"},description = "number of threads used by bowtie2")
     private int threadNum = 1;
-    @Parameter(names={"-l", "--lower-frag-size-limit"},required = true,description = "lower limit for fragment size")
+    @Parameter(names={"-l", "--lower-frag-size-limit"},required = false,description = "lower limit for fragment size")
     private int lowerFragSize = 50;
-    @Parameter(names={"-u", "--upper-frag-size-limit"},required = true,description = "upper limit for fragment size")
+    @Parameter(names={"-u", "--upper-frag-size-limit"},required = false,description = "upper limit for fragment size")
     private int upperFragSize = 800;
-    @Parameter(names={"-s", "--self-ligation-frag-size-limit"},required = true,description = "upper limit for self-ligation fragment size")
+    @Parameter(names={"-s", "--self-ligation-frag-size-limit"},required = false,description = "upper limit for self-ligation fragment size")
     private int upperSelfLigationFragSize = 3000;
     @Parameter(names={"-bsu","--bowtie-stringent-unique"}, description = "use stringent settings for definition of uniquely mapped reads")
     private boolean useStringentUniqueSettings = false;
@@ -70,6 +70,8 @@ public class AlignCommand extends Command {
 
     public void execute() throws DiachromaticException {
 
+        makeOutdirectoryIfNeeded();
+
         String samFile1 = String.format("%s_%s_1.sam", this.filenamePrefix, getRandomPrefix(7));
         String samFile2 = String.format("%s_%s_2.sam", this.filenamePrefix, getRandomPrefix(7));
         logger.trace(String.format("About to read digests from %s.",digestFile));
@@ -80,9 +82,9 @@ public class AlignCommand extends Command {
             Bowtie2Runner runner2 = new Bowtie2Runner(bowtiepath,pathToBowtieIndex,pathToInputFastq2,samFile2,this.threadNum);
             runner2.run();
 
-            String outputWithPrefix=String.format("%s%s%s", outputPath,File.separator,filenamePrefix);
+            String outputDirAndFilePrefix=String.format("%s%s%s", outputDir,File.separator,filenamePrefix);
 
-            Aligner pairer = new Aligner(samFile1,samFile2, outputRejectedReads,outputWithPrefix, digestMap, lowerFragSize, upperFragSize, upperSelfLigationFragSize, filenamePrefix,useStringentUniqueSettings);
+            Aligner pairer = new Aligner(samFile1,samFile2, outputRejectedReads, outputDirAndFilePrefix, digestMap, lowerFragSize, upperFragSize, upperSelfLigationFragSize, filenamePrefix,useStringentUniqueSettings);
             pairer.inputSAMfiles();
             pairer.printStatistics();
             File file = new File(samFile1);

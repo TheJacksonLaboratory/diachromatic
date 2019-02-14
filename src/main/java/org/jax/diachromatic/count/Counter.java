@@ -94,11 +94,11 @@ public class Counter {
     private int n_F2R1 = 0;
 
 
-    public Counter(String validPairsBamFile, DigestMap digestMap, String outputPathPrefix, String filenamePrefix) {
+    public Counter(String validPairsBamFile, DigestMap digestMap, String outputPathPrefix, String outputDirAndFilePrefix) {
         this.reader = SamReaderFactory.makeDefault().open(new File(validPairsBamFile));
         this.digestMap=digestMap;
         this.it = reader.iterator();
-        createOutputNames(outputPathPrefix);
+        createOutputNames(outputDirAndFilePrefix);
         this.dp2countsMap=new HashMap<>();
     }
 

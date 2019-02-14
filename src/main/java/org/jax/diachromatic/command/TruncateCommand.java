@@ -8,6 +8,7 @@ import org.jax.diachromatic.digest.RestrictionEnzyme;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.truncation.Truncator;
 
+import java.io.File;
 import java.util.List;
 
 import static org.jax.diachromatic.digest.RestrictionEnzyme.parseRestrictionEnzymes;
@@ -52,7 +53,7 @@ public class TruncateCommand extends Command {
     private Truncator truncator = null;
     private RestrictionEnzyme re = null;
 /*
-    public TruncateCommand (String file1, String file2, String enzymeName, boolean stickyEnds, String outputPath) throws DiachromaticException {
+    public TruncateCommand (String file1, String file2, String enzymeName, boolean stickyEnds, String outputDir) throws DiachromaticException {
         this.fastaqFile1=file1;
         this.fastaqFile2=file2;
 
@@ -67,13 +68,15 @@ public class TruncateCommand extends Command {
         if (re==null) {
             throw new DiachromaticException(String.format("Could not identify restriction enzyme for \"%s\"",enzymeName));
         }
-        truncator = new Truncator(fastaqFile1,fastaqFile2, re, stickyEnds, outputPath);
+        String outputDirAndFilePrefix=String.format("%s%s%s", outputDir, File.separator,filenamePrefix);
+        truncator = new Truncator(fastaqFile1,fastaqFile2, re, stickyEnds, outputDirAndFilePrefix);
     }
 
 
     public void execute() {
+        makeOutdirectoryIfNeeded();
         logger.trace(String.format("Starting truncate command on files %s and %s",fastaqFile1,fastaqFile2));
-        logger.trace(outputPath);
+        logger.trace(outputDir);
         try {
             init();
             truncator.parseFASTQ();

@@ -12,6 +12,9 @@ import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.io.Commandline;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.io.File;
+
 /**
  * An application to process Hi-C data for differential reads counts in fragments surrounding the
  * transcription start site using probe design by VPV.

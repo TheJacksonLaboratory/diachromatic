@@ -8,6 +8,7 @@ import org.jax.diachromatic.align.DigestMap;
 import org.jax.diachromatic.count.Counter;
 import org.jax.diachromatic.exception.DiachromaticException;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 @Parameters(commandDescription = "count TODO-more text")
 public class CountCommand extends Command {
@@ -26,10 +27,15 @@ public class CountCommand extends Command {
     }
 
     public void execute() throws DiachromaticException {
+
+        makeOutdirectoryIfNeeded();
+
         logger.trace(String.format("About to read digests from %s",digestFile));
         DigestMap digestMap = new DigestMap(digestFile);
 
-        Counter counter = new Counter(validPairsBamFile, digestMap, outputPath, filenamePrefix);
+        String outputDirAndFilePrefix=String.format("%s%s%s", outputDir, File.separator,filenamePrefix);
+
+        Counter counter = new Counter(validPairsBamFile, digestMap, outputDir, outputDirAndFilePrefix);
         try {
             counter.countInteractions();
             counter.printStatistics();
