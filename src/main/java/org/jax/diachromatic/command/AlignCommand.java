@@ -79,7 +79,11 @@ public class AlignCommand extends Command {
             runner.run();
             Bowtie2Runner runner2 = new Bowtie2Runner(bowtiepath,pathToBowtieIndex,pathToInputFastq2,samFile2,this.threadNum);
             runner2.run();
-            Aligner pairer = new Aligner(samFile1,samFile2, outputRejectedReads,outputPath, digestMap, lowerFragSize, upperFragSize, upperSelfLigationFragSize, filenamePrefix,useStringentUniqueSettings);
+            String s = outputPath;
+            s += "/";
+            s += filenamePrefix;
+
+            Aligner pairer = new Aligner(samFile1,samFile2, outputRejectedReads,s, digestMap, lowerFragSize, upperFragSize, upperSelfLigationFragSize, filenamePrefix,useStringentUniqueSettings);
             pairer.inputSAMfiles();
             pairer.printStatistics();
             File file = new File(samFile1);
