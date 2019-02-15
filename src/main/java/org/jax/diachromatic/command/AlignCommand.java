@@ -72,8 +72,10 @@ public class AlignCommand extends Command {
 
         makeOutdirectoryIfNeeded();
 
-        String samFile1 = String.format("%s_%s_1.sam", this.filenamePrefix, getRandomPrefix(7));
-        String samFile2 = String.format("%s_%s_2.sam", this.filenamePrefix, getRandomPrefix(7));
+        String outputDirAndFilePrefix = String.format("%s%s%s", outputDir,File.separator,filenamePrefix);
+
+        String samFile1 = String.format("%s_%s_1.sam", outputDirAndFilePrefix, getRandomPrefix(7));
+        String samFile2 = String.format("%s_%s_2.sam", outputDirAndFilePrefix, getRandomPrefix(7));
         logger.trace(String.format("About to read digests from %s.",digestFile));
         DigestMap digestMap = new DigestMap(digestFile);
         try {
@@ -81,8 +83,6 @@ public class AlignCommand extends Command {
             runner.run();
             Bowtie2Runner runner2 = new Bowtie2Runner(bowtiepath,pathToBowtieIndex,pathToInputFastq2,samFile2,this.threadNum);
             runner2.run();
-
-            String outputDirAndFilePrefix=String.format("%s%s%s", outputDir,File.separator,filenamePrefix);
 
             Aligner pairer = new Aligner(samFile1,samFile2, outputRejectedReads, outputDirAndFilePrefix, digestMap, lowerFragSize, upperFragSize, upperSelfLigationFragSize, filenamePrefix,useStringentUniqueSettings);
             pairer.inputSAMfiles();
