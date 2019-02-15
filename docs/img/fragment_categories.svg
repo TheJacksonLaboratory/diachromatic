@@ -27,7 +27,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.1332296"
-     inkscape:cx="317.70999"
+     inkscape:cx="302.2674"
      inkscape:cy="261.39238"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -4614,16 +4614,16 @@
        sodipodi:linespacing="125%"
        id="text6396"
        y="704.94006"
-       x="297.33835"
+       x="296.4559"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:7.5px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        xml:space="preserve"><tspan
          y="704.94006"
-         x="297.33835"
+         x="296.4559"
          id="tspan6398"
          sodipodi:role="line">Also remove pairs that map</tspan><tspan
          id="tspan6400"
          y="714.31506"
-         x="297.33835"
+         x="296.4559"
          sodipodi:role="line">to the same fragment!</tspan></text>
     <path
        inkscape:connector-curvature="0"
