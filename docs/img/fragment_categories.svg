@@ -16,7 +16,7 @@
    version="1.1"
    inkscape:version="0.91 r13725"
    sodipodi:docname="fragment_categories.svg"
-   inkscape:export-filename="/home/peter/IdeaProjects/diachromatic/docs/img/fragment_categories.png"
+   inkscape:export-filename="/Users/hansep/IdeaProjects/diachromatic/docs/img/fragment_categories.png"
    inkscape:export-xdpi="400"
    inkscape:export-ydpi="400">
   <sodipodi:namedview
@@ -26,16 +26,16 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.6792829"
-     inkscape:cx="384"
-     inkscape:cy="322.45907"
+     inkscape:zoom="1.1332296"
+     inkscape:cx="317.70999"
+     inkscape:cy="261.39238"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
-     inkscape:window-width="1920"
-     inkscape:window-height="1027"
+     inkscape:window-width="1440"
+     inkscape:window-height="805"
      inkscape:window-x="0"
-     inkscape:window-y="0"
+     inkscape:window-y="1"
      inkscape:window-maximized="1"
      units="px"
      showguides="false">
@@ -45,6 +45,36 @@
   </sodipodi:namedview>
   <defs
      id="defs4">
+    <marker
+       inkscape:stockid="TriangleInL"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker6410"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         inkscape:connector-curvature="0"
+         id="path6412"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
+         transform="scale(-0.8,-0.8)" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleInL"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker5522"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         inkscape:connector-curvature="0"
+         id="path5524"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
+         transform="scale(-0.8,-0.8)" />
+    </marker>
     <marker
        inkscape:stockid="TriangleOutL"
        orient="auto"
@@ -1367,7 +1397,8 @@
        refX="0"
        refY="0"
        orient="auto"
-       inkscape:stockid="TriangleInL">
+       inkscape:stockid="TriangleInL"
+       inkscape:collect="always">
       <path
          transform="scale(-0.8,-0.8)"
          style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
@@ -4543,5 +4574,61 @@
          x="53.267239"
          y="641.20245"
          id="tspan6114-3" /></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:7.5px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="534.21533"
+       y="751.771"
+       id="text5478"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan5480"
+         x="534.21533"
+         y="751.771">Also remove pairs that map</tspan><tspan
+         sodipodi:role="line"
+         x="534.21533"
+         y="761.146"
+         id="tspan5482">to the same fragment!</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:7.5px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="480"
+       y="772.36218"
+       id="text5484"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan5486"
+         x="480"
+         y="772.36218" /></text>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker8062-1)"
+       d="m 468.78941,777.34194 c 15,-10 15,-10 15,-10"
+       id="path5488"
+       inkscape:connector-curvature="0" />
+    <path
+       inkscape:connector-curvature="0"
+       id="path5520"
+       d="m 601,777.34194 c -15,-10 -15,-10 -15,-10"
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker5522)" />
+    <text
+       sodipodi:linespacing="125%"
+       id="text6396"
+       y="704.94006"
+       x="297.33835"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:7.5px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       xml:space="preserve"><tspan
+         y="704.94006"
+         x="297.33835"
+         id="tspan6398"
+         sodipodi:role="line">Also remove pairs that map</tspan><tspan
+         id="tspan6400"
+         y="714.31506"
+         x="297.33835"
+         sodipodi:role="line">to the same fragment!</tspan></text>
+    <path
+       inkscape:connector-curvature="0"
+       id="path6408"
+       d="m 220.87805,685.17984 c 15,10 15,10 15,10"
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker6410)" />
   </g>
 </svg>
