@@ -99,7 +99,7 @@ public class Counter {
     public void countInteractions() throws DiachromaticException, FileNotFoundException {
 
         logger.trace("About to determine interaction counts...");
-        interactionMap = new InteractionCountsMap(1);
+        interactionMap = new InteractionCountsMap();
 
         // iterate over unique valid pairs
         n_pairs_total = 0;
@@ -111,7 +111,7 @@ public class Counter {
             ReadPair readPair = new ReadPair(record1, record2, digestMap);
 
             // count interaction
-            interactionMap.incrementFragPair(0,
+            interactionMap.incrementFragPair(
                     readPair.forward().getReferenceName(),
                     readPair.getForwardDigestStart(),
                     readPair.getForwardDigestEnd(),
@@ -122,8 +122,8 @@ public class Counter {
                     readPair.reverseDigestIsActive(),
                     readPair.getRelativeOrientationTag());
 
-            if(interactionMap.getTotalNumberOfInteractionsForCondition(0)%1000000==0) {
-                logger.trace("Number of Interactions: " + interactionMap.getTotalNumberOfInteractionsForCondition(0));
+            if(interactionMap.getTotalNumberOfInteractions()%1000000==0) {
+                logger.trace("Number of Interactions: " + interactionMap.getTotalNumberOfInteractions());
             }
 
             if(readPair.getRelativeOrientationTag().equals("F1F2")) {n_F1F2++;}
@@ -143,7 +143,7 @@ public class Counter {
         }
         logger.trace("...done with counting!");
         logger.trace("About to print the results...");
-        logger.trace("interactionMap.getTotalNumberOfInteractionsForCondition(0): " + interactionMap.getTotalNumberOfInteractionsForCondition(0));
+        logger.trace("interactionMap.getTotalNumberOfInteractions(): " + interactionMap.getTotalNumberOfInteractions());
         interactionMap.printInteractionCountsMapAsCountTable(outputTsvInteractionCounts);
         //interactionMap.printFragmentInteractionCountsMapAsCountTable(outputTsvInteractingFragmentCounts);
         logger.trace("...done!");
@@ -178,19 +178,19 @@ public class Counter {
 
         printStream.print("\n");
         printStream.print("Summary statistics about interactions between active and inactive fragments:\n");
-        printStream.print("\t" + "Total number of interactions: " + interactionMap.getTotalNumberOfInteractionsForCondition(0) + "\n");
-        printStream.print("\t" + "Number of interactions between active fragments: " + interactionMap.getNumberOfInteractionsBetweenActiveFragmentsForCondition(0) + "\n");
-        printStream.print("\t" + "Number of interactions between inactive fragments: " + interactionMap.getNumberOfInteractionsBetweenInactiveFragmentsForCondition(0) + "\n");
-        printStream.print("\t" + "Number of interactions between active and inactive fragments: " + interactionMap.getNumberOfInteractionsBetweenActiveAndInactiveFragmentsForCondition(0) + "\n");
+        printStream.print("\t" + "Total number of interactions: " + interactionMap.getTotalNumberOfInteractions() + "\n");
+        printStream.print("\t" + "Number of interactions between active fragments: " + interactionMap.getNumberOfInteractionsBetweenActiveFragments() + "\n");
+        printStream.print("\t" + "Number of interactions between inactive fragments: " + interactionMap.getNumberOfInteractionsBetweenInactiveFragments() + "\n");
+        printStream.print("\t" + "Number of interactions between active and inactive fragments: " + interactionMap.getNumberOfInteractionsBetweenActiveAndInactiveFragments() + "\n");
         printStream.print("");
-        printStream.print("\t" + "Total number of interacting fragments: " + interactionMap.getTotalNumberOfInteractingFragmentsForCondition(0) + "\n");
-        printStream.print("\t" + "Number of active interacting fragments: " + interactionMap.getTotalNumberOfActiveInteractingFragmentsForCondition(0) + "\n");
+        printStream.print("\t" + "Total number of interacting fragments: " + interactionMap.getTotalNumberOfInteractingFragments() + "\n");
+        printStream.print("\t" + "Number of active interacting fragments: " + interactionMap.getTotalNumberOfActiveInteractingFragments() + "\n");
         printStream.print("\n");
 
         printStream.print("Quality metrics for experimental trouble shooting:\n");
-        printStream.print("\tTarget Enrichment Coefficient (TEC):\t" + String.format("%.2f%%", 100*interactionMap.getTargetEnrichmentCoefficientForCondition(0)) + "\n");
+        printStream.print("\tTarget Enrichment Coefficient (TEC):\t" + String.format("%.2f%%", 100*interactionMap.getTargetEnrichmentCoefficient()) + "\n");
         printStream.print("\tCross-ligation coefficient (CLC):\t" + String.format("%.2f%%", 100.0*n_trans_pairs/n_pairs_total) + "\n");
-        double fsi = 100.0*interactionMap.getTotalNumberOfSingletonInteractionsForCondition(0)/interactionMap.getTotalNumberOfInteractionsForCondition(0);
+        double fsi = 100.0*interactionMap.getTotalNumberOfSingletonInteractions()/interactionMap.getTotalNumberOfInteractions();
         printStream.print("\tFraction of Singleton Interactions (FSI):\t" + String.format("%.2f%%", fsi) + "\n");
     }
 

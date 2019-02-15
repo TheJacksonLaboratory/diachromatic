@@ -73,6 +73,7 @@ public class TruncateCommand extends Command {
 
     public void execute() {
         logger.trace(String.format("Starting truncate command on files %s and %s",fastaqFile1,fastaqFile2));
+        logger.trace(outputPath);
         try {
             init();
             truncator.parseFASTQ();

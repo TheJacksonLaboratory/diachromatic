@@ -64,6 +64,7 @@ public class Diachromatic {
                     System.exit(1);
                 }
             }
+            System.err.println("Parse error: " + e.getMessage());
             jc.usage();
             System.exit(1);
         }

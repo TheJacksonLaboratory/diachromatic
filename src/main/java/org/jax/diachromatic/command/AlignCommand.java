@@ -46,15 +46,11 @@ public class AlignCommand extends Command {
 
     /** Path to the genome digest file produced by GOPHER.*/
     @Parameter(names={"-d","--digest-file"}, required = true,description = "path to GOPHER digest file")
-    private String digestFile = null;
+    private String digestFile;
 
     //** if this is set, an extra BAM file containg the rejected read pairs will be created */
     @Parameter(names={"-j", "--bad"}, description = "output bad (rejected) reads to separated file")
     private boolean outputRejectedReads;
-
-    private String outputPathPrefix = null;
-
-    private String filenamePrefix;
     @Parameter(names={"-p", "--thread-num"},description = "number of threads used by bowtie2")
     private int threadNum = 1;
     @Parameter(names={"-l", "--lower-frag-size-limit"},required = true,description = "lower limit for fragment size")
@@ -66,37 +62,7 @@ public class AlignCommand extends Command {
     @Parameter(names={"-bsu","--bowtie-stringent-unique"}, description = "use stringent settings for definition of uniquely mapped reads")
     private boolean useStringentUniqueSettings = false;
 
-    /**
-     * TODO REMOVE ACTIVE DIGEST FILE
-     * @param bowtie
-     * @param btIndexPath
-     * @param inputFastqPath1
-     * @param inputFastqPath2
-     * @param digest
-     * @param outputRejected
-     * @param outputPathPrefix
-     * @param threadNum
-     * @param lowerFragSize
-     * @param upperFragSize
-     * @param filenamePrefix
-     * @param useStringentUniqueSettings
-     */
-    @Deprecated // NOt needed now with JCOmmander.
-    public AlignCommand(String bowtie, String btIndexPath, String inputFastqPath1, String inputFastqPath2, String digest,
-                        boolean outputRejected, String outputPathPrefix, Integer threadNum, Integer lowerFragSize, Integer upperFragSize, String filenamePrefix, boolean useStringentUniqueSettings) {
-        this.bowtiepath =bowtie;
-        pathToBowtieIndex=btIndexPath;
-        pathToInputFastq1 =inputFastqPath1;
-        pathToInputFastq2 =inputFastqPath2;
-        digestFile=digest;
-        outputRejectedReads = outputRejected;
-        this.outputPathPrefix = outputPathPrefix;
-        this.threadNum = threadNum;
-        this.lowerFragSize = lowerFragSize;
-        this.upperFragSize = upperFragSize;
-        this.filenamePrefix = filenamePrefix;
-        this.useStringentUniqueSettings = useStringentUniqueSettings;
-    }
+
 
     public AlignCommand(){}
 
@@ -104,8 +70,8 @@ public class AlignCommand extends Command {
 
     public void execute() throws DiachromaticException {
 
-        String samFile1 = String.format("%s_%s_1.sam", this.outputPathPrefix, getRandomPrefix(7));
-        String samFile2 = String.format("%s_%s_2.sam", this.outputPathPrefix, getRandomPrefix(7));
+        String samFile1 = String.format("%s_%s_1.sam", this.filenamePrefix, getRandomPrefix(7));
+        String samFile2 = String.format("%s_%s_2.sam", this.filenamePrefix, getRandomPrefix(7));
         logger.trace(String.format("About to read digests from %s.",digestFile));
         DigestMap digestMap = new DigestMap(digestFile);
         try {
@@ -113,7 +79,10 @@ public class AlignCommand extends Command {
             runner.run();
             Bowtie2Runner runner2 = new Bowtie2Runner(bowtiepath,pathToBowtieIndex,pathToInputFastq2,samFile2,this.threadNum);
             runner2.run();
-            Aligner pairer = new Aligner(samFile1,samFile2, outputRejectedReads,outputPathPrefix, digestMap, lowerFragSize, upperFragSize, upperSelfLigationFragSize, filenamePrefix,useStringentUniqueSettings);
+
+            String outputWithPrefix=String.format("%s%s%s", outputPath,File.separator,filenamePrefix);
+
+            Aligner pairer = new Aligner(samFile1,samFile2, outputRejectedReads,outputWithPrefix, digestMap, lowerFragSize, upperFragSize, upperSelfLigationFragSize, filenamePrefix,useStringentUniqueSettings);
             pairer.inputSAMfiles();
             pairer.printStatistics();
             File file = new File(samFile1);

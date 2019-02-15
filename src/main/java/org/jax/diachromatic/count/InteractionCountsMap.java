@@ -11,16 +11,16 @@ import java.io.PrintStream;
 import java.util.*;
 
 /**
- * This class is intended for counting read pairs between interacting fragments for one or more conditions.
+ * This class is intended for counting read pairs between interacting fragments.
  *
  * In essence this is a java HasMap with keys assembled from the coordinates of the interacting fragments
- * and Integer arrays that contain the numbers of interactions for individual conditions,
+ * and Integer arrays that contain the numbers of interactions,
  * but it has additional features that take into account more specific requirements.
  *
  * Once the counting of interactions is done, a second hash align can be optionally derived for the numbers
  * of reads at interacting fragments. The class provides methods that can be used to write the
  * content of the respective hash maps to a text file. Furthermore, numbers such as the total number
- * of interactions for a given condition or the total number of interacting fragments for a given condition
+ * of interactions or the total number of interacting fragments
  * are determined and can be queried via public methods.
  *
  *
@@ -36,61 +36,56 @@ public class InteractionCountsMap {
     // ------
 
     /**
-     * Total number of conditions
+     * Counter reads within active fragments
      */
-    private Integer number_of_conditions;
+    private Integer read_count = null;
 
     /**
      * Counter reads within active fragments
      */
-    private Integer[] read_count = null;
+    private Integer active_read_count = null;
 
     /**
-     * Counter reads within active fragments
+     * Total current number of interactions
      */
-    private Integer[] active_read_count = null;
+    private Integer interaction_count = null;
 
     /**
-     * Total current number of interactions for each condition
-     */
-    private Integer[] interaction_count = null;
-
-    /**
-     * Total current number of singleton interactions for each condition.
+     * Total current number of singleton interactions
      * Note: Initialized only after execution of the function
-     * 'printInteractionCountsMapAsCountTable', which is not nice.
+     * 'printInteractionCountsMapAsCountTable'.
      */
-    private Integer[] n_singleton_interactions = null;
+    private Integer n_singleton_interactions = null;
 
     /**
-     * Number of interactions between two active fragments for each condition
+     * Number of interactions between two active fragments
      */
-    private Integer[] active_active_interaction_count = null;
+    private Integer active_active_interaction_count = null;
 
     /**
-     * Number of interactions between two inactive fragments for each condition
+     * Number of interactions between two inactive fragments
      */
-    private Integer[] inactive_inactive_interaction_count = null;
+    private Integer inactive_inactive_interaction_count = null;
 
     /**
-     * Number of interactions between active and inactive fragments for each condition (both directions)
+     * Number of interactions between active and inactive fragments (both directions)
      */
-    private Integer[] active_inactive_interaction_count = null;
+    private Integer active_inactive_interaction_count = null;
 
     /**
-     * Total number of interacting fragments for each condition
+     * Total number of interacting fragments
      */
-    private Integer[] interacting_fragment_count = null;
+    private Integer interacting_fragment_count = null;
 
     /**
-     * Total number of active interacting fragments for each condition
+     * Total number of active interacting fragments
      */
-    private Integer[] active_interacting_fragment_count = null;
+    private Integer active_interacting_fragment_count = null;
 
     /**
      * Hash align for counting interactions
      */
-    private HashMap<String,List<Integer>> interaction_counts_map = null;
+    private HashMap<String,Integer> interaction_counts_map = null;
 
     /**
      * Output filename for interaction counts
@@ -102,7 +97,7 @@ public class InteractionCountsMap {
     /**
      * Hash align for read counts at interacting fragments
      */
-    private HashMap<String,List<Integer>> fragment_interaction_counts_map = new HashMap<String,List<Integer>>();
+    private HashMap<String,Integer> fragment_interaction_counts_map = new HashMap<String,Integer>();
 
     /**
      * Output filename read counts at interacting fragments
@@ -114,37 +109,18 @@ public class InteractionCountsMap {
     // constructor
     // -----------
 
-    public InteractionCountsMap(Integer number_of_conditions) {
+    public InteractionCountsMap() {
 
-        this.number_of_conditions = number_of_conditions;
-        interaction_counts_map = new HashMap<String,List<Integer>>();
-
-        this.interaction_count = new Integer[number_of_conditions];
-        Arrays.fill(interaction_count, 0);
-
-        this.n_singleton_interactions = new Integer[number_of_conditions];
-        Arrays.fill(n_singleton_interactions, 0);
-
-        this.active_active_interaction_count = new Integer[number_of_conditions];
-        Arrays.fill(active_active_interaction_count, 0);
-
-        this.inactive_inactive_interaction_count = new Integer[number_of_conditions];
-        Arrays.fill(inactive_inactive_interaction_count, 0);
-
-        this.active_inactive_interaction_count = new Integer[number_of_conditions];
-        Arrays.fill(active_inactive_interaction_count, 0);
-
-        this.interacting_fragment_count = new Integer[number_of_conditions];
-        Arrays.fill(interacting_fragment_count, 0);
-
-        this.active_interacting_fragment_count = new Integer[number_of_conditions];
-        Arrays.fill(active_interacting_fragment_count, 0);
-
-        this.active_read_count = new Integer[number_of_conditions];
-        Arrays.fill(active_read_count, 0);
-
-        this.read_count = new Integer[number_of_conditions];
-        Arrays.fill(read_count, 0);
+        interaction_counts_map = new HashMap<String,Integer>();
+        this.interaction_count = 0;
+        this.n_singleton_interactions = 0;
+        this.active_active_interaction_count = 0;
+        this.inactive_inactive_interaction_count = 0;
+        this.active_inactive_interaction_count = 0;
+        this.interacting_fragment_count = 0;
+        this.active_interacting_fragment_count = 0;
+        this.active_read_count = 0;
+        this.read_count = 0;
     }
 
 
@@ -215,9 +191,8 @@ public class InteractionCountsMap {
 
     /**
      * This method is the main interface of this class. It can be used to increment the count of interactions
-     * for a given pair of restriction fragment and condition.
+     * for a given pair of restriction fragments.
      *
-     * @param condition_num Identifier for the condition to be incremented.
      * @param refID_1 Name of the reference sequence to which the first read of the pair is mapped, usually the name of a chromosome, e.g. chr1.
      * @param fragStaPos_1 Starting position of the fragment to which the first read is mapped.
      * @param refID_1 Name of the reference sequence to which the second read of the pair is mapped, usually the name of a chromosome, e.g. chr1.
@@ -230,7 +205,7 @@ public class InteractionCountsMap {
      * TODO: Try to pass the corresponding two digests to this function instead of the long list of arguments.
      *
      */
-    public String incrementFragPair(Integer condition_num, String refID_1, Integer fragStaPos_1, Integer fragEndPos_1, boolean fragActive_1, String refID_2, Integer fragStaPos_2, Integer fragEndPos_2, boolean fragActive_2, String relOriTag) throws IncrementSameInternalInteractionException {
+    public String incrementFragPair(String refID_1, Integer fragStaPos_1, Integer fragEndPos_1, boolean fragActive_1, String refID_2, Integer fragStaPos_2, Integer fragEndPos_2, boolean fragActive_2, String relOriTag) throws IncrementSameInternalInteractionException {
 
         // generate unique key
         String hashKey = getHashKey(refID_1, fragStaPos_1, fragEndPos_1, fragActive_1, refID_2, fragStaPos_2, fragEndPos_2, fragActive_2);
@@ -247,9 +222,9 @@ public class InteractionCountsMap {
         hashKey += oriTag;
 
         // count reads in active fragments
-        if(fragActive_1) {active_read_count[condition_num]++;}
-        if(fragActive_2) {active_read_count[condition_num]++;}
-        read_count[condition_num]=read_count[condition_num]+2;
+        if(fragActive_1) {active_read_count++;}
+        if(fragActive_2) {active_read_count++;}
+        read_count = read_count+2;
 
 
         try {
@@ -261,26 +236,24 @@ public class InteractionCountsMap {
            // check if hashKey exists
             if(!interaction_counts_map.containsKey(hashKey)) {
 
-                // if not, init ArrayList of length that equals the total number of conditions with zero
-                Integer[] integers = new Integer[number_of_conditions];
-                Arrays.fill(integers, 0);
-                List<Integer> newList = Arrays.asList(integers);
-                interaction_counts_map.put(hashKey, newList);
+                // if not, init with zero
+                interaction_counts_map.put(hashKey, 0);
             }
 
             // either way, increment associated array at corresponding position
-            interaction_counts_map.get(hashKey).set(condition_num, interaction_counts_map.get(hashKey).get(condition_num)+1);
+            interaction_counts_map.put(hashKey,interaction_counts_map.get(hashKey)+1);
 
-            // if this the first read pair observed for the current condition, also increment total interaction count for current condition
-            if(interaction_counts_map.get(hashKey).get(condition_num).intValue()==1) {
-                interaction_count[condition_num]++;
+
+            // if this the first read pair observed, also increment total interaction count
+            if(interaction_counts_map.get(hashKey)==1) {
+                interaction_count++;
                 String[] frag = hashKey.split(";");
                 if (fragmentKeyIsActive(frag[0]) && fragmentKeyIsActive(frag[1])) {
-                    active_active_interaction_count[condition_num]++;
+                    active_active_interaction_count++;
                 } else if (!fragmentKeyIsActive(frag[0]) && !fragmentKeyIsActive(frag[1])) {
-                    inactive_inactive_interaction_count[condition_num]++;
+                    inactive_inactive_interaction_count++;
                 } else {
-                    active_inactive_interaction_count[condition_num]++;
+                    active_inactive_interaction_count++;
                 }
             }
         }
@@ -292,77 +265,76 @@ public class InteractionCountsMap {
 
     /**
      *
-     * @return Total number of interactions for a given condition.
+     * @return Total number of interactions
      *
      */
-    public Integer getTotalNumberOfInteractionsForCondition(Integer condition) {
-        return this.interaction_count[condition];
+    public Integer getTotalNumberOfInteractions() {
+        return this.interaction_count;
     }
 
     /**
      *
-     * @return Total number of interactions with only one read pair for a given condition.
+     * @return Total number of interactions with only one read pair.
      *
      */
-    public Integer getTotalNumberOfSingletonInteractionsForCondition(Integer condition) {
-        return this.n_singleton_interactions[condition];
+    public Integer getTotalNumberOfSingletonInteractions() {
+        return this.n_singleton_interactions;
     }
 
     /**
      *
-     * @return Total number of interactions between two active fragments for a given condition.
+     * @return Total number of interactions between two active fragments.
      *
      */
-    public Integer getNumberOfInteractionsBetweenActiveFragmentsForCondition(Integer condition) {
-        return this.active_active_interaction_count[condition];
+    public Integer getNumberOfInteractionsBetweenActiveFragments() {
+        return this.active_active_interaction_count;
     }
 
     /**
      *
-     * @return Total number of interactions between two active fragments for a given condition.
+     * @return Total number of interactions between two active fragments.
      *
      */
-    public Integer getNumberOfInteractionsBetweenInactiveFragmentsForCondition(Integer condition) {
-        return this.inactive_inactive_interaction_count[condition];
+    public Integer getNumberOfInteractionsBetweenInactiveFragments() {
+        return this.inactive_inactive_interaction_count;
     }
 
     /**
      *
-     * @return Total number of interactions between active and inactive fragments for a given condition (both direction).
+     * @return Total number of interactions between active and inactive fragments (both direction).
      *
      */
-    public Integer getNumberOfInteractionsBetweenActiveAndInactiveFragmentsForCondition(Integer condition) {
-        return this.active_inactive_interaction_count[condition];
+    public Integer getNumberOfInteractionsBetweenActiveAndInactiveFragments() {
+        return this.active_inactive_interaction_count;
     }
 
     /**
      *
-     * @return Total number of interacting fragments for a given condition.
+     * @return Total number of interacting fragments.
      *
      */
-    public Integer getTotalNumberOfInteractingFragmentsForCondition(Integer condition) {
-        return this.interacting_fragment_count[condition];
+    public Integer getTotalNumberOfInteractingFragments() {
+        return this.interacting_fragment_count;
     }
 
     /**
      *
-     * @return Total number of active interacting fragments for a given condition.
+     * @return Total number of active interacting fragments.
      *
      */
-    public Integer getTotalNumberOfActiveInteractingFragmentsForCondition(Integer condition) {
-        return this.active_interacting_fragment_count[condition];
+    public Integer getTotalNumberOfActiveInteractingFragments() {
+        return this.active_interacting_fragment_count;
     }
 
-    public double getTargetEnrichmentCoefficientForCondition(Integer condition) {
-        return active_read_count[condition]/read_count[condition].doubleValue();
+    public double getTargetEnrichmentCoefficient() {
+        return active_read_count/read_count.doubleValue();
     }
 
     /**
      * This function writes one tab delimited text file format to disk.
      * Each row corresponds to a pair of interacting fragments.
      * The first six fields contain the coordinates of the two interacting fragments.
-     * All following fields contain the number of read pairs observed for the given fragment pair
-     * for individual conditions.
+     * All following fields contain the number of read pairs observed for the given fragment pair.
      *
      */
     public void printInteractionCountsMapAsCountTable(String interactionCountsTableFileName) throws FileNotFoundException {
@@ -408,35 +380,35 @@ public class InteractionCountsMap {
             printStream.print(refID_1 + "\t" + fragStaPos_1 + "\t" + fragEndPos_1 + "\t" + fragActivationState_1 + "\t");
             printStream.print(refID_2 + "\t" + fragStaPos_2 + "\t" + fragEndPos_2 + "\t" + fragActivationState_2);
 
-            for(int i=0; i<number_of_conditions; i++) {
-                Integer simpleNum;
-                Integer twistedNum;
-                if(relOriTag.equals("S")) {
-                    simpleNum = interaction_counts_map.get(hashKey).get(i);
-                    // check if there is also a twisted interaction
-                    String twistedHaskKey = baseHashKey.concat(";T");
-                    if(interaction_counts_map.containsKey(twistedHaskKey)) {
-                        twistedNum = interaction_counts_map.get(twistedHaskKey).get(i);
-                    } else {
-                        twistedNum = 0;
-                    }
+
+            Integer simpleNum;
+            Integer twistedNum;
+            if(relOriTag.equals("S")) {
+                simpleNum = interaction_counts_map.get(hashKey);
+                // check if there is also a twisted interaction
+                String twistedHaskKey = baseHashKey.concat(";T");
+                if(interaction_counts_map.containsKey(twistedHaskKey)) {
+                    twistedNum = interaction_counts_map.get(twistedHaskKey);
                 } else {
-                    twistedNum = interaction_counts_map.get(hashKey).get(i);
-                    // check if there is also a twisted interaction
-                    String simpleHaskKey = baseHashKey.concat(";S");
-                    if(interaction_counts_map.containsKey(simpleHaskKey)) {
-                        simpleNum = interaction_counts_map.get(simpleHaskKey).get(i);
-                    } else {
-                        simpleNum = 0;
-                    }
+                    twistedNum = 0;
                 }
+            } else {
+                twistedNum = interaction_counts_map.get(hashKey);
+                // check if there is also a twisted interaction
+                String simpleHaskKey = baseHashKey.concat(";S");
+                if(interaction_counts_map.containsKey(simpleHaskKey)) {
+                    simpleNum = interaction_counts_map.get(simpleHaskKey);
+                } else {
+                    simpleNum = 0;
+                }
+
 
                 printStream.print("\t");
                 printStream.print(simpleNum);
                 printStream.print(":");
                 printStream.print(twistedNum);
 
-                if(simpleNum+twistedNum==1) {n_singleton_interactions[i]++;}
+                if(simpleNum+twistedNum==1) {n_singleton_interactions++;}
 
                 //printStream.print(interaction_counts_map.get(hashKey).get(i));
             }
@@ -461,37 +433,29 @@ public class InteractionCountsMap {
 
             // check if fragment keys exists and create array if necessary
             if(!fragment_interaction_counts_map.containsKey(fragKey[0])) {
-                Integer[] frag1counts = new Integer[number_of_conditions];
-                Arrays.fill(frag1counts, 0);
-                List<Integer> newList = Arrays.asList(frag1counts);
-                fragment_interaction_counts_map.put(fragKey[0], newList);
+                fragment_interaction_counts_map.put(fragKey[0], 0);
             }
             if(!fragment_interaction_counts_map.containsKey(fragKey[1])) {
-                Integer[] frag1counts = new Integer[number_of_conditions];
-                Arrays.fill(frag1counts, 0);
-                List<Integer> newList = Arrays.asList(frag1counts);
-                fragment_interaction_counts_map.put(fragKey[1], newList);
+                fragment_interaction_counts_map.put(fragKey[1], 0);
             }
 
-            // increment counts for both fragments and each condition
-            for(int i = 0; i<number_of_conditions; i++) {
-                if(fragment_interaction_counts_map.get(fragKey[0]).get(i)==0) {
-                    interacting_fragment_count[i]++;
+            // increment counts for both fragments
+                if(fragment_interaction_counts_map.get(fragKey[0])==0) {
+                    interacting_fragment_count++;
                     if(fragmentKeyIsActive(fragKey[0])) {
-                        active_interacting_fragment_count[i]++;
+                        active_interacting_fragment_count++;
                     }
                 }
-                Integer newVal = fragment_interaction_counts_map.get(fragKey[0]).get(i) + interaction_counts_map.get(hashKey).get(i);
-                fragment_interaction_counts_map.get(fragKey[0]).set(i,newVal);
-                if(fragment_interaction_counts_map.get(fragKey[1]).get(i)==0) {
-                    interacting_fragment_count[i]++;
+                Integer newVal = fragment_interaction_counts_map.get(fragKey[0]) + interaction_counts_map.get(hashKey);
+                fragment_interaction_counts_map.put(fragKey[0], newVal);
+                if(fragment_interaction_counts_map.get(fragKey[1])==0) {
+                    interacting_fragment_count++;
                     if(fragmentKeyIsActive(fragKey[1])) {
-                        active_interacting_fragment_count[i]++;
+                        active_interacting_fragment_count++;
                     }
                 }
-                newVal = fragment_interaction_counts_map.get(fragKey[1]).get(i) + interaction_counts_map.get(hashKey).get(i);
-                fragment_interaction_counts_map.get(fragKey[1]).set(i,newVal);
-            }
+                newVal = fragment_interaction_counts_map.get(fragKey[1]) + interaction_counts_map.get(hashKey);
+                fragment_interaction_counts_map.put(fragKey[1], newVal);
         }
     }
 
@@ -499,11 +463,11 @@ public class InteractionCountsMap {
     /**
      * This function writes one tab delimited text file format to disk.
      * Each row corresponds to a restriction fragment that contains at least
-     * one read of a valid pair for at least one condition.
+     * one read of a valid pair.
      *
      * The first three fields contain the coordinates of the interacting fragment.
      * All following fields contain the number of reads (that are part of a valid pair)
-     * at the interacting fragments individual conditions.
+     * at the interacting fragments.
      */
     public void printFragmentInteractionCountsMapAsCountTable(String interactingFragmentsCountsTableFileName) throws FileNotFoundException {
 
@@ -519,10 +483,8 @@ public class InteractionCountsMap {
             String hashKey = pair.getKey().toString();
             String[] tmp = hashKey.split(":");
             String[] tmp2 = tmp[1].split("-");
-             printStream.print(tmp[0] + "\t" + tmp2[0] + "\t" + tmp2[1] + "\t" + tmp[2]);
-            for(int j = 0; j<number_of_conditions; j++) {
-                printStream.print("\t" + fragment_interaction_counts_map.get(hashKey).get(j));
-            }
+            printStream.print(tmp[0] + "\t" + tmp2[0] + "\t" + tmp2[1] + "\t" + tmp[2]);
+            printStream.print("\t" + fragment_interaction_counts_map.get(hashKey));
             printStream.print("\n");
         }
     }
@@ -532,12 +494,11 @@ public class InteractionCountsMap {
      * This method is primarily for testing and therefore it's public.
      *
      * @param hashKey
-     * @param condition_id
      *
-     * @return Current number of interactions for given fragment pair and condition.
+     * @return Current number of interactions for given fragment pair.
      */
-    public int getNumberOfInteractionsForKeyAndCondition(String hashKey, Integer condition_id) {
-        int interNum = interaction_counts_map.get(hashKey).get(condition_id);
+    public int getNumberOfInteractionsForKey(String hashKey) {
+        int interNum = interaction_counts_map.get(hashKey);
         return interNum;
     }
 
@@ -545,12 +506,11 @@ public class InteractionCountsMap {
      * This method is primarily for testing and therefore it's public.
      *
      * @param hashKey
-     * @param condition_id
      *
-     * @return Current number of reads for a given fragment and condition.
+     * @return Current number of reads for a given fragment.
      */
-    public int getNumberOfReadsAtInteractingFragmentForKeyAndCondition(String hashKey, Integer condition_id) {
-        int interNum = fragment_interaction_counts_map.get(hashKey).get(condition_id);
+    public int getNumberOfReadsAtInteractingFragmentForKey(String hashKey) {
+        int interNum = fragment_interaction_counts_map.get(hashKey);
         return interNum;
     }
 }
