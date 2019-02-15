@@ -9,7 +9,6 @@ import org.jax.diachromatic.command.Command;
 import org.jax.diachromatic.command.CountCommand;
 import org.jax.diachromatic.command.TruncateCommand;
 import org.jax.diachromatic.exception.DiachromaticException;
-import org.jax.diachromatic.io.Commandline;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -113,5 +112,16 @@ public class Diachromatic {
         } catch (DiachromaticException e) {
             e.printStackTrace();
         }
+    }
+
+    public static String getVersion() {
+        String version="0.0.0";// default, should be overwritten by the following.
+        try {
+            Package p = Diachromatic.class.getPackage();
+            version = p.getImplementationVersion();
+        } catch (Exception e) {
+            // do nothing
+        }
+        return version;
     }
 }

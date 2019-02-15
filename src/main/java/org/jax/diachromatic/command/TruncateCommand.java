@@ -36,7 +36,7 @@ import static org.jax.diachromatic.digest.RestrictionEnzyme.parseRestrictionEnzy
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
  * @version 0.0.2 (2018-01-05)
  */
-@Parameters(commandDescription = "truncate TODO-more text")
+@Parameters(commandDescription = "Command and options for truncate function. truncate searches for Hi-C religation sequences and truncates reads accordingly")
 public class TruncateCommand extends Command {
     private static final Logger logger = LogManager.getLogger();
 

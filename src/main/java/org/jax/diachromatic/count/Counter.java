@@ -59,7 +59,7 @@ public class Counter {
      */
     private String outputTsvInteractingFragmentCounts;
     private String outputTsvInteractionCounts;
-    private String outputTsvInteractionCounts2;
+        private String outputTsvInteractionCounts2;
     private String outputTxtStats;
 
     /**

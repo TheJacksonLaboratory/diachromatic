@@ -4,8 +4,8 @@ import htsjdk.samtools.*;
 import htsjdk.samtools.util.Log;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jax.diachromatic.Diachromatic;
 import org.jax.diachromatic.exception.DiachromaticException;
-import org.jax.diachromatic.io.Commandline;
 import java.io.*;
 import java.util.*;
 
@@ -219,7 +219,7 @@ public class Aligner {
         Arrays.fill(fragSizesUnLigatedPairs, 0);
 
 
-        VERSION = Commandline.getVersion();
+        VERSION = Diachromatic.getVersion();
         createOutputNames(outputPathPrefix);
     }
 
