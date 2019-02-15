@@ -174,8 +174,8 @@ public class Digest {
         if (! (o instanceof Digest) ) return false;
         Digest other = (Digest) o;
         return (chromosome.equals(other.chromosome) &&
-        digestStartPosition ==other.digestStartPosition &&
-        digestEndPosition==other.digestEndPosition);
+        digestStartPosition == other.digestStartPosition &&
+        digestEndPosition == other.digestEndPosition);
     }
 
     /** Hash code with lazily initialized value*/

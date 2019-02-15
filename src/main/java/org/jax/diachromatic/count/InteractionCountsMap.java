@@ -392,6 +392,13 @@ public class InteractionCountsMap {
                 } else {
                     twistedNum = 0;
                 }
+                printStream.print("\t");
+                printStream.print(simpleNum);
+                printStream.print(":");
+                printStream.print(twistedNum);
+
+                if(simpleNum+twistedNum==1) {n_singleton_interactions++;}
+
             } else {
                 twistedNum = interaction_counts_map.get(hashKey);
                 // check if there is also a twisted interaction
@@ -401,8 +408,6 @@ public class InteractionCountsMap {
                 } else {
                     simpleNum = 0;
                 }
-
-
                 printStream.print("\t");
                 printStream.print(simpleNum);
                 printStream.print(":");

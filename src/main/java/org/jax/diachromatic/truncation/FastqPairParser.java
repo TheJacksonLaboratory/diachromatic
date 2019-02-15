@@ -39,7 +39,7 @@ public class FastqPairParser {
     /** FASTQ reader for the reverse reads. */
     private FastqReader fastQreader2;
     /** Number at which we show logger trace messages (every BLOCKSIZE reads)*/
-    private final int BLOCKSIZE=200_000;
+    private final int BLOCKSIZE=100_000_000;
 
 
     /**

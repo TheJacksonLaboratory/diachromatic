@@ -59,6 +59,7 @@ public class Counter {
      */
     private String outputTsvInteractingFragmentCounts;
     private String outputTsvInteractionCounts;
+    private String outputTsvInteractionCounts2;
     private String outputTxtStats;
 
     /**
@@ -211,17 +212,21 @@ public class Counter {
 
     private void createOutputNames(String outputPathPrefix) {
         outputTsvInteractingFragmentCounts = String.format("%s.%s", outputPathPrefix, "interacting.fragments.counts2.table.tsv");
-        outputTsvInteractionCounts = String.format("%s.%s", outputPathPrefix, "interaction.counts2.table.tsv");
+        outputTsvInteractionCounts = String.format("%s.%s", outputPathPrefix, "interaction.counts.table.tsv");
+        outputTsvInteractionCounts2 = String.format("%s.%s", outputPathPrefix, "interaction.counts2.table.tsv");
         outputTxtStats = String.format("%s.%s", outputPathPrefix, "count.stats.txt");
     }
 
 
 
-    public void printInteractionCountsMapAsCountTableNEW() {
+    public void printInteractionCountsMapAsCountTableNEW() throws FileNotFoundException {
+
+        // create file for output
+        PrintStream printStream = new PrintStream(new FileOutputStream(outputTsvInteractionCounts2));
+
         for (DigestPair dp : this.dp2countsMap.keySet()) {
             CountsCounter cc = this.dp2countsMap.get(dp);
-
-            System.out.println(dp.toString() + "\t" + cc.simple + ":" + cc.twisted);
+            printStream.println(dp.toString() + "\t" + cc.simple + ":" + cc.twisted);
         }
     }
 

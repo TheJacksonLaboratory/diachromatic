@@ -44,8 +44,10 @@ public class DigestPair {
         if (o==null) return false;
         if (! (o instanceof DigestPair) ) return false;
         DigestPair other = (DigestPair) o;
-        return other.forwardDigest.equals(this.forwardDigest) &&
-                other.reverseDigest.equals(this.reverseDigest);
+        return (this.forwardDigest.equals(other.forwardDigest) && this.reverseDigest.equals(other.reverseDigest))
+                ||
+               (this.forwardDigest.equals(other.reverseDigest) && this.reverseDigest.equals(other.forwardDigest))
+                ;
     }
 
     /** Hash code with lazily initialized value*/
@@ -54,9 +56,15 @@ public class DigestPair {
     public int hashCode() {
         int result=hashCode;
         if (result==0) {
-            result=forwardDigest.hashCode();
-            result=31*result+reverseDigest.hashCode();
-            hashCode=result;
+            if(forwardDigest.getDigestStartPosition()<reverseDigest.getDigestStartPosition()) {
+                result = forwardDigest.hashCode();
+                result = 31 * result + reverseDigest.hashCode();
+                hashCode = result;
+            } else {
+                result = reverseDigest.hashCode();
+                result = 31 * result + forwardDigest.hashCode();
+                hashCode = result;
+            }
         }
         return result;
     }
