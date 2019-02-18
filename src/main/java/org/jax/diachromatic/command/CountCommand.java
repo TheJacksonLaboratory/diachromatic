@@ -37,9 +37,14 @@ public class CountCommand extends Command {
 
         Counter counter = new Counter(validPairsBamFile, digestMap, outputDir, outputDirAndFilePrefix);
         try {
+            logger.trace("About to determine interaction counts...");
             counter.countInteractions();
+            logger.trace("...done with counting!");
+            logger.trace("About to print the results...");
+            counter.printInteractionCountsMapAsCountTable();
+            counter.printFragmentInteractionCountsMapAsCountTable();
             counter.printStatistics();
-            counter.printInteractionCountsMapAsCountTableNEW();
+            logger.trace("...done!");
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }

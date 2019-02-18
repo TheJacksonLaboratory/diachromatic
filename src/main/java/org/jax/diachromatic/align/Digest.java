@@ -103,11 +103,11 @@ public class Digest {
         return chromosome;
     }
 
-    int getDigestStartPosition() {
+    public int getDigestStartPosition() {
         return digestStartPosition;
     }
 
-    int getDigestEndPosition() {
+    public int getDigestEndPosition() {
         return digestEndPosition;
     }
 
