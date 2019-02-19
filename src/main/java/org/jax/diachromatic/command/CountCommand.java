@@ -2,6 +2,8 @@ package org.jax.diachromatic.command;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.align.DigestMap;
@@ -35,7 +37,9 @@ public class CountCommand extends Command {
 
         String outputDirAndFilePrefix=String.format("%s%s%s", outputDir, File.separator,filenamePrefix);
 
-        Counter counter = new Counter(validPairsBamFile, digestMap, outputDir, outputDirAndFilePrefix);
+        SamReader reader = SamReaderFactory.makeDefault().open(new File(validPairsBamFile));
+
+        Counter counter = new Counter(reader, digestMap, outputDirAndFilePrefix);
         try {
             logger.trace("About to determine interaction counts...");
             counter.countInteractions();

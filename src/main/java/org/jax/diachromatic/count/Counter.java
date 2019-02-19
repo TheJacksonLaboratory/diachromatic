@@ -6,8 +6,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.align.*;
 import org.jax.diachromatic.exception.DiachromaticException;
-
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
@@ -39,11 +37,8 @@ public class Counter {
     private static final htsjdk.samtools.util.Log log = Log.getInstance(Aligner.class);
 
     /**
-     * Stores interaction counts.
+     * HashMap that stores interaction counts. Key: reference of digest pair; Value: SimpleTwistedCount objects.
      */
-    //private InteractionCountsMap interactionMap;
-
-
     private Map<DigestPair,SimpleTwistedCount> dp2countsMap;
 
     /**
@@ -56,7 +51,6 @@ public class Counter {
      */
     private String outputTsvInteractingFragmentCounts;
     private String outputTsvInteractionCounts;
-    private String outputTsvInteractionCounts2;
     private String outputTxtStats;
 
     /**
@@ -138,8 +132,8 @@ public class Counter {
     private int active_interacting_fragment_count = 0;
 
 
-    public Counter(String validPairsBamFile, DigestMap digestMap, String outputPathPrefix, String outputDirAndFilePrefix) {
-        this.reader = SamReaderFactory.makeDefault().open(new File(validPairsBamFile));
+    public Counter(SamReader samReader, DigestMap digestMap, String outputDirAndFilePrefix) {
+        this.reader = samReader;
         this.digestMap=digestMap;
         this.it = reader.iterator();
         createOutputNames(outputDirAndFilePrefix);
@@ -147,9 +141,6 @@ public class Counter {
     }
 
     public void countInteractions() throws DiachromaticException, FileNotFoundException {
-
-        //logger.trace("About to determine interaction counts...");
-        //interactionMap = new InteractionCountsMap();
 
         // iterate over unique valid pairs
         n_pairs_total = 0;
@@ -164,37 +155,8 @@ public class Counter {
             if(readPair.forwardDigestIsActive()){active_read_count++;}
             if(readPair.reverseDigestIsActive()){active_read_count++;}
 
-            // count interaction
-            /*interactionMap.incrementFragPair(
-                    readPair.forward().getReferenceName(),
-                    readPair.getForwardDigestStart(),
-                    readPair.getForwardDigestEnd(),
-                    readPair.forwardDigestIsActive(),
-                    readPair.reverse().getReferenceName(),
-                    readPair.getReverseDigestStart(),
-                    readPair.getReverseDigestEnd(),
-                    readPair.reverseDigestIsActive(),
-                    readPair.getRelativeOrientationTag());*/
-
             DigestPair dp = readPair.getDigestPair();
-            if(!dp2countsMap.containsKey(dp)) {
-                // this is the first read pair for this pair of digests
-                interaction_count++;
-                if (readPair.forwardDigestIsActive() && readPair.reverseDigestIsActive()) {
-                    active_active_interaction_count++;
-                } else if (!readPair.forwardDigestIsActive() && !readPair.reverseDigestIsActive()) {
-                    inactive_inactive_interaction_count++;
-                } else {
-                    active_inactive_interaction_count++;
-                }
-                dp2countsMap.put(dp,new SimpleTwistedCount());
-            }
-            if (readPair.isTwisted()) {
-                dp2countsMap.get(dp).twisted++;
-            } else {
-                dp2countsMap.get(dp).simple++;
-            }
-
+            incrementDigestPair(dp,readPair);
 
             if(interaction_count%1000000==0) {
                 logger.trace("Number of Interactions: " + interaction_count);
@@ -212,15 +174,37 @@ public class Counter {
             if(readPair.isTrans()) {
                 n_trans_pairs++;
             }
-
             n_pairs_total++;
         }
-        //logger.trace("...done with counting!");
-        //logger.trace("About to print the results...");
-        //logger.trace("interactionMap.getTotalNumberOfInteractions(): " + interactionMap.getTotalNumberOfInteractions());
-        //interactionMap.printInteractionCountsMapAsCountTable(outputTsvInteractionCounts);
-        //interactionMap.printFragmentInteractionCountsMapAsCountTable(outputTsvInteractingFragmentCounts);
-        //logger.trace("...done!");
+    }
+
+    public void incrementDigestPair(DigestPair dp, ReadPair rp) {
+
+        if(!dp2countsMap.containsKey(dp)) {
+            // this is the first read pair for this pair of digests
+            interaction_count++;
+            if (dp.forward().isSelected() && dp.reverse().isSelected()) {
+                active_active_interaction_count++;
+            } else if (!dp.forward().isSelected() && !dp.reverse().isSelected()) {
+                inactive_inactive_interaction_count++;
+            } else {
+                active_inactive_interaction_count++;
+            }
+            dp2countsMap.put(dp,new SimpleTwistedCount());
+        }
+        if (rp.isTwisted()) {
+            dp2countsMap.get(dp).twisted++;
+        } else {
+            dp2countsMap.get(dp).simple++;
+        }
+    }
+
+    public SimpleTwistedCount getSimpleTwistedCountForDigestPair(DigestPair dp) {
+        return dp2countsMap.get(dp);
+    }
+
+    public int getInteractionCount(){
+        return interaction_count;
     }
 
     /**
@@ -271,7 +255,6 @@ public class Counter {
     private void createOutputNames(String outputPathPrefix) {
         outputTsvInteractingFragmentCounts = String.format("%s.%s", outputPathPrefix, "interacting.fragments.counts.table.tsv");
         outputTsvInteractionCounts = String.format("%s.%s", outputPathPrefix, "interaction.counts.table.tsv");
-        outputTsvInteractionCounts2 = String.format("%s.%s", outputPathPrefix, "interaction.counts2.table.tsv");
         outputTxtStats = String.format("%s.%s", outputPathPrefix, "count.stats.txt");
     }
 
@@ -284,7 +267,7 @@ public class Counter {
     public void printInteractionCountsMapAsCountTable() throws FileNotFoundException {
 
         // create file for output
-        PrintStream printStream = new PrintStream(new FileOutputStream(outputTsvInteractionCounts2));
+        PrintStream printStream = new PrintStream(new FileOutputStream(outputTsvInteractionCounts));
 
         for (DigestPair dp : this.dp2countsMap.keySet()) {
             SimpleTwistedCount cc = this.dp2countsMap.get(dp);

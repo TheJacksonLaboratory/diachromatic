@@ -33,11 +33,11 @@ class DeDupMapTest {
         when(rpair1.forward()).thenReturn(r1f);
         when(rpair1.reverse()).thenReturn(r1r);
 
-        // This is our first readpair so of course it was not seen before.
+        // This is our first read pair so of course it was not seen before
         boolean result = ddmap.hasSeen(rpair1);
         assertFalse(result);
 
-        // Now add a duplicate readpair and make sure it is recognized as a duplicate
+        // Now add a duplicate read pair and make sure it is recognized as a duplicate
         ReadPair rpair2 = Mockito.mock(ReadPair.class);
 
         when(rpair2.isTrans()).thenReturn(false);
