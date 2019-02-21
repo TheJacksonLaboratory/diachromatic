@@ -7,58 +7,33 @@ import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.digest.RestrictionEnzyme;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.truncation.Truncator;
-
 import java.io.File;
 import java.util.List;
 
 import static org.jax.diachromatic.digest.RestrictionEnzyme.parseRestrictionEnzymes;
 
 /**
- * This command parallels the HiCUP truncate Perl script with various modifcations. The following description is
- * based on the description from the Babraham bioinformatics HiCUP documentation.
- * <P>
- *     Valid Hi-C pairs are chimeric reads that are made up of fragments from two different regions of the genome.
- *     With capture Hi-C, a typical valid read pair might comprise a DNA sequence from a promoter and a DNA sequence
- *     from an enhancer that is regulating the promoter. In most cases, the one of the reads of the read paier will align
- *     to a single ligation fragment, and the reverse read will align to another fragment. However, this is not always true
- *     because the Hi-C ligation junction cvan be located within one of the sequenced reads. The truncater attempts to
- *     address this situation (which could lead to the read with the Hi-C junction not being mapped during the mapping
- *     step), buy deleting sequenced that is downstream of the enzyme recognition site. For example, if the forward read
- *     is entirely contained withint one ligation fragment and the reverse read starts in another fragment, leads into the
- *     ligation junction, and then continues and finishes with part of the fragment of the forward read, then the
- *     truncation step will remove the part of the reverse read that maps to the first ligation fragment.
- * </P>
- * <P>
- *     The method requires the names of the files to be processed as well as the restriction enzymes used to process the
- *     DNA. We will expect that there are two FAASTQ files that are gzipped that represent the paired end sequences.
- * </P>
+ * Class to coordinate truncation of chimeric Hi-C reads containing ligation junctions.
+
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
  * @version 0.0.2 (2018-01-05)
  */
-@Parameters(commandDescription = "Command and options for truncate function. truncate searches for Hi-C religation sequences and truncates reads accordingly")
+@Parameters(commandDescription = "The truncate command searches for Hi-C religation sequences and truncates reads accordingly.")
 public class TruncateCommand extends Command {
     private static final Logger logger = LogManager.getLogger();
 
-    @Parameter(names={"-q","fastq-r1"}, required = true,description = "path to forward FASTQ input file")
+    @Parameter(names={"-q","fastq-r1"}, required = true, description = "Path to forward FASTQ input file.", order = 3)
     private String fastaqFile1;
-    @Parameter(names={"-r","fastq-r2"}, required = true,description = "path to reverse FASTQ input file")
+    @Parameter(names={"-r","fastq-r2"}, required = true, description = "Path to reverse FASTQ input file.", order = 4)
     private String fastaqFile2;
-    @Parameter(names={"-e", "--enzyme"}, required = true, description = "restriction enzyme name")
+    @Parameter(names={"-e", "--enzyme"}, required = true, description = "Restriction enzyme name.", order = 5)
     private String enzymeName;
-    @Parameter(names={"-s", "--sticky-ends"},description = "no fill-in of sticky ends was performed ")
+    @Parameter(names={"-s", "--sticky-ends"},description = "No fill-in of sticky ends was performed.", order = 6)
     private boolean stickyEnds=false;
-
 
     private Truncator truncator = null;
     private RestrictionEnzyme re = null;
-/*
-    public TruncateCommand (String file1, String file2, String enzymeName, boolean stickyEnds, String outputDir) throws DiachromaticException {
-        this.fastaqFile1=file1;
-        this.fastaqFile2=file2;
-
-    }
-*/
 
     public TruncateCommand(){}
 

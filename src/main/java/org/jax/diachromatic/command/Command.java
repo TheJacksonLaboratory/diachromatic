@@ -4,16 +4,15 @@ import com.beust.jcommander.Parameter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.exception.DiachromaticException;
-
 import java.io.File;
 
 public abstract class Command {
     private static final Logger logger = LogManager.getLogger();
 
-    @Parameter(names={"-x", "--prefix"},required = true,description = "prefix for files in output directory")
-    protected String filenamePrefix;
-    @Parameter(names={"-o", "--out-dir"},required = true,description = "name/path of output file/directory")
+    @Parameter(names={"-o", "--out-dir"},required = true, description = "Name/path of output directory. Will be created, if not yet existing.", order = 0)
     protected String outputDir;
+    @Parameter(names={"-x", "--prefix"},required = true, description = "Prefix for files in output directory.", order = 1)
+    protected String filenamePrefix;
 
     abstract public void execute() throws DiachromaticException;
 
@@ -26,4 +25,3 @@ public abstract class Command {
         }
     }
 }
-

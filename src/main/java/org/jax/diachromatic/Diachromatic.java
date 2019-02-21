@@ -12,8 +12,6 @@ import org.jax.diachromatic.exception.DiachromaticException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
-
 /**
  * An application to process Hi-C data for differential reads counts in fragments surrounding the
  * transcription start site using probe design by VPV.
@@ -29,10 +27,6 @@ public class Diachromatic {
 
 
     public static void main(String[] args) throws DiachromaticException {
-//        Commandline clp = new Commandline(args);
-//        Command command = clp.getCommand();
-//        logger.trace(String.format("Running command %s",command));
-//        command.execute();
 
         Diachromatic diachromatic = new Diachromatic();
         AlignCommand align = new AlignCommand();
@@ -45,7 +39,7 @@ public class Diachromatic {
                 .addCommand("align", align)
                 .addCommand("count", count)
                 .build();
-        jc.setProgramName("java -jar diachromatic.jar");
+        jc.setProgramName("java -jar Diachromatic.jar");
         try {
             jc.parse(args);
         } catch (ParameterException e) {
