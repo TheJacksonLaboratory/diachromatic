@@ -74,6 +74,7 @@ public class Aligner {
      * Number of duplicated read pairs that were removed.
      */
     private int n_paired_duplicated = 0;
+    private int n_paired_duplicated2 = 0;
 
     /**
      * Count variables for disjoint read pair categories (see documentation on read the docs).
@@ -269,6 +270,7 @@ public class Aligner {
         }
 
         DeDupMap dedup_map = new DeDupMap(true);
+        DeDupMap2 dedup_map2 = new DeDupMap2(true);
         ReadPair pair;
 
         while ((pair = getNextPair())!= null) {
@@ -280,6 +282,10 @@ public class Aligner {
             }
             if(dedup_map.getNumOfInsertions()%1000000==0 && 0<dedup_map.getNumOfInsertions()) {
                 logger.trace("dedup_map.getNumOfInsertions(): " + dedup_map.getNumOfInsertions());
+            }
+
+            if(dedup_map2.getNumOfInsertions()%1000000==0 && 0<dedup_map2.getNumOfInsertions()) {
+                logger.trace("dedup_map2.getNumOfInsertions(): " + dedup_map2.getNumOfInsertions());
             }
 
             // first check whether both reads were mapped uniquely
@@ -302,8 +308,13 @@ public class Aligner {
                 n_paired++;
 
                 // de-duplication starts with paired pairs
-                if(dedup_map.hasSeen(pair) || pair.isDanglingEnd()) {
+                if(dedup_map.hasSeen(pair)) {
                     n_paired_duplicated++;
+                    //continue;
+                }
+                // de-duplication starts with paired pairs
+                if(dedup_map2.hasSeen(pair)) {
+                    n_paired_duplicated2++;
                     continue;
                 }
 
@@ -389,7 +400,8 @@ public class Aligner {
         }
 
         printFragmentLengthDistributionRscript(fragSizesChimericPairs, fragSizesActiveChimericPairs, fragSizesUnLigatedPairs);
-        //dedup_map.printDeDupStatistics(n_paired_duplicated);
+        dedup_map.printDeDupStatistics(n_paired_duplicated);
+        dedup_map2.printDeDupStatistics(n_paired_duplicated2);
     }
 
     /**
