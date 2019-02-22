@@ -15,7 +15,7 @@ class DeDupMapTest {
     @Test
     void recognizeDuplicateTest() {
         boolean useRelativeOrientation = false;
-        DeDupMap ddmap = new DeDupMap(useRelativeOrientation);
+        DeDupMap2 ddmap = new DeDupMap2(useRelativeOrientation);
         ReadPair rpair1 = Mockito.mock(ReadPair.class);
         // mock SAMRecords, forward and reverse for the two read pairs.
         SAMRecord r1f = Mockito.mock(SAMRecord.class);
@@ -59,7 +59,7 @@ class DeDupMapTest {
         @Test
         void recognizeDuplicateTestDifferingOrientation() {
         boolean useRelativeOrientation=true;
-        DeDupMap ddmap2 = new DeDupMap(useRelativeOrientation);
+        DeDupMap2 ddmap2 = new DeDupMap2(useRelativeOrientation);
 
         ReadPair rpair3 = Mockito.mock(ReadPair.class);
         SAMRecord r3f=Mockito.mock(SAMRecord.class);

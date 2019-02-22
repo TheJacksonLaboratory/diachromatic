@@ -14,14 +14,24 @@ public class ReadPairCoordinates {
     /**
      * Only the two 5' end positions and the orientation of read pairs are taken into account.
      */
-    Integer fivePrimePos1;
-    Integer fivePrimePos2;
-    Integer readPairOrientation;
+    private final int fivePrimePos1;
+    private final int fivePrimePos2;
+    /** Code for orientation of read pairs. The code is set in the class {@link DeDupMap2} to a value between 0 and 4. */
+    private final int readPairOrientation;
+    /** Hash code (calculated in the constructor)*/
+    private final int hashCode;
+
 
     ReadPairCoordinates(int fivePrimePos1, int fivePrimePos2, int readPairOrientation) {
         this.fivePrimePos1 = fivePrimePos1;
         this.fivePrimePos2 = fivePrimePos2;
         this.readPairOrientation = readPairOrientation;
+        /* calculate the hashcode */
+        int result=0;
+        result=Integer.hashCode(readPairOrientation);
+        result=31*result+Integer.hashCode(fivePrimePos1);
+        result=31*result+Integer.hashCode(fivePrimePos2);
+        this.hashCode=result;
     }
 
     /**
@@ -40,40 +50,23 @@ public class ReadPairCoordinates {
             logger.trace(this.readPairOrientation + "\t" + this.fivePrimePos1 + "\t" + this.fivePrimePos2);
             logger.trace(other.readPairOrientation + "\t" + other.fivePrimePos1 + "\t" + other.fivePrimePos2);
             */
-            return false;
+            return true;
         } else {
             /*
             logger.trace("false");
             logger.trace(this.readPairOrientation + "\t" + this.fivePrimePos1 + "\t" + this.fivePrimePos2);
             logger.trace(other.readPairOrientation + "\t" + other.fivePrimePos1 + "\t" + other.fivePrimePos2);
             */
-            return true;
+            return false;
         }
     }
 
-    /** Hash code with lazily initialized value*/
-    private int hashCode;
-
     /**
-     * Calculate the hash code based on the position of the Digest, the other values are not required
-     * to obtain uniqueness.
-     * @return hascode for this object.
+     * {@link #hashCode} is calculate in the constructor {@link ReadPairCoordinates}.
+     * @return hashcode for this object.
      */
     @Override
     public int hashCode() {
-        int result=hashCode;
-        if (result==0) {
-            result=readPairOrientation;
-            result=31*result+fivePrimePos1;
-            result=31*result+fivePrimePos2;
-            hashCode=result;
-            /*
-            logger.trace("readPairOrientation: " + readPairOrientation);
-            logger.trace("fivePrimePos1: " + fivePrimePos1);
-            logger.trace("fivePrimePos2: " + fivePrimePos2);
-            logger.trace("HashCode: " + result);
-            */
-        }
-        return result;
+        return this.hashCode;
     }
 }
