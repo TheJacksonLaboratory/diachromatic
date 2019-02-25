@@ -269,7 +269,7 @@ public class Aligner {
             this.rejectedReadsWriter = new SAMFileWriterFactory().makeBAMWriter(header, presorted, new File(outputBAMrejected));
         }
 
-        DeDupMap dedup_map = new DeDupMap(true);
+        //DeDupMap dedup_map = new DeDupMap(true);
         DeDupMap2 dedup_map2 = new DeDupMap2(true);
         ReadPair pair;
 
@@ -280,9 +280,10 @@ public class Aligner {
             if(n_total_input_read_pairs%1000000==0) {
                 logger.trace("n_total_input_read_pairs: " + n_total_input_read_pairs);
             }
+            /*
             if(dedup_map.getNumOfInsertions()%1000000==0 && 0<dedup_map.getNumOfInsertions()) {
                 logger.trace("dedup_map.getNumOfInsertions(): " + dedup_map.getNumOfInsertions());
-            }
+            }*/
 
             if(dedup_map2.getNumOfInsertions()%1000000==0 && 0<dedup_map2.getNumOfInsertions()) {
                 logger.trace("dedup_map2.getNumOfInsertions(): " + dedup_map2.getNumOfInsertions());
@@ -306,12 +307,13 @@ public class Aligner {
             if(pair.isPaired()) {
 
                 n_paired++;
-
+/*
                 // de-duplication starts with paired pairs
                 if(dedup_map.hasSeen(pair)) {
                     n_paired_duplicated++;
                     //continue;
                 }
+*/
                 // de-duplication starts with paired pairs
                 if(dedup_map2.hasSeen(pair)) {
                     n_paired_duplicated2++;
@@ -400,7 +402,7 @@ public class Aligner {
         }
 
         printFragmentLengthDistributionRscript(fragSizesChimericPairs, fragSizesActiveChimericPairs, fragSizesUnLigatedPairs);
-        dedup_map.printDeDupStatistics(n_paired_duplicated);
+        //dedup_map.printDeDupStatistics(n_paired_duplicated);
         dedup_map2.printDeDupStatistics(n_paired_duplicated2);
     }
 
