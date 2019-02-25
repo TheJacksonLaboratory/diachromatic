@@ -270,7 +270,7 @@ public class Aligner {
         }
 
         //DeDupMap dedup_map = new DeDupMap(true);
-        DeDupMap2 dedup_map2 = new DeDupMap2(true);
+        DeDupMap2 dedup_map2 = new DeDupMap2(false);
         ReadPair pair;
 
         while ((pair = getNextPair())!= null) {
