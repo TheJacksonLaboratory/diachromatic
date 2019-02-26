@@ -3,8 +3,6 @@ package org.jax.diachromatic.align;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Objects;
-
 /**
  * This is a helper class of DeDupMap for the removal of duplicates that takes characteristics of Hi-C fragments
  * into account (orientation of read pairs matter).
@@ -16,7 +14,7 @@ public class ReadPairCoordinates {
      */
     private final int fivePrimePos1;
     private final int fivePrimePos2;
-    /** Code for orientation of read pairs. The code is set in the class {@link DeDupMap2} to a value between 0 and 4. */
+    /** Code for orientation of read pairs. The code is set in the class {@link DeDupMap} to a value between 0 and 4. */
     private final int readPairOrientation;
     /** Hash code (calculated in the constructor)*/
     private final int hashCode;

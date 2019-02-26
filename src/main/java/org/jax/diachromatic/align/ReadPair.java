@@ -314,6 +314,14 @@ public class ReadPair {
         }
     }
 
+    public String getReferenceSequenceOfR1(){
+        return this.R1.getReferenceName();
+    }
+
+    public String getReferenceSequenceOfR2(){
+        return this.R2.getReferenceName();
+    }
+
     public SAMRecord forward() {
         return R1;
     }
@@ -644,5 +652,4 @@ public class ReadPair {
         }
         return false;
     }
-
 }
