@@ -4,10 +4,7 @@ package org.jax.diachromatic;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
-import org.jax.diachromatic.command.AlignCommand;
-import org.jax.diachromatic.command.Command;
-import org.jax.diachromatic.command.CountCommand;
-import org.jax.diachromatic.command.TruncateCommand;
+import org.jax.diachromatic.command.*;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -32,12 +29,14 @@ public class Diachromatic {
         AlignCommand align = new AlignCommand();
         CountCommand count = new CountCommand();
         TruncateCommand truncate = new TruncateCommand();
+        SummarizeCommand summarize = new SummarizeCommand();
 
         JCommander jc = JCommander.newBuilder()
                 .addObject(diachromatic)
                 .addCommand("truncate", truncate)
                 .addCommand("align", align)
                 .addCommand("count", count)
+                .addCommand("summarize", summarize)
                 .build();
         jc.setProgramName("java -jar Diachromatic.jar");
         try {
@@ -97,6 +96,9 @@ public class Diachromatic {
                 break;
             case "count":
                 diachromaticCommand = count;
+                break;
+            case "summarize":
+                diachromaticCommand = summarize;
                 break;
             default:
                 throw new DiachromaticException("Did not recognize command: "+ command);

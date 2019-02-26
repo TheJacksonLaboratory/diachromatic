@@ -72,7 +72,7 @@ public class ReadPair {
     private static int DANGLING_THRESHOLD = 7;
 
     /**
-     * Tag to use to mark invalid reads to output to BAM file.
+     * Tag to use to mark invalid reads to summarize to BAM file.
      */
     private final static String BADREAD_ATTRIBUTE = "YY";
 

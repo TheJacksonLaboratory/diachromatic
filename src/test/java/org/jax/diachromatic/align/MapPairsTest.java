@@ -3,17 +3,13 @@ package org.jax.diachromatic.align;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.util.Pair;
 import org.junit.Ignore;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 
 @Ignore("Broken because of new digest map.")
