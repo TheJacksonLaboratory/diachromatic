@@ -8,6 +8,8 @@ import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.summarize.Summarizer;
 
+import java.io.File;
+
 /**
  * Writes an HTML page with a summary of the entire analysis. We expect to find the files with the
  * prefix as defined and used for {@link TruncateCommand}, {@link AlignCommand} and {@link CountCommand}.
@@ -37,7 +39,8 @@ public class SummarizeCommand extends Command {
 
     @Override
     public void execute() throws DiachromaticException {
+        String outputDirAndFilePrefix = String.format("%s%s%s", outputDir, File.separator, filenamePrefix);
         Summarizer summarizer = new Summarizer(truncateFile);
-        summarizer.outputFile(this.filenamePrefix);
+        summarizer.outputFile(outputDirAndFilePrefix);
     }
 }

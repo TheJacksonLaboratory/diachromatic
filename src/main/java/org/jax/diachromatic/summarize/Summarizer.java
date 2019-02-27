@@ -31,8 +31,6 @@ public class Summarizer {
         parseTruncateData();
     }
 
-
-
     private void parseTruncateData() {
         logger.trace("Parsing the truncation data at {}", truncatePath);
         Map<String,String> truncatemap = new HashMap<>();
@@ -56,7 +54,7 @@ public class Summarizer {
 
 
     public void outputFile(String prefix){
-        String outname=String.format("%s.html",prefix );
+        String outname=String.format("%s.summary.stats.html",prefix);
         logger.trace("Writing HTML file to {}",outname);
         try (BufferedWriter out = new BufferedWriter(new FileWriter(outname))) {
             Template template = cfg.getTemplate("template/diachromatic-html-template.ftl");
