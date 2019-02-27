@@ -393,7 +393,7 @@ public class Aligner {
         }
 
         printFragmentLengthDistributionRscript(fragSizesChimericPairs, fragSizesActiveChimericPairs, fragSizesUnLigatedPairs);
-        dedup_map.printDeDupStatistics(n_paired_duplicated);
+        //dedup_map.printDeDupStatistics(n_paired_duplicated);
     }
 
     /**
