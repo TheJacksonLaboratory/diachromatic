@@ -22,12 +22,18 @@ import java.io.File;
 public class SummarizeCommand extends Command {
     private static final Logger logger = LogManager.getLogger();
 
-    /** Path to the genome digest file produced by GOPHER. */
-    @Parameter(names={"-t","--truncate"}, required = true, description = "Path to diachromatic truncate summarize file.", order = 4)
+    /** Path to text file with summary statistics produced with the truncate command. */
+    @Parameter(names={"-t","--truncate"}, required = true, description = "Path to diachromatic truncate summarize file.", order = 3)
     private String truncateFile = null;
 
 
+    /** Path to text file with summary statistics produced with the align command. */
+    @Parameter(names={"-a","--align"}, description = "Path to diachromatic align summarize file.", order = 4)
+    private String alignFile = null;
 
+    /** Path to text file with summary statistics produced with the count command. */
+    @Parameter(names={"-c","--count"}, description = "Path to diachromatic count summarize file.", order = 5)
+    private String countFile = null;
 
 
 
@@ -39,8 +45,9 @@ public class SummarizeCommand extends Command {
 
     @Override
     public void execute() throws DiachromaticException {
+        makeOutdirectoryIfNeeded();
         String outputDirAndFilePrefix = String.format("%s%s%s", outputDir, File.separator, filenamePrefix);
-        Summarizer summarizer = new Summarizer(truncateFile);
+        Summarizer summarizer = new Summarizer(truncateFile, alignFile, countFile);
         summarizer.outputFile(outputDirAndFilePrefix);
     }
 }

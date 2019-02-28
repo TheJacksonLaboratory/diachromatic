@@ -313,21 +313,47 @@ footer {
     </article>
   </section>
 
+
   <section>
    <article>
     <a name="truncation"></a>
-    <h2>Truncation</h2>
-
-    <p>Truncation: TODO </p>
+    <h2>Truncation statistics</h2>
+    <p>
     <ol>
-    <#list truncate as key, value>
-        <li>${key}: ${value}</li>
+     <#list truncate as line>
+        <li>${line}</li>
      </#list>
     </ol>
     </p>
     </article>
     </section>
-
+      <section>
+       <article>
+        <a name="align"></a>
+        <h2>Align statistics</h2>
+        <p>
+        <ol>
+         <#list align as line>
+            <li>${line}</li>
+         </#list>
+        </ol>
+        </p>
+        </article>
+        </section>
+    </section>
+      <section>
+       <article>
+        <a name="count"></a>
+        <h2>Count statistics</h2>
+        <p>
+        <ol>
+         <#list count as line>
+            <li>${line}</li>
+         </#list>
+        </ol>
+        </p>
+        </article>
+        </section>
 
 </main>
 
