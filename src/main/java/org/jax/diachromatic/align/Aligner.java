@@ -215,7 +215,7 @@ public class Aligner {
         this.upperFragSize = upperFragSize;
         this.filenamePrefix = filenamePrefix;
         this.useStringentUniqueSettings = useStringentUniqueSettings;
-        this.useRelativeOrientationForDuplicateRemoval = false;
+        this.useRelativeOrientationForDuplicateRemoval = true;
         ReadPair.setLengthThresholds(lowerFragSize,upperFragSize,upperSelfLigationSize);
         Arrays.fill(fragSizesChimericPairs, 0);
         Arrays.fill(fragSizesActiveChimericPairs, 0);
