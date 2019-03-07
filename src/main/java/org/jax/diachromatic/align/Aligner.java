@@ -130,7 +130,7 @@ public class Aligner {
      */
     private boolean useStringentUniqueSettings;
 
-    private boolean useRelativeOrientationForDuplicateRemoval = true;
+    private boolean useRelativeOrientationForDuplicateRemoval = false;
 
     /**
      * If true, rejected read pairs are output to an extra BAM file {@link #outputBAMrejected}.
