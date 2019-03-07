@@ -150,8 +150,8 @@ public class Counter {
 
             // create read pair
             ReadPair readPair = new ReadPair(record1, record2, digestMap);
-            readPair.setRandomRelativeOrientationTag();
-            //readPair.setRelativeOrientationTag();
+            //readPair.setRandomRelativeOrientationTag();
+            readPair.setRelativeOrientationTag();
 
 
             read_count=read_count+2;
