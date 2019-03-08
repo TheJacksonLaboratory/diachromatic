@@ -9,6 +9,10 @@ import org.mockito.Mockito;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
+
+
+
+
 class DeDupMapTest {
 
 
@@ -93,5 +97,127 @@ class DeDupMapTest {
         // query and insert rpair4
         result = ddmap2.hasSeen(rpair4);
         assertFalse(result); // this read pair should be inserted, because of the different orientation
+    }
+
+    /**
+     * Test compares removal of duplicates with and without consideration of relative orientation of reads.
+     * Eight read pairs each with the same five prime end positions but different orientations are created
+     * and inserted into the DeDupMap. For the map that does not take into account relative orientation,
+     * we expect only one insertion, whereas for the map that does take into account orientation,
+     * we expect four insertions, because there are four pairs of read pairs that have equivalent orientation.
+     * See here for an explanatory figure: src/test/resources/data/testDeDup/doc/deDupDoc.pdf
+     */
+    @Test
+    void testDuplicateRemovalWithAndWithoutConsiderationOfOrienation() {
+
+        DeDupMap ddmap = new DeDupMap(false);
+        DeDupMap ddmap_ori = new DeDupMap(true);
+
+
+        // first pair of duplicated pairs
+        // ------------------------------
+
+        ReadPair rpair1 = Mockito.mock(ReadPair.class);
+        when(rpair1.getReferenceSequenceOfR1()).thenReturn("chr1");
+        when(rpair1.getReferenceSequenceOfR2()).thenReturn("chr1");
+        when(rpair1.getFivePrimeEndPosOfR1()).thenReturn(1000);
+        when(rpair1.getFivePrimeEndPosOfR2()).thenReturn(2000);
+        when(rpair1.getRelativeOrientationTag()).thenReturn("F1R2");
+
+        ReadPair rpair2 = Mockito.mock(ReadPair.class);
+        when(rpair2.getReferenceSequenceOfR1()).thenReturn("chr1");
+        when(rpair2.getReferenceSequenceOfR2()).thenReturn("chr1");
+        when(rpair2.getFivePrimeEndPosOfR1()).thenReturn(2000);
+        when(rpair2.getFivePrimeEndPosOfR2()).thenReturn(1000);
+        when(rpair2.getRelativeOrientationTag()).thenReturn("F2R1"); // only difference to rpair1
+
+        ddmap.hasSeen(rpair1);
+        ddmap.hasSeen(rpair2);
+
+        ddmap_ori.hasSeen(rpair1);
+        ddmap_ori.hasSeen(rpair2);
+
+        assertEquals(1,ddmap.getNumOfInsertions());
+        assertEquals(1,ddmap_ori.getNumOfInsertions());
+
+
+        // second pair of duplicated pairs
+        // -------------------------------
+
+        ReadPair rpair3 = Mockito.mock(ReadPair.class);
+        when(rpair3.getReferenceSequenceOfR1()).thenReturn("chr1");
+        when(rpair3.getReferenceSequenceOfR2()).thenReturn("chr1");
+        when(rpair3.getFivePrimeEndPosOfR1()).thenReturn(1000);
+        when(rpair3.getFivePrimeEndPosOfR2()).thenReturn(2000);
+        when(rpair3.getRelativeOrientationTag()).thenReturn("R1F2");
+
+        ReadPair rpair4 = Mockito.mock(ReadPair.class);
+        when(rpair4.getReferenceSequenceOfR1()).thenReturn("chr1");
+        when(rpair4.getReferenceSequenceOfR2()).thenReturn("chr1");
+        when(rpair4.getFivePrimeEndPosOfR1()).thenReturn(2000);
+        when(rpair4.getFivePrimeEndPosOfR2()).thenReturn(1000);
+        when(rpair4.getRelativeOrientationTag()).thenReturn("R2F1"); // only difference to rpair3
+
+        ddmap.hasSeen(rpair3);
+        ddmap.hasSeen(rpair4);
+
+        ddmap_ori.hasSeen(rpair3);
+        ddmap_ori.hasSeen(rpair4);
+
+        assertEquals(1, ddmap.getNumOfInsertions());
+        assertEquals(2, ddmap_ori.getNumOfInsertions());
+
+
+        // third pair of duplicated pairs
+        // ------------------------------
+
+        ReadPair rpair5 = Mockito.mock(ReadPair.class);
+        when(rpair5.getReferenceSequenceOfR1()).thenReturn("chr1");
+        when(rpair5.getReferenceSequenceOfR2()).thenReturn("chr1");
+        when(rpair5.getFivePrimeEndPosOfR1()).thenReturn(1000);
+        when(rpair5.getFivePrimeEndPosOfR2()).thenReturn(2000);
+        when(rpair5.getRelativeOrientationTag()).thenReturn("F1F2");
+
+        ReadPair rpair6 = Mockito.mock(ReadPair.class);
+        when(rpair6.getReferenceSequenceOfR1()).thenReturn("chr1");
+        when(rpair6.getReferenceSequenceOfR2()).thenReturn("chr1");
+        when(rpair6.getFivePrimeEndPosOfR1()).thenReturn(2000);
+        when(rpair6.getFivePrimeEndPosOfR2()).thenReturn(1000);
+        when(rpair6.getRelativeOrientationTag()).thenReturn("F2F1"); // only difference to rpair5
+
+        ddmap.hasSeen(rpair5);
+        ddmap.hasSeen(rpair6);
+
+        ddmap_ori.hasSeen(rpair5);
+        ddmap_ori.hasSeen(rpair6);
+
+        assertEquals(1, ddmap.getNumOfInsertions());
+        assertEquals(3, ddmap_ori.getNumOfInsertions());
+
+        // fourth pair of duplicated pairs
+        // -------------------------------
+
+        ReadPair rpair7 = Mockito.mock(ReadPair.class);
+        when(rpair7.getReferenceSequenceOfR1()).thenReturn("chr1");
+        when(rpair7.getReferenceSequenceOfR2()).thenReturn("chr1");
+        when(rpair7.getFivePrimeEndPosOfR1()).thenReturn(1000);
+        when(rpair7.getFivePrimeEndPosOfR2()).thenReturn(2000);
+        when(rpair7.getRelativeOrientationTag()).thenReturn("R1R2");
+
+        ReadPair rpair8 = Mockito.mock(ReadPair.class);
+        when(rpair8.getReferenceSequenceOfR1()).thenReturn("chr1");
+        when(rpair8.getReferenceSequenceOfR2()).thenReturn("chr1");
+        when(rpair8.getFivePrimeEndPosOfR1()).thenReturn(2000);
+        when(rpair8.getFivePrimeEndPosOfR2()).thenReturn(1000);
+        when(rpair8.getRelativeOrientationTag()).thenReturn("R2R1"); // only difference to rpair7
+
+        ddmap.hasSeen(rpair7);
+        ddmap.hasSeen(rpair8);
+
+        ddmap_ori.hasSeen(rpair7);
+        ddmap_ori.hasSeen(rpair8);
+
+        assertEquals(1, ddmap.getNumOfInsertions());
+        assertEquals(4, ddmap_ori.getNumOfInsertions());
     }
 }

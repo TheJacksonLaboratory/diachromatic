@@ -130,6 +130,8 @@ public class Aligner {
      */
     private boolean useStringentUniqueSettings;
 
+    private boolean useRelativeOrientationForDuplicateRemoval = false;
+
     /**
      * If true, rejected read pairs are output to an extra BAM file {@link #outputBAMrejected}.
      */
@@ -213,6 +215,7 @@ public class Aligner {
         this.upperFragSize = upperFragSize;
         this.filenamePrefix = filenamePrefix;
         this.useStringentUniqueSettings = useStringentUniqueSettings;
+        this.useRelativeOrientationForDuplicateRemoval = false;
         ReadPair.setLengthThresholds(lowerFragSize,upperFragSize,upperSelfLigationSize);
         Arrays.fill(fragSizesChimericPairs, 0);
         Arrays.fill(fragSizesActiveChimericPairs, 0);
@@ -268,7 +271,7 @@ public class Aligner {
             this.rejectedReadsWriter = new SAMFileWriterFactory().makeBAMWriter(header, presorted, new File(outputBAMrejected));
         }
 
-        DeDupMap dedup_map = new DeDupMap(true);
+        DeDupMap dedup_map = new DeDupMap(useRelativeOrientationForDuplicateRemoval);
         ReadPair pair;
 
         while ((pair = getNextPair())!= null) {
@@ -278,6 +281,7 @@ public class Aligner {
             if(n_total_input_read_pairs%1000000==0) {
                 logger.trace("n_total_input_read_pairs: " + n_total_input_read_pairs);
             }
+
             if(dedup_map.getNumOfInsertions()%1000000==0 && 0<dedup_map.getNumOfInsertions()) {
                 logger.trace("dedup_map.getNumOfInsertions(): " + dedup_map.getNumOfInsertions());
             }
@@ -302,7 +306,7 @@ public class Aligner {
                 n_paired++;
 
                 // de-duplication starts with paired pairs
-                if(dedup_map.hasSeen(pair) || pair.isDanglingEnd()) {
+                if(dedup_map.hasSeen(pair)) {
                     n_paired_duplicated++;
                     continue;
                 }
