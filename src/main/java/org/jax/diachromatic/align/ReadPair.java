@@ -154,7 +154,9 @@ public class ReadPair {
      */
     private enum ReadPairCategory {
         UN_LIGATED("UL"),
+        UN_LIGATED_SAME_INTERNAL("ULSI"),
         SELF_LIGATED("SL"),
+        SELF_LIGATED_SAME_INTERNAL("SLSI"),
         VALID_PAIR("VP"),
         VALID_TOO_SHORT("TS"),
         VALID_TOO_LONG("TL");
@@ -581,11 +583,20 @@ public class ReadPair {
      */
     private void categorizeReadPair() throws DiachromaticException {
 
+        boolean sameInternal=false;
+        if(this.digestPair.forward()==this.digestPair.reverse()) {
+            sameInternal = true;
+        }
+
         if (!this.isTrans() && (this.isInwardFacing() || this.isOutwardFacing())) {
             // inward and outward pointing read pairs on the same chromosome may arise from self- or un-ligated fragments
             if (this.isOutwardFacing()) {
-                if (this.getSelfLigationFragmentSize() < this.UPPER_SIZE_SELF_LIGATION_THRESHOLD) {
-                    setCategoryTag(ReadPairCategory.SELF_LIGATED.getTag());
+                if (this.getSelfLigationFragmentSize() < this.UPPER_SIZE_SELF_LIGATION_THRESHOLD || sameInternal) {
+                    if(!sameInternal) {
+                        setCategoryTag(ReadPairCategory.SELF_LIGATED.getTag());
+                    } else {
+                        setCategoryTag(ReadPairCategory.SELF_LIGATED_SAME_INTERNAL.getTag());
+                    }
                 } else {
                     if (this.hasTooSmallChimericFragmentSize()) {
                         setCategoryTag(ReadPairCategory.VALID_TOO_SHORT.getTag());
@@ -597,9 +608,14 @@ public class ReadPair {
                 }
             } else {
                 // pair is inward facing
-                if (this.getDistanceBetweenFivePrimeEnds() < this.UPPER_SIZE_THRESHOLD) {
-                    setCategoryTag(ReadPairCategory.UN_LIGATED.getTag());
-                } else {
+                if (this.getDistanceBetweenFivePrimeEnds() < this.UPPER_SIZE_THRESHOLD || sameInternal) {
+                        if(!sameInternal) {
+                            setCategoryTag(ReadPairCategory.UN_LIGATED.getTag());
+                        } else {
+                            setCategoryTag(ReadPairCategory.UN_LIGATED_SAME_INTERNAL.getTag());
+                            //logger.trace("Un-ligated same internal!");
+                        }
+                    } else {
                     if (this.hasTooSmallChimericFragmentSize()) {
                         setCategoryTag(ReadPairCategory.VALID_TOO_SHORT.getTag());
                     } else if (this.hasTooBigChimericFragmentSize()) {
