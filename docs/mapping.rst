@@ -127,7 +127,7 @@ Within Diachromatic five disjoint read pair categories are distinguished:
 
 **1. Un-ligated:** Read pair is pointing inwards and the distance between the two 5' end positions d\ :sub:`u` is smaller than T1\ :sub:`max` or both reads map to the same digest.
 
-**2. Self-ligated:** Read pair is pointing outwards and the calculated size of self-ligating fragments d\ :sub:`s` is smaller than a predefined self-ligation threshold T2\ :sub:`max` (Default: 10,000) or both reads map to the same digest.
+**2. Self-ligated:** Read pair is pointing outwards and the calculated size of self-ligating fragments d\ :sub:`s` is smaller than a predefined self-ligation threshold T2\ :sub:`max` (Default: 3000) or both reads map to the same digest.
 
 **3. Too short chimeric:** Read pair is does neither belong to the un-ligated nor self-ligated category, but the calculated size d\ :sub:`c` is smaller than a specified lower threshold threshold T1\ :sub:`min` (Default: 50).
 
@@ -161,7 +161,41 @@ Trans read pairs
 ----------------
 
 Read pairs arising from trans read pairs may have each of the eight possible orientations but they must be chimeric by
-definition. The number of trans pairs 
+definition. The number of trans read pairs is determined and reported for each read pair category.
+For the categories un-ligated and self-ligated the number of trans pairs must be zero.
+
+Dichromatic vs. HiCUP categories
+--------------------------------
+
+If HiCUP is executed with the ``--keep`` flag, it will crate a directory containing BAM files for the individual read pair
+categories. We applied HiCUP to the associated test data, converted the BAM files back to FASTQ format
+and applied Diachromatic to the FASTQ files.
+The following table shows the numbers of read pairs for HiCUP vs Diachromatic categories.
+
++------------------------+-----------------------+---------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
+|                        | **# Processed pairs** | **# Unique paired pairs** | **# Un-ligated** | **# Self-ligated** | **# Chimeric too short** | **# Chimeric too long** | **# Valid** |
++------------------------+-----------------------+---------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
+| **Same internal**      |                13,760 |                    13,722 |       **13,645** |                  0 |                       13 |                      39 |          25 |
++------------------------+-----------------------+---------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
+| **Re-ligation**        |                 1,060 |                     1,060 |          **842** |                 58 |                        5 |                      49 |         106 |
++------------------------+-----------------------+---------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
+| **Contiguous**         |                    58 |                        58 |           **53** |                  0 |                        1 |                       0 |           4 |
++------------------------+-----------------------+---------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
+| **Same circularised**  |                   428 |                       428 |                3 |            **425** |                        0 |                       0 |           0 |
++------------------------+-----------------------+---------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
+| **Wrong size**         |                10,321 |                    10,267 |                2 |                  0 |                **1,003** |               **9,181** |          81 |
++------------------------+-----------------------+---------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
+| **Valid**              |                25,915 |                    25,851 |                1 |                  5 |                      290 |                       6 |  **25,549** |
++------------------------+-----------------------+---------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
+|                        |                       |                           |                  |                    |                          |                         |             |
++------------------------+-----------------------+---------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
+| **Same dangling ends** |                 2,475 |                     2,473 |        **2,470** |                  0 |                        1 |                       2 |           0 |
++------------------------+-----------------------+---------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
+
+The HiCUP categories same internal, re-ligation and contiguous corresponds to Diachromatic's un-ligated category.
+HiCUP's same circularised category corresponds to the self-ligated category.
+The wrong size category is corresponds to the sum of too short and too large chimeric fragments.
+99% of HiCUP's valid read pairs are also categorized as valid within Diachromatic.
 
 Quality metrics
 ~~~~~~~~~~~~~~~
@@ -304,11 +338,13 @@ If ``--output-rejected`` is set, there will be second BAM file cointaing all rej
 
 The optional fields of the SAM records contain information about the read pair category:
 
-    * chimeric valid (Tag: ``VP``)
-    * chimeric too short (Tag: ``TS``)
-    * chimeric too long (Tag: ``TL``)
-    * same dangling end (Tag: ``UL``)
-    * same internal (Tag: ``SL``)
+    * Un-ligated due to size (Tag: ``UL``)
+    * Un-ligated due to same digest (Tag: ``ULSI``)
+    * Self-ligated due to size (Tag: ``SL``)
+    * Self-ligated due to same digest (Tag: ``SLSI``)
+    * Too short chimeric  (Tag: ``TS``)
+    * Too long chimeric  (Tag: ``TL``)
+    * Valid pair (Tag: ``VP``)
 
 
 Furthermore, there is an ``RO`` attribute that indicates the relative orientation of the pair:
