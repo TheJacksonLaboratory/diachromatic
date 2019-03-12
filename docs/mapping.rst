@@ -65,7 +65,7 @@ Sizes of chimeric fragments
 
 Read pairs arising from chimeric fragments may have all possible relative orientations, and the size needs to be calculated
 in consideration of the Hi-C protocol.
-This size is here referred to as d\ :sub:`h` and calculated as the sum of the two distances between the 5' ends of the
+This size is here referred to as d\ :sub:`c` and calculated as the sum of the two distances between the 5' ends of the
 mapped reads and the next occurrence of a cutting motif in 3' direction which is assumed to correspond to the ligation
 junction (`Wingett 2015 <https://www.ncbi.nlm.nih.gov/pubmed/26835000/>`_).
 
@@ -76,7 +76,7 @@ We assume that the size distribution of chimeric fragments results from the para
 and thus corresponds to overall fragment size distribution in the sequencing library.
 Diachromatic uses lower and upper thresholds T1\ :sub:`min` and T1\ :sub:`max` for valid sizes of sheared fragments that
 need to be specified by the user.
-Read pairs arising from chimeric fragments with a calculated size d\ :sub:`h` that is outside the specified range are
+Read pairs arising from chimeric fragments with a calculated size d\ :sub:`c` that is outside the specified range are
 categorized as *too small* or *too large* artifacts.
 All other read pairs arising from chimeric fragments are defined to be *valid pairs* that can be used for downstream
 analysis.
@@ -97,6 +97,7 @@ This is because we assume the size distributions both for chimeric and un-ligate
 step.
 Inward pointing read pairs for which d\ :sub:`u` is smaller than the user defined threshold T1\ :sub:`max` are categorized as
 un-ligated pairs.
+Furthermore, inward pointing read pairs that map to the same digest are categorized as un-ligated pairs.
 
 
 Sizes of self-ligated fragments
@@ -108,8 +109,8 @@ The relevant sizes are no longer those of the sequenced fragments but the favour
 self-ligate.
 Very short fragments might not self-ligate because of steric hindrance, whereas the ends of very long fragments might
 be unlikely to become located in sufficient physical proximity in order to ligate.
-Within Diachromatic, the size of self-ligating fragments is calculated as the sum d\ :sub:`s` = d\ :sub:`h` + d\ :sub:`u`,
-where d\ :sub:`u` is the distance between the 5' end positions of the two reads, and d\ :sub:`h` is the sum of the two
+Within Diachromatic, the size of self-ligating fragments is calculated as the sum d\ :sub:`s` = d\ :sub:`c` + d\ :sub:`u`,
+where d\ :sub:`u` is the distance between the 5' end positions of the two reads, and d\ :sub:`c` is the sum of the two
 distances between the 5' ends of the mapped reads and the next occurrence of a cutting motif in 3' direction.
 
 .. figure:: img/fragment_size_selfligated.png
@@ -117,9 +118,22 @@ distances between the 5' ends of the mapped reads and the next occurrence of a c
 
 Outward pointing read pairs for which the calculated size d\ :sub:`s` is smaller than a user defined self-ligation
 threshold T2\ :sub:`max` are categorized as self-ligated pairs.
+Furthermore, outward pointing read pairs that map to the same digest are categorized as self-ligated pairs.
 
 Categorization of read pairs
 ----------------------------
+
+Within Diachromatic five disjoint read pair categories are distinguished:
+
+**1. Un-ligated:** Read pair is pointing inwards and the distance between the two 5' end positions d\ :sub:`u` is smaller than T1\ :sub:`max` or both reads map to the same digest.
+
+**2. Self-ligated:** Read pair is pointing outwards and the calculated size of self-ligating fragments d\ :sub:`s` is smaller than a predefined self-ligation threshold T2\ :sub:`max` (Default: 10,000) or both reads map to the same digest.
+
+**3. Too short chimeric:** Read pair is does neither belong to the un-ligated nor self-ligated category, but the calculated size d\ :sub:`c` is smaller than a specified lower threshold threshold T1\ :sub:`min` (Default: 50).
+
+**4. Too long chimeric:** Read pair is does neither belong to the un-ligated nor self-ligated category, but the calculated size d\ :sub:`c` is greater than a specified lower threshold T1\ :sub:`max` (Default: 800).
+
+**5. Valid (chimeric):** All remaining chimeric read pairs.
 
 The illustration below shows the decision tree for the categorization of read pairs.
 
@@ -128,14 +142,26 @@ The illustration below shows the decision tree for the categorization of read pa
 
 The next four paragraphs explain the categorization along the blue bullets points 1 to 4:
 
-**1.** Read pairs that map to different chromosomes or to the same strand cannot originate from un-ligated or self-ligated fragments.
+**1.** Read pairs that map to different chromosomes or to the same strand cannot originate from un-ligated or self-ligated fragments. Therefore, they are categorized as chimeric read pairs that are valid, if the size d\ :sub:`s` is within the specified range.
 
-**2.** Read pairs that point inwards might originate from un-ligated fragments. In such cases, the distance between the 5' end positions of the mapped reads d\ :sub:`u` corresponds to the size of the  sequenced fragment. In order to assign read pairs to the un-ligated category, we use an upper size threshold T\ :sub:`1` that should reflect the maximum plausible size of sheared fragments.
+**2.** Read pairs that point inwards might originate from un-ligated fragments. In such cases, the distance between the 5' end positions of the mapped reads d\ :sub:`u` corresponds to the size of the  sequenced fragment. In order to assign read pairs to the un-ligated category, we use an upper size threshold T\ :sub:`1` that should reflect the maximum plausible size of sheared fragments. Furthermore, inward pointing read pairs that map to the same digest are categorized as un-ligated.
 
-**3.** Read pairs that point outwards might originate from self-ligated fragments. In such cases, the size d\ :sub:`s` of the potentially underlying self-ligated fragment is calculated as described above, and compared to an upper size threshold T\ :sub:`2` for self-ligated fragments. Outward pointing read pairs with d\ :sub:`s` smaller than T\ :sub:`2` are assigned to the self-ligated category.
+**3.** Read pairs that point outwards might originate from self-ligated fragments. In such cases, the size d\ :sub:`s` of the potentially underlying self-ligated fragment is calculated as described above, and compared to an upper size threshold T\ :sub:`2` for self-ligated fragments. Outward pointing read pairs with d\ :sub:`s` smaller than T\ :sub:`2` are assigned to the self-ligated category. Furthermore, outward pointing read pairs that map to the same digest are categorized as self-ligated.
 
-**4.** Read pairs arising from chimeric fragments (not un- or self-ligated) are further distinguished. Read pairs with size d\ :sub:`s` outside the specified size range of sheared fragments will be categorizesd as too small or too large.
+**4.** Read pairs arising from chimeric fragments (not un- or self-ligated) are further distinguished. Read pairs with size d\ :sub:`s` outside the specified size range of sheared fragments will be categorizesd as too small or too large, and all remaining read pairs are categorized as valid.
 
+Dangling end read pairs
+-----------------------
+
+Fragment ends that corresponding to restriction enzyme cutting sites are referred to as dangling ends.
+In theory, fragments of all categories may have dangling ends. Therefore, there is no separate class for dangling ends.
+However, the number of dangling end read pairs within each of the five disjoint categories is determined and reported.
+
+Trans read pairs
+----------------
+
+Read pairs arising from trans read pairs may have each of the eight possible orientations but they must be chimeric by
+definition. The number of trans pairs 
 
 Quality metrics
 ~~~~~~~~~~~~~~~
