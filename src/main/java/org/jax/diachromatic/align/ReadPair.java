@@ -5,6 +5,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.exception.DiachromaticException;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 /**
  * This class represents a pair of reads R1 and R2 of an Illumina paired-end run for a Hi-C library.
  * <p>
@@ -41,16 +43,16 @@ public class ReadPair {
     /**
      * First (forward) and second (reverse) read in a read pair.
      */
-    private SAMRecord R1=null;
-    private SAMRecord R2=null;
+    private SAMRecord R1 = null;
+    private SAMRecord R2 = null;
 
     /**
      * These two thresholds define the range of fragment sizes that are considered to be consistent with the chosen
      * parameters for sonication. For capture Hi-C, an average sizes from 300 to 500 bp are recommended.
-     *
+     * <p>
      * Inward-pointing read pairs whose 5' end positions have a distance d smaller than the defined upper threshold will
      * be categorized as un-ligated.
-     *
+     * <p>
      * Valid read pairs for which the calculated chimeric fragment sizes d' is outside the specified range will be
      * categorized as too small or too large.
      */
@@ -59,7 +61,7 @@ public class ReadPair {
 
     /**
      * Upper threshold for the size of self-ligating fragments.
-     *
+     * <p>
      * For outward pointing read pairs, the calculated size of the chimeric fragment d' is added to d in order to infer
      * the size of the corresponding self-ligated fragment d''. If d'' is smaller than the this threshold, the read pair
      * will be categorized as self-ligated.
@@ -80,6 +82,8 @@ public class ReadPair {
      * Tag to indicate relative orientation of read pair ()
      */
     private final static String ORIENTATION_ATTRIBUTE = "RO";
+
+    private String relativeOrientationTag=null;
 
     /**
      * True, if read R1 or R2 is unmapped.
@@ -150,7 +154,9 @@ public class ReadPair {
      */
     private enum ReadPairCategory {
         UN_LIGATED("UL"),
+        UN_LIGATED_SAME_INTERNAL("ULSI"),
         SELF_LIGATED("SL"),
+        SELF_LIGATED_SAME_INTERNAL("SLSI"),
         VALID_PAIR("VP"),
         VALID_TOO_SHORT("TS"),
         VALID_TOO_LONG("TL");
@@ -177,8 +183,8 @@ public class ReadPair {
     /**
      * Simple constructor that is used for counting of interactions.
      *
-     * @param f SAM record for R1
-     * @param r SAM record for R2
+     * @param f         SAM record for R1
+     * @param r         SAM record for R2
      * @param digestMap Custom class for storing all digests of the genome.
      */
     public ReadPair(SAMRecord f, SAMRecord r, DigestMap digestMap) {
@@ -187,7 +193,7 @@ public class ReadPair {
         R2 = r;
 
         // create digest pair
-        this.digestPair = digestMap.getDigestPair(f.getReferenceName(),getFivePrimeEndPosOfRead(f),r.getReferenceName(),getFivePrimeEndPosOfRead(r));
+        this.digestPair = digestMap.getDigestPair(f.getReferenceName(), getFivePrimeEndPosOfRead(f), r.getReferenceName(), getFivePrimeEndPosOfRead(r));
     }
 
     static void setLengthThresholds(int lowerFragSize, int upperFragSize, int upperSelfLigationFragSize) {
@@ -198,10 +204,9 @@ public class ReadPair {
 
 
     /**
-     *
-     * @param f SAMRecord for R1.
-     * @param r SAMRecord for R2.
-     * @param digestMap structure containing all digests.
+     * @param f               SAMRecord for R1.
+     * @param r               SAMRecord for R2.
+     * @param digestMap       structure containing all digests.
      * @param stringentUnique If true, more  stringent definition of uniquely mapped is used.
      * @throws DiachromaticException
      */
@@ -228,12 +233,12 @@ public class ReadPair {
 
         if (R1.getAttribute("XS") != null) {
             // there is more than one alignment
-            if(stringentUnique) {
+            if (stringentUnique) {
                 // in the stringent mode this enough to be multi-mapped
                 multimapped_R1 = true;
                 this.isPaired = false;
             } else {
-                if(R1.getMappingQuality()<30 || (int)R1.getAttribute("AS")-(int)R1.getAttribute("XS")<10) {
+                if (R1.getMappingQuality() < 30 || (int) R1.getAttribute("AS") - (int) R1.getAttribute("XS") < 10) {
                     multimapped_R1 = true;
                     this.isPaired = false;
                 }
@@ -241,12 +246,12 @@ public class ReadPair {
         }
         if (R2.getAttribute("XS") != null) {
             // there is more than one alignment
-            if(stringentUnique) {
+            if (stringentUnique) {
                 // in the stringent mode this enough to be multi-mapped
                 multimapped_R2 = true;
                 this.isPaired = false;
             } else {
-                if(R2.getMappingQuality()<30 || (int)R2.getAttribute("AS")-(int)R2.getAttribute("XS")<10) {
+                if (R2.getMappingQuality() < 30 || (int) R2.getAttribute("AS") - (int) R2.getAttribute("XS") < 10) {
                     multimapped_R2 = true;
                     this.isPaired = false;
                 }
@@ -262,9 +267,10 @@ public class ReadPair {
 
             // pair reads, if both reads could be mapped uniquely
             this.pairReads();
+            this.setRelativeOrientationTag();
 
             // try to find restriction digests that match the read pair
-            this.digestPair = digestMap.getDigestPair(this.R1.getReferenceName(),getFivePrimeEndPosOfRead(this.R1),this.R2.getReferenceName(),getFivePrimeEndPosOfRead(this.R2));
+            this.digestPair = digestMap.getDigestPair(this.R1.getReferenceName(), getFivePrimeEndPosOfRead(this.R1), this.R2.getReferenceName(), getFivePrimeEndPosOfRead(this.R2));
 
             // categorize ReadPair
             this.categorizeReadPair();
@@ -279,7 +285,7 @@ public class ReadPair {
 
 
         } else {
-            this.digestPair=null;
+            this.digestPair = null;
         }
     }
 
@@ -288,30 +294,35 @@ public class ReadPair {
      * @return The genomic position that corresponds to the 5' end position of the mapped read.
      */
     private Integer getFivePrimeEndPosOfRead(SAMRecord samRecord) {
-        if(!samRecord.getReadNegativeStrandFlag()) {
+        if (!samRecord.getReadNegativeStrandFlag()) {
             return samRecord.getAlignmentStart();
-        }
-        else {
+        } else {
             return samRecord.getAlignmentEnd();
         }
     }
 
     public Integer getFivePrimeEndPosOfR1() {
-        if(!this.R1.getReadNegativeStrandFlag()) {
+        if (!this.R1.getReadNegativeStrandFlag()) {
             return this.R1.getAlignmentStart();
-        }
-        else {
+        } else {
             return this.R1.getAlignmentEnd();
         }
     }
 
     public Integer getFivePrimeEndPosOfR2() {
-        if(!this.R2.getReadNegativeStrandFlag()) {
+        if (!this.R2.getReadNegativeStrandFlag()) {
             return this.R2.getAlignmentStart();
-        }
-        else {
+        } else {
             return this.R2.getAlignmentEnd();
         }
+    }
+
+    public String getReferenceSequenceOfR1() {
+        return this.R1.getReferenceName();
+    }
+
+    public String getReferenceSequenceOfR2() {
+        return this.R2.getReferenceName();
     }
 
     public SAMRecord forward() {
@@ -329,9 +340,8 @@ public class ReadPair {
      * @param digestPair The pair of digests corresponding to the read pair. If the
      *                   reads are on the same chromosome, it decides whether they are {@code CLOSE}
      *                   or {@code FAR} and sets the {@code CT} tag accordingly.
-     *
-     * TODO: Discuss the usefulness of the function below and discard or use.
-     *
+     *                   <p>
+     *                   TODO: Discuss the usefulness of the function below and discard or use.
      */
     public void characterizeReadSeparation(DigestPair digestPair) {
         if (!R1.getReferenceName().equals(R2.getReferenceName())) {
@@ -375,7 +385,6 @@ public class ReadPair {
     }
 
 
-
     /**
      * @return True, if both reads are on the same chromosome.
      */
@@ -394,41 +403,39 @@ public class ReadPair {
      */
     public Integer getChimericFragmentSize() {
 
-         SAMRecord R1 = forward();
+        SAMRecord R1 = forward();
 
-         SAMRecord R2 = reverse();
+        SAMRecord R2 = reverse();
 
-       int d1;
-         if(!R1.getReadNegativeStrandFlag()) {
-             d1 = digestPair.forward().getDigestEndPosition() - getFivePrimeEndPosOfRead(R1) + 1;
-         }
-         else {
-             d1 = getFivePrimeEndPosOfRead(R1) - digestPair.forward().getDigestStartPosition() + 1;
-         }
-         int d2;
-         if(!R2.getReadNegativeStrandFlag()) {
-             d2 = digestPair.reverse().getDigestEndPosition() - getFivePrimeEndPosOfRead(R2) + 1;
-         }
-         else {
-             d2 = getFivePrimeEndPosOfRead(R2) - digestPair.reverse().getDigestStartPosition() + 1;
-         }
-         //logger.trace("d1: " + d1);
-         //logger.trace("d2: " + d2);
-         return d1 + d2;
-     }
+        int d1;
+        if (!R1.getReadNegativeStrandFlag()) {
+            d1 = digestPair.forward().getDigestEndPosition() - getFivePrimeEndPosOfRead(R1) + 1;
+        } else {
+            d1 = getFivePrimeEndPosOfRead(R1) - digestPair.forward().getDigestStartPosition() + 1;
+        }
+        int d2;
+        if (!R2.getReadNegativeStrandFlag()) {
+            d2 = digestPair.reverse().getDigestEndPosition() - getFivePrimeEndPosOfRead(R2) + 1;
+        } else {
+            d2 = getFivePrimeEndPosOfRead(R2) - digestPair.reverse().getDigestStartPosition() + 1;
+        }
+        //logger.trace("d1: " + d1);
+        //logger.trace("d2: " + d2);
+        return d1 + d2;
+    }
 
 
     /**
      * This function returns the size of a potentially underlying self-ligated fragment. This size is the sum of the
      * calculated chimeric size plus the distance between the 5' end positions of the mapped reads.
-     *
+     * <p>
      * The self-ligation size is only defined for read pairs mapping to the same chromosome and pointing outwards.
      *
      * @return
      */
     public int getSelfLigationFragmentSize() {
         return this.getChimericFragmentSize() + this.getDistanceBetweenFivePrimeEnds();
-        }
+    }
 
 
     /**
@@ -489,7 +496,7 @@ public class ReadPair {
      *
      * @return F1F2, F2F1, R1R2, R2R1, F1R2, F2R1, R2F1 or R1F2.
      */
-    public String getRelativeOrientationTag() {
+    public String setRelativeOrientationTag() {
 
         String tag = "NA";
 
@@ -500,18 +507,22 @@ public class ReadPair {
                 if (getFivePrimeEndPosOfRead(R1) <= getFivePrimeEndPosOfRead(R2)) {
                     // R1 proceeds R2
                     tag = "F1F2";
+                    this.relativeOrientationTag = "F1F2";
                 } else {
                     // R2 proceeds R1
                     tag = "F2F1";
+                    this.relativeOrientationTag = "F2F1";
                 }
             } else {
                 // both reads align to the reverse strand
                 if (getFivePrimeEndPosOfRead(R1) <= getFivePrimeEndPosOfRead(R2)) {
                     // R1 proceeds R2
                     tag = "R1R2";
+                    this.relativeOrientationTag = "R1R2";
                 } else {
                     // R2 proceeds R1
                     tag = "R2R1";
+                    this.relativeOrientationTag = "R2R1";
                 }
             }
         } else {
@@ -521,21 +532,29 @@ public class ReadPair {
                 if (getFivePrimeEndPosOfRead(R1) <= getFivePrimeEndPosOfRead(R2)) {
                     // R1 proceeds R2
                     tag = "F1R2"; // innie
+                    this.relativeOrientationTag = "F1R2";
                 } else {
                     // R2 proceeds R1
                     tag = "R2F1"; //outie
+                    this.relativeOrientationTag = "R2F1";
                 }
             } else {
                 // R1 is mapped to the reverse and R2 to the forward strand
                 if (getFivePrimeEndPosOfRead(R1) <= getFivePrimeEndPosOfRead(R2)) {
                     // R1 proceeds R2
                     tag = "R1F2"; // outie
+                    this.relativeOrientationTag = "R1F2";
                 } else {
                     tag = "F2R1"; // innie
+                    this.relativeOrientationTag = "F2R1";
                 }
             }
         }
         return tag;
+    }
+
+    public String getRelativeOrientationTag(){
+        return this.relativeOrientationTag;
     }
 
 
@@ -551,9 +570,9 @@ public class ReadPair {
 
         int fwdReadFpep = getFivePrimeEndPosOfRead(this.R1);
         int revReadFpep = getFivePrimeEndPosOfRead(this.R2);
-        return(
-                Math.abs(fragSta-fwdReadFpep) <  DANGLING_THRESHOLD || Math.abs(fragEnd-fwdReadFpep) <  DANGLING_THRESHOLD ||
-                Math.abs(fragSta-revReadFpep) <  DANGLING_THRESHOLD || Math.abs(fragEnd-revReadFpep) <  DANGLING_THRESHOLD);
+        return (
+                Math.abs(fragSta - fwdReadFpep) < DANGLING_THRESHOLD || Math.abs(fragEnd - fwdReadFpep) < DANGLING_THRESHOLD ||
+                        Math.abs(fragSta - revReadFpep) < DANGLING_THRESHOLD || Math.abs(fragEnd - revReadFpep) < DANGLING_THRESHOLD);
     }
 
 
@@ -564,15 +583,24 @@ public class ReadPair {
      */
     private void categorizeReadPair() throws DiachromaticException {
 
-        if(!this.isTrans() && (this.isInwardFacing()||this.isOutwardFacing())){
+        boolean sameInternal=false;
+        if(this.digestPair.forward()==this.digestPair.reverse()) {
+            sameInternal = true;
+        }
+
+        if (!this.isTrans() && (this.isInwardFacing() || this.isOutwardFacing())) {
             // inward and outward pointing read pairs on the same chromosome may arise from self- or un-ligated fragments
-            if(this.isOutwardFacing()) {
-                if(this.getSelfLigationFragmentSize() < this.UPPER_SIZE_SELF_LIGATION_THRESHOLD) {
-                    setCategoryTag(ReadPairCategory.SELF_LIGATED.getTag());
+            if (this.isOutwardFacing()) {
+                if (this.getSelfLigationFragmentSize() < this.UPPER_SIZE_SELF_LIGATION_THRESHOLD || sameInternal) {
+                    if(!sameInternal) {
+                        setCategoryTag(ReadPairCategory.SELF_LIGATED.getTag());
+                    } else {
+                        setCategoryTag(ReadPairCategory.SELF_LIGATED_SAME_INTERNAL.getTag());
+                    }
                 } else {
-                    if(this.hasTooSmallChimericFragmentSize()) {
+                    if (this.hasTooSmallChimericFragmentSize()) {
                         setCategoryTag(ReadPairCategory.VALID_TOO_SHORT.getTag());
-                    } else if(this.hasTooBigChimericFragmentSize()){
+                    } else if (this.hasTooBigChimericFragmentSize()) {
                         setCategoryTag(ReadPairCategory.VALID_TOO_LONG.getTag());
                     } else {
                         setCategoryTag(ReadPairCategory.VALID_PAIR.getTag()); // only if chimeric fragment has the right size it is categorized as valid pair
@@ -580,12 +608,17 @@ public class ReadPair {
                 }
             } else {
                 // pair is inward facing
-                if(this.getDistanceBetweenFivePrimeEnds() < this.UPPER_SIZE_THRESHOLD) {
-                    setCategoryTag(ReadPairCategory.UN_LIGATED.getTag());
-                } else {
-                    if(this.hasTooSmallChimericFragmentSize()) {
+                if (this.getDistanceBetweenFivePrimeEnds() < this.UPPER_SIZE_THRESHOLD || sameInternal) {
+                        if(!sameInternal) {
+                            setCategoryTag(ReadPairCategory.UN_LIGATED.getTag());
+                        } else {
+                            setCategoryTag(ReadPairCategory.UN_LIGATED_SAME_INTERNAL.getTag());
+                            //logger.trace("Un-ligated same internal!");
+                        }
+                    } else {
+                    if (this.hasTooSmallChimericFragmentSize()) {
                         setCategoryTag(ReadPairCategory.VALID_TOO_SHORT.getTag());
-                    } else if(this.hasTooBigChimericFragmentSize()){
+                    } else if (this.hasTooBigChimericFragmentSize()) {
                         setCategoryTag(ReadPairCategory.VALID_TOO_LONG.getTag());
                     } else {
                         setCategoryTag(ReadPairCategory.VALID_PAIR.getTag()); // only if chimeric fragment has the right size it is categorized as valid
@@ -594,9 +627,9 @@ public class ReadPair {
             }
         } else {
             // trans pairs and read pairs that are pointing in the same direction cannot arise from self- or un-ligated fragments
-            if(this.hasTooSmallChimericFragmentSize()) {
+            if (this.hasTooSmallChimericFragmentSize()) {
                 setCategoryTag(ReadPairCategory.VALID_TOO_SHORT.getTag());
-            } else if(this.hasTooBigChimericFragmentSize()){
+            } else if (this.hasTooBigChimericFragmentSize()) {
                 setCategoryTag(ReadPairCategory.VALID_TOO_LONG.getTag());
             } else {
                 setCategoryTag(ReadPairCategory.VALID_PAIR.getTag()); // only if chimeric fragment has the right size it is categorized as valid
@@ -609,25 +642,41 @@ public class ReadPair {
      * @return Linear genomic distance between 5' end positions of the reads.
      */
     public int getDistanceBetweenFivePrimeEnds() {
-        if(isTrans()){
+        if (isTrans()) {
             logger.error("Distance between 5' ends on different chromosomes is not defined!");
             return -1;
         } else {
-            if(this.getFivePrimeEndPosOfR1() < getFivePrimeEndPosOfR2()) {
-                return getFivePrimeEndPosOfR2()-getFivePrimeEndPosOfR1();
+            if (this.getFivePrimeEndPosOfR1() < getFivePrimeEndPosOfR2()) {
+                return getFivePrimeEndPosOfR2() - getFivePrimeEndPosOfR1();
             } else {
-                return getFivePrimeEndPosOfR1()-getFivePrimeEndPosOfR2();
+                return getFivePrimeEndPosOfR1() - getFivePrimeEndPosOfR2();
             }
         }
     }
 
-    public Integer getForwardDigestStart() {return this.digestPair.forward().getDigestStartPosition();}
-    public Integer getForwardDigestEnd() {return this.digestPair.forward().getDigestEndPosition();}
-    public boolean forwardDigestIsActive() {return this.digestPair.forward().isSelected();}
+    public Integer getForwardDigestStart() {
+        return this.digestPair.forward().getDigestStartPosition();
+    }
 
-    public Integer getReverseDigestStart() {return this.digestPair.reverse().getDigestStartPosition();}
-    public Integer getReverseDigestEnd() {return this.digestPair.reverse().getDigestEndPosition();}
-    public boolean reverseDigestIsActive() {return this.digestPair.reverse().isSelected();}
+    public Integer getForwardDigestEnd() {
+        return this.digestPair.forward().getDigestEndPosition();
+    }
+
+    public boolean forwardDigestIsActive() {
+        return this.digestPair.forward().isSelected();
+    }
+
+    public Integer getReverseDigestStart() {
+        return this.digestPair.reverse().getDigestStartPosition();
+    }
+
+    public Integer getReverseDigestEnd() {
+        return this.digestPair.reverse().getDigestEndPosition();
+    }
+
+    public boolean reverseDigestIsActive() {
+        return this.digestPair.reverse().isSelected();
+    }
 
     public DigestPair getDigestPair() {
         return digestPair;
@@ -645,4 +694,38 @@ public class ReadPair {
         return false;
     }
 
+    /**
+     * // Shuffle read pair orientation for study about significance of directed interactions
+     *
+     * @return Random orientation tag.
+     */
+    public void setRandomRelativeOrientationTag() {
+        int index = ThreadLocalRandom.current().nextInt(8);
+        String tag=null;
+        if (index == 0) {
+            this.relativeOrientationTag = "F1F2";
+        }
+        if (index == 1) {
+            this.relativeOrientationTag = "F2F1";
+        }
+        if (index == 2) {
+            this.relativeOrientationTag = "R1R2";
+        }
+        if (index == 3) {
+            this.relativeOrientationTag = "R2R1";
+        }
+        if (index == 4) {
+            this.relativeOrientationTag = "F1R2";
+        }
+        if (index == 5) {
+            this.relativeOrientationTag = "R2F1";
+        }
+        if (index == 6) {
+            this.relativeOrientationTag = "R1F2";
+        }
+        if (index == 7) {
+            this.relativeOrientationTag = "F2R1";
+        }
+    }
 }
+

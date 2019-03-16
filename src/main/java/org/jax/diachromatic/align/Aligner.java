@@ -78,8 +78,10 @@ public class Aligner {
     /**
      * Count variables for disjoint read pair categories (see documentation on read the docs).
      */
-    private int n_paired_unique_un_ligated = 0; // rejected
+    private int n_paired_unique_un_ligated = 0;
+    private int n_paired_unique_un_ligated_same_internal = 0;
     private int n_paired_unique_self_ligated = 0;
+    private int n_paired_unique_self_ligated_same_internal = 0;
     private int n_paired_unique_too_short = 0;
     private int n_paired_unique_too_long = 0;
     private int n_paired_unique_valid = 0;
@@ -130,6 +132,8 @@ public class Aligner {
      */
     private boolean useStringentUniqueSettings;
 
+    private boolean useRelativeOrientationForDuplicateRemoval = false;
+
     /**
      * If true, rejected read pairs are summarize to an extra BAM file {@link #outputBAMrejected}.
      */
@@ -159,7 +163,7 @@ public class Aligner {
     private int[] fragSizesChimericPairs =  new int[FRAG_SIZE_LIMIT+1];
     private int[] fragSizesActiveChimericPairs =  new int[FRAG_SIZE_LIMIT+1];
     private int[] fragSizesUnLigatedPairs =  new int[FRAG_SIZE_LIMIT+1];
-
+    private int[] fragSizesSelfLigatedSameInternalPairs =  new int[FRAG_SIZE_LIMIT+1];
 
 
     /**
@@ -213,10 +217,13 @@ public class Aligner {
         this.upperFragSize = upperFragSize;
         this.filenamePrefix = filenamePrefix;
         this.useStringentUniqueSettings = useStringentUniqueSettings;
+        this.useRelativeOrientationForDuplicateRemoval = false;
         ReadPair.setLengthThresholds(lowerFragSize,upperFragSize,upperSelfLigationSize);
         Arrays.fill(fragSizesChimericPairs, 0);
         Arrays.fill(fragSizesActiveChimericPairs, 0);
         Arrays.fill(fragSizesUnLigatedPairs, 0);
+        Arrays.fill(fragSizesSelfLigatedSameInternalPairs, 0);
+
 
 
         VERSION = Diachromatic.getVersion();
@@ -268,7 +275,7 @@ public class Aligner {
             this.rejectedReadsWriter = new SAMFileWriterFactory().makeBAMWriter(header, presorted, new File(outputBAMrejected));
         }
 
-        DeDupMap dedup_map = new DeDupMap(true);
+        DeDupMap dedup_map = new DeDupMap(useRelativeOrientationForDuplicateRemoval);
         ReadPair pair;
 
         while ((pair = getNextPair())!= null) {
@@ -278,6 +285,7 @@ public class Aligner {
             if(n_total_input_read_pairs%1000000==0) {
                 logger.trace("n_total_input_read_pairs: " + n_total_input_read_pairs);
             }
+
             if(dedup_map.getNumOfInsertions()%1000000==0 && 0<dedup_map.getNumOfInsertions()) {
                 logger.trace("dedup_map.getNumOfInsertions(): " + dedup_map.getNumOfInsertions());
             }
@@ -302,7 +310,7 @@ public class Aligner {
                 n_paired++;
 
                 // de-duplication starts with paired pairs
-                if(dedup_map.hasSeen(pair) || pair.isDanglingEnd()) {
+                if(dedup_map.hasSeen(pair)) {
                     n_paired_duplicated++;
                     continue;
                 }
@@ -313,8 +321,12 @@ public class Aligner {
                     n_paired_unique_valid++;}
                 if(pair.getCategoryTag().equals("UL")) {
                     n_paired_unique_un_ligated++;}
+                if(pair.getCategoryTag().equals("ULSI")) {
+                    n_paired_unique_un_ligated_same_internal++;}
                 if(pair.getCategoryTag().equals("SL")) {
                     n_paired_unique_self_ligated++;}
+                if(pair.getCategoryTag().equals("SLSI")) {
+                    n_paired_unique_self_ligated_same_internal++;}
                 if(pair.getCategoryTag().equals("TS")) {
                     n_paired_unique_too_short++;}
                 if(pair.getCategoryTag().equals("TL")) {
@@ -371,6 +383,14 @@ public class Aligner {
                 fragSizesUnLigatedPairs[incrementFragSize]++;
             }
 
+            // count sizes of potentially un-ligated fragments (don't use thresholds to avoid circular argument)
+            if(pair.getCategoryTag().equals("SLSI")){
+                incrementFragSize=pair.getSelfLigationFragmentSize();
+                if(FRAG_SIZE_LIMIT<incrementFragSize) { incrementFragSize = FRAG_SIZE_LIMIT; }
+                fragSizesSelfLigatedSameInternalPairs[incrementFragSize]++;
+            }
+
+
             // write pair to BAM file
             if(pair.getCategoryTag().equals("VP")){
                 validReadsWriter.addAlignment(pair.forward());
@@ -388,7 +408,7 @@ public class Aligner {
             rejectedReadsWriter.close();
         }
 
-        printFragmentLengthDistributionRscript(fragSizesChimericPairs, fragSizesActiveChimericPairs, fragSizesUnLigatedPairs);
+        printFragmentLengthDistributionRscript(fragSizesChimericPairs, fragSizesActiveChimericPairs, fragSizesUnLigatedPairs, fragSizesSelfLigatedSameInternalPairs);
         //dedup_map.printDeDupStatistics(n_paired_duplicated);
     }
 
@@ -401,7 +421,7 @@ public class Aligner {
      * @param fragSizesChimericActivePairs same as fragSizesChimericPairs but only for read pairs for which at least one read maps to an selected/active fragment
      * @throws FileNotFoundException
      */
-    private void printFragmentLengthDistributionRscript(int[] fragSizesAllPairs, int[] fragSizesChimericActivePairs, int[] fragSizesUnLigatedPairs) throws FileNotFoundException {
+    private void printFragmentLengthDistributionRscript(int[] fragSizesAllPairs, int[] fragSizesChimericActivePairs, int[] fragSizesUnLigatedPairs, int[] fragSizesSelfLigatedSameInternalPairs) throws FileNotFoundException {
 
         PrintStream printStream = new PrintStream(new FileOutputStream(outputFragSizesCountsRscript));
 
@@ -429,11 +449,18 @@ public class Aligner {
         }
         printStream.print(fragSizesUnLigatedPairs[FRAG_SIZE_LIMIT] + ")\n");
 
+        printStream.print("fragSizesSelfLigatedSameInternalPairs<-c(");
+        for(int i=0; i<FRAG_SIZE_LIMIT; i++) {
+            printStream.print(fragSizesSelfLigatedSameInternalPairs[i] + ",");
+        }
+        printStream.print(fragSizesSelfLigatedSameInternalPairs[FRAG_SIZE_LIMIT] + ")\n");
+
 
         printStream.print("\n");
         printStream.print("cairo_pdf(\"");
         printStream.print(filenamePrefix);
-        printStream.print(".pdf\", height=6.5, width=6.5)\n");
+        printStream.print(".pdf\", height=6, width=12)\n");
+        printStream.print("par(mfrow=c(1,2))\n");
 
         printStream.print("FRAG_SIZE_LIMIT=");
         printStream.print(FRAG_SIZE_LIMIT+1);
@@ -445,7 +472,7 @@ public class Aligner {
 
         printStream.print("XLIM<-c(0,1000)\n");
 
-        printStream.print("YLIM<-max(max(fragSizesChimericPairs[10:1000]),max(fragSizesActiveChimericPairs[10:1000]))\n"); // TODO: Find out why lengths 1 to 10 are omitted
+        printStream.print("YLIM<-max(max(fragSizesChimericPairs[10:1000]),max(fragSizesActiveChimericPairs[10:1000]))\n");
 
         printStream.print("plot(length, fragSizesChimericPairs, xlim=XLIM, type=\"l\", ylim=c(0,YLIM), ylab=NA, xlab=NA, axes=FALSE)\n");
 
@@ -475,6 +502,9 @@ public class Aligner {
         printStream.print("LEGEND_UNLIGATED<-paste(\"Un-ligated fragments (\",PREDOM_UNLIGATED_FRAG_SIZE,\")\",sep=\"\")\n");
 
         printStream.print("legend(\"topright\",legend=c(LEGEND_HYBRID, LEGEND_ACTIVE, LEGEND_UNLIGATED), col=c(\"black\", \"red\", \"blue\"), lty=1, bg = \"white\")\n\n");
+
+
+        printStream.print("plot(length, fragSizesSelfLigatedSameInternalPairs, xlab=\"Size (nt)\", ylab=\"Fragment count\", type=\"l\", xlim=c(0,20000), col=\"black\", main=\"Size distribution of self-ligated same internal fragments\")\n");
 
         printStream.print("dev.off()\n");
     }
@@ -515,18 +545,31 @@ public class Aligner {
         printStream.print("\n");
 
         printStream.print("Disjoint categories:\n");
-        printStream.print("Un-ligated:\t" + n_paired_unique_un_ligated + String.format(" (%.2f%%)", 100.0* n_paired_unique_un_ligated /n_paired_unique) + "\n");
-        printStream.print("Self-ligated:\t" + n_paired_unique_self_ligated + String.format(" (%.2f%%)", 100.0* n_paired_unique_self_ligated /n_paired_unique) + "\n");
-        printStream.print("Calculated size of chimeric fragment too short:\t" + n_paired_unique_too_short + String.format(" (%.2f%%)", 100.0* n_paired_unique_too_short /n_paired_unique) + "\n");
-        printStream.print("Calculated size of chimeric fragment too long:\t" + n_paired_unique_too_long + String.format(" (%.2f%%)", 100.0* n_paired_unique_too_long /n_paired_unique) + "\n");
-        printStream.print("Valid:\t" + n_paired_unique_valid + String.format(" (%.2f%%)", 100.0* n_paired_unique_valid /n_paired_unique) + "\n");
-        printStream.print("Note: These five categories are disjoint subsets of all unique paired read pairs, and percentages refer to this superset." + "\n\n");
+
+        int n_paired_unique_un_ligated_total=n_paired_unique_un_ligated+n_paired_unique_un_ligated_same_internal;
+        printStream.print("Un-ligated:\t" + n_paired_unique_un_ligated_total + String.format(" (%.2f%%)", 100.0* n_paired_unique_un_ligated_total /n_paired_unique) + "\n");
+        printStream.print("\tDue to size:\t" + n_paired_unique_un_ligated + String.format(" (%.2f%%)", 100.0* n_paired_unique_un_ligated /n_paired_unique) + "\n");
+        printStream.print("\tDue to same internal:\t" + n_paired_unique_un_ligated_same_internal + String.format(" (%.2f%%)", 100.0* n_paired_unique_un_ligated_same_internal /n_paired_unique) + "\n");
+
+        int n_paired_unique_self_ligated_total=n_paired_unique_self_ligated+n_paired_unique_self_ligated_same_internal;
+        printStream.print("Self-ligated:\t" + n_paired_unique_self_ligated_total + String.format(" (%.2f%%)", 100.0* n_paired_unique_self_ligated_total /n_paired_unique) + "\n");
+        printStream.print("\tDue to size:\t" + n_paired_unique_self_ligated + String.format(" (%.2f%%)", 100.0* n_paired_unique_self_ligated /n_paired_unique) + "\n");
+        printStream.print("\tDue to same internal:\t" + n_paired_unique_self_ligated_same_internal + String.format(" (%.2f%%)", 100.0* n_paired_unique_self_ligated_same_internal /n_paired_unique) + "\n");
+
+        int n_chimeric_fragments=n_paired_unique_too_short+n_paired_unique_too_long+n_paired_unique_valid;
+
+        printStream.print("Chimeric:\t" + n_chimeric_fragments + String.format(" (%.2f%%)", 100.0* n_chimeric_fragments /n_paired_unique) + "\n");
+        printStream.print("\tToo short:\t" + n_paired_unique_too_short + String.format(" (%.2f%%)", 100.0* n_paired_unique_too_short /n_paired_unique) + "\n");
+        printStream.print("\tToo long:\t" + n_paired_unique_too_long + String.format(" (%.2f%%)", 100.0* n_paired_unique_too_long /n_paired_unique) + "\n");
+        printStream.print("\tValid:\t" + n_paired_unique_valid + String.format(" (%.2f%%)", 100.0* n_paired_unique_valid /n_paired_unique) + "\n");
+
+        printStream.print("Note: These three categories are disjoint subsets of all unique paired read pairs, and percentages refer to this superset." + "\n\n");
 
         printStream.print("Dangling end pairs total:\t" + n_paired_unique_dangling + String.format(" (%.2f%%)", 100.0* n_paired_unique_dangling /n_paired_unique) + "\n");
         printStream.print("Note: Dangling end pairs may occur in all categories, and a read pair with a dangling end can still be valid." + "\n\n");
 
         printStream.print("Trans pairs total:\t" + n_paired_unique_trans + String.format(" (%.2f%%)", 100.0* n_paired_unique_trans /n_paired_unique) + "\n");
-        printStream.print("Note: Trans pairs may not occur in the categories un-ligated and self-ligated but all others." + "\n\n");
+        printStream.print("Note: Trans pairs cannot occur in the categories un-ligated and self-ligated but all others." + "\n\n");
 
         printStream.print("\n");
         printStream.print("Quality metrics for experimental trouble shooting\n");

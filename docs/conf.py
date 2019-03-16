@@ -46,7 +46,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Diachromatic'
-copyright = u'2018, Peter Hansen, Peter Robinson'
+copyright = u'2019, Peter Hansen, Peter Robinson'
 author = u'Peter Hansen, Peter Robinson'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -109,6 +109,7 @@ html_sidebars = {
         'donate.html',
     ]
 }
+
 
 
 # -- Options for HTMLHelp output ------------------------------------------

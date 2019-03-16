@@ -2,9 +2,10 @@ Counting of valid read pairs between pairs of restriction fragments
 ===================================================================
 
 Mapped Hi-C read pairs are typically transformed into contact matrices, whereby the pairs are counted between windows of
-fixed size, typically 5 kbp (ref). Diachromatic was developed in the first place for *capture Hi-C* data which achieves
-a much higher resolution as compared to Hi-C. Therefore, for Diachromatic the read counts are determined on the
-restriction fragment level.
+fixed size, typically 5 kbp (`Forcato et al., 2017 <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5493985/>`_ provide a review of
+the methodology). Diachromatic was developed for *capture Hi-C*, which achieves
+a much higher resolution than Hi-C. Therefore, for Diachromatic the read counts are determined for each
+restriction digest.
 
 
 Required input files
@@ -13,11 +14,8 @@ Required input files
 GOPHER digest file
 ------------------
 
-Due to the fact that the counts are determined on the restriction fragment level, the digest file `initially produced
-using GOPHER`_ needs to be passed to ``Diachromatic count``. If the captured viewpoints were designed with GOPHER,
+Due to the fact that the counts are determined on the restriction fragment level, the digest file :ref:`rst_digest` needs to be passed to ``Diachromatic count``. If the captured viewpoints were designed with GOPHER,
 this file also includes information about active and inactive restriction fragments.
-
-.. _initially produced using GOPHER: digest.html
 
 
 BAM file with unique valid pairs
@@ -52,7 +50,9 @@ Running Diachromatic's truncation subcommand
 
 Use the following command to run the counting step. ::
 
-    $ java -jar Diachromatic.jar count -v prefix.valid_pairs.aligned.bam -d hg38_DpnII_DigestedGenome.txt
+    $ java -jar Diachromatic.jar count \
+        -v prefix.valid_pairs.aligned.bam \
+        -d hg38_DpnII_DigestedGenome.txt
 
 
 +--------------+----------------------+--------------------------------------------------------+----------+------------------------------------------------------------------+---------+
@@ -83,7 +83,7 @@ Consider the following example:
 
  ::
 
-    chr7    42304777        42314850        A       chr7    152941166       152943990       I       12:2
+    chr7    42304777        42314850        A       chr7    152941166      152943990      I       12:2
     chr7    42304777        42314850        A       chr7    38624777       38625305       I       7:4
 
 The first three columns contain the coordinates of a restriction fragment on chromosome 7. The ``A`` in column 4
@@ -102,9 +102,9 @@ The structure is again similar to that of BED files. Consider the following exam
 
  ::
 
-    chr7    42304777        42314850        A       25
-    chr7    152941166       152943990       I       14
-    chr7    38624777       38625305       I       11
+    chr7    42304777       42314850        A       25
+    chr7    152941166      152943990       I       14
+    chr7    38624777       38625305        I       11
 
 The first three columns contain the coordinates of interacting restriction fragments. This is again followed by either an ``A`` or ``I`` in column 4,
 whereby ``A`` means active and ``I`` inactive. The fifth column contains the read counts aggregated from all
@@ -120,7 +120,7 @@ Fraction of singleton interactions (FSI)
 It has been pointed out that the Cis/Trans ratio quality measure depends also on other factors such as the genome size and
 number of chromosomes of the analyzed species (Wingett 2015). Diachromatic provides an alternative and possibly more robust quality metric that
 can be used to access the extent of cross-ligation. Amongst the trans read pairs, we generally observe a large proportion
-of restriction fragments that are connected by single read pairs only. The number of all possible different cross-ligation
+of restriction fragments that are connected by only a single read pair. The number of all possible different cross-ligation
 events (including cis and trans) can roughly be estimated as the square number of all restriction fragments across the
 entire genome. Given this huge number, we reasoned that it is very unlikely that the same cross-ligation event occurs
 twice. Therefore, we defined the fraction of singleton interactions as the ratio of singleton read pairs and all read pairs.
