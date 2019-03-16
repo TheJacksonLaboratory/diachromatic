@@ -5,8 +5,8 @@ Truncation of chimeric reads
 Ligation junctions, chimeric fragments and chimeric reads
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Valid Hi-C read pairs stem from chimeric fragments consisting of DNA from two different loci linked by the ligation
-junction. Depending on whether the sticky ends of the dangling ends were filled or not, the ligation junction consist
+Valid Hi-C read pairs originate from chimeric fragments with DNA from two different loci linked by the ligation
+junction. Depending on whether the sticky ends of the dangling ends were filled or not, the ligation junction consists
 of either one or two restriction enzyme cutting motifs.
 
 .. figure:: img/sticky_and_blunt_ends.png
@@ -15,7 +15,7 @@ of either one or two restriction enzyme cutting motifs.
 The sonication step of the Hi-C protocol may introduce breakpoints near restriction enzyme cutting
 sites. If the breakpoint occurs at a distance smaller than one read length, this will result in a chimeric read that
 cannot be mapped to the reference sequence.
-The truncation step of the pipeline attempts to address this situation by deleting the sequence that is downstream of
+The truncation step of the pipeline attempts to address this problem by deleting the sequence that is downstream of
 the enzyme recognition site.
 
 .. figure:: img/chimeric_reads.png

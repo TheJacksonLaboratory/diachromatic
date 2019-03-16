@@ -1,11 +1,11 @@
-
-Creating an in silico restriction digest map for Diachromatic using GOPHER
-==========================================================================
 .. _rst_digest:
+Creating an *in silico* restriction digest map for Diachromatic using GOPHER
+============================================================================
+
 
 The Capture Hi-C (CHC) protocol involves the restriction digestion of a sample and the downstream analysis assigns
-reads to pairs of restriction digest. Therefore, the ``align`` subcommand of Diachromatic requires a list of all
-restriction digests that result from the in silico digestions of a given genome with the chosen enzyme or enzymes.
+reads to pairs of restriction digests. Therefore, the ``align`` subcommand of Diachromatic requires a list of all
+restriction digests that result from the *in silico* digestions of a given genome with the chosen enzyme or enzymes.
 Such lists can be generated using the GOPHER_ software. The TSV
 formatted file exported from GOPHER can be passed to Diachromatic using the ``-d`` or ``digest`` option.
 
@@ -20,10 +20,12 @@ information about enriched and non-enriched digests, i.e. if there are enrichmen
 
 .. figure:: img/output_export.png
 
-If you did not perform the design using GOPHER, you will have to `setup a new project`_.
-It's sufficient to specify the parameters within the *Data sources* section and to selected used enzyme within the
-*Design parameters* section. If you prepare the digest map in this way, all digests will be marked as inactive,
-and for some features of Diachromatic, you will need to change the digest file to indicate which
+If you did not  design CHC probes using GOPHER, you can still use diachromatic, but will need to create file with
+the same format. It is easy to do so with the GOPHER software. First, `setup a new project`_, and then
+specify the parameters in the *Data sources* section and the restriction enzyme in the
+*Design parameters* section. If you prepare the digest map in this way, all digests will be marked as inactive
+(i.e., not enriched with capture probes). In order to use some features of Diachromatic, you will need to change
+the digest file to indicate which
 digests where chosen for enrichment (for instance, with a Python script).
 
 .. _setup a new project: https://gopher.readthedocs.io/en/latest/02_gui_data.html
@@ -36,8 +38,7 @@ Format of the digest file
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The first line of this file contains the column names, and all other lines correspomd to one restriction digest.
-Each line consists of 14 fields that are described in the table below. The features of the fields 8 to 14 will be used
-for the Poisson-regression based normalization scheme.
+Each line consists of 14 fields that are described in the table .
 
 +--------+-------------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------+
 | Column | Name                    | Example  | Description                                                                                                                              |
@@ -51,7 +52,7 @@ for the Poisson-regression based normalization scheme.
 | 4      | Digest_Number           | 42       | Consecutive digest number.                                                                                                               |
 +--------+-------------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------+
 | 5      | 5'_Restriction_Site     | DpnII    | Name of the enzyme responsible for the cut at the 5' end of the digest.                                                                  |
-+--------+-------------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------+
++--------+-------------------------+---------WHy -+------------------------------------------------------------------------------------------------------------------------------------------+
 | 6      | 3'_Restriction_Site     | DpnII    | Name of the enzyme responsible for the cut at the 3' end of the digest. May be different from field 5 if more than one enzyme is used.   |
 +--------+-------------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------+
 | 7      | Length                  | 1245     | Length of the digest.                                                                                                                    |
