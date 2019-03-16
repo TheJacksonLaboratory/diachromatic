@@ -19,9 +19,9 @@ import java.util.Map;
  * clarity.
  *
  * The input for the constructor will be a BAM file containing the valid read pairs as well as a prefix
- * for output file (including the path).
+ * for summarize file (including the path).
  *
- * The output will consist of three files:
+ * The summarize will consist of three files:
  *
  * <li>prefix.interacting.fragments.counts.table.tsv</li>
  * <li>prefix.interaction.counts.table.tsv</li>
@@ -47,7 +47,7 @@ public class Counter {
     private DigestMap digestMap;
 
     /**
-     * Paths for output files.
+     * Paths for summarize files.
      */
     private String outputTsvInteractingFragmentCounts;
     private String outputTsvInteractionCounts;
@@ -215,7 +215,7 @@ public class Counter {
      */
     public void printStatistics() throws FileNotFoundException {
 
-        // create file for output
+        // create file for summarize
         PrintStream printStream = new PrintStream(new FileOutputStream(outputTxtStats));
 
         printStream.print("Summary statistics\n");
@@ -269,7 +269,7 @@ public class Counter {
      */
     public void printInteractionCountsMapAsCountTable() throws FileNotFoundException {
 
-        // create file for output
+        // create file for summarize
         PrintStream printStream = new PrintStream(new FileOutputStream(outputTsvInteractionCounts));
 
         for (DigestPair dp : this.dp2countsMap.keySet()) {
@@ -286,7 +286,7 @@ public class Counter {
      */
     public void printFragmentInteractionCountsMapAsCountTable() throws FileNotFoundException {
 
-        // create file for output
+        // create file for summarize
         PrintStream printStream = new PrintStream(new FileOutputStream(outputTsvInteractingFragmentCounts));
 
         HashMap<Digest,Integer> readCountsAtDigestsMap = new HashMap<>();

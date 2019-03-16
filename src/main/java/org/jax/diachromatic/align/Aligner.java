@@ -135,12 +135,12 @@ public class Aligner {
     private boolean useRelativeOrientationForDuplicateRemoval = false;
 
     /**
-     * If true, rejected read pairs are output to an extra BAM file {@link #outputBAMrejected}.
+     * If true, rejected read pairs are summarize to an extra BAM file {@link #outputBAMrejected}.
      */
     private final boolean outputRejectedReads;
 
     /**
-     * Filenames (including path) for output BAM files and for text file containing statistics about the alignment and
+     * Filenames (including path) for summarize BAM files and for text file containing statistics about the alignment and
      * filtering step.
      */
     private String outputBAMvalid, outputBAMrejected, outputTxtStats, outputFragSizesCountsRscript;
@@ -197,7 +197,7 @@ public class Aligner {
      * @param sam1 SAM file for the truncated R1 reads
      * @param sam2 SAM file for the truncated R2 reads
      * @param outputRejected If true, an additional BAM file for rejected reads will be created.
-     * @param outputPathPrefix Path for output including path and file prefix.
+     * @param outputPathPrefix Path for summarize including path and file prefix.
      * @param digestMap Custom class of Diachromatic containing information about all digests of the genome.
      * @param lowerFragSize Lower threshold for fragments sizes consistent with sonication parameters.
      * @param upperFragSize Upper threshold for fragments sizes consistent with sonication parameters.
@@ -249,7 +249,7 @@ public class Aligner {
 
     /**
      * Input the pair of truncated SAM files. We will add the PG groups of both
-     * SAM files to the header of the output file, and also add a line about the Diachromatic processing.
+     * SAM files to the header of the summarize file, and also add a line about the Diachromatic processing.
      *
      * @throws IOException Required because of generation R script for fragment size distribution.
      * @throws DiachromaticException Required because class ReadPair is used.
@@ -604,7 +604,7 @@ public class Aligner {
     }
 
     /**
-     * This function assembles the names of all output files.
+     * This function assembles the names of all summarize files.
      *
      * @param outputPathPrefix
      */

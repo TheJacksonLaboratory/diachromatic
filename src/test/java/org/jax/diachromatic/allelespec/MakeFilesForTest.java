@@ -117,7 +117,7 @@ public class MakeFilesForTest {
             poslist.add(pos);
         }
         assertEquals(4, found);
-        // output genome file
+        // summarize genome file
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter("genome.small.fa"));
             writer.write(">chrZ\n");
@@ -126,7 +126,7 @@ public class MakeFilesForTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        // output some paired reads
+        // summarize some paired reads
         // we will go for fragments 1-3 and fragments 2-4
         fastq1 = new ArrayList<>();
         fastq2 = new ArrayList<>();

@@ -56,7 +56,7 @@ public class Truncator {
     /**
      * Parse the two input FASTQ files using a {@link FastqPairParser} object that returns one inputSAMfiles of reads at a time.
      * For each inputSAMfiles of reads, if one or both of the reads was truncated to the extent that the remaining read is too
-     * short, then skip the read inputSAMfiles. Write out each read of valid pairs to separate output files.
+     * short, then skip the read inputSAMfiles. Write out each read of valid pairs to separate summarize files.
      *
      * @throws DiachromaticException
      */
