@@ -1,5 +1,59 @@
-Testing
-===============================
+Tutorial
+========
+
+Here, we present a complete tutorial for using Diachromatic for processing and quality control of Capture Hi-C reads.
+
+
+The test dataset
+~~~~~~~~~~~~~~~~
+Note: for now I am using the HiCUP test dataset, but we should create our own.
+
+
+
+Truncation
+~~~~~~~~~~
+The first step of processing with data with Diachromatic is processing of the raw FASTQ files to recognize and truncate
+reads with filled-in ligation juctions, which indicate reads that include the junction of the chimeric CHC fragment. If
+a single read is chimeric, it is not possible to map it to one locus, and therefore the 3' portion of the chimeric read
+is removed ("truncated"), leaving behind the 5' portion of the read that should map to a specific locus. If the 5' sequence
+is too short to be mapped, the entire read pair is discarded. This is performed with the truncate command.::
+
+
+    $ java -jar Diachromatic.jar truncate \
+        -q test_dataset1.fastq \
+        -r test_dataset2.fastq \
+        -e HinDIII
+        -o HinDIII
+        -x foo
+
+In practice, only about XXXX percent of the readpairs are truncated.
+
+
+Mapping
+~~~~~~~
+The second step of the pipeline is to map the truncated read pairs to the target genome. Diachromatic uses bowtie2 to perform the
+mapping, and then creates a BAM file containing the valid read pairs. If desired, Diachromatic also outputs BAM files
+with the discarded (arterfactual or unmappable reads).
+
+To use the mapping file, we need to have a file that shows the locations of restriction digests across the genome.
+Diachromatic users can use GOPHER to create probes and the digest file TODO -- MORE DETAIL.
+
+It is recommended that users download bowtie index files from the bowtie site. In the following, we have
+downloaded and extracted these files to a directory called ``/data/bt_indices`` (in this directory, there are multiple index files
+hg19.1.bt2, hg19.3.bt2, hg19.rev.1.bt2, hg19.2.bt2, hg19.4.bt2, hg19.rev.2.bt2).
+
+
+Use the following command to run the alignment step. ::
+
+    $ java -jar target/Diachromatic.jar align \
+        -b /usr/bin/bowtie2 \
+        -i /data/bt_indices/hg19 \
+        -q foo.truncated_R1.fastq.gz \
+        -r foo.truncated_R2.fq.gz \
+        -d hg19_HinDIII_DigestedGenome.txt
+
+
+
 
 This document contains a summary of how some of the unit tests were designed. Probably this page can/should be
 deleted before publication.
