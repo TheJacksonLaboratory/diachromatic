@@ -335,8 +335,6 @@ footer {
           <tr><td><b>Truncated Reads</b></td><td>${truncated_forward_reads!"n/a"}</td><td>${truncated_reverse_reads!"n/a"}</td></tr>
             <tr><td><b>Dangling Reads</b></td><td>${dangling_forward_reads!"n/a"}</td><td>${dangling_reverse_reads!"n/a"}</td></tr>
      <tr><td><b>Too short to map</b></td><td>${short_removed_forward_reads!"n/a"}</td><td>${short_removed_reverse_reads!"n/a"}</td></tr>
-
-short_removed_forward_reads
          </table>
     </p>
      <div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
