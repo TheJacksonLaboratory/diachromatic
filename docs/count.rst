@@ -18,8 +18,6 @@ Due to the fact that the counts are determined on the restriction fragment level
 this file also includes information about active and inactive restriction fragments.
 
 
-
-
 BAM file with unique valid pairs
 --------------------------------
 
