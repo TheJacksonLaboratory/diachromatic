@@ -498,7 +498,7 @@ public class Aligner {
 
 
         printStream.print("LEGEND_HYBRID<-paste(\"Chimeric fragments (\",PREDOM_FRAG_SIZE,\")\",sep=\"\")\n");
-        printStream.print("LEGEND_ACTIVE<-paste(\"Active chimeric fragments (\",PREDOM_ACTIVE_FRAG_SIZE,\")\",sep=\"\")\n");
+        printStream.print("LEGEND_ACTIVE<-paste(\"Enriched chimeric fragments (\",PREDOM_ACTIVE_FRAG_SIZE,\")\",sep=\"\")\n");
         printStream.print("LEGEND_UNLIGATED<-paste(\"Un-ligated fragments (\",PREDOM_UNLIGATED_FRAG_SIZE,\")\",sep=\"\")\n");
 
         printStream.print("legend(\"topright\",legend=c(LEGEND_HYBRID, LEGEND_ACTIVE, LEGEND_UNLIGATED), col=c(\"black\", \"red\", \"blue\"), lty=1, bg = \"white\")\n\n");

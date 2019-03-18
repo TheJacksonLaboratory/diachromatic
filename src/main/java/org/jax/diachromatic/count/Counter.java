@@ -238,7 +238,7 @@ public class Counter {
         printStream.print("\n");
 
         printStream.print("\n");
-        printStream.print("Summary statistics about interactions between active and inactive fragments:\n");
+        printStream.print("Summary statistics about interactions between active (most typically enriched) and inactive fragments:\n");
         printStream.print("\t" + "Total number of interactions: " + interaction_count + "\n");
         printStream.print("\t" + "Number of interactions between active fragments: " + active_active_interaction_count + "\n");
         printStream.print("\t" + "Number of interactions between inactive fragments: " + inactive_inactive_interaction_count + "\n");

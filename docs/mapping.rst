@@ -279,7 +279,7 @@ In such cases, the plot can be used to choose good thresholds.
 
 For the size distribution of chimeric fragments (**black**), the chimeric sizes of all read pairs that were categorized
 as either as *valid*, *too short* or *too long* are determined.
-Active chimeric fragments (**red**) form a subset of all chimeric fragments, whereby either the read R1 or R2 is assigned
+Enriched chimeric fragments (**red**) form a subset of all chimeric fragments, whereby either the read R1 or R2 is assigned
 to a digest that is flagged as selected in the digest file passed to Diachromatic.
 For the size distribution of un-ligated fragments (**blue**) the distances between all inward pointing read pairs mapping
 to the same chromosome (*cis*) are determined.
