@@ -2,7 +2,7 @@ Counting of valid read pairs between pairs of restriction fragments
 ===================================================================
 
 Mapped Hi-C read pairs are typically transformed into contact matrices, whereby the pairs are counted between windows of
-fixed size, typically 5 kbp (`Forcato et al., 2017 <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5493985/>`_ provide a review of
+fixed size, typically 5 kbp (`Forcato et al., 2017 <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5493985/>`_) provide a review of
 the methodology). Diachromatic was developed for *capture Hi-C*, which achieves
 a much higher resolution than Hi-C. Therefore, for Diachromatic the read counts are determined for each
 restriction digest.
@@ -78,7 +78,7 @@ The interactions are written to a tab separated text file that has the following
 
     * ``prefix.interaction.counts.table.tsv``
 
-The structure of this file is similar to that of iBED files. Each line stands for one pair of interacting fragments.
+The structure of this file is similar to that of (`iBED <https://bioconductor.org/packages/release/bioc/vignettes/Chicago/inst/doc/Chicago.html#ibed-format-ends-with-ibed>`_) files. Each line stands for one pair of interacting fragments.
 Consider the following example:
 
  ::
