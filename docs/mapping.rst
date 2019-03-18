@@ -1,3 +1,4 @@
+.. _rstalign:
 Mapping and categorization of Hi-C paired-end reads
 ===================================================
 

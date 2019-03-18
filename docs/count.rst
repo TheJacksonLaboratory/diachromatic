@@ -14,19 +14,19 @@ Required input files
 GOPHER digest file
 ------------------
 
-Due to the fact that the counts are determined on the restriction fragment level, the digest file :ref:`rst_digest` needs to be passed to ``Diachromatic count``. If the captured viewpoints were designed with GOPHER,
+Due to the fact that the counts are determined on the restriction fragment level, the :ref:`digest file <rstdigest>` needs to be passed to ``Diachromatic count``. If the captured viewpoints were designed with GOPHER,
 this file also includes information about active and inactive restriction fragments.
+
+
 
 
 BAM file with unique valid pairs
 --------------------------------
 
-The second required input file contains the unique valid mapped read pairs in BAM format. If this file was generated `using
-Diachromatic with the align subcommand`_, nothing has to be done or taken care of. If the BAM file was produced in a different way,
+The second required input file contains the unique valid mapped read pairs in BAM format. If this file was generated using
+Diachromatic with the :ref:`align <rstalign>` subcommand, nothing has to be done or taken care of. If the BAM file was produced in a different way,
 make sure that the two reads of any given pair occur consecutively. Furthermore, make sure that duplicates were previously
 removed.
-
-.. _using Diachromatic with the align subcommand: mapping.html
 
 
 Simple and twisted read pairs and counts of directed interaction

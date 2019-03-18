@@ -1,4 +1,5 @@
-.. _rst_digest:
+.. _rstdigest:
+
 Creating an *in silico* restriction digest map for Diachromatic using GOPHER
 ============================================================================
 
