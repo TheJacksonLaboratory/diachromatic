@@ -14,7 +14,7 @@ Welcome to Diachromatic's documentation!
    Mapping paired-end Hi-C reads <mapping>
    Counting unique valid pairs <count>
    Calling SNPs on Hi-C reads <allelspec>
-   testing
+   tutorial
 
 
 

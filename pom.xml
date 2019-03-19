@@ -5,7 +5,7 @@
 
     <groupId>org.jax</groupId>
     <artifactId>diachromatic</artifactId>
-    <version>0.2.1</version>
+    <version>0.3.1</version>
     <packaging>jar</packaging>
 
     <name>diachromatic</name>
@@ -23,12 +23,6 @@
     </properties>
 
     <dependencies>
-        <!-- <dependency>
-            <groupId>org.rosuda.REngine</groupId>
-            <artifactId>REngine</artifactId>
-            <version>2.1.0</version>
-        </dependency> -->
-
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
@@ -186,6 +180,13 @@
             </resource>
             <resource>
                 <directory>src/main/resources/data</directory>
+            </resource>
+            <resource>
+                <directory>src/main/resources/template</directory>
+                <includes>
+                    <include>**.*.js</include>
+                    <include>**/*.ftl</include>
+                </includes>
             </resource>
 
             <resource>

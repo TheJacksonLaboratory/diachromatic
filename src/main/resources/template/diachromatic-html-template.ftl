@@ -285,6 +285,12 @@ footer {
     <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience and security.</p>
   <![endif]-->
 <header class="banner">
+
+<script>${highcharts!""}</script>
+<script>${exporting!""}</script>
+<script>${exportdata!""}</script>
+
+
     <h1>Diachromatic: Preparation and Quality Control of Hi-C and Capture Hi-C Data</h1>
 </header>
 
@@ -319,13 +325,24 @@ footer {
     <a name="truncation"></a>
     <h2>Truncation statistics</h2>
     <p>
-    <ol>
-     <#list truncate as line>
-        <li>${line}</li>
-     </#list>
-    </ol>
+    Truncation was performed with a length threshold of ${length_threshold!"n/a"} nucleotides (reads whose length is below this threshold
+    after truncation are removed, denoted <i>Too short to map</i> in the table). A total of ${removed_pairs_one_or_two_reads_too_short!"n/a"}
+    pairs contained either a forward or a reverse read (or both) that were too short to map.</p>
+    <p>
+     <table class="redTable">
+         <tr><th></th><th>Forward Read</th><th>Reverse Read</th></tr>
+             <tr><td><b>Total Reads</b></td><td>${total_read_pairs_processed!"n/a"}</td><td>${total_read_pairs_processed!"n/a"}</td></tr>
+          <tr><td><b>Truncated Reads</b></td><td>${truncated_forward_reads!"n/a"}</td><td>${truncated_reverse_reads!"n/a"}</td></tr>
+            <tr><td><b>Dangling Reads</b></td><td>${dangling_forward_reads!"n/a"}</td><td>${dangling_reverse_reads!"n/a"}</td></tr>
+     <tr><td><b>Too short to map</b></td><td>${short_removed_forward_reads!"n/a"}</td><td>${short_removed_reverse_reads!"n/a"}</td></tr>
+         </table>
     </p>
+     <div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+            <script type="text/javascript">
+                ${truncationjs!""}
+            		</script>
     </article>
+    <#if align??>
     </section>
       <section>
        <article>
@@ -341,6 +358,9 @@ footer {
         </article>
         </section>
     </section>
+
+    </#if>
+    <#if count??>
       <section>
        <article>
         <a name="count"></a>
@@ -352,9 +372,10 @@ footer {
          </#list>
         </ol>
         </p>
+
         </article>
         </section>
-
+       </#if> <!-- count section -->
 </main>
 
   <section>
