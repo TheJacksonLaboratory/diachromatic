@@ -174,25 +174,25 @@ categories. We applied HiCUP to the associated test data, converted the BAM file
 and applied Diachromatic to the FASTQ files.
 The following table shows the numbers of read pairs for HiCUP vs Diachromatic categories.
 
-+------------------------+-----------------------+---------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
-|                        | **# Processed pairs** | **# Unique paired pairs** | **# Un-ligated** | **# Self-ligated** | **# Chimeric too short** | **# Chimeric too long** | **# Valid** |
-+------------------------+-----------------------+---------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
-| **Same internal**      |                13,760 |                    13,722 |       **13,645** |                  0 |                       13 |                      39 |          25 |
-+------------------------+-----------------------+---------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
-| **Re-ligation**        |                 1,060 |                     1,060 |          **842** |                 58 |                        5 |                      49 |         106 |
-+------------------------+-----------------------+---------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
-| **Contiguous**         |                    58 |                        58 |           **53** |                  0 |                        1 |                       0 |           4 |
-+------------------------+-----------------------+---------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
-| **Same circularised**  |                   428 |                       428 |                3 |            **425** |                        0 |                       0 |           0 |
-+------------------------+-----------------------+---------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
-| **Wrong size**         |                10,321 |                    10,267 |                2 |                  0 |                **1,003** |               **9,181** |          81 |
-+------------------------+-----------------------+---------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
-| **Valid**              |                25,915 |                    25,851 |                1 |                  5 |                      290 |                       6 |  **25,549** |
-+------------------------+-----------------------+---------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
-|                        |                       |                           |                  |                    |                          |                         |             |
-+------------------------+-----------------------+---------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
-| **Same dangling ends** |                 2,475 |                     2,473 |        **2,470** |                  0 |                        1 |                       2 |           0 |
-+------------------------+-----------------------+---------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
++------------------------+-----------------------+-----------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
+|                        | **# Processed pairs** | **# Uniquely mapped pairs** | **# Un-ligated** | **# Self-ligated** | **# Chimeric too short** | **# Chimeric too long** | **# Valid** |
++------------------------+-----------------------+-----------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
+| **Same internal**      |                13,760 |                      13,722 |       **13,645** |                  0 |                       13 |                      39 |          25 |
++------------------------+-----------------------+-----------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
+| **Re-ligation**        |                 1,060 |                       1,060 |          **842** |                 58 |                        5 |                      49 |         106 |
++------------------------+-----------------------+-----------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
+| **Contiguous**         |                    58 |                          58 |           **53** |                  0 |                        1 |                       0 |           4 |
++------------------------+-----------------------+-----------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
+| **Same circularised**  |                   428 |                         428 |                3 |            **425** |                        0 |                       0 |           0 |
++------------------------+-----------------------+-----------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
+| **Wrong size**         |                10,321 |                      10,267 |                2 |                  0 |                **1,003** |               **9,181** |          81 |
++------------------------+-----------------------+-----------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
+| **Valid**              |                25,915 |                      25,851 |                1 |                  5 |                      290 |                       6 |  **25,549** |
++------------------------+-----------------------+-----------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
+|                        |                       |                             |                  |                    |                          |                         |             |
++------------------------+-----------------------+-----------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
+| **Same dangling ends** |                 2,475 |                       2,473 |        **2,470** |                  0 |                        1 |                       2 |           0 |
++------------------------+-----------------------+-----------------------------+------------------+--------------------+--------------------------+-------------------------+-------------+
 
 The HiCUP categories same internal, re-ligation and contiguous corresponds to Diachromatic's un-ligated category.
 HiCUP's same circularised category corresponds to the self-ligated category.
@@ -204,7 +204,7 @@ Quality metrics
 Diachromatic outputs a text file with the quality metrics for each run. The interpretation of the individual metrics is
 as follows.
 
-Percentage of paired read pairs
+Percentage of uniquely mapped pairs
 -------------------------------
 
 Percentage of truncated input read pairs that were paired, i.e. both reads were uniquely mapped to the genome.
@@ -215,7 +215,7 @@ Hi-C pair duplication rate (HPDR)
 ---------------------------------
 
 For Hi-C, the removal of duplicates must take into account the chimeric nature of the underlying fragments.
-The HPDR is defined as the percentage of paired read pairs that were removed because they were recognized to be *Hi-C duplicates*.
+The HPDR is defined as the percentage of uniquely mapped pairs that were removed because they were recognized to be *Hi-C duplicates*.
 Usually, high duplication rates indicate sequencing libraries with low complexity.
 Typical values range between 1% and 50%.
 
@@ -223,7 +223,7 @@ Typical values range between 1% and 50%.
 Percentages of different read pair categories
 ---------------------------------------------
 
-The categorization scheme subdivides the set of all paired read pairs, i.e. unique pairs for which both reads can be uniquely
+The categorization scheme subdivides the set of all uniquely mapped pairs, i.e. unique pairs for which both reads can be uniquely
 mapped into disjoint subsets.
 The percentages of the different categories may be useful for experimental troubleshooting.
 
@@ -254,13 +254,13 @@ distinguished from those arising from **cross-ligation** events.
 Based on the assumption that random cross-ligations between DNA fragments of different chromosomes (*trans*) occur more
 likely as compared to cross-ligations between DNA fragments of the same chromosome (*cis*), the ratio of the numbers of cis
 and trans read pairs is taken as an indicator of poor Hi-C libraries (Wingett 2015, Nagano 2015).
-Within Diachromatic, the CLC is calculated as proportion of trans read pairs amongst all unique paired read pairs.
+Within Diachromatic, the CLC is calculated as proportion of trans read pairs amongst all unique uniquely mapped pairs.
 
 
 Re-ligation coefficient (RLC)
 -----------------------------
 
-Percentage of unique paired read pairs that did not arise from fragments with dangling-ends, i.e. ends that correspond
+Percentage of unique uniquely mapped pairs that did not arise from fragments with dangling-ends, i.e. ends that correspond
 to un-ligated restriction enzyme cutting sites.
 The RLC is intended to reflect the efficiency of the re-ligation step
 and could possibly be used to improve experimental
