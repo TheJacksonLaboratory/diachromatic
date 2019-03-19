@@ -159,6 +159,7 @@ public class ReadPair {
         SELF_LIGATED_SAME_INTERNAL("SLSI"),
         VALID_PAIR("VP"),
         VALID_TOO_SHORT("TS"),
+        STRANGE_INTERNAL("SI"),
         VALID_TOO_LONG("TL");
 
         private String tag;
@@ -627,7 +628,9 @@ public class ReadPair {
             }
         } else {
             // trans pairs and read pairs that are pointing in the same direction cannot arise from self- or un-ligated fragments
-            if (this.hasTooSmallChimericFragmentSize()) {
+            if(this.digestPair.forward()==this.digestPair.reverse() && !this.isTrans()) {
+                setCategoryTag(ReadPairCategory.STRANGE_INTERNAL.getTag());
+            } else if (this.hasTooSmallChimericFragmentSize()) {
                 setCategoryTag(ReadPairCategory.VALID_TOO_SHORT.getTag());
             } else if (this.hasTooBigChimericFragmentSize()) {
                 setCategoryTag(ReadPairCategory.VALID_TOO_LONG.getTag());

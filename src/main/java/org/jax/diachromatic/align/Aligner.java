@@ -85,7 +85,7 @@ public class Aligner {
     private int n_paired_unique_too_short = 0;
     private int n_paired_unique_too_long = 0;
     private int n_paired_unique_valid = 0;
-
+    private int n_paired_strange_internal = 0;
 
     /**
      * Number trans read pairs, i.e. the two reads of a given pair map to different chromosomes. Trans read pairs are
@@ -109,12 +109,14 @@ public class Aligner {
     private int n_paired_unique_too_short_dangling = 0;
     private int n_paired_unique_too_long_dangling = 0;
     private int n_paired_unique_valid_dangling = 0;
+    private int n_paired_strange_internal_dangling = 0;
 
     private int n_paired_unique_un_ligated_trans = 0; // should never be incremented
     private int n_paired_unique_self_ligated_trans = 0; // should never be incremented
     private int n_paired_unique_too_short_trans = 0;
     private int n_paired_unique_too_long_trans = 0;
     private int n_paired_unique_valid_trans = 0;
+    private int n_paired_strange_internal_trans = 0;
 
     /**
      * Lower and upper bounds for sizes of chimeric fragments. Are passed as arguments to the constructor of {@link ReadPair}
@@ -331,6 +333,8 @@ public class Aligner {
                     n_paired_unique_too_short++;}
                 if(pair.getCategoryTag().equals("TL")) {
                     n_paired_unique_too_long++;}
+                if(pair.getCategoryTag().equals("SI")) {
+                    n_paired_strange_internal++;}
 
                 if(pair.isDanglingEnd()) {
                     n_paired_unique_dangling++;
@@ -344,6 +348,8 @@ public class Aligner {
                         n_paired_unique_too_short_dangling++;}
                     if(pair.getCategoryTag().equals("TL")) {
                         n_paired_unique_too_long_dangling++;}
+                    if(pair.getCategoryTag().equals("SI")) {
+                        n_paired_strange_internal_dangling++;}
                 }
 
                 if(pair.isTrans()) {
@@ -358,6 +364,8 @@ public class Aligner {
                         n_paired_unique_too_short_trans++;}
                     if(pair.getCategoryTag().equals("TL")) {
                         n_paired_unique_too_long_trans++;}
+                    if(pair.getCategoryTag().equals("SI")) {
+                        n_paired_strange_internal_trans++;}
                 }
             } else {
                 continue;
@@ -563,7 +571,9 @@ public class Aligner {
         printStream.print("\tToo long:\t" + n_paired_unique_too_long + String.format(" (%.2f%%)", 100.0* n_paired_unique_too_long /n_paired_unique) + "\n");
         printStream.print("\tValid:\t" + n_paired_unique_valid + String.format(" (%.2f%%)", 100.0* n_paired_unique_valid /n_paired_unique) + "\n");
 
-        printStream.print("Note: These three categories are disjoint subsets of all unique paired read pairs, and percentages refer to this superset." + "\n\n");
+        printStream.print("Strange internal:\t" + n_paired_strange_internal + String.format(" (%.2f%%)", 100.0* n_paired_strange_internal /n_paired_unique) + "\n");
+
+        printStream.print("Note: These four categories are disjoint subsets of all unique paired read pairs, and percentages refer to this superset." + "\n\n");
 
         printStream.print("Dangling end pairs total:\t" + n_paired_unique_dangling + String.format(" (%.2f%%)", 100.0* n_paired_unique_dangling /n_paired_unique) + "\n");
         printStream.print("Note: Dangling end pairs may occur in all categories, and a read pair with a dangling end can still be valid." + "\n\n");
@@ -593,6 +603,8 @@ public class Aligner {
         printStream.print(String.format("n_paired_unique_too_short_dangling=%d (%.2f%% of all unique valid too short pairs)\n", n_paired_unique_too_short_dangling, (100.0 * n_paired_unique_too_short_dangling / n_paired_unique_too_short)));
         printStream.print(String.format("n_paired_unique_too_long_dangling=%d (%.2f%% of all unique valid too long pairs)\n", n_paired_unique_too_long_dangling, (100.0 * n_paired_unique_too_long_dangling / n_paired_unique_too_long)));
         printStream.print(String.format("n_paired_unique_valid_dangling=%d (%.2f%% of all unique valid pairs)\n", n_paired_unique_valid_dangling, (100.0 * n_paired_unique_valid_dangling / n_paired_unique_valid)));
+        printStream.print(String.format("n_paired_strange_internal_dangling=%d (%.2f%% of all unique valid pairs)\n", n_paired_strange_internal_dangling, (100.0 * n_paired_strange_internal_dangling / n_paired_unique_valid)));
+
         printStream.print("\n");
         printStream.print("Fractions of trans pairs:\n");
         printStream.print(String.format("n_paired_unique_un_ligated_trans=%d (%.2f%% of all unique un-ligated pairs)\n", n_paired_unique_un_ligated_trans, (100.0 * n_paired_unique_un_ligated_trans / n_paired_unique_un_ligated)));
@@ -600,7 +612,9 @@ public class Aligner {
         printStream.print(String.format("n_paired_unique_too_short_trans=%d (%.2f%% of all unique valid too short pairs)\n", n_paired_unique_too_short_trans, (100.0 * n_paired_unique_too_short_trans / n_paired_unique_too_short)));
         printStream.print(String.format("n_paired_unique_too_long_trans=%d (%.2f%% of all unique valid too long pairs)\n", n_paired_unique_too_long_trans, (100.0 * n_paired_unique_too_long_trans / n_paired_unique_too_long)));
         printStream.print(String.format("n_paired_unique_valid_trans=%d (%.2f%% of all unique valid pairs)\n", n_paired_unique_valid_trans, (100.0 * n_paired_unique_valid_trans / n_paired_unique_valid)));
+        printStream.print(String.format("n_paired_strange_internal_trans=%d (%.2f%% of all unique valid pairs)\n", n_paired_strange_internal_trans, (100.0 * n_paired_strange_internal_trans / n_paired_unique_valid)));
         printStream.print(String.format("n_total_trans=%d (%.2f%% of all unique paired read pairs)\n", n_paired_unique_trans, (100.0 * n_paired_unique_trans/n_paired_unique)));
+
     }
 
     /**
