@@ -6,7 +6,15 @@ Here, we present a complete tutorial for using Diachromatic for processing and q
 
 The test dataset
 ~~~~~~~~~~~~~~~~
-Note: for now I am using the HiCUP test dataset, but we should create our own.
+Note: for now I am using the HiCUP test dataset, but we should create our own. I am describing the entire tutorial using the
+HiCUP dataset for now TODO make this up to date!
+
+To get the data, visit the `download site <https://www.bioinformatics.babraham.ac.uk/projects/download.html#hicup>`_ and
+download the HiCUP_test_dataset. Extract it using this command. ::
+
+    $  tar xvfz test_dataset.tar.gz
+
+This will create a directory called ``test_dataset``, which we will symbolize with ``TESTDIR`` in the following examples.
 
 
 
@@ -20,10 +28,10 @@ is too short to be mapped, the entire read pair is discarded. This is performed 
 
 
     $ java -jar Diachromatic.jar truncate \
-        -q test_dataset1.fastq \
-        -r test_dataset2.fastq \
+        -q ${TESTDIR}/test_dataset1.fastq \
+        -r ${TESTDIR}/test_dataset2.fastq \
         -e HinDIII
-        -o HinDIII
+        -o HinD3
         -x foo
 
 In practice, only about XXXX percent of the readpairs are truncated.
@@ -57,6 +65,21 @@ Use the following command to run the alignment step. ::
 
 This document contains a summary of how some of the unit tests were designed. Probably this page can/should be
 deleted before publication.
+
+
+
+Summarize
+~~~~~~~~~
+To run the Summarize command with the truncate data, run the following command. ::
+
+    $ java -jar target/Diachromatic.jar summarize \
+        -o HinD3 \
+        -x foo \
+        -t HinD3/foo.truncation.stats
+
+
+This will generate an HTML file called ``HinD3/foo.summary.stats.html``.
+
 
 HiCUP
 ~~~~~

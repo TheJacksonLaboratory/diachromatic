@@ -28,7 +28,12 @@ Running Diachromatic's *truncate* subcommand
 
 Use the following command to run the truncation step. ::
 
-    $ java -jar Diachromatic.jar truncate -q test1.fastq -r test2.fastq -e HindIII
+    $ java -jar Diachromatic.jar truncate \
+        -q test1.fastq \
+        -r test2.fastq \
+        -e HindIII \
+        -x prefix \
+        -o outdir
 
 
 The following table lists all possible arguments.
