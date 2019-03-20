@@ -20,5 +20,8 @@ And view the documentation as local files at
 ``diachromatic/docs/_build/html/index.html 
 ``
 
+## Genes manusciprt
+manuscript:
+https://drive.google.com/drive/folders/1_hOdjZVENnSt9r0xJHqWhD0GREDJ_heY?usp=sharing
 
  
