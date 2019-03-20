@@ -30,10 +30,24 @@ public class Bowtie2Runner {
         if (! checkBowtie2(bowtiepath) ){
             throw new DiachromaticException("Could not start bowtie");
         }
+
         pathToBowtieIndex=btIndexPath;
         pathToInputFastq=inputFastqPath;
         outname=outnam;
+        checkExistenceOfInputFile();
         this.threadNum=threadNum;
+    }
+
+
+    /** Throw an exception of the input file (which should be something like
+     * foo.truncated_R1.fastq.gz) cannot be found
+     * @throws DiachromaticException if the input file cannot be found.
+     */
+    private void checkExistenceOfInputFile() throws  DiachromaticException{
+        File f = new File(pathToInputFastq);
+        if (!f.exists()) {
+            throw new DiachromaticException("Could not find input truncated FASTQ file at " + pathToInputFastq);
+        }
     }
 
 
