@@ -54,7 +54,7 @@ public class AlignCommand extends Command {
 
 
     @Parameter(names={"-l", "--lower-frag-size-limit"}, description = "Lower limit for fragment size.", order = 10)
-    private int lowerFragSize = 150;
+    private int lowerFragSize = 50;
     @Parameter(names={"-u", "--upper-frag-size-limit"}, description = "Upper limit for fragment size.", order = 11)
     private int upperFragSize = 800;
     @Parameter(names={"-s", "--self-ligation-frag-size-limit"}, description = "Upper limit for self-ligation fragment size.", order = 12)

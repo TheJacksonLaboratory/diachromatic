@@ -75,8 +75,9 @@ junction (`Wingett 2015 <https://www.ncbi.nlm.nih.gov/pubmed/26835000/>`_).
 
 We assume that the size distribution of chimeric fragments results from the parameters used for shearing
 and thus corresponds to overall fragment size distribution in the sequencing library.
-Diachromatic uses lower and upper thresholds T1\ :sub:`min` and T1\ :sub:`max` for valid sizes of sheared fragments
- (these parameters need to be specified by the user).
+Diachromatic uses lower  and upper thresholds T1\ :sub:`min` and T1\ :sub:`max` for valid sizes of sheared fragments.
+These parameters need to be specified by the user using the flags ``-l`` (Default: 50) and ``-u`` (Default: 800) and should be set according to
+the expected distribution of sizes of shared fragments within the library.
 Read pairs arising from chimeric fragments with a calculated size d\ :sub:`c` that is outside the specified range are
 categorized as *too small* or *too large* artifacts.
 All other read pairs arising from chimeric fragments are defined to be *valid pairs* that can be used for downstream
