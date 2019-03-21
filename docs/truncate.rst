@@ -5,9 +5,17 @@ Truncation of chimeric reads
 Ligation junctions, chimeric fragments and chimeric reads
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Valid Hi-C read pairs originate from chimeric fragments with DNA from two different loci linked by the ligation
-junction. Depending on whether the sticky ends of the dangling ends were filled or not, the ligation junction consists
-of either one or two restriction enzyme cutting motifs.
+Valid Hi-C read pairs originate from chimeric fragments with DNA from two different loci linked by the ligation junction.
+Most experimental protocols for capture Hi-C fill in the sticky ends with biotinylated nucleotides.
+This alters the original restriction enzyme motif in a characteristic way.
+For instance, the enzyme HinDIII cuts the DNA in the following manner:
+
+.. figure:: img/HindIII_cut_site.png
+    :align: center
+
+Therefore, if some sequence contains a HindIII site, '5-NAAGCTTN-3', restriction followed by filling in and religation of the resulting blunt ends with produce the following hybrid sequence '5-NAAGCTAGCTTN-3'.
+Diachromatic searches for hybrid patterns like this according the restriction enzyme or enzymes that were used, and truncates the reads accordingly.
+Rarely, protocols do not fill in the ends but instead perform religation and thereby recreate the original restriction motif.
 
 .. figure:: img/sticky_and_blunt_ends.png
     :align: center
