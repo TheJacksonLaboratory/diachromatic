@@ -260,11 +260,7 @@ public class Aligner {
 
         SAMFileHeader header = sam_reader_R1.getFileHeader();
         SAMFileHeader header2 = sam_reader_R2.getFileHeader();
-        // first add program records from the reverse SAM file
-        List<SAMProgramRecord> pgList = header2.getProgramRecords();
-        for (SAMProgramRecord spr : pgList) {
-            //header.addProgramRecord(spr); // TODO: Why is this commented out? Repair or remove!
-        }
+
         // add the new program record from Diachromatic
         String programGroupId = "Diachromatic\tPN:Diachromatic\tVN:" + VERSION;
         SAMProgramRecord programRecord = new SAMProgramRecord(programGroupId);
