@@ -44,7 +44,7 @@ Use the following command to run the truncation step. ::
         -o outdir
 
 
-The following table lists all possible arguments.
+The following table lists all possible arguments:
 
 +--------------+-----------------+---------------+----------+----------------------------------------------------------+---------+
 | Short option | Long option     | Example       | Required | Description                                              | Default |
@@ -57,9 +57,9 @@ The following table lists all possible arguments.
 +--------------+-----------------+---------------+----------+----------------------------------------------------------+---------+
 | -s           | --sticky-ends   | false         | no       | True, if no fill-in of sticky ends was performed.        | false   |
 +--------------+-----------------+---------------+----------+----------------------------------------------------------+---------+
-| -od          | --out-directory | cd4v2         | no       | Directory containing the output of the truncate command. | results |
+| -o           | --out-directory | cd4v2         | yes      | Directory containing the output of the truncate command. | results |
 +--------------+-----------------+---------------+----------+----------------------------------------------------------+---------+
-| -op          | ---out-prefix   | stim_rep1     | no       | Prefix for all generated files in output directory.      | prefix  |
+| -x           | ---out-prefix   | stim_rep1     | yes      | Prefix for all generated files in output directory.      | prefix  |
 +--------------+-----------------+---------------+----------+----------------------------------------------------------+---------+
 
 Output files
