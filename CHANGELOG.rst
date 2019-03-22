@@ -2,9 +2,15 @@
 Changelog
 =========
 
--------
+------
+v0.4.1
+------
+- integration with highchart for data display in HTML output
+- solved several issues with memory efficiency
+
+------
 v0.2.1
--------
+------
 - extensive refactoring and revision of code
 - switch to JCommand user interface
 

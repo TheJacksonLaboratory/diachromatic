@@ -23,13 +23,16 @@ public class SummarizeCommand extends Command {
     private static final Logger logger = LogManager.getLogger();
 
     /** Path to text file with summary statistics produced with the truncate command. */
-    @Parameter(names={"-t","--truncate"}, required = true, description = "Path to diachromatic truncate summarize file.", order = 3)
+//    @Parameter(names={"-t","--truncate"}, required = true, description = "Path to diachromatic truncate summarize file.", order = 3)
     private String truncateFile = null;
 
 
     /** Path to text file with summary statistics produced with the align command. */
-    @Parameter(names={"-a","--align"}, description = "Path to diachromatic align summarize file.", order = 4)
+//    @Parameter(names={"-a","--align"}, description = "Path to diachromatic align summarize file.", order = 4)
     private String alignFile = null;
+
+    @Parameter(names={"--summaries"},required = true,description="Path to directory containing summary files")
+    private String summariesDirectory;
 
     /** Path to text file with summary statistics produced with the count command. */
     @Parameter(names={"-c","--count"}, description = "Path to diachromatic count summarize file.", order = 5)
@@ -46,6 +49,9 @@ public class SummarizeCommand extends Command {
     @Override
     public void execute() throws DiachromaticException {
         makeOutdirectoryIfNeeded();
+        truncateFile = String.format("%s%s%s.truncation.stats.txt",summariesDirectory,File.separator,filenamePrefix);
+        alignFile= String.format("%s%s%s.align.stats.txt",summariesDirectory,File.separator,filenamePrefix);
+
         String outputDirAndFilePrefix = String.format("%s%s%s", outputDir, File.separator, filenamePrefix);
         Summarizer summarizer = new Summarizer(truncateFile, alignFile, countFile);
         summarizer.outputFile(outputDirAndFilePrefix);

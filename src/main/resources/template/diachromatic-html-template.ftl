@@ -342,24 +342,63 @@ footer {
                 ${truncationjs!""}
             		</script>
     </article>
-    <#if align??>
+
     </section>
       <section>
        <article>
         <a name="align"></a>
         <h2>Align statistics</h2>
         <p>
-        <ol>
-         <#list align as line>
-            <li>${line}</li>
-         </#list>
-        </ol>
+        Alignment was TODO--Write a summary here
         </p>
+        <p>
+        TODO -- consider reformating the table because many of the items are for read-pairs and not reads
+             <table class="redTable">
+                 <tr><th></th><th>Forward Read</th><th>Reverse Read</th></tr>
+                     <tr><td><b>Total Reads</b></td><td>${align_total_read_pairs_processed!"n/a"}</td><td>${align_total_read_pairs_processed!"n/a"}</td></tr>
+                  <tr><td><b>Unmapped Read pairs</b></td><td>${align_unmapped_read_pairs!"n/a"}</td><td>${align_unmapped_read_pairs!"n/a"}</td></tr>
+             <tr><td><b>Unmapped Reads</b></td><td>${align_unmapped_R1_reads!"n/a"}</td><td>${align_unmapped_R2_reads!"n/a"}</td></tr>
+                <tr><td><b>Multimapped Read Pairs</b></td><td>${align_multimapped_read_pairs!"n/a"}</td><td>${align_multimapped_read_pairs!"n/a"}</td></tr>
+                  <tr><td><b>Multimapped Reads</b></td><td>${align_multimapped_R1_reads!"n/a"}</td><td>${align_multimapped_R2_reads!"n/a"}</td></tr>
+       <tr><td><b>Paired Read pairs</b></td><td>${align_paired_read_pairs!"n/a"}</td><td>${align_paired_read_pairs!"n/a"}</td></tr>
+       <tr><td><b>Multimapped Reads</b></td><td>${align_unique_paired_read_pairs!"n/a"}</td><td>${align_unique_paired_read_pairs!"n/a"}</td></tr>
+       <tr><td><b>Multimapped Reads</b></td><td>${align_duplicated_pairs!"n/a"}</td><td>${align_duplicated_pairs!"n/a"}</td></tr>
+        </table>
+            </p>
+              <div id="container_align" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+                        <script type="text/javascript">
+                            ${alignjs!""}
+                        		</script>
         </article>
         </section>
     </section>
 
-    </#if>
+
+     <section>
+           <article>
+            <a name="align"></a>
+            <h2>Artefact statistics</h2>
+            <p>
+            Artefacts are TODO--Write a summary here
+            </p>
+            <p>
+            TODO-- update table
+                 <table class="redTable">
+                     <tr><th></th><th>Forward Read</th><th>Reverse Read</th></tr>
+                         <tr><td><b>Total Reads</b></td><td>${align_total_read_pairs_processed!"n/a"}</td><td>${align_total_read_pairs_processed!"n/a"}</td></tr>
+                      <tr><td><b>Unmapped Read pairs</b></td><td>${align_unmapped_read_pairs!"n/a"}</td><td>${align_unmapped_read_pairs!"n/a"}</td></tr>
+                 <tr><td><b>Unmapped Reads</b></td><td>${align_unmapped_R1_reads!"n/a"}</td><td>${align_unmapped_R2_reads!"n/a"}</td></tr>
+                    <tr><td><b>Multimapped Read Pairs</b></td><td>${align_multimapped_read_pairs!"n/a"}</td><td>${align_multimapped_read_pairs!"n/a"}</td></tr>
+                      <tr><td><b>Multimapped Reads</b></td><td>${align_multimapped_R1_reads!"n/a"}</td><td>${align_multimapped_R2_reads!"n/a"}</td></tr>
+
+                                 </table>
+                </p>
+            </article>
+            </section>
+        </section>
+
+
+
     <#if count??>
       <section>
        <article>

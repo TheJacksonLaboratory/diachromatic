@@ -526,32 +526,30 @@ public class Aligner {
 
         PrintStream printStream = new PrintStream(new FileOutputStream(outputTxtStats));
 
-        printStream.print("Summary statistics\n");
-        printStream.print("==================\n\n");
-        printStream.print("\n");
-        printStream.print("Alignment statistics\n");
-        printStream.print("--------------------\n");
-        printStream.print("\n");
-        printStream.print("Total number of read pairs processed:\t" + n_total_input_read_pairs + "\n");
+//        printStream.print("Summary statistics\n");
+//        printStream.print("==================\n\n");
+//        printStream.print("\n");
+//        printStream.print("Alignment statistics\n");
+//        printStream.print("--------------------\n");
+//        printStream.print("\n");
+        printStream.print("total_read_pairs_processed:\t" + n_total_input_read_pairs + "\n");
 
-        printStream.print("Number of unmapped read pairs:\t" + n_unmappedPair + String.format(" (%.2f%%)", 100.0*n_unmappedPair/ n_total_input_read_pairs) + "\n");
-        printStream.print("\tNumber of unpapped R1 reads:\t" + n_unmapped_R1 + "\n");
-        printStream.print("\tNumber of unpapped R2 reads:\t" + n_unmapped_R2 + "\n");
+        printStream.print("unmapped_read_pairs:" + n_unmappedPair + String.format(" (%.2f%%)", 100.0*n_unmappedPair/ n_total_input_read_pairs) + "\n");
+        printStream.print("unmapped_R1_reads:" + n_unmapped_R1 + "\n");
+        printStream.print("unmapped_R2_reads:" + n_unmapped_R2 + "\n");
 
-        printStream.print("Number of multimapped read pairs:\t" + n_multimappedPair + String.format(" (%.2f%%)", 100.0*n_multimappedPair/ n_total_input_read_pairs) + "\n");
-        printStream.print("\tNumber of multimapped R1 reads:\t" + n_multimapped_R1 + "\n");
-        printStream.print("\tNumber of multimapped R2 reads:\t" + n_multimapped_R2 + "\n");
-        printStream.print("Note:\tThere may an overlap between unmapped and multimapped pairs." + "\n");
+        printStream.print("multimapped_read_pairs:" + n_multimappedPair + String.format(" (%.2f%%)", 100.0*n_multimappedPair/ n_total_input_read_pairs) + "\n");
+        printStream.print("multimapped_R1_reads:" + n_multimapped_R1 + "\n");
+        printStream.print("multimapped_R2_reads:" + n_multimapped_R2 + "\n");
+//        printStream.print("Note:\tThere may an overlap between unmapped and multimapped pairs." + "\n");
 
-        printStream.print("Number of paired read pairs:\t" + n_paired + String.format(" (%.2f%%)", 100.0*n_paired/ n_total_input_read_pairs) + "\n");
-        printStream.print("\tNumber of unique paired read pairs:\t" + n_paired_unique + "\n");
-        printStream.print("\tNumber of duplicated pairs:\t" + n_paired_duplicated + "\n");
-        printStream.print("\n");
+        printStream.print("paired_read_pairs:" + n_paired + String.format(" (%.2f%%)", 100.0*n_paired/ n_total_input_read_pairs) + "\n");
+        printStream.print("unique_paired_read_pairs:" + n_paired_unique + "\n");
+        printStream.print("duplicated_pairs:\t" + n_paired_duplicated + "\n");
         printStream.print("\n");
         printStream.print("Artifact statistics\n");
         printStream.print("-------------------\n");
         printStream.print("\n");
-
         printStream.print("Disjoint categories:\n");
 
         int n_paired_unique_un_ligated_total=n_paired_unique_un_ligated+n_paired_unique_un_ligated_same_internal;
@@ -620,7 +618,7 @@ public class Aligner {
     /**
      * This function assembles the names of all summarize files.
      *
-     * @param outputPathPrefix
+     * @param outputPathPrefix The prefix that will be used for output files, e.g.,  foo for foo.valid_pairs.aligned.bam
      */
     private void createOutputNames(String outputPathPrefix) {
         outputBAMvalid = String.format("%s.%s", outputPathPrefix, "valid_pairs.aligned.bam");

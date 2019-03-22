@@ -21,7 +21,7 @@ class TruncationJavaScript {
     }
 
 
-    public String getJavaScript() {
+    String getJavaScript() {
         StringBuilder sb = new StringBuilder();
         sb.append("Highcharts.chart('container', {\n" +
                 "    chart: {\n" +
@@ -77,78 +77,3 @@ class TruncationJavaScript {
 
 }
 
-/*
-     name: 'Berlin',
-        data: [42.4, 33.2, 34.5, 39.7, 52.6, 75.5, 57.4, 60.4, 47.6, 39.1, 46.8, 51.1]
-
-    }]
-});
-
-
-
-	// Mapping Analysis
-		$(function () {
-			$('#truncating_mapping_plot').highcharts({
-				colors: [
-				   '#0d233a',
-				   '#2f7ed8',
-				   '#8bbc21',
-				   '#910000',
-				   '#1aadce',
-				   '#492970',
-				   '#f28f43',
-				   '#77a1e5',
-				   '#c42525',
-				   '#a6c96a'
-				],
-				chart: {
-					type: 'column',
-					marginRight:0
-				},
-				title: {
-					text: ''
-				},
-				xAxis: {
-					categories: ['Total Reads',
-				                                 'Not Truncated',
-					                         'Truncated',
-                                                                 'Too short to map',
-								 'Unique Alignments',
-								 'Multiple Alignments',
-								 'Failed To Align',
-								 'Paired']
-				},
-				yAxis: {
-					title: {
-						text: 'Number of Reads'
-					}
-				},
-				credits: {
-					enabled: false
-				},
-				tooltip: {
-					formatter: function() {
-						if(this.series.name == 'Read 1'){
-							return '<b>'+ this.series.name + '</b><br/>'+
-								this.x + ': ' +((this.y / 99742) * 100).toFixed(1) + '%';
-						} else {
-							return '<b>'+ this.series.name + '</b><br/>'+
-								this.x + ': ' +((this.y / 99742) * 100).toFixed(1) + '%';
-						}
-					}
-				},
-				legend: {
-					align: 'right',
-					verticalAlign: 'top',
-					y: 10
-				},
-				series: [{
-					name: 'Read 1',
-					data: [99742, 98802, 940, 333, 71235, 16631, 11543, 54021]
-				}, {
-					name: 'Read 2',
-					data: [99742, 98875, 867, 339, 69787, 17419, 12197, 54021]
-				}]
-			});
-		});
- */

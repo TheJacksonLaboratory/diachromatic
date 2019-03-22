@@ -28,7 +28,7 @@ public class Summarizer {
     /** Map of data that will be used for the FreeMark template. */
     private final Map<String, Object> templateData= new HashMap<>();
     /** FreeMarker configuration object. */
-    protected final Configuration cfg;
+    private final Configuration cfg;
 
 
     public Summarizer(String truncFile, String alignFile, String countFile) {
@@ -52,7 +52,7 @@ public class Summarizer {
         if(alignFile!=null) {
             parseAlignData();
         }
-        if(alignFile!=null) {
+        if(countFile!=null) {
             parseCountData();
         }
     }
@@ -174,26 +174,90 @@ public class Summarizer {
 
     private void parseAlignData() {
         logger.trace("Parsing the align data at {}", alignPath);
-        List<String> alignMap = new ArrayList<>();
-        try (
-                BufferedReader br = new BufferedReader(new FileReader(alignPath))) {
-            String line;
-            while ((line=br.readLine())!=null) {
-                System.out.println(line);
-                alignMap.add(line);
+        logger.trace("Parsing the truncation data at {}", truncatePath);
+        int UNINITIALIZED=-1;
+        int total_read_pairs_processed=UNINITIALIZED;
+        int unmapped_read_pairs=UNINITIALIZED;
+        int unmapped_R1_reads=UNINITIALIZED;
+        int unmapped_R2_reads=UNINITIALIZED;
+        int multimapped_read_pairs=UNINITIALIZED;
+        int multimapped_R1_reads=UNINITIALIZED;
+        int multimapped_R2_reads=UNINITIALIZED;
+        int paired_read_pairs=UNINITIALIZED;
+        int unique_paired_read_pairs=UNINITIALIZED;
+        int duplicated_pairs=UNINITIALIZED;
+
+       String line;
+        try (BufferedReader br = new BufferedReader(new FileReader(alignPath))) {
+        while ((line=br.readLine())!=null) {
+            System.out.println(line);
+            String[] fields = line.split(":");
+            if (fields.length != 2) continue; // skip non key-value lines, they are comments
+            templateData.put(String.format("align_%s",fields[0].trim()), fields[1].trim());
+            System.err.println( String.format("align_%s",fields[0]));
+            switch (fields[0]) {
+                case "total_read_pairs_processed":
+                    total_read_pairs_processed = getIntegerValue(fields[1]);
+                    break;
+                case "unmapped_read_pairs":
+                    unmapped_read_pairs=getIntegerValue(fields[1]);
+                    break;
+                case "unmapped_R1_reads":
+                    unmapped_R1_reads=getIntegerValue(fields[1]);
+                   break;
+                case "unmapped_R2_reads":
+                    unmapped_R2_reads=getIntegerValue(fields[1]);
+                    break;
+                case "multimapped_read_pairs":
+                    multimapped_read_pairs=getIntegerValue(fields[1]);
+                    break;
+                case "multimapped_R1_reads":
+                    multimapped_R1_reads=getIntegerValue(fields[1]);
+                    break;
+                case "multimapped_R2_reads":
+                    multimapped_R2_reads=getIntegerValue(fields[1]);
+                    break;
+                case "paired_read_pairs":
+                    paired_read_pairs=getIntegerValue(fields[1]);
+                    break;
+                case "unique_paired_read_pairs":
+                    unique_paired_read_pairs=getIntegerValue(fields[1]);
+                    break;
+                case "duplicated_pairs":
+                    duplicated_pairs=getIntegerValue(fields[1]);
+                    break;
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
-        logger.trace("Putting a total of {} items into the align map", alignMap.size());
-        templateData.put("align",alignMap);
+
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+
+    /*
+    int =UNINITIALIZED;
+        int =UNINITIALIZED;
+        int =UNINITIALIZED;
+        int =UNINITIALIZED;
+        int =UNINITIALIZED;
+        int =UNINITIALIZED;
+        int =UNINITIALIZED;
+        int =UNINITIALIZED;
+        int =UNINITIALIZED;
+        int =UNINITIALIZED;
+     */
+        AlignJavaScript js = new  AlignJavaScript(total_read_pairs_processed,
+                unmapped_read_pairs,unmapped_R1_reads,
+                unmapped_R2_reads,multimapped_read_pairs,
+                multimapped_R1_reads,multimapped_R2_reads,
+                paired_read_pairs,unique_paired_read_pairs,duplicated_pairs);
+        templateData.put("alignjs",js.getJavaScript());
+        System.err.println(js.getJavaScript());
     }
 
     private void parseCountData() {
         logger.trace("Parsing the count data at {}", countPath);
         List<String> countMap = new ArrayList<>();
-        try (
-                BufferedReader br = new BufferedReader(new FileReader(countPath))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(countPath))) {
             String line;
             while ((line=br.readLine())!=null) {
                 System.out.println(line);
