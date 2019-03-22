@@ -218,14 +218,16 @@ The wrong size category is corresponds to the sum of too short and too large chi
 
 Quality metrics
 ~~~~~~~~~~~~~~~
-Diachromatic outputs a text file with the quality metrics for each run. The interpretation of the individual metrics is
-as follows.
+Diachromatic outputs a text file with the quality metrics for each run. The following texts provides possible interpretations
+of these quality metrics and exemplary numbers for the `CTCF depletion Hi-C datasets of Nora et al. 2017`_.
+
+.. _CTCF depletion Hi-C datasets of Nora et al. 2017: https://www.ncbi.nlm.nih.gov/pubmed/2852575
 
 Percentage of uniquely mapped pairs
 -----------------------------------
 
 Percentage of truncated input read pairs that were paired, i.e. both reads were uniquely mapped to the genome.
-Typical values range between 40% and 60%.
+For the CTCF depletion datasets, percentages range from 48.54% to 56.66%.
 
 
 Hi-C pair duplication rate (HPDR)
@@ -234,25 +236,25 @@ Hi-C pair duplication rate (HPDR)
 For Hi-C, the removal of duplicates must take into account the chimeric nature of the underlying fragments.
 The HPDR is defined as the percentage of uniquely mapped pairs that were removed because they were recognized to be *Hi-C duplicates*.
 Usually, high duplication rates indicate sequencing libraries with low complexity.
-Typical values range between 1% and 50%.
+For the CTCF depletion data, the proportion of unique read pairs amongst all uniquely mapped read pairs ranges between
+1.26% and 21.13%.
 
 
 Percentages of different read pair categories
 ---------------------------------------------
 
-The categorization scheme subdivides the set of all uniquely mapped pairs, i.e. unique pairs for which both reads can be uniquely
-mapped into disjoint subsets.
-The percentages of the different categories may be useful for experimental troubleshooting.
+The categorization scheme subdivides the set of all uniquely mapped unique pairs into disjoint subsets.
+The percentages of the individual categories may be useful for experimental troubleshooting.
 
-**Percentage of un-ligated read pairs:** A high percentages of un-ligated pairs indicate poor enrichment for ligation junctions, i.e. the streptavidin pull-down of biotinylated Hi-C ligation did not perform well. Typical values range between 5% and 15%.
+**Percentage of un-ligated read pairs:** High percentages of un-ligated pairs indicate poor enrichment for ligation junctions, i.e. the streptavidin pull-down of biotinylated Hi-C ligation did not perform well. For the CTCF depletion data, the percentages of un-ligated pairs range between 9.61% and 26.17%.
 
-**Percentage of self-ligated read pairs:** In practice, self-ligation seems not to occur  very often. Typical values are below 1%.
+**Percentage of self-ligated read pairs:** In practice, self-ligation seems not to occur  very often. For the CTCF depletion data, the percentages of self-ligated pairs range between 0.95% and 1.89%.
 
-**Percentage of short chimeric read pairs:** A high percentage of short chimeric fragments may indicate that either the chosen lower threshold does not match the experimental settings, or conversely, the parameters for shearing need to be adjusted. Typical values are smaller than 10%.
+**Percentage of too short chimeric read pairs:** A high percentage (5%<) of too short chimeric fragments may indicate that the chosen lower size threshold for sheared fragments (``-l``) does not match the experimental settings. Diachromatic generates a plot for distribution of fragment sizes (see below) may provide guidance.
 
-**Percentage of large chimeric read pairs:** Essentially, the same applies as for the short chimeric category.
+**Percentage of too large chimeric read pairs:** Essentially, the same applies as for the too short chimeric category.
 
-**Percentage of valid read pairs:** The more, the better. For a successful experiment, typical values range between 65% and 85%.
+**Percentage of valid read pairs:** The more, the better. For the the CTCF depletion data, percentages range between 62.30% and 81.35%.
 
 
 Yield of valid pairs (YVP)
@@ -260,7 +262,7 @@ Yield of valid pairs (YVP)
 
 Percentage of truncated input read pairs that were finally categorized as valid pairs usable for downstream analysis.
 The YVP is intended to reflect the overall efficiency of the Hi-C protocol.
-Typical values range between 10% and 40%.
+For the the CTCF depletion data, the percentages range between 24.37% and 42.77%.
 
 
 Cross-ligation coefficient (CLC)
@@ -271,18 +273,19 @@ distinguished from those arising from **cross-ligation** events.
 Based on the assumption that random cross-ligations between DNA fragments of different chromosomes (*trans*) occur more
 likely as compared to cross-ligations between DNA fragments of the same chromosome (*cis*), the ratio of the numbers of cis
 and trans read pairs is taken as an indicator of poor Hi-C libraries (Wingett 2015, Nagano 2015).
-Within Diachromatic, the CLC is calculated as proportion of trans read pairs amongst all unique uniquely mapped pairs.
+Within Diachromatic, the CLC is calculated as proportion of trans read pairs amongst all uniquely mapped unique pairs.
+For the CTCF depletion dataset, percentages range between 18.48% and 28.24%.
 
 
 Re-ligation coefficient (RLC)
 -----------------------------
 
-Percentage of unique uniquely mapped pairs that did not arise from fragments with dangling-ends, i.e. ends that correspond
+Percentage of uniquely mapped unique pairs that did not arise from fragments with dangling-ends, i.e. ends that correspond
 to un-ligated restriction enzyme cutting sites.
 The RLC is intended to reflect the efficiency of the re-ligation step
 and could possibly be used to improve experimental
 conditions for re-ligation.
-
+For the CTCF depletion dataset, percentages range between 97.04% and 98.92%.
 
 Size distribution of chimeric and un-ligated fragments
 ------------------------------------------------------
@@ -334,9 +337,9 @@ The following table lists all possible arguments.
 +--------------+--------------------------+---------------------------------------------+----------+----------------------------------------------------------------------+---------+
 | -d           | --digest-file            | /data/GOPHER/hg38_DpnII_DigestedGenome.txt  | yes      | Path to the digest file produced with GOPHER.                        | --      |
 +--------------+--------------------------+---------------------------------------------+----------+----------------------------------------------------------------------+---------+
-| -od          | --out-directory          | cd4v2                                       | no       | Directory containing the output of the align subcommand.             | results |
+| -o           | --out-directory          | cd4v2                                       | no       | Directory containing the output of the align subcommand.             | results |
 +--------------+--------------------------+---------------------------------------------+----------+----------------------------------------------------------------------+---------+
-| -op          | ---out-prefix            | stim_rep1                                   | no       | Prefix for all generated files in output directory.                  | prefix  |
+| -x           | ---out-prefix            | stim_rep1                                   | no       | Prefix for all generated files in output directory.                  | prefix  |
 +--------------+--------------------------+---------------------------------------------+----------+----------------------------------------------------------------------+---------+
 | -p           | --thread-num             | 15                                          | no       | Number of threads used by bowtie2.                                   | 1       |
 +--------------+--------------------------+---------------------------------------------+----------+----------------------------------------------------------------------+---------+
