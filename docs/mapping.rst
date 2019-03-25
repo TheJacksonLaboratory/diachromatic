@@ -93,14 +93,15 @@ distance between the 5' end positions of the two reads. This distance is here re
 .. figure:: img/fragment_size_unligated.png
     :align: center
 
-In order decide whether a given read pair originates from a chimeric or an un-ligated fragment, Diachromatic
-uses the same upper threshold T1\ :sub:`max` that is also used for  chimeric fragments.
+Within Diachromatic, inward pointing read pairs mapping to the same digest are categorized as un-ligated
+because the do not contain a ligation junction.
+Furthermore, inward pointing read pairs that map to different digests but have a d\ :sub:`u` smaller than the threshold T1\ :sub:`max`
+are categorized as un-ligated.
+Note that we are using the upper threshold for chimeric fragments.
 This is because we assume the size distributions both for chimeric and un-ligated fragments to be the result of the same shearing
 step.
-Inward pointing read pairs for which d\ :sub:`u` is smaller than the user defined threshold T1\ :sub:`max` are categorized as
-un-ligated pairs.
-Furthermore, inward pointing read pairs that map to the same digest are categorized as un-ligated pairs.
-
+Below this threshold (Default:800) fragments containing uncut sites cannot be distinguished from
+re-ligated chimeric fragments containing ligation junctions.
 
 Sizes of self-ligated fragments
 -------------------------------
