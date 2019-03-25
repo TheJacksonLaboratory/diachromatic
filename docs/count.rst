@@ -112,17 +112,32 @@ interactions given above.
 Quality metrics
 ~~~~~~~~~~~~~~~
 
-Fraction of singleton interactions (FSI)
-----------------------------------------
+Proportion of singleton interactions (PSI)
+------------------------------------------
 
-It has been pointed out that the Cis/Trans ratio quality measure depends also on other factors such as the genome size and
-number of chromosomes of the analyzed species (Wingett 2015). Diachromatic provides an alternative and possibly more robust quality metric that
-can be used to access the extent of cross-ligation. Amongst the trans read pairs, we generally observe a large proportion
-of restriction fragments that are connected by only a single read pair. The number of all possible different cross-ligation
+The ratio of the numbers of trans and cis read pairs is taken as an indicator of poor Hi-C libraries
+that contain many cimeric fragments arising from cross-ligations events between
+unrelated protein-DNA complexes (Wingett 2015, Nagano 2015).
+The :ref:`align subcommand<rstalign>` of Diachromatic calculates the CLC that is equivalent to the trans/cis ratio
+and defined as the proportion of trans read pairs amongst all uniquely mapped unique pairs.
+However, it has also been pointed out that the trans/cis ratio quality measure depends also on other factors such as the genome size and
+number of chromosomes of the analyzed species (Wingett 2015).
+
+Diachromatic provides an alternative and possibly more robust quality metric that
+can also be used to access the extent of cross-ligation.
+Amongst the trans read pairs, we generally observe a large proportion
+of restriction fragment pairs that are connected by a single read pair only.
+The number of all possible different cross-ligation
 events (including cis and trans) can roughly be estimated as the square number of all restriction fragments across the
-entire genome. Given this huge number, we reasoned that it is very unlikely that the same cross-ligation event occurs
-twice. Therefore, we defined the fraction of singleton interactions as the ratio of singleton read pairs and all read pairs.
+entire genome.
+Given this huge number, we reasoned that it is very unlikely that the same cross-ligation event occurs
+twice, i.e. if cross-ligation events primarily result in interactions (or digest pairs) with only one read pair.
+Therefore, we defined the fraction of singleton interactions as the proportion of interactions with only one read pair
+amongst all interactions.
 
+We typically observe very high PSI around 90%. However, not all of these interactions are necessarily the result
+of cross-ligation events. There might be other factors that contribute singelton interactions such as occasional
+non-functional contacts of spatial proximity.
 
 Interaction count statistics
 ----------------------------
