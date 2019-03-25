@@ -131,7 +131,7 @@ The number of all possible different cross-ligation
 events (including cis and trans) can roughly be estimated as the square number of all restriction fragments across the
 entire genome.
 Given this huge number, we reasoned that it is very unlikely that the same cross-ligation event occurs
-twice, i.e. if cross-ligation events primarily result in interactions (or digest pairs) with only one read pair.
+twice, i.e. cross-ligation events primarily result in interactions (or digest pairs) with only one read pair.
 Therefore, we defined the fraction of singleton interactions as the proportion of interactions with only one read pair
 amongst all interactions.
 
