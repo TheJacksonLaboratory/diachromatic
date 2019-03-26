@@ -21,6 +21,9 @@ class TruncationJavaScript {
     }
 
 
+
+
+
     String getJavaScript() {
         StringBuilder sb = new StringBuilder();
         sb.append("Highcharts.chart('container', {\n" +

@@ -257,11 +257,13 @@ a[name="othergenes"] table.redTable a::first-letter {
 	text-transform: uppercase;
 }
 
-/* Create two equal columns that floats next to each other */
+* {
+  box-sizing: border-box;
+}
+
 .column {
   float: left;
   width: 50%;
-  padding: 10px;
 }
 
 /* Clear floats after the columns */
@@ -271,6 +273,14 @@ a[name="othergenes"] table.redTable a::first-letter {
   clear: both;
 }
 
+hr {
+    display: block;
+    height: 1px;
+    border: 0;
+    border-top: 1px solid #ccc;
+    margin: 1em 0;
+    padding: 0;
+}
 
 footer {
 	background-color: #05396b;
@@ -348,22 +358,73 @@ footer {
        <article>
         <a name="align"></a>
         <h2>Align statistics</h2>
-        <p>
-        Alignment was TODO--Write a summary here
-        </p>
+<p>Diachromatic performs alignment of the truncated reads
+       with <a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml" target="__blank">bowtie2</a>. TODO-more text.
+    </p>
+
+
+<div class="row">
+  <div class="column" >
+    <h1>Read pair analysis</h1>
+    <p>TODO Some text..</p>
+    <table class="redTable">
+       <tr><th></th><th>Count</th></tr>
+        <tr><td><b>Total Reads</b></td><td>${align_total_read_pairs_processed!"n/a"}</td></tr>
+        <tr><td><b>Unmapped Read pairs</b></td><td>${align_unmapped_read_pairs!"n/a"}</td></tr>
+         <tr><td><b>Multimapped Read Pairs</b></td><td>${align_multimapped_read_pairs!"n/a"}</td></tr>
+           <tr><td><b>Paired Read pairs</b></td><td>${align_paired_read_pairs!"n/a"}</td></tr>
+           <tr><td><b>Unique paired Read pairs</b></td><td>${align_unique_paired_read_pairs!"n/a"}</td></tr>
+           <tr><td><b>Duplicated Read pairss</b></td><td>${align_duplicated_pairs!"n/a"}</td></tr>
+      </table>
+  </div>
+  <div class="column" >
+     <h1>Read  analysis</h1>
+    <p>TODO Some text about the reads..</p>
+
+
+    <table class="redTable">
+      <tr><th></th><th>Forward Read</th><th>Reverse Read</th></tr>
+      <tr><td><b>Unmapped Reads</b></td><td>${align_unmapped_R1_reads!"n/a"}</td><td>${align_unmapped_R2_reads!"n/a"}</td></tr>
+      <tr><td><b>Multimapped Reads</b></td><td>${align_multimapped_R1_reads!"n/a"}</td><td>${align_multimapped_R2_reads!"n/a"}</td></tr>
+    </table>
+
+    <div id="container_alignRead" style="min-width: 210px; height: 200px; margin: 0 auto"></div>
+          <script type="text/javascript">${alignjsR!""}</script>
+  </div>
+</div>
+<hr/>
+
+<div class="row">
+  <div class="column" >
+
+     <div id="container_alignRead" style="min-width: 150px; height: 200px; margin: 0 auto"></div>
+              <script type="text/javascript">${alignjsR!""}</script>
+      </div>
+
+  </div>
+  <div class="column" >
+
+    <div id="container_alignReadPair" style="min-width: 210px; height: 200px; margin: 0 auto"></div>
+          <script type="text/javascript">${alignjsRP!""}</script>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         <p>
         TODO -- consider reformating the table because many of the items are for read-pairs and not reads
-             <table class="redTable">
-                 <tr><th></th><th>Forward Read</th><th>Reverse Read</th></tr>
-                     <tr><td><b>Total Reads</b></td><td>${align_total_read_pairs_processed!"n/a"}</td><td>${align_total_read_pairs_processed!"n/a"}</td></tr>
-                  <tr><td><b>Unmapped Read pairs</b></td><td>${align_unmapped_read_pairs!"n/a"}</td><td>${align_unmapped_read_pairs!"n/a"}</td></tr>
-             <tr><td><b>Unmapped Reads</b></td><td>${align_unmapped_R1_reads!"n/a"}</td><td>${align_unmapped_R2_reads!"n/a"}</td></tr>
-                <tr><td><b>Multimapped Read Pairs</b></td><td>${align_multimapped_read_pairs!"n/a"}</td><td>${align_multimapped_read_pairs!"n/a"}</td></tr>
-                  <tr><td><b>Multimapped Reads</b></td><td>${align_multimapped_R1_reads!"n/a"}</td><td>${align_multimapped_R2_reads!"n/a"}</td></tr>
-       <tr><td><b>Paired Read pairs</b></td><td>${align_paired_read_pairs!"n/a"}</td><td>${align_paired_read_pairs!"n/a"}</td></tr>
-       <tr><td><b>Multimapped Reads</b></td><td>${align_unique_paired_read_pairs!"n/a"}</td><td>${align_unique_paired_read_pairs!"n/a"}</td></tr>
-       <tr><td><b>Multimapped Reads</b></td><td>${align_duplicated_pairs!"n/a"}</td><td>${align_duplicated_pairs!"n/a"}</td></tr>
-        </table>
+
             </p>
               <div id="container_align" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
                         <script type="text/javascript">

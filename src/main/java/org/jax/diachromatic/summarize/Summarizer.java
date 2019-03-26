@@ -233,24 +233,14 @@ public class Summarizer {
         e.printStackTrace();
     }
 
-    /*
-    int =UNINITIALIZED;
-        int =UNINITIALIZED;
-        int =UNINITIALIZED;
-        int =UNINITIALIZED;
-        int =UNINITIALIZED;
-        int =UNINITIALIZED;
-        int =UNINITIALIZED;
-        int =UNINITIALIZED;
-        int =UNINITIALIZED;
-        int =UNINITIALIZED;
-     */
         AlignJavaScript js = new  AlignJavaScript(total_read_pairs_processed,
                 unmapped_read_pairs,unmapped_R1_reads,
                 unmapped_R2_reads,multimapped_read_pairs,
                 multimapped_R1_reads,multimapped_R2_reads,
                 paired_read_pairs,unique_paired_read_pairs,duplicated_pairs);
         templateData.put("alignjs",js.getJavaScript());
+        templateData.put("alignjsR",js.getReadJavaScript());
+        templateData.put("alignjsRP",js.getReadPairJavaScript());
         System.err.println(js.getJavaScript());
     }
 
