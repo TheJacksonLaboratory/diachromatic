@@ -54,7 +54,7 @@ class AlignJavaScript {
                 "    },\n" +
                 "    subtitle: {\n" +
                 "        text: 'read counts following alignment'\n" +
-                "    },");
+                "    },width : { 500px },");
         sb.append(" xAxis: {\n" +
                 "        categories: ['Unmapped reads', 'Multimapped reads'], "+
                 "crosshair: true " +

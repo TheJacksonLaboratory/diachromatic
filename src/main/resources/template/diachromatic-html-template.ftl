@@ -388,8 +388,6 @@ footer {
       <tr><td><b>Multimapped Reads</b></td><td>${align_multimapped_R1_reads!"n/a"}</td><td>${align_multimapped_R2_reads!"n/a"}</td></tr>
     </table>
 
-    <div id="container_alignRead" style="min-width: 210px; height: 200px; margin: 0 auto"></div>
-          <script type="text/javascript">${alignjsR!""}</script>
   </div>
 </div>
 <hr/>
