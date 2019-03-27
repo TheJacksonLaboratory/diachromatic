@@ -1,4 +1,6 @@
 .. _rstalign:
+
+===================================================
 Mapping and categorization of Hi-C paired-end reads
 ===================================================
 
@@ -6,16 +8,17 @@ Independent mapping of forward and reverse paired-end reads using bowtie2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The two reads of a valid Hi-C read pair come from two different interacting genomic regions that can be
-separated by a large number of nucleotides within the same chromosome (**cis interactions**) or even be located on
+separated by a large number of nucleotides on the same chromosome (**cis interactions**) or even be located on
 different chromosomes (**trans interactions**). For this reason, the distance between the two 5' end positions of the
 mapped reads can no longer be interpreted as the classical *insert size*.
-Therefore, the truncated forward (R1) and reverse (R2) reads have to be mapped independently.
+Moreover, the truncated forward (R1) and reverse (R2) reads have to be mapped independently.
 
 Diachromatic separately executes ``bowtie2``  with the ``--very-sensitive`` option for the truncated R1 and R2 reads.
 Read pairs for which at least one read cannot be mapped uniquely are discarded.
 Diachromatic provides two levels of stringency for the definition of multi-mapped reads:
-    1. **Very stringent mapping:** There is no second best alignment for the given read. In this case the line in the SAM record produced by ``bowtie2`` contains no ``XS`` tag. Use Diachromatic's ``--bowtie-stringent-unique`` or ``-bsu`` option in order to use this level of stringency.
-    2. **Less stringent mapping:** There can be a second best alignment, but the score of the alignment (MAPQ) needs to e greater or equal than 30 and the difference of the mapping scores between the best and second best alignment must be greater or equal than 10 (following the recommendation of `HiCUP <https://www.bioinformatics.babraham.ac.uk/projects/hicup/>`_). Diachromatic uses this option by default.
+
+1. **Very stringent mapping:** There is no second best alignment for the given read. In this case the line in the SAM record produced by ``bowtie2`` contains no ``XS`` tag. Use Diachromatic's ``--bowtie-stringent-unique`` or ``-bsu`` option in order to use this level of stringency.
+2. **Less stringent mapping:** There can be a second best alignment, but the score of the alignment (MAPQ) must be at least 30 and the difference of the mapping scores between the best and second best alignment must be at least 10 (following the recommendation of `HiCUP <https://www.bioinformatics.babraham.ac.uk/projects/hicup/>`_). Diachromatic uses this option by default.
 
 
 Pairing of properly mapped read pairs
@@ -33,7 +36,7 @@ Formation of Hi-C fragments
 
 Read pairs are divided into valid and artefactual read pairs.
 In order to understand how Diachromatic determines whether a read pair is valid or not, it is important to
- understand the process by which Hi-C fragments are formed.
+understand the process by which Hi-C fragments are formed.
 Hi-C fragments arise from cross-linked chromatin that is processed in three successive experimental steps:
 *restriction digest*, *re-ligation* and *shearing* (see illustration below).
 
@@ -56,9 +59,10 @@ Paired-end sequencing of chimeric fragments may result in all possible relative 
 may point *inwards*, *outwards* or in the *same direction*.
 In contrast to that, sequencing of un-ligated fragments results in inward pointing pairs only, and sequencing of
 self-ligated fragments results in outward pointing pairs only.
-Due to the fact that the read pair orientations overlap
-for the different categories, the identification of read pairs arising from un-ligated or self-ligated fragments
-additionally requires the definition of size thresholds that will be introduced below.
+Because of the fact that valid chimeric fragments can also correspond to read pairs that point inwards and outwards,
+additional criteria (size thresholds) are required to differentiate un-ligated or self-ligated fragments from valid
+chimeric fragments.
+
 
 
 Sizes of chimeric fragments
