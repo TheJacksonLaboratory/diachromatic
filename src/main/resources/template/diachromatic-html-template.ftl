@@ -408,18 +408,6 @@ footer {
 </div>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
         <p>
         TODO -- consider reformating the table because many of the items are for read-pairs and not reads
 
@@ -441,17 +429,60 @@ footer {
             Artefacts are TODO--Write a summary here
             </p>
             <p>
-            TODO-- update table
-                 <table class="redTable">
-                     <tr><th></th><th>Forward Read</th><th>Reverse Read</th></tr>
-                         <tr><td><b>Total Reads</b></td><td>${align_total_read_pairs_processed!"n/a"}</td><td>${align_total_read_pairs_processed!"n/a"}</td></tr>
-                      <tr><td><b>Unmapped Read pairs</b></td><td>${align_unmapped_read_pairs!"n/a"}</td><td>${align_unmapped_read_pairs!"n/a"}</td></tr>
-                 <tr><td><b>Unmapped Reads</b></td><td>${align_unmapped_R1_reads!"n/a"}</td><td>${align_unmapped_R2_reads!"n/a"}</td></tr>
-                    <tr><td><b>Multimapped Read Pairs</b></td><td>${align_multimapped_read_pairs!"n/a"}</td><td>${align_multimapped_read_pairs!"n/a"}</td></tr>
-                      <tr><td><b>Multimapped Reads</b></td><td>${align_multimapped_R1_reads!"n/a"}</td><td>${align_multimapped_R2_reads!"n/a"}</td></tr>
-
-                                 </table>
+           <table class="redTable">
+             <tr><th>Artefact type</th><th>Count</th></tr>
+               <tr><td><b>Unligated</b></td><td>${align_unligated!"n/a"}</td></tr>
+               <tr><td><b>unligated_by_size</b></td><td>${align_unligated_by_size!"n/a"}</td></tr>
+                <tr><td><b>unligated (same_internal)</b></td><td>${align_unligated_same_internal!"n/a"}</td></tr>
+                <tr><td><b>self-ligated</b></td><td>${align_self_ligated!"n/a"}</td></tr>
+                <tr><td><b>self-ligated_by_size</b></td><td>${align_self_ligated_by_size!"n/a"}</td></tr>
+                  <tr><td><b>self-ligated (same internal)</b></td><td>${align_self_ligated_same_internal!"n/a"}</td></tr>
+                   <tr><td><b>chimeric</b></td><td>${align_chimeric!"n/a"}</td></tr>
+                    <tr><td><b> chimeric short</b></td><td>${align_chimeric_short!"n/a"}</td></tr>
+                     <tr><td><b>chimeric long</b></td><td>${align_chimeric_long!"n/a"}</td></tr>
+                      <tr><td><b>chimeric valid</b></td><td>${align_chimeric_valid!"n/a"}</td></tr>
+                       <tr><td><b> strange internal </b></td><td>${align_strange_internal!"n/a"}</td></tr>
+                        <tr><td><b> dangling_end_pairs_total  </b></td><td>${align_dangling_end_pairs_total!"n/a"}</td></tr>
+                         <tr><td><b> trans_pairs_total  </b></td><td>${align_trans_pairs_total!"n/a"}</td></tr>
+                </table>
                 </p>
+
+                  <p> Detailed results and sanity checks TODO -- better text. </p>
+                           <table class="redTable">
+                           <caption>dangling end analysis</caption>
+                             <tr><th>Artefact type</th><th>Count</th></tr>
+                                         <tr><td><b> n_paired_unique_un_ligated_dangling  </b></td><td>${align_n_paired_unique_un_ligated_dangling!"n/a"}</td></tr>
+                                         <tr><td><b>  n_paired_unique_self_ligated_dangling </b></td><td>${align_n_paired_unique_self_ligated_dangling!"n/a"}</td></tr>
+                                         <tr><td><b> n_paired_unique_too_short_dangling  </b></td><td>${align_n_paired_unique_too_short_dangling!"n/a"}</td></tr>
+                                         <tr><td><b> n_paired_unique_too_long_dangling  </b></td><td>${align_n_paired_unique_too_long_dangling!"n/a"}</td></tr>
+                                         <tr><td><b> n_paired_unique_valid_dangling  </b></td><td>${align_n_paired_unique_valid_dangling!"n/a"}</td></tr>
+                                         <tr><td><b> n_paired_strange_internal_dangling  </b></td><td>${align_n_paired_strange_internal_dangling!"n/a"}</td></tr>
+                                </table>
+                                <br/> <br/>
+
+                                 <table class="redTable">
+                                   <caption>trans pair  analysis</caption>
+                                     <tr><th>Artefact type</th><th>Count</th></tr>
+                                        <tr><td><b> n_paired_unique_un_ligated_trans  </b></td><td>${align_n_paired_unique_un_ligated_trans!"n/a"}</td></tr>
+                                        <tr><td><b> n_paired_unique_self_ligated_trans  </b></td><td>${align_n_paired_unique_self_ligated_trans!"n/a"}</td></tr>
+                                        <tr><td><b> n_paired_unique_too_short_trans  </b></td><td>${align_n_paired_unique_too_short_trans!"n/a"}</td></tr>
+                                        <tr><td><b> n_paired_unique_too_long_trans  </b></td><td>${align_n_paired_unique_too_long_trans!"n/a"}</td></tr>
+                                        <tr><td><b> n_paired_unique_valid_trans  </b></td><td>${align_n_paired_unique_valid_trans!"n/a"}</td></tr>
+                                        <tr><td><b> n_paired_strange_internal_trans  </b></td><td>${align_n_paired_strange_internal_trans!"n/a"}</td></tr>
+                                        <tr><td><b> n_total_trans  </b></td><td>${align_n_total_trans!"n/a"}</td></tr>
+                                 </table>
+
+ <br/> <br/>
+
+                                 <table class="redTable">
+                                   <caption>Summary</caption>
+                                     <tr><th>Artefact type</th><th>Count</th></tr>
+                                        <tr><td><b> Yield of valid pairs (YVP)</b></td><td>${align_YVP!"n/a"}</td></tr>
+                                        <tr><td><b> Cross-ligation coefficient (CLC)  </b></td><td>${align_CLC!"n/a"}</td></tr>
+                                         <tr><td><b>Re-ligation coefficient (RLC)   </b></td><td>${align_RLC!"n/a"}</td></tr>
+                                          <tr><td><b>Hi-C pair duplication rate (HPDR)</b></td><td>${align_HPDR!"n/a"}</td></tr>
+                                 </table>
+
             </article>
             </section>
         </section>

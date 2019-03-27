@@ -544,45 +544,44 @@ public class Aligner {
         printStream.print("duplicated_pairs:\t" + n_paired_duplicated + "\n");
         printStream.print("\n");
         printStream.print("Artifact statistics\n");
-        printStream.print("-------------------\n");
-        printStream.print("\n");
-        printStream.print("Disjoint categories:\n");
+//        printStream.print("-------------------\n");
+//        printStream.print("\n");
+//        printStream.print("Disjoint categories:\n");
 
         int n_paired_unique_un_ligated_total=n_paired_unique_un_ligated+n_paired_unique_un_ligated_same_internal;
-        printStream.print("Un-ligated:\t" + n_paired_unique_un_ligated_total + String.format(" (%.2f%%)", 100.0* n_paired_unique_un_ligated_total /n_paired_unique) + "\n");
-        printStream.print("\tDue to size:\t" + n_paired_unique_un_ligated + String.format(" (%.2f%%)", 100.0* n_paired_unique_un_ligated /n_paired_unique) + "\n");
-        printStream.print("\tDue to same internal:\t" + n_paired_unique_un_ligated_same_internal + String.format(" (%.2f%%)", 100.0* n_paired_unique_un_ligated_same_internal /n_paired_unique) + "\n");
+        printStream.print("unligated:" + n_paired_unique_un_ligated_total + String.format(" (%.2f%%)", 100.0* n_paired_unique_un_ligated_total /n_paired_unique) + "\n");
+        printStream.print("unligated_by_size:" + n_paired_unique_un_ligated + String.format(" (%.2f%%)", 100.0* n_paired_unique_un_ligated /n_paired_unique) + "\n");
+        printStream.print("unligated_same_internal:" + n_paired_unique_un_ligated_same_internal + String.format(" (%.2f%%)", 100.0* n_paired_unique_un_ligated_same_internal /n_paired_unique) + "\n");
 
         int n_paired_unique_self_ligated_total=n_paired_unique_self_ligated+n_paired_unique_self_ligated_same_internal;
-        printStream.print("Self-ligated:\t" + n_paired_unique_self_ligated_total + String.format(" (%.2f%%)", 100.0* n_paired_unique_self_ligated_total /n_paired_unique) + "\n");
-        printStream.print("\tDue to size:\t" + n_paired_unique_self_ligated + String.format(" (%.2f%%)", 100.0* n_paired_unique_self_ligated /n_paired_unique) + "\n");
-        printStream.print("\tDue to same internal:\t" + n_paired_unique_self_ligated_same_internal + String.format(" (%.2f%%)", 100.0* n_paired_unique_self_ligated_same_internal /n_paired_unique) + "\n");
+        printStream.print("self_ligated:" + n_paired_unique_self_ligated_total + String.format(" (%.2f%%)", 100.0* n_paired_unique_self_ligated_total /n_paired_unique) + "\n");
+        printStream.print("self_ligated_by_size:" + n_paired_unique_self_ligated + String.format(" (%.2f%%)", 100.0* n_paired_unique_self_ligated /n_paired_unique) + "\n");
+        printStream.print("self_ligated_same_internal:" + n_paired_unique_self_ligated_same_internal + String.format(" (%.2f%%)", 100.0* n_paired_unique_self_ligated_same_internal /n_paired_unique) + "\n");
 
         int n_chimeric_fragments=n_paired_unique_too_short+n_paired_unique_too_long+n_paired_unique_valid;
 
-        printStream.print("Chimeric:\t" + n_chimeric_fragments + String.format(" (%.2f%%)", 100.0* n_chimeric_fragments /n_paired_unique) + "\n");
-        printStream.print("\tToo short:\t" + n_paired_unique_too_short + String.format(" (%.2f%%)", 100.0* n_paired_unique_too_short /n_paired_unique) + "\n");
-        printStream.print("\tToo long:\t" + n_paired_unique_too_long + String.format(" (%.2f%%)", 100.0* n_paired_unique_too_long /n_paired_unique) + "\n");
-        printStream.print("\tValid:\t" + n_paired_unique_valid + String.format(" (%.2f%%)", 100.0* n_paired_unique_valid /n_paired_unique) + "\n");
+        printStream.print("chimeric:" + n_chimeric_fragments + String.format(" (%.2f%%)", 100.0* n_chimeric_fragments /n_paired_unique) + "\n");
+        printStream.print("chimeric_short:" + n_paired_unique_too_short + String.format(" (%.2f%%)", 100.0* n_paired_unique_too_short /n_paired_unique) + "\n");
+        printStream.print("chimeric_long:" + n_paired_unique_too_long + String.format(" (%.2f%%)", 100.0* n_paired_unique_too_long /n_paired_unique) + "\n");
+        printStream.print("chimeric_valid:" + n_paired_unique_valid + String.format(" (%.2f%%)", 100.0* n_paired_unique_valid /n_paired_unique) + "\n");
 
-        printStream.print("Strange internal:\t" + n_paired_strange_internal + String.format(" (%.2f%%)", 100.0* n_paired_strange_internal /n_paired_unique) + "\n");
+        printStream.print("strange_internal:" + n_paired_strange_internal + String.format(" (%.2f%%)", 100.0* n_paired_strange_internal /n_paired_unique) + "\n");
 
         printStream.print("Note: These four categories are disjoint subsets of all unique paired read pairs, and percentages refer to this superset." + "\n\n");
 
-        printStream.print("Dangling end pairs total:\t" + n_paired_unique_dangling + String.format(" (%.2f%%)", 100.0* n_paired_unique_dangling /n_paired_unique) + "\n");
+        printStream.print("dangling_end_pairs_total:" + n_paired_unique_dangling + String.format(" (%.2f%%)", 100.0* n_paired_unique_dangling /n_paired_unique) + "\n");
         printStream.print("Note: Dangling end pairs may occur in all categories, and a read pair with a dangling end can still be valid." + "\n\n");
 
-        printStream.print("Trans pairs total:\t" + n_paired_unique_trans + String.format(" (%.2f%%)", 100.0* n_paired_unique_trans /n_paired_unique) + "\n");
+        printStream.print("trans_pairs_total:" + n_paired_unique_trans + String.format(" (%.2f%%)", 100.0* n_paired_unique_trans /n_paired_unique) + "\n");
         printStream.print("Note: Trans pairs cannot occur in the categories un-ligated and self-ligated but all others." + "\n\n");
 
-        printStream.print("\n");
-        printStream.print("Quality metrics for experimental trouble shooting\n");
-        printStream.print("-------------------------------------------------\n");
-        printStream.print("\n");
-        printStream.print("Yield of Valid Pairs (YVP):\t" + String.format("%.2f%%", 100.0* n_paired_unique_valid / n_total_input_read_pairs) + "\n");
-        printStream.print("Cross-ligation coefficient (CLC):\t" + String.format("%.2f%%", 100.0* n_paired_unique_trans /n_paired_unique) + "\n");
-        printStream.print("Re-ligation coefficient (RLC):\t" + String.format("%.2f%%", 100.0*(n_paired_unique- n_paired_unique_dangling)/n_paired_unique) + "\n");
-        printStream.print("Hi-C pair Duplication Rate (HPDR):\t" + String.format("%.2f%%", 100.0*n_paired_duplicated/n_paired) + "\n");
+//        printStream.print("Quality metrics for experimental trouble shooting\n");
+//        printStream.print("-------------------------------------------------\n");
+//        printStream.print("\n");
+        printStream.print("YVP:\t" + String.format("%.2f%%", 100.0* n_paired_unique_valid / n_total_input_read_pairs) + "\n");
+        printStream.print("CLC:\t" + String.format("%.2f%%", 100.0* n_paired_unique_trans /n_paired_unique) + "\n");
+        printStream.print("RLC:\t" + String.format("%.2f%%", 100.0*(n_paired_unique- n_paired_unique_dangling)/n_paired_unique) + "\n");
+        printStream.print("HPDR:\t" + String.format("%.2f%%", 100.0*n_paired_duplicated/n_paired) + "\n");
         printStream.print("\n");
 
 
@@ -592,22 +591,22 @@ public class Aligner {
         printStream.print("\n");
 
         printStream.print("Fractions of dangling end pairs:\n");
-        printStream.print(String.format("n_paired_unique_un_ligated_dangling=%d (%.2f%% of all unique un-ligated pairs)\n", n_paired_unique_un_ligated_dangling, (100.0 * n_paired_unique_un_ligated_dangling / n_paired_unique_un_ligated)));
-        printStream.print(String.format("n_paired_unique_self_ligated_dangling=%d (%.2f%% of all unique self-ligated pairs)\n", n_paired_unique_self_ligated_dangling, (100.0 * n_paired_unique_self_ligated_dangling / n_paired_unique_self_ligated)));
-        printStream.print(String.format("n_paired_unique_too_short_dangling=%d (%.2f%% of all unique valid too short pairs)\n", n_paired_unique_too_short_dangling, (100.0 * n_paired_unique_too_short_dangling / n_paired_unique_too_short)));
-        printStream.print(String.format("n_paired_unique_too_long_dangling=%d (%.2f%% of all unique valid too long pairs)\n", n_paired_unique_too_long_dangling, (100.0 * n_paired_unique_too_long_dangling / n_paired_unique_too_long)));
-        printStream.print(String.format("n_paired_unique_valid_dangling=%d (%.2f%% of all unique valid pairs)\n", n_paired_unique_valid_dangling, (100.0 * n_paired_unique_valid_dangling / n_paired_unique_valid)));
-        printStream.print(String.format("n_paired_strange_internal_dangling=%d (%.2f%% of all unique valid pairs)\n", n_paired_strange_internal_dangling, (100.0 * n_paired_strange_internal_dangling / n_paired_unique_valid)));
+        printStream.print(String.format("n_paired_unique_un_ligated_dangling:%d (%.2f%% of all unique un-ligated pairs)\n", n_paired_unique_un_ligated_dangling, (100.0 * n_paired_unique_un_ligated_dangling / n_paired_unique_un_ligated)));
+        printStream.print(String.format("n_paired_unique_self_ligated_dangling:%d (%.2f%% of all unique self-ligated pairs)\n", n_paired_unique_self_ligated_dangling, (100.0 * n_paired_unique_self_ligated_dangling / n_paired_unique_self_ligated)));
+        printStream.print(String.format("n_paired_unique_too_short_dangling:%d (%.2f%% of all unique valid too short pairs)\n", n_paired_unique_too_short_dangling, (100.0 * n_paired_unique_too_short_dangling / n_paired_unique_too_short)));
+        printStream.print(String.format("n_paired_unique_too_long_dangling:%d (%.2f%% of all unique valid too long pairs)\n", n_paired_unique_too_long_dangling, (100.0 * n_paired_unique_too_long_dangling / n_paired_unique_too_long)));
+        printStream.print(String.format("n_paired_unique_valid_dangling:%d (%.2f%% of all unique valid pairs)\n", n_paired_unique_valid_dangling, (100.0 * n_paired_unique_valid_dangling / n_paired_unique_valid)));
+        printStream.print(String.format("n_paired_strange_internal_dangling:%d (%.2f%% of all unique valid pairs)\n", n_paired_strange_internal_dangling, (100.0 * n_paired_strange_internal_dangling / n_paired_unique_valid)));
 
         printStream.print("\n");
         printStream.print("Fractions of trans pairs:\n");
-        printStream.print(String.format("n_paired_unique_un_ligated_trans=%d (%.2f%% of all unique un-ligated pairs)\n", n_paired_unique_un_ligated_trans, (100.0 * n_paired_unique_un_ligated_trans / n_paired_unique_un_ligated)));
-        printStream.print(String.format("n_paired_unique_self_ligated_trans=%d (%.2f%% of all unique self-ligated pairs)\n", n_paired_unique_self_ligated_trans, (100.0 * n_paired_unique_self_ligated_trans / n_paired_unique_self_ligated)));
-        printStream.print(String.format("n_paired_unique_too_short_trans=%d (%.2f%% of all unique valid too short pairs)\n", n_paired_unique_too_short_trans, (100.0 * n_paired_unique_too_short_trans / n_paired_unique_too_short)));
-        printStream.print(String.format("n_paired_unique_too_long_trans=%d (%.2f%% of all unique valid too long pairs)\n", n_paired_unique_too_long_trans, (100.0 * n_paired_unique_too_long_trans / n_paired_unique_too_long)));
-        printStream.print(String.format("n_paired_unique_valid_trans=%d (%.2f%% of all unique valid pairs)\n", n_paired_unique_valid_trans, (100.0 * n_paired_unique_valid_trans / n_paired_unique_valid)));
-        printStream.print(String.format("n_paired_strange_internal_trans=%d (%.2f%% of all unique valid pairs)\n", n_paired_strange_internal_trans, (100.0 * n_paired_strange_internal_trans / n_paired_unique_valid)));
-        printStream.print(String.format("n_total_trans=%d (%.2f%% of all unique paired read pairs)\n", n_paired_unique_trans, (100.0 * n_paired_unique_trans/n_paired_unique)));
+        printStream.print(String.format("n_paired_unique_un_ligated_trans:%d (%.2f%% of all unique un-ligated pairs)\n", n_paired_unique_un_ligated_trans, (100.0 * n_paired_unique_un_ligated_trans / n_paired_unique_un_ligated)));
+        printStream.print(String.format("n_paired_unique_self_ligated_trans:%d (%.2f%% of all unique self-ligated pairs)\n", n_paired_unique_self_ligated_trans, (100.0 * n_paired_unique_self_ligated_trans / n_paired_unique_self_ligated)));
+        printStream.print(String.format("n_paired_unique_too_short_trans:%d (%.2f%% of all unique valid too short pairs)\n", n_paired_unique_too_short_trans, (100.0 * n_paired_unique_too_short_trans / n_paired_unique_too_short)));
+        printStream.print(String.format("n_paired_unique_too_long_trans:%d (%.2f%% of all unique valid too long pairs)\n", n_paired_unique_too_long_trans, (100.0 * n_paired_unique_too_long_trans / n_paired_unique_too_long)));
+        printStream.print(String.format("n_paired_unique_valid_trans:%d (%.2f%% of all unique valid pairs)\n", n_paired_unique_valid_trans, (100.0 * n_paired_unique_valid_trans / n_paired_unique_valid)));
+        printStream.print(String.format("n_paired_strange_internal_trans:%d (%.2f%% of all unique valid pairs)\n", n_paired_strange_internal_trans, (100.0 * n_paired_strange_internal_trans / n_paired_unique_valid)));
+        printStream.print(String.format("n_total_trans:%d (%.2f%% of all unique paired read pairs)\n", n_paired_unique_trans, (100.0 * n_paired_unique_trans/n_paired_unique)));
 
     }
 

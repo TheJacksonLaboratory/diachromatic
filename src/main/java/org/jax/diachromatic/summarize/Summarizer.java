@@ -194,6 +194,7 @@ public class Summarizer {
             String[] fields = line.split(":");
             if (fields.length != 2) continue; // skip non key-value lines, they are comments
             templateData.put(String.format("align_%s",fields[0].trim()), fields[1].trim());
+            System.out.println(String.format("align_%s %s",fields[0].trim(), fields[1].trim()));
             System.err.println( String.format("align_%s",fields[0]));
             switch (fields[0]) {
                 case "total_read_pairs_processed":
