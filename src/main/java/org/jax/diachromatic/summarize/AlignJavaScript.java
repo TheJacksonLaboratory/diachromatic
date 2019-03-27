@@ -106,6 +106,7 @@ class AlignJavaScript {
                 "    subtitle: {\n" +
                 "        text: 'read counts following alignment'\n" +
                 "    },");
+        sb.append(" width: 400,");
         sb.append(" xAxis: {\n" +
                 "        categories: [ " +
                 " 'Total readpairs', " +

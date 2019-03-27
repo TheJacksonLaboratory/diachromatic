@@ -330,100 +330,83 @@ footer {
   </section>
 
 
+<!-- Section on truncation -->
   <section>
-   <article>
-    <a name="truncation"></a>
-    <h2>Truncation statistics</h2>
-    <p>
-    Truncation was performed with a length threshold of ${length_threshold!"n/a"} nucleotides (reads whose length is below this threshold
-    after truncation are removed, denoted <i>Too short to map</i> in the table). A total of ${removed_pairs_one_or_two_reads_too_short!"n/a"}
-    pairs contained either a forward or a reverse read (or both) that were too short to map.</p>
-    <p>
+    <article>
+     <a name="truncation"></a>
+     <h2>Truncation statistics</h2>
+     <p>Truncation was performed with a length threshold of ${length_threshold!"n/a"} nucleotides (reads whose length is below this threshold
+        after truncation are removed, denoted <i>Too short to map</i> in the table). A total of ${removed_pairs_one_or_two_reads_too_short!"n/a"}
+         pairs contained either a forward or a reverse read (or both) that were too short to map.
+     </p>
      <table class="redTable">
-         <tr><th></th><th>Forward Read</th><th>Reverse Read</th></tr>
-             <tr><td><b>Total Reads</b></td><td>${total_read_pairs_processed!"n/a"}</td><td>${total_read_pairs_processed!"n/a"}</td></tr>
-          <tr><td><b>Truncated Reads</b></td><td>${truncated_forward_reads!"n/a"}</td><td>${truncated_reverse_reads!"n/a"}</td></tr>
-            <tr><td><b>Dangling Reads</b></td><td>${dangling_forward_reads!"n/a"}</td><td>${dangling_reverse_reads!"n/a"}</td></tr>
-     <tr><td><b>Too short to map</b></td><td>${short_removed_forward_reads!"n/a"}</td><td>${short_removed_reverse_reads!"n/a"}</td></tr>
-         </table>
-    </p>
-     <div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
-            <script type="text/javascript">
-                ${truncationjs!""}
-            		</script>
+       <tr><th></th><th>Forward Read</th><th>Reverse Read</th></tr>
+       <tr><td><b>Total Reads</b></td><td>${total_read_pairs_processed!"n/a"}</td><td>${total_read_pairs_processed!"n/a"}</td></tr>
+       <tr><td><b>Truncated Reads</b></td><td>${truncated_forward_reads!"n/a"}</td><td>${truncated_reverse_reads!"n/a"}</td></tr>
+       <tr><td><b>Dangling Reads</b></td><td>${dangling_forward_reads!"n/a"}</td><td>${dangling_reverse_reads!"n/a"}</td></tr>
+       <tr><td><b>Too short to map</b></td><td>${short_removed_forward_reads!"n/a"}</td><td>${short_removed_reverse_reads!"n/a"}</td></tr>
+     </table>
+      <div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+      <script type="text/javascript">${truncationjs!""}</script>
     </article>
+  </section>
 
-    </section>
-      <section>
-       <article>
-        <a name="align"></a>
-        <h2>Align statistics</h2>
-<p>Diachromatic performs alignment of the truncated reads
-       with <a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml" target="__blank">bowtie2</a>. TODO-more text.
+ <!-- Section on alignment -->
+
+ <section>
+   <article>
+     <a name="align"></a>
+     <h2>Align statistics</h2>
+     <p>Diachromatic performs alignment of the truncated reads
+        with <a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml" target="__blank">bowtie2</a>. TODO-more text.
     </p>
-
-
-<div class="row">
-  <div class="column" >
-    <h1>Read pair analysis</h1>
-    <p>TODO Some text..</p>
-    <table class="redTable">
-       <tr><th></th><th>Count</th></tr>
-        <tr><td><b>Total Reads</b></td><td>${align_total_read_pairs_processed!"n/a"}</td></tr>
-        <tr><td><b>Unmapped Read pairs</b></td><td>${align_unmapped_read_pairs!"n/a"}</td></tr>
-         <tr><td><b>Multimapped Read Pairs</b></td><td>${align_multimapped_read_pairs!"n/a"}</td></tr>
-           <tr><td><b>Paired Read pairs</b></td><td>${align_paired_read_pairs!"n/a"}</td></tr>
-           <tr><td><b>Unique paired Read pairs</b></td><td>${align_unique_paired_read_pairs!"n/a"}</td></tr>
-           <tr><td><b>Duplicated Read pairss</b></td><td>${align_duplicated_pairs!"n/a"}</td></tr>
-      </table>
-  </div>
-  <div class="column" >
-     <h1>Read  analysis</h1>
-    <p>TODO Some text about the reads..</p>
-
-
-    <table class="redTable">
-      <tr><th></th><th>Forward Read</th><th>Reverse Read</th></tr>
-      <tr><td><b>Unmapped Reads</b></td><td>${align_unmapped_R1_reads!"n/a"}</td><td>${align_unmapped_R2_reads!"n/a"}</td></tr>
-      <tr><td><b>Multimapped Reads</b></td><td>${align_multimapped_R1_reads!"n/a"}</td><td>${align_multimapped_R2_reads!"n/a"}</td></tr>
-    </table>
-
-  </div>
-</div>
-<hr/>
-
-<div class="row">
-  <div class="column" >
-
-     <div id="container_alignRead" style="min-width: 150px; height: 200px; margin: 0 auto"></div>
-              <script type="text/javascript">${alignjsR!""}</script>
+    <div class="row">
+      <div class="column" > <!-- upper left quadrant -->
+        <h1>Read pair analysis</h1>
+        <p>TODO Some text..</p>
+        <table class="redTable">
+          <tr><th></th><th>Count</th></tr>
+          <tr><td><b>Total Reads</b></td><td>${align_total_read_pairs_processed!"n/a"}</td></tr>
+          <tr><td><b>Unmapped Read pairs</b></td><td>${align_unmapped_read_pairs!"n/a"}</td></tr>
+          <tr><td><b>Multimapped Read Pairs</b></td><td>${align_multimapped_read_pairs!"n/a"}</td></tr>
+          <tr><td><b>Paired Read pairs</b></td><td>${align_paired_read_pairs!"n/a"}</td></tr>
+          <tr><td><b>Unique paired Read pairs</b></td><td>${align_unique_paired_read_pairs!"n/a"}</td></tr>
+          <tr><td><b>Duplicated Read pairss</b></td><td>${align_duplicated_pairs!"n/a"}</td></tr>
+         </table>
       </div>
+    <div class="column" > <!-- lower right quadrant -->
+      <h1>Read  analysis</h1>
+      <p>TODO Some text about the reads..</p>
+      <table class="redTable">
+        <tr><th></th><th>Forward Read</th><th>Reverse Read</th></tr>
+        <tr><td><b>Unmapped Reads</b></td><td>${align_unmapped_R1_reads!"n/a"}</td><td>${align_unmapped_R2_reads!"n/a"}</td></tr>
+        <tr><td><b>Multimapped Reads</b></td><td>${align_multimapped_R1_reads!"n/a"}</td><td>${align_multimapped_R2_reads!"n/a"}</td></tr>
+      </table>
+    </div>
+   </div>
 
-  </div>
-  <div class="column" >
+   <hr/> <!-- dividing line between top two and bottom two quadrants --maybe remove? -->
 
-    <div id="container_alignReadPair" style="min-width: 210px; height: 200px; margin: 0 auto"></div>
-          <script type="text/javascript">${alignjsRP!""}</script>
-  </div>
-</div>
+   <div class="row">
+     <div class="column" > <!-- lower left quadrant -->
+       <div id="container_alignRead" style="min-width: 150px; height: 200px; margin: 0 auto"></div>
+       <script type="text/javascript">${alignjsR!""}</script>
+     </div>
+     <div class="column" > <!-- lower right quadrant -->
+       <div id="container_alignReadPair" style="min-width: 210px; height: 200px; margin: 0 auto"></div>
+       <script type="text/javascript">${alignjsRP!""}</script>
+     </div>
+   </div>
 
+   <p> TODO -- consider reformating the table because many of the items are for read-pairs and not reads</p
+   </article>
+  </section>
 
-        <p>
-        TODO -- consider reformating the table because many of the items are for read-pairs and not reads
-
-            </p>
-              <div id="container_align" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
-                        <script type="text/javascript">
-                            ${alignjs!""}
-                        		</script>
-        </article>
-        </section>
-    </section>
 
 
      <section>
            <article>
-            <a name="align"></a>
+            <a name="artefact"></a>
             <h2>Artefact statistics</h2>
             <p>
             Artefacts are TODO--Write a summary here
