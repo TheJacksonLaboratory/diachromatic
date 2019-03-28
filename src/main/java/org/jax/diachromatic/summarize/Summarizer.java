@@ -22,13 +22,10 @@ public class Summarizer {
     private final String alignPath;
     private final String countPath;
 
-    /**
-     * Map of data that will be used for the FreeMark template.
-     */
+    // Map of data that will be used for the FreeMark template.
     private final Map<String, Object> templateData = new HashMap<>();
-    /**
-     * FreeMarker configuration object.
-     */
+
+    // FreeMarker configuration object.
     private final Configuration cfg;
 
     public Summarizer(String truncFile, String alignFile, String countFile) {

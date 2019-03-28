@@ -18,8 +18,6 @@ import java.io.*;
 public class PoissonRegressionTest {
     //private static final Logger logger = LogManager.getLogger();
 
-
-
     /*
        The following code is intended to reproduce an example for Poisson Regression Model for Count Data in R
        from here: https://onlinecourses.science.psu.edu/stat504/node/169

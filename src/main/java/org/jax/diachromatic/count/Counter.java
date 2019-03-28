@@ -134,10 +134,10 @@ public class Counter {
 
     public Counter(SamReader samReader, DigestMap digestMap, String outputDirAndFilePrefix) {
         this.reader = samReader;
-        this.digestMap=digestMap;
+        this.digestMap = digestMap;
         this.it = reader.iterator();
         createOutputNames(outputDirAndFilePrefix);
-        this.dp2countsMap=new HashMap<>();
+        this.dp2countsMap = new HashMap<>();
     }
 
     public void countInteractions() throws DiachromaticException, FileNotFoundException {
@@ -153,28 +153,47 @@ public class Counter {
             //readPair.setRandomRelativeOrientationTag();
             readPair.setRelativeOrientationTag();
 
-
-            read_count=read_count+2;
-            if(readPair.forwardDigestIsActive()){active_read_count++;}
-            if(readPair.reverseDigestIsActive()){active_read_count++;}
+            read_count = read_count + 2;
+            if (readPair.forwardDigestIsActive()) {
+                active_read_count++;
+            }
+            if (readPair.reverseDigestIsActive()) {
+                active_read_count++;
+            }
 
             DigestPair dp = readPair.getDigestPair();
-            incrementDigestPair(dp,readPair);
+            incrementDigestPair(dp, readPair);
 
-            if(interaction_count%1000000==0) {
+            if (interaction_count % 1000000 == 0) {
                 logger.trace("Number of Interactions: " + interaction_count);
             }
 
-            if(readPair.getRelativeOrientationTag().equals("F1F2")) {n_F1F2++;}
-            if(readPair.getRelativeOrientationTag().equals("F2F1")) {n_F2F1++;}
-            if(readPair.getRelativeOrientationTag().equals("R1R2")) {n_R1R2++;}
-            if(readPair.getRelativeOrientationTag().equals("R2R1")) {n_R2R1++;}
-            if(readPair.getRelativeOrientationTag().equals("F1R2")) {n_F1R2++;}
-            if(readPair.getRelativeOrientationTag().equals("R2F1")) {n_R2F1++;}
-            if(readPair.getRelativeOrientationTag().equals("F2R1")) {n_F2R1++;}
-            if(readPair.getRelativeOrientationTag().equals("R1F2")) {n_R1F2++;}
+            if (readPair.getRelativeOrientationTag().equals("F1F2")) {
+                n_F1F2++;
+            }
+            if (readPair.getRelativeOrientationTag().equals("F2F1")) {
+                n_F2F1++;
+            }
+            if (readPair.getRelativeOrientationTag().equals("R1R2")) {
+                n_R1R2++;
+            }
+            if (readPair.getRelativeOrientationTag().equals("R2R1")) {
+                n_R2R1++;
+            }
+            if (readPair.getRelativeOrientationTag().equals("F1R2")) {
+                n_F1R2++;
+            }
+            if (readPair.getRelativeOrientationTag().equals("R2F1")) {
+                n_R2F1++;
+            }
+            if (readPair.getRelativeOrientationTag().equals("F2R1")) {
+                n_F2R1++;
+            }
+            if (readPair.getRelativeOrientationTag().equals("R1F2")) {
+                n_R1F2++;
+            }
 
-            if(readPair.isTrans()) {
+            if (readPair.isTrans()) {
                 n_trans_pairs++;
             }
             n_pairs_total++;
@@ -183,7 +202,7 @@ public class Counter {
 
     public void incrementDigestPair(DigestPair dp, ReadPair rp) {
 
-        if(!dp2countsMap.containsKey(dp)) {
+        if (!dp2countsMap.containsKey(dp)) {
             // this is the first read pair for this pair of digests
             interaction_count++;
             if (dp.forward().isSelected() && dp.reverse().isSelected()) {
@@ -193,7 +212,7 @@ public class Counter {
             } else {
                 active_inactive_interaction_count++;
             }
-            dp2countsMap.put(dp,new SimpleTwistedCount());
+            dp2countsMap.put(dp, new SimpleTwistedCount());
         }
         if (rp.isTwisted()) {
             dp2countsMap.get(dp).twisted++;
@@ -289,26 +308,26 @@ public class Counter {
         // create file for summarize
         PrintStream printStream = new PrintStream(new FileOutputStream(outputTsvInteractingFragmentCounts));
 
-        HashMap<Digest,Integer> readCountsAtDigestsMap = new HashMap<>();
+        HashMap<Digest, Integer> readCountsAtDigestsMap = new HashMap<>();
 
         // Iterate over all interactions and add individual digest to a hashMap with key=digestRef and value=read count.
         Integer readCount;
         for (DigestPair dp : this.dp2countsMap.keySet()) {
             SimpleTwistedCount cc = this.dp2countsMap.get(dp);
-            if(!readCountsAtDigestsMap.containsKey(dp.forward())) {
+            if (!readCountsAtDigestsMap.containsKey(dp.forward())) {
                 readCountsAtDigestsMap.put(dp.forward(), 1);
                 interacting_fragment_count++;
-                if(dp.forward().isSelected()) {
+                if (dp.forward().isSelected()) {
                     active_interacting_fragment_count++;
                 }
             } else {
                 readCount = cc.simple + cc.twisted;
                 readCountsAtDigestsMap.put(dp.forward(), readCountsAtDigestsMap.get(dp.forward()) + readCount);
             }
-            if(!readCountsAtDigestsMap.containsKey(dp.reverse())) {
+            if (!readCountsAtDigestsMap.containsKey(dp.reverse())) {
                 readCountsAtDigestsMap.put(dp.reverse(), 1);
                 interacting_fragment_count++;
-                if(dp.reverse().isSelected()) {
+                if (dp.reverse().isSelected()) {
                     active_interacting_fragment_count++;
                 }
             } else {
@@ -320,7 +339,9 @@ public class Counter {
         // Print unique interacting digests and associated read counts
         for (Digest d : readCountsAtDigestsMap.keySet()) {
             char c = 'I';
-            if(d.isSelected()) {c = 'A';}
+            if (d.isSelected()) {
+                c = 'A';
+            }
             printStream.println(d.getChromosome() + "\t" + d.getDigestStartPosition() + "\t" + d.getDigestEndPosition() + "\t" + c + "\t" + readCountsAtDigestsMap.get(d));
         }
 
@@ -331,7 +352,7 @@ public class Counter {
      * @return Percentage of reads in selective/active digests.
      */
     public double getTargetEnrichmentCoefficient() {
-        return 1.0*active_read_count/read_count;
+        return 1.0 * active_read_count/read_count;
     }
 
 

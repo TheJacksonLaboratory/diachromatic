@@ -35,12 +35,8 @@ public class Diachromatic {
         TruncateCommand truncate = new TruncateCommand();
         SummarizeCommand summarize = new SummarizeCommand();
 
-        JCommander jc = JCommander.newBuilder()
-                .addObject(diachromatic)
-                .addCommand("truncate", truncate)
-                .addCommand("align", align)
-                .addCommand("count", count)
-                .addCommand("summarize", summarize)
+        JCommander jc = JCommander.newBuilder().addObject(diachromatic).addCommand("truncate", truncate)
+                .addCommand("align", align).addCommand("count", count).addCommand("summarize", summarize)
                 .build();
         jc.setProgramName("java -jar Diachromatic.jar");
         try {
@@ -99,7 +95,6 @@ public class Diachromatic {
             jc.usage();
             System.exit(1);
         }
-
 
         Command diachromaticCommand;
         switch (parsedCommand) {

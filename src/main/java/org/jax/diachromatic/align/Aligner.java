@@ -206,7 +206,9 @@ public class Aligner {
      * @param filenamePrefix Prefix for names of created files.
      * @param useStringentUniqueSettings Use the more stringent definition of multi-mapped reads.
      */
-    public Aligner(String sam1, String sam2, boolean outputRejected, String outputPathPrefix, DigestMap digestMap, Integer lowerFragSize, Integer upperFragSize, Integer upperSelfLigationSize, String filenamePrefix, boolean useStringentUniqueSettings) {
+    public Aligner(String sam1, String sam2, boolean outputRejected, String outputPathPrefix, DigestMap digestMap,
+                   Integer lowerFragSize, Integer upperFragSize, Integer upperSelfLigationSize, String filenamePrefix,
+                   boolean useStringentUniqueSettings) {
         this.sam_path_R1 = sam1;
         this.sam_path_R2 = sam2;
         this.sam_reader_R1 = SamReaderFactory.makeDefault().open(new File(sam_path_R1));
@@ -289,16 +291,24 @@ public class Aligner {
             }
 
             // first check whether both reads were mapped uniquely
-            if(pair.isUnMappedR1()) {
-                n_unmapped_R1++;}
-            if(pair.isUnMappedR2()) {
-                n_unmapped_R2++;}
-            if(pair.isUnMappedR1()||pair.isUnMappedR2()) {n_unmappedPair++;}
-            if(pair.isMultiMappedR1()) {
-                n_multimapped_R1++;}
-            if(pair.isMultiMappedR2()) {
-                n_multimapped_R2++;}
-            if(pair.isMultiMappedR1()||pair.isMultiMappedR2()) {n_multimappedPair++;}
+            if (pair.isUnMappedR1()) {
+                n_unmapped_R1++;
+            }
+            if (pair.isUnMappedR2()) {
+                n_unmapped_R2++;
+            }
+            if (pair.isUnMappedR1() || pair.isUnMappedR2()) {
+                n_unmappedPair++;
+            }
+            if (pair.isMultiMappedR1()) {
+                n_multimapped_R1++;
+            }
+            if (pair.isMultiMappedR2()) {
+                n_multimapped_R2++;
+            }
+            if (pair.isMultiMappedR1() || pair.isMultiMappedR2()) {
+                n_multimappedPair++;
+            }
 
             // Note: Read pairs with unmapped or multi-mapped reads remain unpaired
 
@@ -521,13 +531,7 @@ public class Aligner {
     public void printStatistics() throws FileNotFoundException {
 
         PrintStream printStream = new PrintStream(new FileOutputStream(outputTxtStats));
-
-//        printStream.print("Summary statistics\n");
-//        printStream.print("==================\n\n");
-//        printStream.print("\n");
-//        printStream.print("Alignment statistics\n");
-//        printStream.print("--------------------\n");
-//        printStream.print("\n");
+        
         printStream.print("total_read_pairs_processed:\t" + n_total_input_read_pairs + "\n");
 
         printStream.print("unmapped_read_pairs:" + n_unmappedPair + String.format(" (%.2f%%)", 100.0*n_unmappedPair/ n_total_input_read_pairs) + "\n");
@@ -537,16 +541,12 @@ public class Aligner {
         printStream.print("multimapped_read_pairs:" + n_multimappedPair + String.format(" (%.2f%%)", 100.0*n_multimappedPair/ n_total_input_read_pairs) + "\n");
         printStream.print("multimapped_R1_reads:" + n_multimapped_R1 + "\n");
         printStream.print("multimapped_R2_reads:" + n_multimapped_R2 + "\n");
-//        printStream.print("Note:\tThere may an overlap between unmapped and multimapped pairs." + "\n");
 
         printStream.print("paired_read_pairs:" + n_paired + String.format(" (%.2f%%)", 100.0*n_paired/ n_total_input_read_pairs) + "\n");
         printStream.print("unique_paired_read_pairs:" + n_paired_unique + "\n");
         printStream.print("duplicated_pairs:\t" + n_paired_duplicated + "\n");
         printStream.print("\n");
         printStream.print("Artifact statistics\n");
-//        printStream.print("-------------------\n");
-//        printStream.print("\n");
-//        printStream.print("Disjoint categories:\n");
 
         int n_paired_unique_un_ligated_total=n_paired_unique_un_ligated+n_paired_unique_un_ligated_same_internal;
         printStream.print("unligated:" + n_paired_unique_un_ligated_total + String.format(" (%.2f%%)", 100.0* n_paired_unique_un_ligated_total /n_paired_unique) + "\n");
