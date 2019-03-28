@@ -579,7 +579,7 @@ public class Aligner {
 //        printStream.print("-------------------------------------------------\n");
 //        printStream.print("\n");
         printStream.print("YVP:\t" + String.format("%.2f%%", 100.0* n_paired_unique_valid / n_total_input_read_pairs) + "\n");
-        printStream.print("CLC:\t" + String.format("%.2f%%", 100.0* n_paired_unique_trans /n_paired_unique) + "\n");
+        printStream.print("CLC:\t" + String.format("%.2f%%", 100.0* n_paired_unique_valid_trans/n_paired_unique_valid) + "\n");
         printStream.print("RLC:\t" + String.format("%.2f%%", 100.0*(n_paired_unique- n_paired_unique_dangling)/n_paired_unique) + "\n");
         printStream.print("HPDR:\t" + String.format("%.2f%%", 100.0*n_paired_duplicated/n_paired) + "\n");
         printStream.print("\n");

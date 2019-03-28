@@ -278,7 +278,7 @@ distinguished from those arising from **cross-ligation** events.
 Based on the assumption that random cross-ligations between DNA fragments of different chromosomes (*trans*) occur more
 likely as compared to cross-ligations between DNA fragments of the same chromosome (*cis*), the ratio of the numbers of cis
 and trans read pairs is taken as an indicator of poor Hi-C libraries (Wingett 2015, Nagano 2015).
-Within Diachromatic, the CLC is calculated as proportion of trans read pairs amongst all uniquely mapped unique pairs.
+Within Diachromatic, the CLC is calculated as proportion of unique valid trans read pairs amongst all unique valid read pairs.
 For the CTCF depletion dataset, percentages range between 18.48% and 28.24%.
 
 
