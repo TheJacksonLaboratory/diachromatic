@@ -138,7 +138,7 @@ Therefore, we defined the fraction of singleton interactions as the proportion o
 read pair amongst all interactions.
 
 We typically observe very high PSI around 90%. However, not all of these interactions are necessarily the result
-of cross-ligation events. There might be other factors that contribute singelton interactions such as occasional
+of cross-ligation events. There might be other factors that contribute singletons interactions such as occasional
 non-functional contacts of spatial proximity.
 
 Interaction count statistics
