@@ -1,4 +1,3 @@
-
 @import url("https://www.jax.org/_res/css/modules/jax-base/p01-fonts.css");
 @import url("https://www.jax.org/_res/css/modules/fonts-extended.css");
 
@@ -6,11 +5,6 @@
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
     box-sizing: border-box
-}
-
-html, body, h1, li, a, article, aside, footer, header, main, nav, .section {
-    padding: 0;
-    margin: 0;
 }
 
 html, body {
@@ -23,26 +17,12 @@ body {
     background-color: #e0e3ea;
 }
 
-
-body > header, nav, main, body > .section, footer {
-    max-width: 1200px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-@media (min-width: 1440px) {
-    body > header, nav, main, body > .section, footer {
-        width: 83.3333%;
-        max-width: unset;
-    }
-}
-
-main, body > .section {
+.section {
     margin-top: 1.5rem;
     margin-bottom: 1.5rem;
 }
 
-body > header, body > .section {
+header, .section {
     padding: 2.1rem 2rem 0;
 }
 
@@ -66,22 +46,6 @@ h1 {
     line-height: 1;
 }
 
-.title {
-    margin:0 0 25px 0;
-}
-
-/* Your really should address semantic issues with your markup that make selectors like this necessary */
-
-main section a[name="othergenes"] h3,
-h2 {
-    font-family: "DIN Next", Helvetica, Arial, sans-serif;
-    font-weight: 700;
-    font-size: 1.5rem;
-    line-height: 1;
-    margin: 0 0 0.5rem;
-    padding: 0;
-}
-
 h3 {
     font-family: "DIN Next", Helvetica, Arial, sans-serif;
     font-weight: 700;
@@ -91,16 +55,32 @@ h3 {
     padding: 0;
 }
 
-
-main ul, main ol {
+ul, ol {
     margin: 0.5rem 0 0.5rem 1.4rem;
     padding: 0;
 }
 
-main li {
+li {
     margin: 0.25rem 0;
     padding: 0;
 }
+
+
+
+
+.title {
+    margin:0 0 25px 0;
+}
+
+.section a[name="othergenes"] h3, h2 {
+    font-family: "DIN Next", Helvetica, Arial, sans-serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1;
+    margin: 0 0 0.5rem;
+    padding: 0;
+}
+
 
 
 /* Navigation, Header */
@@ -149,7 +129,7 @@ main li {
 }
 
 /* Main Sections */
-main .section {
+.section {
     margin-top: 1.5rem;
     margin-bottom: 1.5rem;
     background-color: white;
@@ -157,7 +137,7 @@ main .section {
 
 }
 
-main .section  a[name="othergenes"] {
+.section  a[name="othergenes"] {
     display: block;
     margin-top: 1.5rem;
     background-color: white;
@@ -237,11 +217,6 @@ a[name="othergenes"] table.redTable a::first-letter {
 
 * {
     box-sizing: border-box;
-}
-
-.column {
-    float: left;
-    width: 50%;
 }
 
 /* Clear floats after the columns */

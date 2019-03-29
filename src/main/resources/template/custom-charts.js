@@ -1,6 +1,12 @@
+// Replace all
+String.prototype.replaceAll = function(search, replacement) {
+    var target = this;
+    return target.split(search).join(replacement);
+};
 /* Method to convert array of strings to array of integers */
 var convertToIntArray = function(ray){
     return ray.map(function (x) {
+        x = x.replaceAll(",", "");
         return parseInt(x, 10);
     });
 };
