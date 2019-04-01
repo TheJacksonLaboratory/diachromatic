@@ -16,15 +16,12 @@ class TruncatorTest {
     private static FastqPairParser parser=null;
     private static String fastq_1;
     private static String fastq_2;
-    private static String ligationSequence;
 
     @BeforeAll
     static void init() {
       ClassLoader classLoader = TruncatorTest.class.getClassLoader();
       fastq_1 = classLoader.getResource("data/fastq/test1.fastq").getFile();
       fastq_2 = classLoader.getResource("data/fastq/test2.fastq").getFile();
-      RestrictionEnzyme hindIII = new RestrictionEnzyme("HindIII","A^AGCTT");
-      ligationSequence=Truncator.fillEnd(hindIII);
     }
 
 

@@ -5,7 +5,7 @@ import htsjdk.samtools.util.Log;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.align.*;
-import org.jax.diachromatic.exception.DiachromaticException;
+
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
@@ -140,7 +140,7 @@ public class Counter {
         this.dp2countsMap=new HashMap<>();
     }
 
-    public void countInteractions() throws DiachromaticException, FileNotFoundException {
+    public void countInteractions() {
 
         // iterate over unique valid pairs
         n_pairs_total = 0;
@@ -218,41 +218,31 @@ public class Counter {
         // create file for summarize
         PrintStream printStream = new PrintStream(new FileOutputStream(outputTxtStats));
 
-        printStream.print("Summary statistics\n");
+        printStream.print("#Count statistics\n");
         printStream.print("==================\n\n");
-        printStream.print("\n");
-        printStream.print("Interaction count statistics\n");
-        printStream.print("----------------------------\n");
-        printStream.print("\n");
-        printStream.print("Total number of read pairs processed:\t" + n_pairs_total + "\n\n");
-
-        printStream.print("Counts of read pair orientations:\n");
-        printStream.print("\tF1F2 - commie:\t" + n_F1F2 + String.format(" (%.2f%%)", 100.0*n_F1F2/n_pairs_total) + "\n");
-        printStream.print("\tF2F1 - commie:\t" + n_F2F1 + String.format(" (%.2f%%)", 100.0*n_F2F1/n_pairs_total) + "\n");
-        printStream.print("\tR1R2 - commie:\t" + n_R1R2 + String.format(" (%.2f%%)", 100.0*n_R1R2/n_pairs_total) + "\n");
-        printStream.print("\tR2R1 - commie:\t" + n_R2R1 + String.format(" (%.2f%%)", 100.0*n_R2R1/n_pairs_total) + "\n");
-        printStream.print("\tF1R2 - innie:\t" + n_F1R2 + String.format(" (%.2f%%)", 100.0*n_F1R2/n_pairs_total) + "\n");
-        printStream.print("\tF2R1 - innie:\t" + n_F2R1 + String.format(" (%.2f%%)", 100.0*n_F2R1/n_pairs_total) + "\n");
-        printStream.print("\tR2F1 - outie:\t" + n_R2F1 + String.format(" (%.2f%%)", 100.0*n_R2F1/n_pairs_total) + "\n");
-        printStream.print("\tR1F2 - outie:\t" + n_R1F2 + String.format(" (%.2f%%)", 100.0*n_R1F2/n_pairs_total) + "\n");
-        printStream.print("\n");
-
-        printStream.print("\n");
-        printStream.print("Summary statistics about interactions between active (most typically enriched) and inactive fragments:\n");
-        printStream.print("\t" + "Total number of interactions: " + interaction_count + "\n");
-        printStream.print("\t" + "Number of interactions between active fragments: " + active_active_interaction_count + "\n");
-        printStream.print("\t" + "Number of interactions between inactive fragments: " + inactive_inactive_interaction_count + "\n");
-        printStream.print("\t" + "Number of interactions between active and inactive fragments: " + active_inactive_interaction_count + "\n");
+        printStream.print("total_read_pairs_ processed:" + n_pairs_total + "\n");
+        //  Counts of read pair orientations
+        printStream.print("\tF1F2_commie:" + n_F1F2 + String.format(" (%.2f%%)", 100.0*n_F1F2/n_pairs_total) + "\n");
+        printStream.print("\tF2F1_commie:" + n_F2F1 + String.format(" (%.2f%%)", 100.0*n_F2F1/n_pairs_total) + "\n");
+        printStream.print("\tR1R2_commie:" + n_R1R2 + String.format(" (%.2f%%)", 100.0*n_R1R2/n_pairs_total) + "\n");
+        printStream.print("\tR2R1_commie:" + n_R2R1 + String.format(" (%.2f%%)", 100.0*n_R2R1/n_pairs_total) + "\n");
+        printStream.print("\tF1R2_innie:" + n_F1R2 + String.format(" (%.2f%%)", 100.0*n_F1R2/n_pairs_total) + "\n");
+        printStream.print("\tF2R1_innie:" + n_F2R1 + String.format(" (%.2f%%)", 100.0*n_F2R1/n_pairs_total) + "\n");
+        printStream.print("\tR2F1_outie:" + n_R2F1 + String.format(" (%.2f%%)", 100.0*n_R2F1/n_pairs_total) + "\n");
+        printStream.print("\tR1F2_outie:" + n_R1F2 + String.format(" (%.2f%%)", 100.0*n_R1F2/n_pairs_total) + "\n");
+        // Summary statistics about interactions between active (most typically enriched) and inactive fragments
+        printStream.print("total_interaction_count: " + interaction_count + "\n");
+        printStream.print("interactions_between_selected_fragments:" + active_active_interaction_count + "\n");
+        printStream.print("interactions_between_unselected_fragments:" + inactive_inactive_interaction_count + "\n");
+        printStream.print("interactions_between_selected_and_unselected_fragments:" + active_inactive_interaction_count + "\n");
         printStream.print("");
-        printStream.print("\t" + "Total number of interacting fragments: " + interacting_fragment_count + "\n");
-        printStream.print("\t" + "Number of active interacting fragments: " + active_interacting_fragment_count + "\n");
-        printStream.print("\n");
-
-        printStream.print("Quality metrics for experimental trouble shooting:\n");
-        printStream.print("\tTarget Enrichment Coefficient (TEC):\t" + String.format("%.2f%%", 100*this.getTargetEnrichmentCoefficient()) + "\n");
-        printStream.print("\tCross-ligation coefficient (CLC):\t" + String.format("%.2f%%", 100.0*n_trans_pairs/n_pairs_total) + "\n");
+        printStream.print("total_interacting_fragments:" + interacting_fragment_count + "\n");
+        printStream.print("selected_interacting_fragments:" + active_interacting_fragment_count + "\n");
+        // Quality metrics for experimental trouble shooting:
+        printStream.print("target_enrichment_coefficient:" + String.format("%.2f%%", 100*this.getTargetEnrichmentCoefficient()) + "\n");
+        printStream.print("cross_ligation_coefficient:" + String.format("%.2f%%", 100.0*n_trans_pairs/n_pairs_total) + "\n");
         double fsi = 100.0*n_singleton_interactions/interaction_count;
-        printStream.print("\tFraction of Singleton Interactions (FSI):\t" + String.format("%.2f%%", fsi) + "\n");
+        printStream.print("fraction_singleton_interactions:" + String.format("%.2f%%", fsi) + "\n");
     }
 
     private void createOutputNames(String outputPathPrefix) {
@@ -265,7 +255,7 @@ public class Counter {
     /**
      * Prints digest pairs with associated read pair counts to a tab separated file.
      *
-     * @throws FileNotFoundException
+     * @throws FileNotFoundException  if the file output stream cannot be open for the TSV file of interaction counts
      */
     public void printInteractionCountsMapAsCountTable() throws FileNotFoundException {
 
@@ -282,7 +272,7 @@ public class Counter {
     /**
      * Prints coordinates of interacting digests and associated read counts to a tab separated file.
      *
-     * @throws FileNotFoundException
+     * @throws FileNotFoundException if the file output stream cannot be open for the TSV file of fragment interaction counts
      */
     public void printFragmentInteractionCountsMapAsCountTable() throws FileNotFoundException {
 
@@ -330,7 +320,7 @@ public class Counter {
     /**
      * @return Percentage of reads in selective/active digests.
      */
-    public double getTargetEnrichmentCoefficient() {
+    private double getTargetEnrichmentCoefficient() {
         return 1.0*active_read_count/read_count;
     }
 
