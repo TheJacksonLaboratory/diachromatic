@@ -9,8 +9,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ReadPairCoordinatesTest {
 
-
-
     @Test
     void testEqualsFunction() {
         ReadPairCoordinates rpc1 = new ReadPairCoordinates(42,37,1);

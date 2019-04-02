@@ -15,25 +15,25 @@ import java.io.IOException;
 class PotentiallyTruncatedFastQRecord {
     private static final Logger logger = LogManager.getLogger();
     private final String name;
-    private  String sequence=null;
-    private  String quality=null;
+    private  String sequence = null;
+    private  String quality = null;
 
-    private static String ligationSequence=null;
-    private static String restrictionSequence=null;
-    private static String danglingSequence=null;
+    private static String ligationSequence = null;
+    private static String restrictionSequence = null;
+    private static String danglingSequence = null;
 
-    private boolean maybeDangling=false;
+    private boolean maybeDangling = false;
 
 
     static void setLigationSequence(String seq) {
-        ligationSequence=seq;
+        ligationSequence = seq;
     }
 
     static void setRestrictionSequence(String seq) {
-        restrictionSequence=seq;
+        restrictionSequence = seq;
     }
 
-    static void setDanglingSequence(String seq) { danglingSequence=seq; }
+    static void setDanglingSequence(String seq) { danglingSequence = seq; }
 
     public boolean isMaybeDangling() {
         return this.maybeDangling;
@@ -44,9 +44,9 @@ class PotentiallyTruncatedFastQRecord {
 
 
     PotentiallyTruncatedFastQRecord(FastqRecord fqr) {
-        this.name=fqr.getReadName();
-        this.sequence=fqr.getReadString();
-        this.quality=fqr.getBaseQualityString();
+        this.name = fqr.getReadName();
+        this.sequence = fqr.getReadString();
+        this.quality = fqr.getBaseQualityString();
     }
 
     /**
@@ -56,16 +56,16 @@ class PotentiallyTruncatedFastQRecord {
      */
     boolean truncateIfLigationSiteFound() {
         int j = sequence.indexOf(PotentiallyTruncatedFastQRecord.danglingSequence);
-        if(j==0) {
-            this.maybeDangling=true;
+        if (j == 0) {
+            this.maybeDangling = true;
         }
         int i = sequence.indexOf(PotentiallyTruncatedFastQRecord.ligationSequence);
-        if (i<0) {
+        if (i < 0) {
             return false;  // we did not find the ligation sequence
         }
-        sequence=sequence.substring(0,i) + PotentiallyTruncatedFastQRecord.restrictionSequence;
-        int len=sequence.length();
-        quality=quality.substring(0,len);
+        sequence = sequence.substring(0, i) + PotentiallyTruncatedFastQRecord.restrictionSequence;
+        int len = sequence.length();
+        quality = quality.substring(0, len);
         return true;
     }
 
@@ -74,7 +74,7 @@ class PotentiallyTruncatedFastQRecord {
         out.write("@" + name + "\n");
         out.write(sequence + "\n");
         out.write("+\n");
-        out.write(quality+"\n");
+        out.write(quality + "\n");
     }
 
 

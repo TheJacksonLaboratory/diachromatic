@@ -46,25 +46,24 @@ public class RestrictionEnzyme implements Serializable {
     private Integer offset=null;
 
     public RestrictionEnzyme(String n, String s) {
-        name=n;
-        site=s;
-        this.offset=site.indexOf('^');
-        if (offset<0) {
-            logger.error(String.format("Malformed site pattern for enyze %s (%s)",name,site)); /* Should never happen!*/
+        name = n;
+        site = s;
+        this.offset = site.indexOf('^');
+        if (offset < 0) {
+            // Should never happen!
+            logger.error(String.format("Malformed site pattern for enyze %s (%s)", name, site));
         }
-        plainSite=site;
-        int i= site.indexOf('^');
-        if (i>=0) {
-            plainSite=site.substring(0,i)+site.substring(i+1);
+        plainSite = site;
+        int i = site.indexOf('^');
+        if (i >= 0) {
+            plainSite = site.substring(0, i) + site.substring(i + 1);
         }
-        int center=plainSite.length()/2;
-        if(offset<=center) {
-            this.danglingEndSeq=plainSite.substring(offset,plainSite.length());
+        int center = plainSite.length() / 2;
+        if (offset <= center) {
+            this.danglingEndSeq = plainSite.substring(offset, plainSite.length());
+        } else {
+            this.danglingEndSeq = plainSite.substring(plainSite.length() - offset, plainSite.length());
         }
-        else {
-            this.danglingEndSeq=plainSite.substring(plainSite.length()-offset,plainSite.length());
-        }
-        //logger.trace("name: " + name + "\tsite: " + site + "\tplainSite: " +  plainSite + "\toffset: " + offset + "\tcenter: " + center + "\tdanglingEndSeq: " + this.danglingEndSeq);
     }
 
     public String getName() {
@@ -89,7 +88,7 @@ public class RestrictionEnzyme implements Serializable {
 
 
     public static List<RestrictionEnzyme> parseRestrictionEnzymes() {
-        List<RestrictionEnzyme> reList=new ArrayList<>();
+        List<RestrictionEnzyme> reList = new ArrayList<>();
         ClassLoader classLoader = RestrictionEnzyme.class.getClassLoader();
         InputStream is = classLoader.getResourceAsStream("data/enzymelist.tab");
         try {
@@ -118,8 +117,8 @@ public class RestrictionEnzyme implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj==null) return false;
-        if (! (obj instanceof RestrictionEnzyme)) return false;
+        if (obj == null) return false;
+        if (!(obj instanceof RestrictionEnzyme)) return false;
         RestrictionEnzyme other = (RestrictionEnzyme) obj;
         return (name.equals(other.name) && site.equals(other.site));
     }

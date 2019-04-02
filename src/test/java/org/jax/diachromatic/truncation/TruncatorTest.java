@@ -24,7 +24,6 @@ class TruncatorTest {
       fastq_2 = classLoader.getResource("data/fastq/test2.fastq").getFile();
     }
 
-
     @Test
     void testBglII() {
         //BglII (5'-A^GATCT-3') cuts between A and G. So, the ligation
@@ -163,5 +162,4 @@ class TruncatorTest {
         }
         assertEquals(12,parser.getnReadsProcessed());
     }
-
 }

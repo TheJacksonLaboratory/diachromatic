@@ -35,12 +35,8 @@ public class Diachromatic {
         TruncateCommand truncate = new TruncateCommand();
         SummarizeCommand summarize = new SummarizeCommand();
 
-        JCommander jc = JCommander.newBuilder()
-                .addObject(diachromatic)
-                .addCommand("truncate", truncate)
-                .addCommand("align", align)
-                .addCommand("count", count)
-                .addCommand("summarize", summarize)
+        JCommander jc = JCommander.newBuilder().addObject(diachromatic).addCommand("truncate", truncate)
+                .addCommand("align", align).addCommand("count", count).addCommand("summarize", summarize)
                 .build();
         jc.setProgramName("java -jar Diachromatic.jar");
         try {
@@ -68,9 +64,9 @@ public class Diachromatic {
                 jc.usage();
                 System.exit(0);
             }
-            System.err.println("[ERROR] " + e.getMessage());
-            System.err.println("[ERROR] your command: " + commandstring);
-            System.err.println("[ERROR] enter java -jar Lr2pg -h for more information.");
+            logger.error("[ERROR] " + e.getMessage());
+            logger.error("[ERROR] your command: " + commandstring);
+            logger.error("[ERROR] enter java -jar Lr2pg -h for more information.");
             System.exit(1);
         }
         String parsedCommand = jc.getParsedCommand();
@@ -79,9 +75,9 @@ public class Diachromatic {
             System.exit(0);
         }
         if (!commandnames.contains(parsedCommand)) {
-            System.err.println("[ERROR] did not recognize command \"" + parsedCommand + "\"");
-            System.err.println("[ERROR] available commands are " + String.join(", ", commandnames));
-            System.err.println("[ERROR] enter java -jar Lr2pg -h for more information.");
+            logger.error("[ERROR] did not recognize command \"" + parsedCommand + "\"");
+            logger.error("[ERROR] available commands are " + String.join(", ", commandnames));
+            logger.error("[ERROR] enter java -jar Lr2pg -h for more information.");
             System.exit(1);
         }
 
@@ -95,11 +91,10 @@ public class Diachromatic {
         }
 
         if (jc.getParsedCommand() == null) {
-            System.err.println("[ERROR] no command passed");
+            logger.error("[ERROR] no command passed");
             jc.usage();
             System.exit(1);
         }
-
 
         Command diachromaticCommand;
         switch (parsedCommand) {
