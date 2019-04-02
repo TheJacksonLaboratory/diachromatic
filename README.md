@@ -1,4 +1,4 @@
-# diachromatic
+# Diachromatic
 Differential analysis of chromatin interactions by capture
 
 ## Summary
