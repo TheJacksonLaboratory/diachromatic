@@ -6,6 +6,8 @@
         <title>Diachromatic Analysis</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/solid.css" integrity="sha384-QokYePQSOwpBDuhlHOsX0ymF6R/vLk/UQVz3WHa6wygxI5oGTmDTv8wahFOSspdm" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/fontawesome.css" integrity="sha384-vd1e11sR28tEK9YANUtpIOdjGW14pS87bUBuOIoBILVWLFnS+MCX9T6MMf0VdPGq" crossorigin="anonymous">
         <style>
             <#include "bootstrap.min.css">
         </style>
@@ -21,24 +23,57 @@
     <header class="banner container">
         <h1 class="title">Diachromatic: Preparation and Quality Control of Hi-C and Capture Hi-C Data</h1>
         <div class="nav" id="navi">
-            <ul>
-                <li><a href="#sample">Sample</a> </li>
-                <li><a href="#truncation">Truncation</a></li>
-                <li><a href="#align">Alignment</a></li>
-                <li><a href="#count">Count</a></li>
-                <li><a href="#settings">Settings</a></li>
-                <li><a href="#about">About</a></li>
+            <ul class="nav-icons-home">
+                <li id="home"><i class="fas fa-home"></i></li>
+            </ul>
+            <ul class="nav-icons-support">
+                <li id="about"><i class="fas fa-info-circle"></i></li>
+                <li id="settings"><i class="fas fa-cogs"></i></li>
+                <li id="help"><i class="fas fa-question-circle"></i></li>
             </ul>
         </div>
     </header>
-    <div class="container">
-        <div class="section">
-            <a name="sample"></a>
-            <h2>Sample name: </h2>
-            <div class="row">
-                <div class="column" style="background-color:#aaa;">
-                  <h2>To do show names of files etc.</h2>
-                </div>
+    <div class="container main">
+        <div class="section sample">
+            <table class="info-table">
+                <tr>
+                    <td class="table-label">
+                        Date
+                    </td>
+                    <td class="table-data">
+                        Sunday March 30, 2019 7:30pm
+                    </td>
+                </tr>
+                <tr>
+                    <td class="table-label">
+                        Sample
+                    </td>
+                    <td class="table-data">
+                        Z17X
+                    </td>
+                </tr>
+                <tr>
+                    <td class="table-label">
+                        Input Files
+                    </td>
+                    <td class="table-data">
+                        z17x.align.stats.txt, z17x.truncation.stats.txt
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="section extra">
+            <div class="about">
+                <h2>About</h2>
+                <p>Diachromatic is a tool for ....</p>
+            </div>
+            <div class="settings">
+                <h2>Settings</h2>
+                <p>Diachromatic is a tool for ....</p>
+            </div>
+            <div class="help">
+                <h2>Help</h2>
+                <p>Diachromatic is a tool for ....</p>
             </div>
         </div>
         <!-- Section on truncation -->
@@ -73,10 +108,10 @@
                </tr>
              </table>
             <div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+            <span id="align"></span>
         </div>
          <!-- Section on alignment -->
         <div class="section">
-            <a name="align"></a>
             <h2>Alignment Statistics</h2>
             <p>
                 Diachromatic performs alignment of the truncated reads
@@ -147,11 +182,11 @@
                     <div id="container_alignReadGraph" style="min-width: 150px; height: 200px; margin: 0 auto"></div>
                 </div>
             </div>
+            <span id="artefact"></span>
            <p> TODO -- consider reformating the table because many of the items are for read-pairs and not reads</p>
         </div>
         <!-- Artefact statistics -->
         <div class="section">
-            <a name="artefact"></a>
             <h2>Artefact Statistics</h2>
             <p>
                 Artefacts are TODO--Write a summary here
@@ -261,16 +296,13 @@
                 </article>
             </section>
         </#if> <!-- count section -->
-        <div class="section">
-            <a name="about"></a>
-            <h2>About</h2>
-
-            <p>Diachromatic is a tool for ....</p>
-        </div>
     </div>
     <footer class="container">
       <p>Diachromatic &copy; 2019</p>
     </footer>
+    <script type="text/javascript">
+        <#include "jquery.js">
+    </script>
     <script>
         <#include "highcharts.js">
     </script>

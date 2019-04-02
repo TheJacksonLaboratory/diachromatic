@@ -149,3 +149,31 @@ Highcharts.chart('container', {
         data: convertToIntArray(truncationReverseData)
     }]
 });
+
+$(".nav-icons-support li").click(function(event) {
+    var target = event.currentTarget.id;
+    reset();
+    $(".section").not(".extra").hide();
+    $(".section.extra").show();
+    console.log(event);
+    if(target === "about"){
+        $(".about").show();
+    } else if(target ===  "settings"){
+        $(".settings").show();
+    } else if(target === "help"){
+        $(".help").show();
+    }
+
+});
+
+$(".nav-icons-home li").click(function(){
+    $(".section.extra").hide();
+    $(".section").not(".extra").show();
+});
+
+var reset = function(){
+    $(".about").hide();
+    $(".settings").hide();
+    $(".help").hide();
+};
+
