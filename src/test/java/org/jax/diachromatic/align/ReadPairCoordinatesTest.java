@@ -13,14 +13,14 @@ public class ReadPairCoordinatesTest {
     void testEqualsFunction() {
         ReadPairCoordinates rpc1 = new ReadPairCoordinates(42,37,1);
         ReadPairCoordinates rpc2 = new ReadPairCoordinates(42,37,1);
-        assertTrue(rpc1.equals(rpc2));
+        assertEquals(rpc1,rpc2);
     }
 
     @Test
     void testEqualsFunctionForDistinctRPC() {
         ReadPairCoordinates rpc1 = new ReadPairCoordinates(42,37,1);
         ReadPairCoordinates rpc2 = new ReadPairCoordinates(42,36,1);
-        assertFalse(rpc1.equals(rpc2));
+        assertEquals(rpc1,rpc2);
     }
 
     @Test
