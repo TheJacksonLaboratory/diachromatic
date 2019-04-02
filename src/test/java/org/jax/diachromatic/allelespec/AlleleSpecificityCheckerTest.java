@@ -9,7 +9,7 @@ import java.net.URL;
 import static org.junit.Assert.assertEquals;
 
 public class AlleleSpecificityCheckerTest{
-    /** Path to BAM file created with help of {@link MakeFilesForTest}. */
+    // Path to BAM file created with help of {@link MakeFilesForTest}.
     private static String bamPath;
 
     @BeforeClass
@@ -22,7 +22,6 @@ public class AlleleSpecificityCheckerTest{
         bamPath = resource.getFile();
     }
 
-
     @Test
     public void test1() {
         AlleleSpecificityChecker checker = new AlleleSpecificityChecker(bamPath,"");
@@ -33,6 +32,4 @@ public class AlleleSpecificityCheckerTest{
             System.err.println("p="+loc.binomialTestPvalue());
         }
     }
-
-
 }

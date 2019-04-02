@@ -8,6 +8,4 @@ public class SimpleTwistedCount {
     public SimpleTwistedCount(){
 
     }
-
-
 }

@@ -66,7 +66,7 @@ public class DigestMapTest {
     }
 
 
-    /** Test that the binary search gets the same result for any position in digest */
+    // Test that the binary search gets the same result for any position in digest
     @Test
     void testGetSameDigest()throws DiachromaticException {
         //17954	18291

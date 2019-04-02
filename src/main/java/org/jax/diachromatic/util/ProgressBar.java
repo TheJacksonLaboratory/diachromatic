@@ -1,5 +1,8 @@
 package org.jax.diachromatic.util;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * A simple status bar that only work on terminals where "\r" has an affect.
  *
@@ -9,6 +12,7 @@ package org.jax.diachromatic.util;
  */
 public final class ProgressBar {
 
+    private static final Logger logger = LogManager.getLogger();
     /** smallest value */
     private final long min;
     /** largest value */
@@ -48,13 +52,13 @@ public final class ProgressBar {
         }
 
         bar.append("]   " + percent + "%     ");
-        System.err.print("\r" + bar.toString());
+        logger.error("\r" + bar.toString());
         if (pos == max)
-            System.err.println();
+            logger.error("\n");
     }
 
     public void finish() {
-        System.err.println();
+        logger.error("\n");
     }
 
 }

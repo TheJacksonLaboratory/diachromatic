@@ -1,0 +1,274 @@
+@import url("https://www.jax.org/_res/css/modules/jax-base/p01-fonts.css");
+@import url("https://www.jax.org/_res/css/modules/fonts-extended.css");
+
+* {
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box
+}
+
+html, body {
+    font-size: 14px;
+}
+
+body {
+    font-family: "DIN Next", Helvetica, Arial, sans-serif;
+    line-height: 1.25;
+    background-color: #e0e3ea;
+}
+
+header, .section {
+    padding: 2.1rem 2rem 0;
+}
+
+a[href] {
+    color: #05396b;
+}
+
+a[href]:hover {
+    color: #009ed0;
+}
+
+p {
+    padding: 0;
+    margin: 0.75rem 0;
+}
+
+h1 {
+    font-family: "DIN Next", Helvetica, Arial, sans-serif;
+    font-weight: 700;
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+h3 {
+    font-family: "DIN Next", Helvetica, Arial, sans-serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+    line-height: 1;
+    margin: 0 0 0.5rem;
+    padding: 0;
+}
+
+ul, ol {
+    margin: 0.5rem 0 0.5rem 1.4rem;
+    padding: 0;
+}
+
+li {
+    margin: 0.25rem 0;
+    padding: 0;
+}
+
+.title {
+    margin:0 0 15px 0;
+    text-align: center;
+}
+
+/* Navigation, Header */
+.banner {
+    background-color: #05396b;
+    color: white;
+}
+
+.nav {
+    background-color: #05396b;
+    margin-top: 1px;
+    overflow: auto;
+    zoom: 1;
+    padding: 0;
+    border-top: 1px solid #ccc;
+}
+
+.nav li {
+    color: white;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.2rem;
+    display: block;
+    padding: 1rem;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.nav li:hover {
+    color: #05396b;
+    background-color: #04c3ff;
+}
+
+.nav ul {
+    display: table;
+    margin: 0;
+}
+
+.nav li {
+    display: block;
+    float: left;
+}
+
+.nav .nav-icons-home {
+    float: left;
+}
+
+.nav .nav-icons-support {
+    float: right;
+}
+
+/* Main Sections */
+.section {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    background-color: white;
+    padding: 2.1rem 2rem 1.6rem;
+    box-shadow: 0 1px 2px 0 #c0c0c0;
+}
+
+.section  a[name="othergenes"] {
+    display: block;
+    margin-top: 1.5rem;
+    background-color: white;
+    padding: 2.1rem 2rem 1.6rem;
+}
+
+.section a[name="othergenes"] h3, h2 {
+    font-family: "DIN Next", Helvetica, Arial, sans-serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1;
+    margin: 0 0 0.5rem;
+    padding: 0;
+}
+
+.section.extra {
+    display: none;
+    padding: 1rem;
+    width: 75%;
+    margin: 1rem 0 1rem 15%;
+}
+
+.remove-extra {
+    position: relative;
+    top: -20px;
+    left: -75px;
+    font-size: 24px;
+    cursor: pointer;
+}
+.main .section:first-child {
+    width: 40%;
+    padding: 5px;
+    height: 100px;
+    margin: 1rem 0 0 30%;
+}
+
+.info-table {
+    margin: 0.5rem 0 0 1rem;
+}
+.info-table .table-label {
+    text-align: justify-all;
+    text-transform: UPPERCASE;
+    font-weight: bold;
+    color: #575858b5;
+    font-size: 12px;
+}
+
+.info-table .table-data {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0.5rem 0;
+}
+
+th, td {
+    text-align: left;
+    padding: 0.4rem 0.5rem 0.25rem;
+}
+
+th {
+    background-color: #e0e3ea;
+    border-bottom: 1px solid white;
+}
+
+table.redTable {
+    width: auto;
+    min-width: 50%;
+}
+
+table.redTable td {
+    background-color: #f0f3fa;
+}
+
+table.minimalistBlack th,
+table.minimalistBlack td {
+    border: 2px solid #e0e3ea;
+}
+
+table.minimalistBlack.red td {
+    background: red;
+}
+
+td.red {
+    background-color: #f0f3fa;
+}
+
+
+a[name="othergenes"] table.redTable {
+
+}
+
+a[name="othergenes"] table.redTable td.disease {
+    font-size: 0.928rem;
+    padding-top: 0.35rem;
+    padding-bottom: 0.15rem;
+    text-transform: lowercase
+}
+
+a[name="othergenes"] table.redTable > tbody > tr:nth-child(even) > td {
+    background-color: white;
+}
+
+a[name="othergenes"] table.redTable > tbody > tr:hover > td {
+    background-color: #cceaff;
+}
+
+a[name="othergenes"] table.redTable a {
+    text-decoration: none;
+    display: block;
+}
+
+a[name="othergenes"] table.redTable a:hover {
+    text-decoration: underline;
+}
+
+a[name="othergenes"] table.redTable a::first-letter {
+    text-transform: uppercase;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/* Clear floats after the columns */
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+hr {
+    display: block;
+    height: 1px;
+    border: 0;
+    border-top: 1px solid #ccc;
+    margin: 1em 0;
+    padding: 0;
+}
+
+footer {
+    background-color: #05396b;
+    color: white;
+    padding: 1rem 2rem;
+}
