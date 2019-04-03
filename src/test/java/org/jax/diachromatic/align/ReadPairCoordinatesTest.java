@@ -20,7 +20,7 @@ public class ReadPairCoordinatesTest {
     void testEqualsFunctionForDistinctRPC() {
         ReadPairCoordinates rpc1 = new ReadPairCoordinates(42,37,1);
         ReadPairCoordinates rpc2 = new ReadPairCoordinates(42,36,1);
-        assertEquals(rpc1,rpc2);
+        assertNotEquals(rpc1,rpc2);
     }
 
     @Test
