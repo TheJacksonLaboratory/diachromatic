@@ -69,6 +69,7 @@ public class Summarizer {
 
     private void parseTruncateData() {
         int UNINITIALIZED = -1;
+        String EMPTY_STRING = "";
         int total_read_pairs_processed = UNINITIALIZED;
         int truncated_forward_reads = UNINITIALIZED;
         int truncated_reverse_reads = UNINITIALIZED;
@@ -76,6 +77,8 @@ public class Summarizer {
         int dangling_reverse_reads = UNINITIALIZED;
         int short_removed_forward_reads = UNINITIALIZED;
         int short_removed_reverse_reads = UNINITIALIZED;
+        String restriction_enzyme = EMPTY_STRING;
+        String filled_end_sequence = EMPTY_STRING;
 
         logger.trace("Parsing the truncation data at {}", truncatePath);
         try (BufferedReader br = new BufferedReader(new FileReader(truncatePath))) {
@@ -106,6 +109,12 @@ public class Summarizer {
                         break;
                     case "short_removed_reverse_reads":
                         short_removed_reverse_reads=getIntegerValue(fields[1]);
+                        break;
+                    case "restriction_enzyme":
+                        restriction_enzyme=fields[1];
+                        break;
+                    case "filled_end_sequence":
+                        filled_end_sequence = fields[1];
                         break;
                 }
             }

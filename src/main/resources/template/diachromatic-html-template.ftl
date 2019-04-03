@@ -46,18 +46,18 @@
                 </tr>
                 <tr>
                     <td class="table-label">
-                        Sample
+                        Input (forward)
                     </td>
                     <td class="table-data">
-                        Z17X
+                        ${input_fastq1!"n/a"}
                     </td>
                 </tr>
                 <tr>
                     <td class="table-label">
-                        Input Files
+                        Input (reverse)
                     </td>
                     <td class="table-data">
-                        z17x.align.stats.txt, z17x.truncation.stats.txt
+                         ${input_fastq2!"n/a"}
                     </td>
                 </tr>
             </table>
@@ -80,6 +80,8 @@
         <div class="section">
              <a name="truncation"></a>
              <h2>Truncation Statistics</h2>
+             <p>Reads were processed to recognize filled in restriction sites of the enzyme
+                ${restriction_enzyme!"n/a"}, i.e., ${filled_end_sequence!"n/a"}.</p>
              <p>Truncation was performed with a length threshold of ${length_threshold!"n/a"} nucleotides (reads whose length is below this threshold
                 after truncation are removed, denoted <i>Too short to map</i> in the table). A total of ${removed_pairs_one_or_two_reads_too_short!"n/a"}
                  pairs contained either a forward or a reverse read (or both) that were too short to map.

@@ -118,7 +118,7 @@ Highcharts.chart('container', {
         text: 'read counts following truncation'
     },
     xAxis: {
-        categories: ['Total reads', 'Not truncated', 'Truncated', 'Too short'],
+        categories: ['Total reads', 'Truncated', 'Dangling', 'Too short'],
         crosshair: true
     },
     yAxis: {
