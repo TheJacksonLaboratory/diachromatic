@@ -109,148 +109,146 @@
                    <td>${short_removed_reverse_reads!"n/a"}</td>
                </tr>
              </table>
-            <div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
-            <span id="align"></span>
-        </div>
          <!-- Section on alignment -->
         <div class="section">
             <h2>Alignment Statistics</h2>
             <p>
-                Diachromatic performs alignment of the truncated reads
-                with <a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml" target="__blank">bowtie2</a>. TODO-more text.
+                Diachromatic performs two independent alignments of the truncated R1 and R2 reads
+                with <a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml" target="__blank">bowtie2</a>.
+                Read pairs for which either R1 or R2 cannot be mapped or cannot be mapped to a unique location are
+                discarded. The remaining read pairs are re-paired and subjected to deduplication,
+                i.e. for given read pairs with identical orientation and identically mapped 5' end positions
+                only one read is used for downstream analysis.
             </p>
-            <!-- Read Pair Section -->
-            <div class="row">
+           <div class="row">
+                <!-- Read Section -->
                 <div class="col-lg-5">
-                    <h3>Read pair analysis</h3>
-                    <p>TODO Some text..</p>
                     <table class="redTable">
                         <tr>
-                            <th></th><th>Count</th>
+                            <th></th><th>R1</th><th>R2</th><th>Pairs</th>
                         </tr>
                         <tr>
-                            <td><b>Total Reads</b></td>
+                            <td style="text-align:left"><b>Total</b></td>
+                            <td></td>
+                            <td></td>
                             <td>${align_total_read_pairs_processed!"n/a"}</td>
                         </tr>
                         <tr>
-                            <td><b>Unmapped Read pairs</b></td>
+                            <td style="text-align:left"><b>Unmapped</b></td>
+                            <td>${align_unmapped_R1_reads!"n/a"}</td>
+                            <td>${align_unmapped_R2_reads!"n/a"}</td>
                             <td>${align_unmapped_read_pairs!"n/a"}</td>
                         </tr>
                         <tr>
-                            <td><b>Multimapped Read Pairs</b></td>
+                            <td style="text-align:left"><b>Multimapped</b></td>
+                            <td>${align_multimapped_R1_reads!"n/a"}</td>
+                            <td>${align_multimapped_R2_reads!"n/a"}</td>
                             <td>${align_multimapped_read_pairs!"n/a"}</td>
                         </tr>
                         <tr>
-                            <td><b>Paired Read pairs</b></td>
+                            <td style="text-align:left"><b>Paired</b></td>
+                            <td></td>
+                            <td></td>
                             <td>${align_paired_read_pairs!"n/a"}</td>
                         </tr>
                         <tr>
-                            <td><b>Unique paired Read pairs</b></td>
-                            <td>${align_unique_paired_read_pairs!"n/a"}</td>
-                        </tr>
-                        <tr>
-                            <td><b>Duplicated Read pairss</b></td>
+                            <td style="text-align:left"><b>Paired duplicated</b></td>
+                            <td></td>
+                            <td></td>
                             <td>${align_duplicated_pairs!"n/a"}</td>
                         </tr>
-                    </table>
-                </div>
-                <div class="col-lg-6">
-                    <div id="container_alignReadPairGraph" style="min-width: 210px; height: 200px; margin: 0 auto"></div>
-                </div>
-            </div>
-            <hr/>
-            <div class="row">
-                <!-- Read Section -->
-                <div class="col-lg-5">
-                    <h3>Read analysis</h3>
-                    <p>TODO Some text about the reads..</p>
-                    <table class="redTable">
                         <tr>
-                            <th></th><th>Forward Read</th><th>Reverse Read</th>
-                        </tr>
-                        <tr>
-                            <td><b>Unmapped Reads</b></td>
-                            <td>${align_unmapped_R1_reads!"n/a"}</td>
-                            <td>${align_unmapped_R2_reads!"n/a"}</td>
-                        </tr>
-                        <tr>
-                            <td><b>Multimapped Reads</b></td>
-                            <td>${align_multimapped_R1_reads!"n/a"}</td>
-                            <td>${align_multimapped_R2_reads!"n/a"}</td>
+                            <td style="text-align:left"><b>Paired unique</b></td>
+                            <td></td>
+                            <td></td>
+                            <td>${align_unique_paired_read_pairs!"n/a"}</td>
                         </tr>
                     </table>
                 </div>
                 <div class="col-lg-6">
-                    <div id="container_alignReadGraph" style="min-width: 150px; height: 200px; margin: 0 auto"></div>
+                    <div id="container_alignReadGraph" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
                 </div>
             </div>
+            TODO: Add separate column for percentages of pairs. Add thousands separator to numbers.
             <span id="artefact"></span>
-           <p> TODO -- consider reformating the table because many of the items are for read-pairs and not reads</p>
         </div>
         <!-- Artefact statistics -->
         <div class="section">
-            <h2>Artefact Statistics</h2>
+            <h2>Artifact Statistics</h2>
             <p>
-                Artefacts are TODO--Write a summary here
+                The paired unique pairs are subdivided into four disjoint categories: <i>un-ligated</i>, <i>self-ligated</i>,
+                <i>chimeric</i> and <i>strange internal</i>. The <i>un-ligated</i> and <i>self-ligated</i> categories
+                are further subdivided depending on whether the two reads were mapped to the same digest or
+                whether the categorization was based on one of the corresponding size threshold.
+                Reads that are neither <i>un-ligated</i> or <i>self-ligated</i> ligation are categorized as <i>chimeric</i>.
+                The <i>chimeric</i> category id further subdivided into <i>too short</i>, <i>valid</i>, and <i>too long</i>
+                depending on whether the calculated size is within the user defined range.
+                The last category <i>strange internal</i> is a container for read pairs that cannot be explained by
+                the processing logic. These pairs map to the same strand and, therefore, cannot be <i>un-ligated</i>
+                or <i>self-ligated</i> but they are not chimeric because both reads map to the same digest.
+                For all datasets that were analyzed, <i>strange internal</i> constitute only a small fraction of
+                all paired unique pairs.
+                TODO: Verify claim about strange internals. Revise text.
             </p>
-            <table class="redTable">
-                <tr>
-                    <th>Artefact type</th><th>Count</th>
-                </tr>
-                <tr>
-                    <td><b>Unligated</b></td>
-                    <td>${align_unligated!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b>unligated_by_size</b></td>
-                    <td>${align_unligated_by_size!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b>unligated (same_internal)</b></td>
-                    <td>${align_unligated_same_internal!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b>self-ligated</b></td>
-                    <td>${align_self_ligated!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b>self-ligated_by_size</b></td>
-                    <td>${align_self_ligated_by_size!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b>self-ligated (same internal)</b></td>
-                    <td>${align_self_ligated_same_internal!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b>chimeric</b></td>
-                    <td>${align_chimeric!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b> chimeric short</b></td>
-                    <td>${align_chimeric_short!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b>chimeric long</b></td>
-                    <td>${align_chimeric_long!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b>chimeric valid</b></td>
-                    <td>${align_chimeric_valid!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b> strange internal </b></td>
-                    <td>${align_strange_internal!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b> dangling_end_pairs_total  </b></td>
-                    <td>${align_dangling_end_pairs_total!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b> trans_pairs_total  </b></td>
-                    <td>${align_trans_pairs_total!"n/a"}</td>
-                </tr>
-            </table>
-            <p> Detailed results and sanity checks TODO -- better text. </p>
+           <div class="row">
+                <!-- Read Section -->
+                <div class="col-lg-5">
+                    <table class="redTable">
+                        <tr>
+                            <th>Fragment type</th><th>Count</th>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left"><b>Un-ligated</b></td>
+                            <td>${align_unligated!"n/a"}</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left">Un-ligated by size</b></td>
+                            <td>${align_unligated_by_size!"n/a"}</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left"> Un-ligated by same internal</td>
+                            <td>${align_unligated_same_internal!"n/a"}</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left"><b>Self-ligated</b></td>
+                            <td>${align_self_ligated!"n/a"}</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left">Self-ligated by size</td>
+                            <td>${align_self_ligated_by_size!"n/a"}</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left">Self-ligated by same internal</td>
+                            <td>${align_self_ligated_same_internal!"n/a"}</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left"><b>Chimeric</b></td>
+                            <td>${align_chimeric!"n/a"}</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left">Chimeric too short</td>
+                            <td>${align_chimeric_short!"n/a"}</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left">Chimeric too long</td>
+                            <td>${align_chimeric_long!"n/a"}</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left">Chimeric valid</td>
+                            <td>${align_chimeric_valid!"n/a"}</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left"><b>Strange internal</b></td>
+                            <td>${align_strange_internal!"n/a"}</td>
+                        </tr>
+                </table>
+                </div>
+                <div class="col-lg-6">
+                    <div id="container_artifactCountsSimpleGraph" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
+                </div>
+            </div>
+            <p> Detailed results and sanity checks TODO: Table/graphic for chimeric reads only. Danglig ends, Trans pairs, size distribution.
+            </p>
             <table class="redTable">
                 <caption>dangling end analysis</caption>
                 <tr><th>Artefact type</th><th>Count</th></tr>
@@ -276,7 +274,7 @@
             <br/><br/>
             <table class="redTable">
                 <caption>Summary</caption>
-                <tr><th>Artefact type</th><th>Count</th></tr>
+                <tr><th>Quality metrics</th><th>Count</th></tr>
                 <tr><td><b> Yield of valid pairs (YVP)</b></td><td>${align_YVP!"n/a"}</td></tr>
                 <tr><td><b> Cross-ligation coefficient (CLC)  </b></td><td>${align_CLC!"n/a"}</td></tr>
                 <tr><td><b>Re-ligation coefficient (RLC)   </b></td><td>${align_RLC!"n/a"}</td></tr>
