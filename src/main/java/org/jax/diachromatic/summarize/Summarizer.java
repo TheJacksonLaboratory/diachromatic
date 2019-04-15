@@ -153,8 +153,16 @@ public class Summarizer {
                 logger.debug(line);
                 String[] fields = line.split(":");
                 if (fields.length != 2) continue; // skip non key-value lines, they are comments
-                templateData.put(String.format("align_%s",fields[0].trim()), fields[1].trim());
-                logger.debug(String.format("align_%s %s",fields[0].trim(), fields[1].trim()));
+                String[] fields2 = fields[1].split(" ");
+                if(!fields[0].contains("YVP") && !fields[0].contains("CLC") && !fields[0].contains("RLC") && !fields[0].contains("HPDR")) {
+                    templateData.put(String.format("align_%s", fields[0].trim()), getIntegerValue(fields2[0].trim()));
+                } else if(fields[0].contains("size_counts")) {
+                    templateData.put(String.format("align_%s", fields[0].trim()), fields[1]);
+                } else {
+                    templateData.put(String.format("align_%s",fields[0].trim()), fields2[0].trim());
+                }
+
+                logger.debug(String.format("align_%s %s",fields[0].trim(), fields2[0].trim()));
                 logger.error(String.format("align_%s",fields[0]));
                 switch (fields[0]) {
                     case "total_read_pairs_processed":

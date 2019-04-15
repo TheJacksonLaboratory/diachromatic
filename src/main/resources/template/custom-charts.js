@@ -68,9 +68,102 @@ Highcharts.chart('container_alignReadGraph', {
     ]
 });
 
-/* Artifact Charts */
-var artifactDataSimple = ['${align_unique_paired_read_pairs}', '${align_unligated}','${align_self_ligated}', '${align_chimeric}', '${align_strange_internal}'];
-Highcharts.chart('container_artifactCountsSimpleGraph', {
+/* Dangling subcategories */
+var danglingSubcategoryCounts = [
+    '${align_dangling_end_pairs_total}',
+    '${align_n_paired_unique_un_ligated_dangling}',
+    '${align_n_paired_unique_self_ligated_dangling}',
+    '${align_n_paired_unique_too_short_dangling}',
+    '${align_n_paired_unique_valid_dangling}',
+    '${align_n_paired_unique_too_long_dangling}',
+    '${align_n_paired_strange_internal_dangling}'
+    ];
+var transSubcategoryCounts = [
+    '${align_trans_pairs_total}',
+    '${align_n_paired_unique_un_ligated_trans}',
+    '${align_n_paired_unique_self_ligated_trans}',
+    '${align_n_paired_unique_too_short_trans}',
+    '${align_n_paired_unique_valid_trans}',
+    '${align_n_paired_unique_too_long_trans}',
+    '${align_n_paired_strange_internal_trans}'
+    ];
+var detailedCategoryCounts = [
+    '${align_unique_paired_read_pairs}',
+    '${align_unligated}',
+    '${align_self_ligated}',
+    '${align_chimeric_short}',
+    '${align_chimeric_valid}',
+    '${align_chimeric_long}',
+    '${align_strange_internal}'
+    ];
+Highcharts.chart('container_danglingTransSubcategoryCounts', {
+    chart: {
+        type: 'column'
+    },
+    title: {
+        text: 'Dangling and trans subcategories'
+    },
+    subtitle: {
+        text: 'Fractions of dangling end and trans pairs'
+    },
+    xAxis: {
+        categories: ['Total', 'Un-ligated', 'Self-ligated', 'Chimeric - Too short', 'Chimeric - Valid size', 'Chimeric - Too long', 'Strange internal'],
+        crosshair: true
+    },
+    yAxis: {
+        min: 0,
+        title: {
+            text: 'Number of pairs'
+        }
+    },
+    tooltip: {
+        headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+        pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+            '<td style="padding:0"><b>{point.y:.1f} mm</b></td></tr>',
+        footerFormat: '</table>',
+        shared: true,
+        useHTML: true
+    },
+    plotOptions: {
+        column: {
+            pointPadding: 0.2,
+            borderWidth: 0
+        }
+    },
+    series: [
+        {
+            name: 'Total',
+            color: '#743562',
+            data: convertToIntArray(detailedCategoryCounts)
+        },
+        {
+            name: 'Dangling',
+            color: '#00cc99',
+            data: convertToIntArray(danglingSubcategoryCounts)
+        },
+        {
+            name: 'Trans',
+            color: '#3366cc',
+            data: convertToIntArray(transSubcategoryCounts)
+        }
+    ]
+});
+
+/* Fragments size plot */
+var fragmentSizeCounts = ['${align_chimeric_fragment_size_counts}'];
+Highcharts.chart('container_fragmentSizeCounts', {
+    series: [
+    {
+        data: convertToIntArray(fragmentSizeCounts),
+        pointStart: 1,
+        lineWidth: 0.5
+    }
+    ]
+});
+
+/* Fragment type count chart */
+var fragmentTypeCounts = ['${align_unique_paired_read_pairs}', '${align_unligated}','${align_self_ligated}', '${align_chimeric}', '${align_strange_internal}'];
+Highcharts.chart('container_fragmentTypeCounts', {
     chart: {
         type: 'column'
     },
@@ -107,7 +200,7 @@ Highcharts.chart('container_artifactCountsSimpleGraph', {
     series: [
     {
         name: 'Pairs',
-        data: convertToIntArray(artifactDataSimple),
+        data: convertToIntArray(fragmentTypeCounts),
         color: '#743562'
     }
     ]

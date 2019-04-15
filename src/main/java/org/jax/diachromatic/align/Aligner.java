@@ -608,6 +608,15 @@ public class Aligner {
         printStream.print(String.format("n_paired_strange_internal_trans:%d (%.2f%% of all unique valid pairs)\n", n_paired_strange_internal_trans, (100.0 * n_paired_strange_internal_trans / n_paired_unique_valid)));
         printStream.print(String.format("n_total_trans:%d (%.2f%% of all unique paired read pairs)\n", n_paired_unique_trans, (100.0 * n_paired_unique_trans/n_paired_unique)));
 
+        printStream.print("\n");
+        printStream.print("chimeric_fragment_size_counts:");
+        for(int i=0; i<FRAG_SIZE_LIMIT; i++) {
+            if (i < FRAG_SIZE_LIMIT - 1) {
+                printStream.print(fragSizesChimericPairs[i] + ", ");
+            } else {
+                printStream.print(fragSizesChimericPairs[i] + "\n");
+            }
+        }
     }
 
     /**
