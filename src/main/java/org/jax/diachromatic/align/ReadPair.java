@@ -259,8 +259,8 @@ public class ReadPair {
             }
         }
 
-        // check if both reads are not on random chromosomes
-        if (R1.getReferenceName().contains("_") || R2.getReferenceName().contains("_")) {
+        // check if both reads are not on random chromosomes or EBV for hg38
+        if (R1.getReferenceName().contains("_") || R2.getReferenceName().contains("_") || R1.getReferenceName().contains("EBV")|| R2.getReferenceName().contains("EBV")) {
             this.isPaired = false;
         }
 
