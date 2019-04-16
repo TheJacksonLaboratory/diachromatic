@@ -155,11 +155,14 @@ public class Summarizer {
                 if (fields.length != 2) continue; // skip non key-value lines, they are comments
                 String[] fields2 = fields[1].split(" ");
                 if(!fields[0].contains("YVP") && !fields[0].contains("CLC") && !fields[0].contains("RLC") && !fields[0].contains("HPDR")) {
-                    templateData.put(String.format("align_%s", fields[0].trim()), getIntegerValue(fields2[0].trim()));
-                } else if(fields[0].contains("size_counts")) {
-                    templateData.put(String.format("align_%s", fields[0].trim()), fields[1]);
+                    if(fields[0].contains("array")) {
+                        templateData.put(String.format("align_%s", fields[0].trim()), fields[1]);
+                        logger.trace(fields[1].length());
+                    } else {
+                        templateData.put(String.format("align_%s", fields[0].trim()), getIntegerValue(fields2[0].trim()));
+                    }
                 } else {
-                    templateData.put(String.format("align_%s",fields[0].trim()), fields2[0].trim());
+                        templateData.put(String.format("align_%s", fields[0].trim()), fields2[0].trim());
                 }
 
                 logger.debug(String.format("align_%s %s",fields[0].trim(), fields2[0].trim()));

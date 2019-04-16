@@ -167,6 +167,12 @@ public class Aligner {
     private int[] fragSizesUnLigatedPairs =  new int[FRAG_SIZE_LIMIT+1];
     private int[] fragSizesSelfLigatedSameInternalPairs =  new int[FRAG_SIZE_LIMIT+1];
 
+    /**
+     * HasMap for Trans/Cis ratio
+     */
+    Map<String, Integer> cisCounts;
+    Map<String, Integer> transCounts;
+
 
     /**
      * HTS-JDK SAM reader objects for R1 and R2.
@@ -277,6 +283,8 @@ public class Aligner {
 
         DeDupMap dedup_map = new DeDupMap(useRelativeOrientationForDuplicateRemoval);
         ReadPair pair;
+        cisCounts = new HashMap<String, Integer>();
+        transCounts = new HashMap<String, Integer>();
 
         while ((pair = getNextPair())!= null) {
 
@@ -372,6 +380,22 @@ public class Aligner {
                         n_paired_unique_too_long_trans++;}
                     if(pair.getCategoryTag().equals("SI")) {
                         n_paired_strange_internal_trans++;}
+                    if(transCounts.containsKey(pair.getReferenceSequenceOfR1())) {
+                        transCounts.put(pair.getReferenceSequenceOfR1(),transCounts.get(pair.getReferenceSequenceOfR1())+1);
+                    } else {
+                        transCounts.put(pair.getReferenceSequenceOfR1(),1);
+                    }
+                    if(transCounts.containsKey(pair.getReferenceSequenceOfR2())) {
+                        transCounts.put(pair.getReferenceSequenceOfR2(),transCounts.get(pair.getReferenceSequenceOfR2())+1);
+                    } else {
+                        transCounts.put(pair.getReferenceSequenceOfR2(),1);
+                    }
+                } else {
+                    if(cisCounts.containsKey(pair.getReferenceSequenceOfR1())) {
+                        cisCounts.put(pair.getReferenceSequenceOfR1(),cisCounts.get(pair.getReferenceSequenceOfR1())+2);
+                    } else {
+                        cisCounts.put(pair.getReferenceSequenceOfR1(),2);
+                    }
                 }
             } else {
                 continue;
@@ -609,14 +633,56 @@ public class Aligner {
         printStream.print(String.format("n_total_trans:%d (%.2f%% of all unique paired read pairs)\n", n_paired_unique_trans, (100.0 * n_paired_unique_trans/n_paired_unique)));
 
         printStream.print("\n");
-        printStream.print("chimeric_fragment_size_counts:");
-        for(int i=0; i<FRAG_SIZE_LIMIT; i++) {
-            if (i < FRAG_SIZE_LIMIT - 1) {
+        printStream.print("chimeric_fragment_size_count_array:");
+        for(int i=0; i<1000; i++) {
+            if (i < 1000 - 1) {
                 printStream.print(fragSizesChimericPairs[i] + ", ");
             } else {
                 printStream.print(fragSizesChimericPairs[i] + "\n");
             }
         }
+        printStream.print("\n");
+        printStream.print("chimeric_fragment_size_active_count_array:");
+        for(int i=0; i<1000; i++) {
+            if (i < 1000 - 1) {
+                printStream.print(fragSizesActiveChimericPairs[i] + ", ");
+            } else {
+                printStream.print(fragSizesActiveChimericPairs[i] + "\n");
+            }
+        }
+        printStream.print("\n");
+        printStream.print("un_ligated_fragment_size_count_array:");
+        for(int i=0; i<1000; i++) {
+            if (i < 1000 - 1) {
+                printStream.print(fragSizesUnLigatedPairs[i] + ", ");
+            } else {
+                printStream.print(fragSizesUnLigatedPairs[i] + "\n");
+            }
+        }
+        printStream.print("\n");
+        printStream.print("self_ligated_fragment_size_count_array:");
+        for(int i=0; i<FRAG_SIZE_LIMIT; i++) {
+            if (i < FRAG_SIZE_LIMIT - 1) {
+                printStream.print(fragSizesSelfLigatedSameInternalPairs[i] + ", ");
+
+            } else {
+                printStream.print(fragSizesSelfLigatedSameInternalPairs[i]);
+
+            }
+        }
+        printStream.print("\n");
+
+
+
+        HashMap<String, Double> clc = new HashMap<String, Double>();
+        for (String chromosome : transCounts.keySet()) {
+            printStream.print(chromosome + "\t" + 1.0*transCounts.get(chromosome)/(cisCounts.get(chromosome)+transCounts.get(chromosome)) +"\n");
+            clc.put(chromosome,1.0*transCounts.get(chromosome)/(cisCounts.get(chromosome)+transCounts.get(chromosome)));
+        }
+        // TODO: Sort by value and create array for HiChart.
+
+
+
     }
 
     /**

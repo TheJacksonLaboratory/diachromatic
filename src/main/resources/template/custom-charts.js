@@ -149,13 +149,69 @@ Highcharts.chart('container_danglingTransSubcategoryCounts', {
     ]
 });
 
-/* Fragments size plot */
-var fragmentSizeCounts = ['${align_chimeric_fragment_size_counts}'];
+/* Fragments size plots */
+
+var ChimericFragmentSizeCounts = [${align_chimeric_fragment_size_count_array}];
+var ChimericFragmentSizeCountsActive = [${align_chimeric_fragment_size_active_count_array}];
+var UnLigatedFragmentSizeCountsActive = [${align_un_ligated_fragment_size_count_array}];
 Highcharts.chart('container_fragmentSizeCounts', {
+    title: {
+        text: 'Distribution of fragment sizes'
+    },
+    chart: {
+        type: 'line'
+    },
+    yAxis: {
+        min: 0,
+        title: {
+            text: 'Fragment counts'
+        }
+    },
     series: [
     {
-        data: convertToIntArray(fragmentSizeCounts),
+        name: 'Chimeric',
+        data: ChimericFragmentSizeCounts,
         pointStart: 1,
+        color: '#9ADAFF',
+        lineWidth: 0.5
+    },
+    {
+        name: 'Chimeric active',
+        data: ChimericFragmentSizeCountsActive,
+        color: '#FFA500',
+        pointStart: 1,
+        lineWidth: 0.5
+    },
+    {
+        name: 'Un-ligated',
+        data: UnLigatedFragmentSizeCountsActive,
+        color: '#A3A3A3',
+        pointStart: 1,
+        lineWidth: 0.5
+    }
+    ]
+});
+
+var SelfLigatedDigestSizeCounts = [${align_self_ligated_fragment_size_count_array}];
+Highcharts.chart('container_SelfLigatedDigestSizeCounts', {
+    title: {
+        text: 'Distribution of self-ligating digest sizes'
+    },
+    chart: {
+        type: 'line'
+    },
+    yAxis: {
+        min: 0,
+        title: {
+            text: 'Digest counts'
+        }
+    },
+    series: [
+    {
+        name: 'Self-ligated',
+        data: SelfLigatedDigestSizeCounts,
+        pointStart: 1,
+        color: '#9ADAFF',
         lineWidth: 0.5
     }
     ]

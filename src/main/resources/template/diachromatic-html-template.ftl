@@ -246,7 +246,7 @@
 	<div class="section">
 	<h2>Quality metrics</h2>
 		<p>
-                Explain quality metrics.
+        Explain quality metrics.
 		</p>
 		<table class="redTable">
 			<tr>
@@ -257,6 +257,7 @@
 			<tr><td style="text-align:left"><b>Re-ligation coefficient (RLC)   </b></td><td>${align_RLC!"n/a"}</td></tr>
 			<tr><td style="text-align:left"><b>Hi-C pair duplication rate (HPDR)</b></td><td>${align_HPDR!"n/a"}</td></tr>
 		</table>
+		<font color="red"><b>ToDo: Explain quality metrics.</b></font>
 	</div>
 	<!-- Quality metrics - end -->
 	<!-- Detailed results -->
@@ -265,8 +266,8 @@
 		<p>
 		Dangling ends and trans read pairs do not constitute a separate category but may occur in different categories. The following table and bar chart show the proportion of
 		dangling end and trans read pairs within the individual categories (the category <i>Chimeric</i> is broken down into <i>Chimeric - Too short</i>, <i>Chimeric - Valid size</i>,
-		and <i>Chimeric - Too long</i>). Note: Trans pairs cannot occur within the categories <i>Un-ligated</i>, <i>Self-ligated</i> and <i>Strange internal</i> by defiition.
-            	</p>
+		and <i>Chimeric - Too long</i>). Note: Trans pairs cannot occur within the categories <i>Un-ligated</i>, <i>Self-ligated</i> and <i>Strange internal</i> by definition.
+        </p>
 		<br>
 		<table class="redTable">
 			<tr>
@@ -293,12 +294,28 @@
 		</table>
 		<br>
 		<div id="container_danglingTransSubcategoryCounts" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
+		 <font color="red"><b>ToDo: Pop-up windows show 'mm' unit.</b></font>
 	</div>
 	<!-- Detailed results - end -->
 	<!-- Fragment sizes -->
 	<div class="section">
-		<div id="container_fragmentSizeCounts" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
-	</div>
+	<h2>Fragment and self-ligating digest sizes</h2>
+	        <p>
+    		Diachromatic determines the distribution of fragment sizes separately for <i>Chimeric</i> (blue) and <i>active Chimeric</i> (orange)
+    		read pairs, whereby a read pair is defined to be active, if at least one of the reads maps to a digest that
+    		was selected for enrichment (marked with an 'A' in the input digest file).
+    		In addition, the size distribution of un-ligated fragments is determined (gray).
+            </p>
+		    <div id="container_fragmentSizeCounts" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
+            <p>
+            The size distribution of self-ligating is derived from outward pointing read pairs that map to the same digest only
+            and is intended to guide the choice of a good size threshold for self-ligation (-s option).
+            Furthermore, this distribution may provide insights into the relationship between digests size and
+            re-ligation beyond self-ligation.
+            </p>
+            <div id="container_SelfLigatedDigestSizeCounts" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
+            <font color="red"><b>ToDo: Plot size distribution of self-ligating digests in a histogram rather than line plot.</b></font>
+    </div>
         <#if count??>
             <section>
                 <article>
