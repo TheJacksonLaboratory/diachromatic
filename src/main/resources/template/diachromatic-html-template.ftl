@@ -79,15 +79,17 @@
         <!-- Section on truncation -->
         <div class="section">
              <a name="truncation"></a>
-             <h2>Truncation Statistics</h2>
+             <h2>Truncation statistics</h2>
              <p>Reads were processed to recognize filled in restriction sites of the enzyme
                 ${restriction_enzyme!"n/a"}, i.e., ${filled_end_sequence!"n/a"}.</p>
              <p>Truncation was performed with a length threshold of ${length_threshold!"n/a"} nucleotides (reads whose length is below this threshold
                 after truncation are removed, denoted <i>Too short to map</i> in the table). A total of ${removed_pairs_one_or_two_reads_too_short!"n/a"}
                  pairs contained either a forward or a reverse read (or both) that were too short to map.
              </p>
+	     <br>
              <table class="redTable">
-               <tr><th></th><th>Forward Read</th><th>Reverse Read</th></tr>
+               <tr>
+			<th></th><th>Forward Read</th><th>Reverse Read</th></tr>
                <tr>
                    <td><b>Total Reads</b></td>
                    <td>${total_read_pairs_processed!"n/a"}</td>
@@ -109,180 +111,227 @@
                    <td>${short_removed_reverse_reads!"n/a"}</td>
                </tr>
              </table>
-            <div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
-            <span id="align"></span>
         </div>
-         <!-- Section on alignment -->
+	<!-- Section on truncation - end -->
+        <!-- Section on alignment -->
+	<div class="section">
+	<h2>Alignment statistics</h2>
+		<p>
+                Diachromatic performs two independent alignments of the truncated R1 and R2 reads
+                with <a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml" target="__blank">bowtie2</a>.
+                Read pairs for which either R1 or R2 cannot be mapped or cannot be mapped to a unique location are
+                discarded. The remaining read pairs are re-paired and subjected to deduplication,
+                i.e. for given read pairs with identical orientation and identically mapped 5' end positions
+                only one read is used for downstream analysis.
+		</p>
+		<br>
+		<table class="redTable">
+			<tr>
+			    <th></th><th>R1</th><th>R2</th><th>Pairs</th>
+			</tr>
+			<tr>
+			    <td style="text-align:left"><b>Total</b></td>
+			    <td></td>
+			    <td></td>
+			    <td>${align_total_read_pairs_processed!"n/a"}</td>
+			</tr>
+			<tr>
+			    <td style="text-align:left"><b>Unmapped</b></td>
+			    <td>${align_unmapped_R1_reads!"n/a"}</td>
+			    <td>${align_unmapped_R2_reads!"n/a"}</td>
+			    <td>${align_unmapped_read_pairs!"n/a"}</td>
+			</tr>
+			<tr>
+			    <td style="text-align:left"><b>Multimapped</b></td>
+			    <td>${align_multimapped_R1_reads!"n/a"}</td>
+			    <td>${align_multimapped_R2_reads!"n/a"}</td>
+			    <td>${align_multimapped_read_pairs!"n/a"}</td>
+			</tr>
+			<tr>
+			    <td style="text-align:left"><b>Paired</b></td>
+			    <td></td>
+			    <td></td>
+			    <td>${align_paired_read_pairs!"n/a"}</td>
+			</tr>
+			<tr>
+			    <td style="text-align:left"><b>Paired duplicated</b></td>
+			    <td></td>
+			    <td></td>
+			    <td>${align_duplicated_pairs!"n/a"}</td>
+			</tr>
+			<tr>
+			    <td style="text-align:left"><b>Paired unique</b></td>
+			    <td></td>
+			    <td></td>
+			    <td>${align_unique_paired_read_pairs!"n/a"}</td>
+			</tr>
+		</table>
+		<br>
+                <div id="container_alignReadGraph" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
+	</div>
+	<!-- Section on alignment - end -->
+        <!-- Fragment statistics -->
         <div class="section">
-            <h2>Alignment Statistics</h2>
-            <p>
-                Diachromatic performs alignment of the truncated reads
-                with <a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml" target="__blank">bowtie2</a>. TODO-more text.
-            </p>
-            <!-- Read Pair Section -->
-            <div class="row">
-                <div class="col-lg-5">
-                    <h3>Read pair analysis</h3>
-                    <p>TODO Some text..</p>
-                    <table class="redTable">
-                        <tr>
-                            <th></th><th>Count</th>
-                        </tr>
-                        <tr>
-                            <td><b>Total Reads</b></td>
-                            <td>${align_total_read_pairs_processed!"n/a"}</td>
-                        </tr>
-                        <tr>
-                            <td><b>Unmapped Read pairs</b></td>
-                            <td>${align_unmapped_read_pairs!"n/a"}</td>
-                        </tr>
-                        <tr>
-                            <td><b>Multimapped Read Pairs</b></td>
-                            <td>${align_multimapped_read_pairs!"n/a"}</td>
-                        </tr>
-                        <tr>
-                            <td><b>Paired Read pairs</b></td>
-                            <td>${align_paired_read_pairs!"n/a"}</td>
-                        </tr>
-                        <tr>
-                            <td><b>Unique paired Read pairs</b></td>
-                            <td>${align_unique_paired_read_pairs!"n/a"}</td>
-                        </tr>
-                        <tr>
-                            <td><b>Duplicated Read pairss</b></td>
-                            <td>${align_duplicated_pairs!"n/a"}</td>
-                        </tr>
-                    </table>
-                </div>
-                <div class="col-lg-6">
-                    <div id="container_alignReadPairGraph" style="min-width: 210px; height: 200px; margin: 0 auto"></div>
-                </div>
+	<h2>Fragment statistics</h2>
+		<p>
+                The paired unique pairs are subdivided into four disjoint categories: <i>un-ligated</i>, <i>self-ligated</i>,
+                <i>chimeric</i> and <i>strange internal</i>. The <i>un-ligated</i> and <i>self-ligated</i> categories
+                are further subdivided depending on whether the two reads were mapped to the same digest or
+                whether the categorization was based on one of the corresponding size threshold.
+                Reads that are neither <i>un-ligated</i> or <i>self-ligated</i> ligation are categorized as <i>chimeric</i>.
+                The <i>chimeric</i> category id further subdivided into <i>too short</i>, <i>valid</i>, and <i>too long</i>
+                depending on whether the calculated size is within the user defined range.
+                The last category <i>strange internal</i> is a container for read pairs that cannot be explained by
+                the processing logic. These pairs map to the same strand and, therefore, cannot be <i>un-ligated</i>
+                or <i>self-ligated</i> but they are not chimeric because both reads map to the same digest.
+                For all datasets that were analyzed, <i>strange internal</i> constitute only a small fraction of
+                all paired unique pairs.
+		</p>
+		<br>
+		<table class="redTable">
+			<tr>
+			    <th>Fragment type</th><th>Count</th>
+			</tr>
+			<tr>
+			    <td style="text-align:left"><b>Un-ligated</b></td>
+			    <td>${align_unligated!"n/a"}</td>
+			</tr>
+			<tr>
+			    <td style="text-align:left">Un-ligated by size</b></td>
+			    <td>${align_unligated_by_size!"n/a"}</td>
+			</tr>
+			<tr>
+			    <td style="text-align:left"> Un-ligated by same internal</td>
+			    <td>${align_unligated_same_internal!"n/a"}</td>
+			</tr>
+			<tr>
+			    <td style="text-align:left"><b>Self-ligated</b></td>
+			    <td>${align_self_ligated!"n/a"}</td>
+			</tr>
+			<tr>
+			    <td style="text-align:left">Self-ligated by size</td>
+			    <td>${align_self_ligated_by_size!"n/a"}</td>
+			</tr>
+			<tr>
+			    <td style="text-align:left">Self-ligated by same internal</td>
+			    <td>${align_self_ligated_same_internal!"n/a"}</td>
+			</tr>
+			<tr>
+			    <td style="text-align:left"><b>Chimeric</b></td>
+			    <td>${align_chimeric!"n/a"}</td>
+			</tr>
+			<tr>
+			    <td style="text-align:left">Chimeric too short</td>
+			    <td>${align_chimeric_short!"n/a"}</td>
+			</tr>
+			<tr>
+			    <td style="text-align:left">Chimeric too long</td>
+			    <td>${align_chimeric_long!"n/a"}</td>
+			</tr>
+			<tr>
+			    <td style="text-align:left">Chimeric valid</td>
+			    <td>${align_chimeric_valid!"n/a"}</td>
+			</tr>
+			<tr>
+			    <td style="text-align:left"><b>Strange internal</b></td>
+			    <td>${align_strange_internal!"n/a"}</td>
+			</tr>
+		</table>
+		<br>
+                <div id="container_fragmentTypeCounts" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
+                TODO: Verify claim about strange internals. Revise text.
             </div>
-            <hr/>
-            <div class="row">
-                <!-- Read Section -->
-                <div class="col-lg-5">
-                    <h3>Read analysis</h3>
-                    <p>TODO Some text about the reads..</p>
-                    <table class="redTable">
-                        <tr>
-                            <th></th><th>Forward Read</th><th>Reverse Read</th>
-                        </tr>
-                        <tr>
-                            <td><b>Unmapped Reads</b></td>
-                            <td>${align_unmapped_R1_reads!"n/a"}</td>
-                            <td>${align_unmapped_R2_reads!"n/a"}</td>
-                        </tr>
-                        <tr>
-                            <td><b>Multimapped Reads</b></td>
-                            <td>${align_multimapped_R1_reads!"n/a"}</td>
-                            <td>${align_multimapped_R2_reads!"n/a"}</td>
-                        </tr>
-                    </table>
-                </div>
-                <div class="col-lg-6">
-                    <div id="container_alignReadGraph" style="min-width: 150px; height: 200px; margin: 0 auto"></div>
-                </div>
-            </div>
-            <span id="artefact"></span>
-           <p> TODO -- consider reformating the table because many of the items are for read-pairs and not reads</p>
-        </div>
-        <!-- Artefact statistics -->
-        <div class="section">
-            <h2>Artefact Statistics</h2>
-            <p>
-                Artefacts are TODO--Write a summary here
+	<!-- Fragment statistics -end -->
+        <!-- Quality metrics -->
+	<div class="section">
+	<h2>Quality metrics</h2>
+		<p>
+        Explain quality metrics.
+		</p>
+		<table class="redTable">
+			<tr>
+			    <th>Quality metrics</th><th></th>
+			</tr
+			<tr><td style="text-align:left"><b> Yield of valid pairs (YVP)</b></td><td>${align_YVP!"n/a"}</td></tr>
+			<tr><td style="text-align:left"><b> Cross-ligation coefficient (CLC)  </b></td><td>${align_CLC!"n/a"}</td></tr>
+			<tr><td style="text-align:left"><b>Re-ligation coefficient (RLC)   </b></td><td>${align_RLC!"n/a"}</td></tr>
+			<tr><td style="text-align:left"><b>Hi-C pair duplication rate (HPDR)</b></td><td>${align_HPDR!"n/a"}</td></tr>
+		</table>
+		<font color="red"><b>ToDo: Explain quality metrics.</b></font>
+	</div>
+	<!-- Quality metrics - end -->
+	<!-- Detailed results -->
+	<div class="section">
+	<h2>Dangling end and trans pair subcategories</h2>
+		<p>
+		Dangling ends and trans read pairs do not constitute a separate category but may occur in different categories. The following table and bar chart show the proportion of
+		dangling end and trans read pairs within the individual categories (the category <i>Chimeric</i> is broken down into <i>Chimeric - Too short</i>, <i>Chimeric - Valid size</i>,
+		and <i>Chimeric - Too long</i>). Note: Trans pairs cannot occur within the categories <i>Un-ligated</i>, <i>Self-ligated</i> and <i>Strange internal</i> by definition.
+        </p>
+		<br>
+		<table class="redTable">
+			<tr>
+				<th>Fragment type</th><th>Dangling</th><th>Trans</th>
+			</tr>
+			<tr>
+				<td style="text-align:left"><b>Un-ligated</b></td><td>${align_n_paired_unique_un_ligated_dangling!"n/a"}</td><td>${align_n_paired_unique_un_ligated_trans!"n/a"}</td>
+			</tr>
+			<tr>
+				<td style="text-align:left"><b>Self-ligated</b></td><td>${align_n_paired_unique_self_ligated_dangling!"n/a"}<td>${align_n_paired_unique_self_ligated_trans!"n/a"}</td></td>
+			</tr>
+			<tr>
+				<td style="text-align:left"><b>Chimeric - Too short</b></td><td>${align_n_paired_unique_too_short_dangling!"n/a"}</td><td>${align_n_paired_unique_too_short_trans!"n/a"}</td>
+			</tr>
+			<tr>
+				<td style="text-align:left"><b>Chimeric - Valid size</b></td><td>${align_n_paired_unique_valid_dangling!"n/a"}</td><td>${align_n_paired_unique_valid_trans!"n/a"}</td>
+			</tr>
+			<tr>
+				<td style="text-align:left"><b>Chimeric - Too long</b></td><td>${align_n_paired_unique_too_long_dangling!"n/a"}</td><td>${align_n_paired_unique_too_long_trans!"n/a"}</td>
+			</tr>
+			<tr>
+				<td style="text-align:left"><b>Strange internal</b></td><td>${align_n_paired_strange_internal_dangling!"n/a"}</td><td>${align_n_paired_strange_internal_trans!"n/a"}</td>
+			</tr>
+		</table>
+		<br>
+		<div id="container_danglingTransSubcategoryCounts" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
+		 <font color="red"><b>ToDo: Pop-up windows show 'mm' unit.</b></font>
+	</div>
+	<!-- Detailed results - end -->
+	<!-- Fragment sizes -->
+	<div class="section">
+	<h2>Fragment and self-ligating digest sizes</h2>
+	        <p>
+    		Diachromatic determines the distribution of fragment sizes separately for <i>Chimeric</i> (blue) and <i>active Chimeric</i> (orange)
+    		read pairs, whereby a read pair is defined to be active, if at least one of the reads maps to a digest that
+    		was selected for enrichment (marked with an 'A' in the input digest file).
+    		In addition, the size distribution of un-ligated fragments is determined (gray).
             </p>
-            <table class="redTable">
-                <tr>
-                    <th>Artefact type</th><th>Count</th>
-                </tr>
-                <tr>
-                    <td><b>Unligated</b></td>
-                    <td>${align_unligated!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b>unligated_by_size</b></td>
-                    <td>${align_unligated_by_size!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b>unligated (same_internal)</b></td>
-                    <td>${align_unligated_same_internal!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b>self-ligated</b></td>
-                    <td>${align_self_ligated!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b>self-ligated_by_size</b></td>
-                    <td>${align_self_ligated_by_size!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b>self-ligated (same internal)</b></td>
-                    <td>${align_self_ligated_same_internal!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b>chimeric</b></td>
-                    <td>${align_chimeric!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b> chimeric short</b></td>
-                    <td>${align_chimeric_short!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b>chimeric long</b></td>
-                    <td>${align_chimeric_long!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b>chimeric valid</b></td>
-                    <td>${align_chimeric_valid!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b> strange internal </b></td>
-                    <td>${align_strange_internal!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b> dangling_end_pairs_total  </b></td>
-                    <td>${align_dangling_end_pairs_total!"n/a"}</td>
-                </tr>
-                <tr>
-                    <td><b> trans_pairs_total  </b></td>
-                    <td>${align_trans_pairs_total!"n/a"}</td>
-                </tr>
-            </table>
-            <p> Detailed results and sanity checks TODO -- better text. </p>
-            <table class="redTable">
-                <caption>dangling end analysis</caption>
-                <tr><th>Artefact type</th><th>Count</th></tr>
-                <tr><td><b> n_paired_unique_un_ligated_dangling  </b></td><td>${align_n_paired_unique_un_ligated_dangling!"n/a"}</td></tr>
-                <tr><td><b>  n_paired_unique_self_ligated_dangling </b></td><td>${align_n_paired_unique_self_ligated_dangling!"n/a"}</td></tr>
-                <tr><td><b> n_paired_unique_too_short_dangling  </b></td><td>${align_n_paired_unique_too_short_dangling!"n/a"}</td></tr>
-                <tr><td><b> n_paired_unique_too_long_dangling  </b></td><td>${align_n_paired_unique_too_long_dangling!"n/a"}</td></tr>
-                <tr><td><b> n_paired_unique_valid_dangling  </b></td><td>${align_n_paired_unique_valid_dangling!"n/a"}</td></tr>
-                <tr><td><b> n_paired_strange_internal_dangling  </b></td><td>${align_n_paired_strange_internal_dangling!"n/a"}</td></tr>
-            </table>
-            <br/><br/>
-            <table class="redTable">
-                <caption>trans pair  analysis</caption>
-                <tr><th>Artefact type</th><th>Count</th></tr>
-                <tr><td><b> n_paired_unique_un_ligated_trans  </b></td><td>${align_n_paired_unique_un_ligated_trans!"n/a"}</td></tr>
-                <tr><td><b> n_paired_unique_self_ligated_trans  </b></td><td>${align_n_paired_unique_self_ligated_trans!"n/a"}</td></tr>
-                <tr><td><b> n_paired_unique_too_short_trans  </b></td><td>${align_n_paired_unique_too_short_trans!"n/a"}</td></tr>
-                <tr><td><b> n_paired_unique_too_long_trans  </b></td><td>${align_n_paired_unique_too_long_trans!"n/a"}</td></tr>
-                <tr><td><b> n_paired_unique_valid_trans  </b></td><td>${align_n_paired_unique_valid_trans!"n/a"}</td></tr>
-                <tr><td><b> n_paired_strange_internal_trans  </b></td><td>${align_n_paired_strange_internal_trans!"n/a"}</td></tr>
-                <tr><td><b> n_total_trans  </b></td><td>${align_n_total_trans!"n/a"}</td></tr>
-            </table>
-            <br/><br/>
-            <table class="redTable">
-                <caption>Summary</caption>
-                <tr><th>Artefact type</th><th>Count</th></tr>
-                <tr><td><b> Yield of valid pairs (YVP)</b></td><td>${align_YVP!"n/a"}</td></tr>
-                <tr><td><b> Cross-ligation coefficient (CLC)  </b></td><td>${align_CLC!"n/a"}</td></tr>
-                <tr><td><b>Re-ligation coefficient (RLC)   </b></td><td>${align_RLC!"n/a"}</td></tr>
-                <tr><td><b>Hi-C pair duplication rate (HPDR)</b></td><td>${align_HPDR!"n/a"}</td></tr>
-            </table>
-        </div>
+		    <div id="container_fragmentSizeCounts" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
+            <p>
+            The size distribution of self-ligating is derived from outward pointing read pairs that map to the same digest only
+            and is intended to guide the choice of a good size threshold for self-ligation (-s option).
+            Furthermore, this distribution may provide insights into the relationship between digests size and
+            re-ligation beyond self-ligation.
+            </p>
+            <div id="container_SelfLigatedDigestSizeCounts" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
+            <font color="red"><b>ToDo: Plot size distribution of self-ligating digests in a histogram rather than line plot.</b></font>
+    </div>
+    <!-- Fragment sizes - end -->
+    <!-- Proportion of trans reads for each chromosome -->
+    <div class="section">
+	<h2>Proportion of trans reads for each chromosome</h2>
+		        <p>
+                The overall proportion of trans read pairs is taken as an indicator for poor Hi-C libraries because
+                random cross-ligation are assumed to tend to be between location on different chromosomes (Wingett 2015,
+                Nagano 2015).
+                However, random ligations with digests of other chromosomes should be more likely for digests of smaller
+                chromosomes.
+                Therefore, we calculate the proportion of trans reads for each chromosome (x-axis).
+                Furthermore, the number of digests is determined for each chromosome (y-axis).
+                </p>
+	<div id="container_transCisScatterPlot" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
+	<font color="red"><b>ToDo: Add regression line to plot.</b></font>
+	</div>
         <#if count??>
             <section>
                 <article>

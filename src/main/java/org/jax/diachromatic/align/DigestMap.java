@@ -174,6 +174,9 @@ public class DigestMap {
         }
 
 
+        public int getNumOfDigestsForChromosome() {
+            return digestArray.size();
+        }
 
         /* Koennen wir nicht annehmen dass die Digests sortiert sind? */
         @Deprecated
