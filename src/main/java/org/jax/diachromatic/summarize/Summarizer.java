@@ -156,7 +156,7 @@ public class Summarizer {
                 String[] fields2 = fields[1].split(" ");
                 if(!fields[0].contains("YVP") && !fields[0].contains("CLC") && !fields[0].contains("RLC") && !fields[0].contains("HPDR")) {
                     if(fields[0].contains("array")) {
-                        templateData.put(String.format("align_%s", fields[0].trim()), fields[1]);
+                        templateData.put(String.format("align_%s", fields[0].trim()), fields[1].replace("%",":"));
                         logger.trace(fields[1].length());
                     } else {
                         templateData.put(String.format("align_%s", fields[0].trim()), getIntegerValue(fields2[0].trim()));
@@ -164,6 +164,11 @@ public class Summarizer {
                 } else {
                         templateData.put(String.format("align_%s", fields[0].trim()), fields2[0].trim());
                 }
+                if(fields[0].contains("global_clc")) {
+                    templateData.put(String.format("align_%s", fields[0].trim()), fields2[0].trim());
+                }
+
+
 
                 logger.debug(String.format("align_%s %s",fields[0].trim(), fields2[0].trim()));
                 logger.error(String.format("align_%s",fields[0]));

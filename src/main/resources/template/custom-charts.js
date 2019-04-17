@@ -262,6 +262,58 @@ Highcharts.chart('container_fragmentTypeCounts', {
     ]
 });
 
+/* Trans/Cis scatterplot */
+var transCisScatterValues = ${align_trans_cis_scatter_values_array};
+var globalCLC = parseFloat(${align_global_clc});
+Highcharts.chart('container_transCisScatterPlot', {
+    chart: {
+        type: 'scatter',
+        zoomType: 'xy'
+    },
+    title: {
+        text: 'Number of digest vs. proportion of trans reads for each chromosome'
+    },
+    plotOptions: {
+        scatter: {
+            dataLabels: {
+                format: "{point.name}",
+                allowOverlap: true,
+                enabled: true
+            }
+        }
+    },
+    xAxis: {
+        title: {
+            text: 'Proportion of trans reads'
+        },
+        plotLines: [{
+            color: 'gray', // Color value
+            dashStyle: 'Dash',
+            value: ${align_global_clc},
+            width: 1,
+        }]
+    },
+    yAxis: {
+        title: {
+            text: 'Number of digest per chromosome'
+        }
+    },
+    series: [{
+        regression: true,
+        regressionSettings: {
+        type: 'linear',
+        color: 'red',
+        dashStyle: 'Solid'
+        },
+        name: "Chromosome",
+        color: '#9ADAFF',
+        data: transCisScatterValues
+    }
+
+]
+});
+
+
 
 var readPairData = ['${total_read_pairs_processed}', '${unmapped_read_pairs}', '${multimapped_read_pairs}',
                     '${paired_read_pairs}', '${unique_paired_read_pairs}', '${duplicated_pairs}'];

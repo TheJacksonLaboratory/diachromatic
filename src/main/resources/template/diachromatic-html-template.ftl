@@ -316,6 +316,22 @@
             <div id="container_SelfLigatedDigestSizeCounts" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
             <font color="red"><b>ToDo: Plot size distribution of self-ligating digests in a histogram rather than line plot.</b></font>
     </div>
+    <!-- Fragment sizes - end -->
+    <!-- Proportion of trans reads for each chromosome -->
+    <div class="section">
+	<h2>Proportion of trans reads for each chromosome</h2>
+		        <p>
+                The overall proportion of trans read pairs is taken as an indicator for poor Hi-C libraries because
+                random cross-ligation are assumed to tend to be between location on different chromosomes (Wingett 2015,
+                Nagano 2015).
+                However, random ligations with digests of other chromosomes should be more likely for digests of smaller
+                chromosomes.
+                Therefore, we calculate the proportion of trans reads for each chromosome (x-axis).
+                Furthermore, the number of digests is determined for each chromosome (y-axis).
+                </p>
+	<div id="container_transCisScatterPlot" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
+	<font color="red"><b>ToDo: Add regression line to plot.</b></font>
+	</div>
         <#if count??>
             <section>
                 <article>

@@ -380,21 +380,34 @@ public class Aligner {
                         n_paired_unique_too_long_trans++;}
                     if(pair.getCategoryTag().equals("SI")) {
                         n_paired_strange_internal_trans++;}
-                    if(transCounts.containsKey(pair.getReferenceSequenceOfR1())) {
-                        transCounts.put(pair.getReferenceSequenceOfR1(),transCounts.get(pair.getReferenceSequenceOfR1())+1);
-                    } else {
-                        transCounts.put(pair.getReferenceSequenceOfR1(),1);
-                    }
-                    if(transCounts.containsKey(pair.getReferenceSequenceOfR2())) {
-                        transCounts.put(pair.getReferenceSequenceOfR2(),transCounts.get(pair.getReferenceSequenceOfR2())+1);
-                    } else {
-                        transCounts.put(pair.getReferenceSequenceOfR2(),1);
+                    if(pair.getCategoryTag().equals("VP")) { // count trans/cis for chromosome-wise CLC
+                        if(transCounts.containsKey(pair.getReferenceSequenceOfR1())) {
+                            transCounts.put(pair.getReferenceSequenceOfR1(),transCounts.get(pair.getReferenceSequenceOfR1())+1);
+                        } else {
+                            transCounts.put(pair.getReferenceSequenceOfR1(),1);
+                            if(!cisCounts.containsKey(pair.getReferenceSequenceOfR1())) {
+                                cisCounts.put(pair.getReferenceSequenceOfR1(),0);
+                            }
+                        }
+                        if(transCounts.containsKey(pair.getReferenceSequenceOfR2())) {
+                            transCounts.put(pair.getReferenceSequenceOfR2(),transCounts.get(pair.getReferenceSequenceOfR2())+1);
+                        } else {
+                            transCounts.put(pair.getReferenceSequenceOfR2(),1);
+                            if(!cisCounts.containsKey(pair.getReferenceSequenceOfR2())) {
+                                cisCounts.put(pair.getReferenceSequenceOfR2(),0);
+                            }
+                        }
                     }
                 } else {
-                    if(cisCounts.containsKey(pair.getReferenceSequenceOfR1())) {
-                        cisCounts.put(pair.getReferenceSequenceOfR1(),cisCounts.get(pair.getReferenceSequenceOfR1())+2);
-                    } else {
-                        cisCounts.put(pair.getReferenceSequenceOfR1(),2);
+                    if(pair.getCategoryTag().equals("VP")) {
+                        if (cisCounts.containsKey(pair.getReferenceSequenceOfR1())) {
+                            cisCounts.put(pair.getReferenceSequenceOfR1(), cisCounts.get(pair.getReferenceSequenceOfR1()) + 2);
+                        } else {
+                            cisCounts.put(pair.getReferenceSequenceOfR1(), 2);
+                            if(!transCounts.containsKey(pair.getReferenceSequenceOfR1())) {
+                                transCounts.put(pair.getReferenceSequenceOfR1(),0);
+                            }
+                        }
                     }
                 }
             } else {
@@ -672,17 +685,28 @@ public class Aligner {
         }
         printStream.print("\n");
 
-
-
-        HashMap<String, Double> clc = new HashMap<String, Double>();
+        // prepare scatterplot for chromosome-wise clc against digest numbers
+        printStream.print("\n");
+        printStream.print("trans_cis_scatter_values_array:[");
+        int cnt = 0;
+        int trans_cnt=0;
+        int cis_cnt=0;
         for (String chromosome : transCounts.keySet()) {
-            printStream.print(chromosome + "\t" + 1.0*transCounts.get(chromosome)/(cisCounts.get(chromosome)+transCounts.get(chromosome)) +"\n");
-            clc.put(chromosome,1.0*transCounts.get(chromosome)/(cisCounts.get(chromosome)+transCounts.get(chromosome)));
+            if(chromosome.equals("chrM") || chromosome.equals("chrY")) {continue;}
+            double chr_clc = 1.0*transCounts.get(chromosome)/(cisCounts.get(chromosome)+transCounts.get(chromosome));
+            if(cnt==0) {
+                printStream.print("{\"name\"%\"" + chromosome + "\", \"x\"%" + String.format("%.2f", chr_clc) + ",\"y\"%" + digestMap.getDigestMap().get(chromosome).getNumOfDigestsForChromosome() + "}");
+                cnt++;
+            } else {
+                printStream.print(", {\"name\"%\"" + chromosome + "\", \"x\"%" + String.format("%.2f", chr_clc) + ",\"y\"%" + digestMap.getDigestMap().get(chromosome).getNumOfDigestsForChromosome() + "}");
+            }
+            trans_cnt = trans_cnt + transCounts.get(chromosome);
+            cis_cnt = cis_cnt + cisCounts.get(chromosome);
+            //logger.trace(chromosome + "\t" + transCounts.get(chromosome) + "\t" + cisCounts.get(chromosome) + "\t" + digestMap.getDigestMap().get(chromosome).getNumOfDigestsForChromosome());
         }
-        // TODO: Sort by value and create array for HiChart.
-
-
-
+        printStream.print("]\n\n");
+        double global_clc = 1.0*trans_cnt/(trans_cnt + cis_cnt);
+        printStream.print("global_clc:" + String.format("%.4f", global_clc) + "\n");
     }
 
     /**
