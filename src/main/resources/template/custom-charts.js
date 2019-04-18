@@ -68,6 +68,105 @@ Highcharts.chart('container_alignReadGraph', {
     ]
 });
 
+/* Interaction count statistics */
+var interactionCounts = [
+    '${count_total_interacting_fragments}',
+    '${count_selected_interacting_fragments}',
+    '${count_total_interaction_count}',
+    '${count_interactions_between_selected_fragments}',
+    '${count_interactions_between_selected_and_unselected_fragments}',
+    '${count_interactions_between_unselected_fragments}'
+    ];
+Highcharts.chart('container_interactionCountsBarChart', {
+    chart: {
+        type: 'column'
+    },
+    title: {
+        text: 'Interaction counts'
+    },
+    subtitle: {
+        text: 'The total number of interactions (black) and numbers for the different subcategories (orange/gray)'
+    },
+    xAxis: {
+        categories: ['Interacting digests', 'Active', 'Interactions', 'Active/Active',  'Active/Inactive', 'Inactive/Inactive'],
+        crosshair: true
+    },
+    yAxis: {
+        min: 0,
+        title: {
+            text: 'Number of interactions'
+        }
+    },
+    tooltip: {
+        headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+        pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+            '<td style="padding:0"><b>{point.y:.1f} mm</b></td></tr>',
+        footerFormat: '</table>',
+        shared: true,
+        useHTML: true
+    },
+    plotOptions: {
+        series: {
+            colorByPoint: true
+        },
+        column: {
+            pointPadding: 0.2,
+            borderWidth: 0
+        }
+    },
+    series: [
+    {
+        showInLegend: false,
+        name: 'Digest and interaction counts',
+        data: convertToIntArray(interactionCounts),
+        colors: ['black', '#ffa500', 'black', '#ffa500', '#d1a452', '#a3a3a3']
+    }
+    ]
+});
+
+
+
+
+/*var transInteractionCounts = ['${count_n_singleton_interactions_trans}', '${count_n_gt1_interaction_count_trans}'];
+var shortInteractionCounts = ['${count_n_singleton_interactions_short_range}', '${count_n_gt1_interaction_count_short_range}'];
+var longInteractionCounts = ['${count_n_singleton_interactions_long_range}', '${count_n_gt1_interaction_count_long_range}'];
+Highcharts.chart('container_singletonInteractions', {
+  chart: {
+    type: 'bar'
+  },
+  title: {
+    text: 'Stacked bar chart'
+  },
+  xAxis: {
+    categories: ['Singleton', 'Other']
+  },
+  yAxis: {
+    min: 0,
+    title: {
+      text: 'Composition of singleton interactions and other interactions'
+    }
+  },
+  legend: {
+    reversed: true
+  },
+  plotOptions: {
+    series: {
+      stacking: 'normal'
+    }
+  },
+  series: [{
+    name: 'Trans',
+    data: transInteractionCounts
+  }, {
+    name: 'Short',
+    data: shortInteractionCounts
+  }, {
+    name: 'Long',
+    data: longInteractionCounts
+  }]
+});*/
+
+
 /* Dangling subcategories */
 var danglingSubcategoryCounts = [
     '${align_dangling_end_pairs_total}',

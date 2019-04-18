@@ -231,6 +231,11 @@ public class Summarizer {
         try (BufferedReader br = new BufferedReader(new FileReader(countPath))) {
             String line;
             while ((line = br.readLine()) != null) {
+                logger.debug(line);
+                String[] fields = line.split(":");
+                if (fields.length != 2) continue; // skip non key-value lines, they are comments
+                String[] fields2 = fields[1].split(" ");
+                templateData.put(String.format("count_%s", fields[0].trim()), fields2[0].trim());
                 System.out.println(line);
                 countMap.add(line);
             }

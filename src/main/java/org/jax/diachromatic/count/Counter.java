@@ -100,11 +100,20 @@ public class Counter {
      */
     private int interaction_count = 0;
 
+
     /**
      * Total current number of singleton interactions
      * Note: Initialized only after execution of the function 'printInteractionCountsMapAsCountTable'.
      */
     private int n_singleton_interactions = 0;
+    private int n_singleton_interactions_trans = 0;
+    private int n_singleton_interactions_short_range = 0;
+    private int n_singleton_interactions_long_range = 0;
+
+    private int n_gt1_interaction_count = 0;
+    private int n_gt1_interaction_count_trans = 0;
+    private int n_gt1_interaction_count_short_range = 0;
+    private int n_gt1_interaction_count_long_range = 0;
 
     /**
      * Number of interactions between two active fragments
@@ -164,7 +173,7 @@ public class Counter {
             DigestPair dp = readPair.getDigestPair();
             incrementDigestPair(dp, readPair);
 
-            if (interaction_count % 1000000 == 0) {
+            if (interaction_count % 10000000 == 0) {
                 logger.trace("Number of Interactions: " + interaction_count);
             }
 
@@ -250,7 +259,7 @@ public class Counter {
         printStream.print("\tR2F1_outie:" + n_R2F1 + String.format(" (%.2f%%)", 100.0*n_R2F1/n_pairs_total) + "\n");
         printStream.print("\tR1F2_outie:" + n_R1F2 + String.format(" (%.2f%%)", 100.0*n_R1F2/n_pairs_total) + "\n");
         // Summary statistics about interactions between active (most typically enriched) and inactive fragments
-        printStream.print("total_interaction_count: " + interaction_count + "\n");
+        printStream.print("total_interaction_count:" + interaction_count + "\n");
         printStream.print("interactions_between_selected_fragments:" + active_active_interaction_count + "\n");
         printStream.print("interactions_between_unselected_fragments:" + inactive_inactive_interaction_count + "\n");
         printStream.print("interactions_between_selected_and_unselected_fragments:" + active_inactive_interaction_count + "\n");
@@ -262,6 +271,14 @@ public class Counter {
         printStream.print("cross_ligation_coefficient:" + String.format("%.2f%%", 100.0*n_trans_pairs/n_pairs_total) + "\n");
         double fsi = 100.0*n_singleton_interactions/interaction_count;
         printStream.print("fraction_singleton_interactions:" + String.format("%.2f%%", fsi) + "\n");
+        printStream.print("n_singleton_interactions:" + n_singleton_interactions + "\n");
+        printStream.print("n_singleton_interactions_trans:" + n_singleton_interactions_trans + "\n");
+        printStream.print("n_singleton_interactions_short_range:" + n_singleton_interactions_short_range + "\n");
+        printStream.print("n_singleton_interactions_long_range:" + n_singleton_interactions_long_range + "\n");
+        printStream.print("n_gt1_interaction_count:" + n_gt1_interaction_count + "\n");
+        printStream.print("n_gt1_interaction_count_trans:" + n_gt1_interaction_count_trans + "\n");
+        printStream.print("n_gt1_interaction_count_short_range:" + n_gt1_interaction_count_short_range + "\n");
+        printStream.print("n_gt1_interaction_count_long_range:" + n_gt1_interaction_count_long_range + "\n");
     }
 
     private void createOutputNames(String outputPathPrefix) {
@@ -284,7 +301,33 @@ public class Counter {
         for (DigestPair dp : this.dp2countsMap.keySet()) {
             SimpleTwistedCount cc = this.dp2countsMap.get(dp);
             printStream.println(dp.toString() + "\t" + cc.simple + ":" + cc.twisted);
-            if(cc.simple+cc.twisted==1) {this.n_singleton_interactions++;}
+            if (cc.simple + cc.twisted == 1) {
+                this.n_singleton_interactions++;
+                if (!dp.forward().getChromosome().equals(dp.reverse().getChromosome())) {
+                    n_singleton_interactions_trans++;
+                } else {
+                    int forward_digest_center = dp.forward().getDigestStartPosition() + ((dp.forward().getDigestEndPosition() - dp.forward().getDigestStartPosition()) / 2);
+                    int reverse_digest_center = dp.reverse().getDigestStartPosition() + ((dp.reverse().getDigestEndPosition() - dp.reverse().getDigestStartPosition()) / 2);
+                    if(Math.abs(reverse_digest_center - forward_digest_center)<10000) {
+                        n_singleton_interactions_short_range++;
+                    } else {
+                        n_singleton_interactions_long_range++;
+                    }
+                }
+            } else {
+                n_gt1_interaction_count++;
+                if (!dp.forward().getChromosome().equals(dp.reverse().getChromosome())) {
+                    n_gt1_interaction_count_trans++;
+                } else {
+                    int forward_digest_center = dp.forward().getDigestStartPosition() + ((dp.forward().getDigestEndPosition() - dp.forward().getDigestStartPosition()) / 2);
+                    int reverse_digest_center = dp.reverse().getDigestStartPosition() + ((dp.reverse().getDigestEndPosition() - dp.reverse().getDigestStartPosition()) / 2);
+                    if(Math.abs(reverse_digest_center - forward_digest_center)<10000) {
+                        n_gt1_interaction_count_short_range++;
+                    } else {
+                        n_gt1_interaction_count_long_range++;
+                    }
+                }
+            }
         }
     }
 

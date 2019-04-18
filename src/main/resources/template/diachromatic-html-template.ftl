@@ -335,11 +335,23 @@
 	<!-- Proportion of trans reads for each chromosome - end -->
 	 <!-- Interaction statistics -->
 	     <div class="section">
-     	<h2>Interaction statistics</h2>
+     	<h2>Counts of interacting digests and interactions</h2>
             <p>
-            XXX.
+            Each digest to which one or more read were mapped is defined to be interacting. If a digest was selected for
+            target enrichment (marked with 'A' in the input digest file), it is referred to as <i>Active</i> (orange).
+            Interactions are defined to be a pairs of digests that are connected by one or more read pairs.
+            Depending on whether the corresponding digests were selected for target enrichment, a given interaction belongs to one of three subcategories.
+            If both digests were selected, the corresponding interaction is referred to as <i>Active/Active</i> (orange).
+            If only one of the two digests was selected the interaction is referred to as <i>Active/Inactive</i>
+            (greyish orange), and, if non of the digests was selected, the interaction is referred to as
+            <i>Inactive/Inactive</i> (gray).
             </p>
-     </div>
+            <div id="container_interactionCountsBarChart" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
+            <p>
+            The target enrichment coefficient (TEC) is defined as the proportion of reads that are mapped to active
+            digests. For this dataset, the TEC is <b>${count_target_enrichment_coefficient!"n/a"}</b>.
+            </p>
+        </div>
 	 <!-- Interaction statistics end -->
         <#if count??>
             <section>
@@ -351,9 +363,7 @@
                             <li>${line}</li>
                         </#list>
                     </ol>
-
-
-                </article>
+             </article>
             </section>
         </#if> <!-- count section -->
     </div>
