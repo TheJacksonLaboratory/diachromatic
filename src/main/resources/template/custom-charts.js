@@ -127,7 +127,7 @@ Highcharts.chart('container_interactionCountsBarChart', {
 
 
 
-/*var transInteractionCounts = ['${count_n_singleton_interactions_trans}', '${count_n_gt1_interaction_count_trans}'];
+var transInteractionCounts = ['${count_n_singleton_interactions_trans}', '${count_n_gt1_interaction_count_trans}'];
 var shortInteractionCounts = ['${count_n_singleton_interactions_short_range}', '${count_n_gt1_interaction_count_short_range}'];
 var longInteractionCounts = ['${count_n_singleton_interactions_long_range}', '${count_n_gt1_interaction_count_long_range}'];
 Highcharts.chart('container_singletonInteractions', {
@@ -135,7 +135,7 @@ Highcharts.chart('container_singletonInteractions', {
     type: 'bar'
   },
   title: {
-    text: 'Stacked bar chart'
+    text: 'Singleton interactions vs. others'
   },
   xAxis: {
     categories: ['Singleton', 'Other']
@@ -156,15 +156,15 @@ Highcharts.chart('container_singletonInteractions', {
   },
   series: [{
     name: 'Trans',
-    data: transInteractionCounts
+    data: convertToIntArray(transInteractionCounts)
   }, {
-    name: 'Short',
-    data: shortInteractionCounts
+    name: 'Cis, Short range',
+    data: convertToIntArray(shortInteractionCounts)
   }, {
-    name: 'Long',
-    data: longInteractionCounts
+    name: 'Cis, Long range',
+    data: convertToIntArray(longInteractionCounts)
   }]
-});*/
+});
 
 
 /* Dangling subcategories */

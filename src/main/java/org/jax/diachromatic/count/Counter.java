@@ -9,6 +9,7 @@ import org.jax.diachromatic.align.*;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -139,6 +140,17 @@ public class Counter {
      * Total number of active interacting fragments
      */
     private int active_interacting_fragment_count = 0;
+
+    /**
+     * Largest number of read pairs for given digest pairs.
+     */
+    private static int MAX_K = 1000;
+
+    /**
+     * Array for counting interactions with k read pairs. The index corresponds to k, e.g. array[2]
+     * contains the number of interactions with 2 read pairs.
+     */
+    private int[] kInteractionCounts =  new int[MAX_K+1];
 
 
     public Counter(SamReader samReader, DigestMap digestMap, String outputDirAndFilePrefix) {
@@ -279,6 +291,18 @@ public class Counter {
         printStream.print("n_gt1_interaction_count_trans:" + n_gt1_interaction_count_trans + "\n");
         printStream.print("n_gt1_interaction_count_short_range:" + n_gt1_interaction_count_short_range + "\n");
         printStream.print("n_gt1_interaction_count_long_range:" + n_gt1_interaction_count_long_range + "\n");
+        printStream.print("\n");
+        printStream.print("self_ligated_fragment_size_count_array:");
+        for(int i=0; i<MAX_K; i++) {
+            if (i < MAX_K - 1) {
+                printStream.print(kInteractionCounts[i] + ", ");
+
+            } else {
+                printStream.print(kInteractionCounts[i]);
+
+            }
+        }
+        printStream.print("\n");
     }
 
     private void createOutputNames(String outputPathPrefix) {
@@ -295,11 +319,15 @@ public class Counter {
      */
     public void printInteractionCountsMapAsCountTable() throws FileNotFoundException {
 
+        // init array for k-interaction counting
+        Arrays.fill(kInteractionCounts, 0);
+
         // create file for summarize
         PrintStream printStream = new PrintStream(new FileOutputStream(outputTsvInteractionCounts));
 
         for (DigestPair dp : this.dp2countsMap.keySet()) {
             SimpleTwistedCount cc = this.dp2countsMap.get(dp);
+            kInteractionCounts[cc.simple + cc.twisted]++;
             printStream.println(dp.toString() + "\t" + cc.simple + ":" + cc.twisted);
             if (cc.simple + cc.twisted == 1) {
                 this.n_singleton_interactions++;

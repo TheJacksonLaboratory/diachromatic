@@ -168,6 +168,7 @@
 		</table>
 		<br>
                 <div id="container_alignReadGraph" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
+                <font color="red"><b>ToDo: Pop-up windows show 'mm' unit.</b></font>
 	</div>
 	<!-- Section on alignment - end -->
         <!-- Fragment statistics -->
@@ -238,9 +239,10 @@
 			</tr>
 		</table>
 		<br>
-                <div id="container_fragmentTypeCounts" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
-                TODO: Verify claim about strange internals. Revise text.
-            </div>
+            <div id="container_fragmentTypeCounts" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
+            <font color="red"><b>ToDo: Pop-up windows show 'mm' unit.</b></font><br>
+            <font color="red"><b>ToDo: Verify claim about strange internals. Revise text.</b></font>
+        </div>
 	<!-- Fragment statistics -end -->
         <!-- Quality metrics -->
 	<div class="section">
@@ -294,7 +296,7 @@
 		</table>
 		<br>
 		<div id="container_danglingTransSubcategoryCounts" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
-		 <font color="red"><b>ToDo: Pop-up windows show 'mm' unit.</b></font>
+		<font color="red"><b>ToDo: Pop-up windows show 'mm' unit.</b></font>
 	</div>
 	<!-- Detailed results - end -->
 	<!-- Fragment sizes -->
@@ -351,21 +353,29 @@
             The target enrichment coefficient (TEC) is defined as the proportion of reads that are mapped to active
             digests. For this dataset, the TEC is <b>${count_target_enrichment_coefficient!"n/a"}</b>.
             </p>
+        <font color="red"><b>ToDo: Pop-up windows show 'mm' unit.</b></font>
         </div>
-	 <!-- Interaction statistics end -->
-        <#if count??>
-            <section>
-                <article>
-                    <a name="count"></a>
-                    <h2>Count statistics</h2>
-                    <ol>
-                        <#list count as line>
-                            <li>${line}</li>
-                        </#list>
-                    </ol>
-             </article>
-            </section>
-        </#if> <!-- count section -->
+        <!-- Singleton interactions statistics -->
+         <div class="section">
+        <h2>Singleton interactions</h2>
+        <p>
+        Given the large number of all possible digest pairs, it should be very unlikely that random cross-ligation occurs
+        more than once for a digest given pair. The plot shows the composition of singleton (only one read pair for a given
+        digest pair) and all other interactions with respect to cis and trans.
+        </p>
+            <div id="container_singletonInteractions" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
+            	<font color="red"><b>ToDo: Normalize to values between 0 and 1, because 99% of the interactions are singleton interactions.</b></font>
+        </div>
+        <!-- Singleton interactions statistics end -->
+        <!-- k interactions statistics -->
+        <div class="section">
+        <h2>Distribution of k-interactions</h2>
+        <p>
+        The plot shows the distribution of interaction with k read pairs.
+        </p>
+            <font color="red"><b>ToDo: Plot histogram of 'self_ligated_fragment_size_count_array'. Index corresponds to k=2.</b></font>
+        </div>
+     	 <!-- k interactions statistics end -->
     </div>
     <footer class="container">
       <p>Diachromatic &copy; 2019</p>
