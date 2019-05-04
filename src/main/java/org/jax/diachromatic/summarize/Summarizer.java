@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.*;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,6 +47,8 @@ public class Summarizer {
         if (countFile != null) {
             parseCountData();
         }
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        templateData.put("timestamp",timestamp.toLocalDateTime());
     }
 
     private int getIntegerValue(String f) {

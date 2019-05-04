@@ -41,7 +41,7 @@
                         Date
                     </td>
                     <td class="table-data">
-                        Sunday March 30, 2019 7:30pm
+                        ${timestamp!"n/a"}
                     </td>
                 </tr>
                 <tr>
