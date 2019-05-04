@@ -246,18 +246,26 @@
 	<div class="section">
 	<h2>Quality metrics</h2>
 		<p>
-        Explain quality metrics.
+        The <b>Yield of Valid Pairs (YVP)</b> is the percentage of truncated input read pairs that are not
+        categorized as artifactual by any of the quality control steps. The YVP reflects the
+        overall efficiency of the Hi-C protocol. The <b>Cross-Ligation Coefficient (CLC)</b> is calculated as
+        the proportion of unique valid trans read pairs (i.e., pairs whose reads map to different chromosomes) amongst
+        all unique valid read pairs. Trans pairs can be valid or not, but a high CLC may be taken to be an indication
+        of poor library quality. The <b>Re-Ligation Coefficient (RLC)</b> is the percentage of uniquely mapped unique pairs
+        that did not arise from fragments with dangling-ends, i.e. ends that correspond to un-ligated restriction enzyme
+         cutting sites. Higher numbers are good. Finally, the <b>Hi-C pair duplication rate (HPDR)</b> refers
+         to the percentage of uniquely mapped pairs that were removed because of duplication. Usually, high duplication
+         rates indicate sequencing libraries with low complexity.
 		</p>
 		<table class="redTable">
 			<tr>
 			    <th>Quality metrics</th><th></th>
 			</tr
-			<tr><td style="text-align:left"><b> Yield of valid pairs (YVP)</b></td><td>${align_YVP!"n/a"}</td></tr>
-			<tr><td style="text-align:left"><b> Cross-ligation coefficient (CLC)  </b></td><td>${align_CLC!"n/a"}</td></tr>
-			<tr><td style="text-align:left"><b>Re-ligation coefficient (RLC)   </b></td><td>${align_RLC!"n/a"}</td></tr>
+			<tr><td style="text-align:left"><b>Yield of valid pairs (YVP)</b></td><td>${align_YVP!"n/a"}</td></tr>
+			<tr><td style="text-align:left"><b>Cross-ligation coefficient (CLC)</b></td><td>${align_CLC!"n/a"}</td></tr>
+			<tr><td style="text-align:left"><b>Re-ligation coefficient (RLC)</b></td><td>${align_RLC!"n/a"}</td></tr>
 			<tr><td style="text-align:left"><b>Hi-C pair duplication rate (HPDR)</b></td><td>${align_HPDR!"n/a"}</td></tr>
 		</table>
-		<font color="red"><b>ToDo: Explain quality metrics.</b></font>
 	</div>
 	<!-- Quality metrics - end -->
 	<!-- Detailed results -->
@@ -294,7 +302,6 @@
 		</table>
 		<br>
 		<div id="container_danglingTransSubcategoryCounts" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
-		 <font color="red"><b>ToDo: Pop-up windows show 'mm' unit.</b></font>
 	</div>
 	<!-- Detailed results - end -->
 	<!-- Fragment sizes -->

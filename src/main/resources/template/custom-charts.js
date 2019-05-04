@@ -11,6 +11,12 @@ var convertToIntArray = function(ray){
     });
 };
 
+Highcharts.setOptions({
+    lang: {
+        thousandsSep: ','
+    }
+});
+
 /* Alignment Charts */
 var forwardReadCounts = ['${align_total_read_pairs_processed}','${unmapped_R1_reads}', '${multimapped_R1_reads}', '${align_paired_read_pairs}', '${align_duplicated_pairs}', '${align_unique_paired_read_pairs}'];
 var reverseReadCounts = ['${align_total_read_pairs_processed}','${unmapped_R2_reads}', '${multimapped_R2_reads}', '${align_paired_read_pairs}', '${align_duplicated_pairs}', '${align_unique_paired_read_pairs}'];
@@ -38,7 +44,7 @@ Highcharts.chart('container_alignReadGraph', {
     tooltip: {
         headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
         pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
-            '<td style="padding:0"><b>{point.y:.1f} mm</b></td></tr>',
+            '<td style="padding:0"><b>{point.y}</b></td></tr>',
         footerFormat: '</table>',
         shared: true,
         useHTML: true
@@ -119,7 +125,7 @@ Highcharts.chart('container_danglingTransSubcategoryCounts', {
     tooltip: {
         headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
         pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
-            '<td style="padding:0"><b>{point.y:.1f} mm</b></td></tr>',
+            '<td style="padding:0"><b>{point.y}</b></td></tr>',
         footerFormat: '</table>',
         shared: true,
         useHTML: true
@@ -242,7 +248,7 @@ Highcharts.chart('container_fragmentTypeCounts', {
     tooltip: {
         headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
         pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
-            '<td style="padding:0"><b>{point.y:.1f} mm</b></td></tr>',
+            '<td style="padding:0"><b>{point.y}</b></td></tr>',
         footerFormat: '</table>',
         shared: true,
         useHTML: true
@@ -301,10 +307,10 @@ Highcharts.chart('container_transCisScatterPlot', {
     series: [{
         regression: true,
         regressionSettings: {
-        type: 'linear',
-        color: 'red',
-        dashStyle: 'Solid'
-        },
+                type: 'linear',
+                color: 'red',
+                dashStyle: 'solid'
+                },
         name: "Chromosome",
         color: '#9ADAFF',
         data: transCisScatterValues
@@ -341,7 +347,7 @@ Highcharts.chart('container_alignReadPairGraph', {
     tooltip: {
         headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
         pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
-            '<td style="padding:0"><b>{point.y:.1f} mm</b></td></tr>',
+            '<td style="padding:0"><b>{point.y}</b></td></tr>',
         footerFormat: '</table>',
         shared: true,
         useHTML: true
@@ -390,7 +396,7 @@ Highcharts.chart('container', {
     tooltip: {
         headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
         pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
-            '<td style="padding:0"><b>{point.y:.1f} mm</b></td></tr>',
+            '<td style="padding:0"><b>{point.y}</b></td></tr>',
         footerFormat: '</table>',
         shared: true,
         useHTML: true

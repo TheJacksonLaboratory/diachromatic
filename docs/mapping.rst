@@ -265,8 +265,9 @@ The percentages of the individual categories may be useful for experimental trou
 Yield of valid pairs (YVP)
 --------------------------
 
-Percentage of truncated input read pairs that were finally categorized as valid pairs usable for downstream analysis.
-The YVP is intended to reflect the overall efficiency of the Hi-C protocol.
+Percentage of truncated input read pairs that  are not
+categorized as artifactual by any of the quality control steps, and therefore can be used for downstream analysis.
+The YVP reflects the overall efficiency of the Hi-C protocol.
 For the the CTCF depletion data, the percentages range between 24.37% and 42.77%.
 
 
@@ -278,7 +279,7 @@ distinguished from those arising from **cross-ligation** events.
 Based on the assumption that random cross-ligations between DNA fragments of different chromosomes (*trans*) occur more
 likely as compared to cross-ligations between DNA fragments of the same chromosome (*cis*), the ratio of the numbers of cis
 and trans read pairs is taken as an indicator of poor Hi-C libraries (Wingett 2015, Nagano 2015).
-Within Diachromatic, the CLC is calculated as proportion of unique valid trans read pairs amongst all unique valid read pairs.
+Within Diachromatic, the CLC is calculated as the proportion of unique valid trans read pairs amongst all unique valid read pairs.
 For the CTCF depletion dataset, percentages range between 18.48% and 28.24%.
 
 
