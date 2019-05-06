@@ -12,8 +12,8 @@ var convertToIntArray = function(ray){
 };
 
 /* Alignment Charts */
-var forwardReadCounts = ['${align_total_read_pairs_processed}','${unmapped_R1_reads}', '${multimapped_R1_reads}', '${align_paired_read_pairs}', '${align_duplicated_pairs}', '${align_unique_paired_read_pairs}'];
-var reverseReadCounts = ['${align_total_read_pairs_processed}','${unmapped_R2_reads}', '${multimapped_R2_reads}', '${align_paired_read_pairs}', '${align_duplicated_pairs}', '${align_unique_paired_read_pairs}'];
+var forwardReadCounts = ['0', '${unmapped_R1_reads}', '${multimapped_R1_reads}', '0', '0', '0'];
+var reverseReadCounts = ['0', '${unmapped_R2_reads}', '${multimapped_R2_reads}', '0', '0', '0'];
 var pairCounts = ['${align_total_read_pairs_processed}','${unmapped_read_pairs}', '${multimapped_read_pairs}', '${align_paired_read_pairs}', '${align_duplicated_pairs}', '${align_unique_paired_read_pairs}'];
 Highcharts.chart('container_alignReadGraph', {
     chart: {
@@ -272,21 +272,21 @@ Highcharts.chart('container_fragmentSizeCounts', {
         data: ChimericFragmentSizeCounts,
         pointStart: 1,
         color: '#9ADAFF',
-        lineWidth: 0.5
+        lineWidth: 2.5
     },
     {
-        name: 'Chimeric active',
+        name: 'Chimeric enriched',
         data: ChimericFragmentSizeCountsActive,
         color: '#FFA500',
         pointStart: 1,
-        lineWidth: 0.5
+        lineWidth: 2.5
     },
     {
         name: 'Un-ligated',
         data: UnLigatedFragmentSizeCountsActive,
         color: '#A3A3A3',
         pointStart: 1,
-        lineWidth: 0.5
+        lineWidth: 2.5
     }
     ]
 });
