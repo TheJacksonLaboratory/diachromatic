@@ -327,33 +327,60 @@
     <!-- Proportion of trans reads for each chromosome -->
     <div class="section">
 	<h2>Proportion of trans reads for each chromosome</h2>
-		        <p>
-                The overall proportion of trans read pairs is taken as an indicator for poor Hi-C libraries because
-                random cross-ligation are assumed to tend to be between location on different chromosomes (Wingett 2015,
-                Nagano 2015).
-                However, random ligations with digests of other chromosomes should be more likely for digests of smaller
-                chromosomes.
-                Therefore, we calculate the proportion of trans reads for each chromosome (x-axis).
-                Furthermore, the number of digests is determined for each chromosome (y-axis).
-                </p>
+            <p>
+            The overall proportion of trans read pairs is taken as an indicator for poor Hi-C libraries because
+            random cross-ligation are assumed to tend to be between location on different chromosomes (Wingett 2015,
+            Nagano 2015).
+            However, random ligations with digests of other chromosomes should be more likely for digests of smaller
+            chromosomes.
+            Therefore, we calculate the proportion of trans reads for each chromosome (x-axis).
+            Furthermore, the number of digests is determined for each chromosome (y-axis).
+            </p>
 	<div id="container_transCisScatterPlot" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
 	<font color="red"><b>ToDo: Add regression line to plot.</b></font>
 	</div>
-        <#if count??>
-            <section>
-                <article>
-                    <a name="count"></a>
-                    <h2>Count statistics</h2>
-                    <ol>
-                        <#list count as line>
-                            <li>${line}</li>
-                        </#list>
-                    </ol>
-
-
-                </article>
-            </section>
-        </#if> <!-- count section -->
+	<!-- Proportion of trans reads for each chromosome - end -->
+	 <!-- Interaction statistics -->
+	     <div class="section">
+     	<h2>Counts of interacting digests and interactions</h2>
+            <p>
+            Each digest to which one or more read were mapped is defined to be interacting. If a digest was selected for
+            target enrichment (marked with 'A' in the input digest file), it is referred to as <i>Active</i> (orange).
+            Interactions are defined to be a pairs of digests that are connected by one or more read pairs.
+            Depending on whether the corresponding digests were selected for target enrichment, a given interaction belongs to one of three subcategories.
+            If both digests were selected, the corresponding interaction is referred to as <i>Active/Active</i> (orange).
+            If only one of the two digests was selected the interaction is referred to as <i>Active/Inactive</i>
+            (greyish orange), and, if non of the digests was selected, the interaction is referred to as
+            <i>Inactive/Inactive</i> (gray).
+            </p>
+            <div id="container_interactionCountsBarChart" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
+            <p>
+            The target enrichment coefficient (TEC) is defined as the proportion of reads that are mapped to active
+            digests. For this dataset, the TEC is <b>${count_target_enrichment_coefficient!"n/a"}</b>.
+            </p>
+        <font color="red"><b>ToDo: Pop-up windows show 'mm' unit.</b></font>
+        </div>
+        <!-- Singleton interactions statistics -->
+         <div class="section">
+        <h2>Singleton interactions</h2>
+        <p>
+        Given the large number of all possible digest pairs, it should be very unlikely that random cross-ligation occurs
+        more than once for a digest given pair. The plot shows the composition of singleton (only one read pair for a given
+        digest pair) and all other interactions with respect to cis and trans.
+        </p>
+            <div id="container_singletonInteractions" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
+            	<font color="red"><b>ToDo: Normalize to values between 0 and 1, because 99% of the interactions are singleton interactions.</b></font>
+        </div>
+        <!-- Singleton interactions statistics end -->
+        <!-- k interactions statistics -->
+        <div class="section">
+        <h2>Distribution of k-interactions</h2>
+        <p>
+        The plot shows the distribution of interaction with k read pairs.
+        </p>
+            <font color="red"><b>ToDo: Plot histogram of 'self_ligated_fragment_size_count_array'. Index corresponds to k=2.</b></font>
+        </div>
+     	 <!-- k interactions statistics end -->
     </div>
     <footer class="container">
       <p>Diachromatic &copy; 2019</p>

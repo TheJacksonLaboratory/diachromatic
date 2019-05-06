@@ -18,8 +18,8 @@ Highcharts.setOptions({
 });
 
 /* Alignment Charts */
-var forwardReadCounts = ['${align_total_read_pairs_processed}','${unmapped_R1_reads}', '${multimapped_R1_reads}', '${align_paired_read_pairs}', '${align_duplicated_pairs}', '${align_unique_paired_read_pairs}'];
-var reverseReadCounts = ['${align_total_read_pairs_processed}','${unmapped_R2_reads}', '${multimapped_R2_reads}', '${align_paired_read_pairs}', '${align_duplicated_pairs}', '${align_unique_paired_read_pairs}'];
+var forwardReadCounts = ['0', '${unmapped_R1_reads}', '${multimapped_R1_reads}', '0', '0', '0'];
+var reverseReadCounts = ['0', '${unmapped_R2_reads}', '${multimapped_R2_reads}', '0', '0', '0'];
 var pairCounts = ['${align_total_read_pairs_processed}','${unmapped_read_pairs}', '${multimapped_read_pairs}', '${align_paired_read_pairs}', '${align_duplicated_pairs}', '${align_unique_paired_read_pairs}'];
 Highcharts.chart('container_alignReadGraph', {
     chart: {
@@ -73,6 +73,105 @@ Highcharts.chart('container_alignReadGraph', {
         }
     ]
 });
+
+/* Interaction count statistics */
+var interactionCounts = [
+    '${count_total_interacting_fragments}',
+    '${count_selected_interacting_fragments}',
+    '${count_total_interaction_count}',
+    '${count_interactions_between_selected_fragments}',
+    '${count_interactions_between_selected_and_unselected_fragments}',
+    '${count_interactions_between_unselected_fragments}'
+    ];
+Highcharts.chart('container_interactionCountsBarChart', {
+    chart: {
+        type: 'column'
+    },
+    title: {
+        text: 'Interaction counts'
+    },
+    subtitle: {
+        text: 'The total number of interactions (black) and numbers for the different subcategories (orange/gray)'
+    },
+    xAxis: {
+        categories: ['Interacting digests', 'Active', 'Interactions', 'Active/Active',  'Active/Inactive', 'Inactive/Inactive'],
+        crosshair: true
+    },
+    yAxis: {
+        min: 0,
+        title: {
+            text: 'Number of interactions'
+        }
+    },
+    tooltip: {
+        headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+        pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+            '<td style="padding:0"><b>{point.y:.1f} mm</b></td></tr>',
+        footerFormat: '</table>',
+        shared: true,
+        useHTML: true
+    },
+    plotOptions: {
+        series: {
+            colorByPoint: true
+        },
+        column: {
+            pointPadding: 0.2,
+            borderWidth: 0
+        }
+    },
+    series: [
+    {
+        showInLegend: false,
+        name: 'Digest and interaction counts',
+        data: convertToIntArray(interactionCounts),
+        colors: ['black', '#ffa500', 'black', '#ffa500', '#d1a452', '#a3a3a3']
+    }
+    ]
+});
+
+
+
+
+var transInteractionCounts = ['${count_n_singleton_interactions_trans}', '${count_n_gt1_interaction_count_trans}'];
+var shortInteractionCounts = ['${count_n_singleton_interactions_short_range}', '${count_n_gt1_interaction_count_short_range}'];
+var longInteractionCounts = ['${count_n_singleton_interactions_long_range}', '${count_n_gt1_interaction_count_long_range}'];
+Highcharts.chart('container_singletonInteractions', {
+  chart: {
+    type: 'bar'
+  },
+  title: {
+    text: 'Singleton interactions vs. others'
+  },
+  xAxis: {
+    categories: ['Singleton', 'Other']
+  },
+  yAxis: {
+    min: 0,
+    title: {
+      text: 'Composition of singleton interactions and other interactions'
+    }
+  },
+  legend: {
+    reversed: true
+  },
+  plotOptions: {
+    series: {
+      stacking: 'normal'
+    }
+  },
+  series: [{
+    name: 'Trans',
+    data: convertToIntArray(transInteractionCounts)
+  }, {
+    name: 'Cis, Short range',
+    data: convertToIntArray(shortInteractionCounts)
+  }, {
+    name: 'Cis, Long range',
+    data: convertToIntArray(longInteractionCounts)
+  }]
+});
+
 
 /* Dangling subcategories */
 var danglingSubcategoryCounts = [
@@ -179,21 +278,21 @@ Highcharts.chart('container_fragmentSizeCounts', {
         data: ChimericFragmentSizeCounts,
         pointStart: 1,
         color: '#9ADAFF',
-        lineWidth: 0.5
+        lineWidth: 2.5
     },
     {
-        name: 'Chimeric active',
+        name: 'Chimeric enriched',
         data: ChimericFragmentSizeCountsActive,
         color: '#FFA500',
         pointStart: 1,
-        lineWidth: 0.5
+        lineWidth: 2.5
     },
     {
         name: 'Un-ligated',
         data: UnLigatedFragmentSizeCountsActive,
         color: '#A3A3A3',
         pointStart: 1,
-        lineWidth: 0.5
+        lineWidth: 2.5
     }
     ]
 });
