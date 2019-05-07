@@ -130,7 +130,7 @@ public class Truncator {
         }
         printSummaryStatistics.print(String.format("restriction_enzyme:%s (%s)\n",this.renzyme.getName(),this.renzyme.getSite()));
         printSummaryStatistics.print(String.format("filled_end_sequence:%s\n",filledEndSequence));
-        printSummaryStatistics.print("total_read_pairs_processed:" + parser.getnReadsProcessed() + "\n");
+        printSummaryStatistics.print("total_raw_read_pairs_processed:" + parser.getnReadsProcessed() + "\n");
         printSummaryStatistics.print(String.format("truncated_forward_reads:%d (%.2f%%)\n",
                 parser.getReadOneTruncated(),
                 100.0 * parser.getReadOneTruncated() / parser.getnReadsProcessed()));
