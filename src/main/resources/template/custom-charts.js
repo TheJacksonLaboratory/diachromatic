@@ -376,7 +376,7 @@ Highcharts.chart('container_transCisScatterPlot', {
         zoomType: 'xy'
     },
     title: {
-        text: 'Number of digest vs. proportion of trans reads for each chromosome'
+        text: 'Number of digests vs. proportion of trans reads for each chromosome'
     },
     plotOptions: {
         scatter: {
