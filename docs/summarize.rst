@@ -1,5 +1,5 @@
 
-Summarize command
+Summarize results
 =================
 
 

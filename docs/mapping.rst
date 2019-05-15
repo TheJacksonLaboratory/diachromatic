@@ -4,13 +4,13 @@
 Mapping and categorization of Hi-C reads
 ========================================
 
+The two reads of a valid Hi-C read pair come from two different interacting genomic regions that can be separated by a large number of nucleotides on the same chromosome (cis) or even be located on different chromosomes (trans). The truncated forward (R1) and reverse (R2) reads have to be mapped independently.
+
 
 Independent mapping of forward and reverse paired-end reads
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Diachromatic separately executes ``bowtie2``  with the ``--very-sensitive`` option for the truncated R1 and R2 reads.
-Read pairs for which at least one read cannot be mapped uniquely are discarded.
-Diachromatic provides two levels of stringency for the definition of multi-mapped reads:
+Diachromatic separately executes ``bowtie2``  with the ``--very-sensitive`` option for the truncated R1 and R2 reads. Read pairs for which at least one read cannot be mapped uniquely are discarded. Diachromatic provides two levels of stringency for the definition of multi-mapped reads:
 
 1. **Very stringent mapping:** There is no second best alignment for the given read. In this case the line in the SAM record produced by ``bowtie2`` contains no ``XS`` tag. Use Diachromatic's ``--bowtie-stringent-unique`` or ``-bsu`` option in order to use this level of stringency.
 2. **Less stringent mapping:** There can be a second best alignment, but the score of the alignment (MAPQ) must be at least 30 and the difference of the mapping scores between the best and second best alignment must be at least 10 (following the recommendation of `HiCUP <https://www.bioinformatics.babraham.ac.uk/projects/hicup/>`_). Diachromatic uses this option by default.
@@ -19,17 +19,13 @@ Diachromatic provides two levels of stringency for the definition of multi-mappe
 Pairing of properly mapped read pairs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The independently mapped reads are written to two temporary SAM files, whereby the order of read records in the
-truncated FASTQ files is retained by using bowtie2's option ``--reorder``. In the next step, Diachromatic iterates
-simultaneously over the two SAM files.
-Read pairs for which both reads can be mapped uniquely are paired, i.e. the two SAM records for single-end reads are
-combined into one paired-end record with appropriate SAM flags reflecting the relative orientation of the reads.
+The independently mapped reads are written to two temporary SAM files, whereby the order of read records in the truncated FASTQ files is retained by using bowtie2's option ``--reorder``. In the next step, Diachromatic iterates simultaneously over the two SAM files. Read pairs for which both reads can be mapped uniquely are paired, i.e. the two SAM records for single-end reads are combined into one paired-end record with appropriate SAM flags reflecting the relative orientation of the reads.
 
 
 Categorization of read pairs
 ----------------------------
 
-Diachromatic distinguishes several read pair categories: (A) Trans reads by definition are chimeric fragments and may represent valid biological interactions or random cross-ligation events. (B) Pairs mapping to different strands of the same chromosome may originate from un-ligated or self-ligated digests. (C) Inward pointing pairs that map to the same digest must have originated from un-ligated fragments. Size thresholds are applied to the remaining fragments to categorize them as valid or artefactual (see text). (D) Outward pointing read pairs that map the same digest must have originated from self-ligated digests. Size thresholds are applied to the remaining fragments to categorize them as valid or artefactual (see text). (E) Read pairs mapping to the same strand can only be chimeric. However, we observe very small proportions of read pairs that are mapped to the same strand and digest. Such read pairs are classified as strange internal.
+Diachromatic distinguishes several read pair categories: (A) Trans reads by definition are chimeric fragments and may represent valid biological interactions or random cross-ligation events. (B) Pairs mapping to different strands of the same chromosome may originate from un-ligated or self-ligated digests. (C) Inward pointing pairs that map to the same digest must have originated from un-ligated fragments. Size thresholds are applied to the remaining fragments to categorize them as valid or artefactual. (D) Outward pointing read pairs that map the same digest must have originated from self-ligated digests. Size thresholds are applied to the remaining fragments to categorize them as valid or artefactual. (E) Read pairs mapping to the same strand can only be chimeric. However, we observe very small proportions of read pairs that are mapped to the same strand and digest. Such read pairs are classified as strange internal.
 
 .. figure:: img/categorization.png
     :align: center
@@ -45,10 +41,8 @@ Diachromatic distinguishes several read pair categories: (A) Trans reads by defi
 
 **5. Valid (chimeric):** All remaining chimeric read pairs.
 
-The illustration below shows the decision tree for the categorization of read pairs.
 
-
-The decision as to whether a read-pair is valid or not is made according to the four decision nodes shown in the Figure:
+The decision as to whether a read-pair is valid or not is made according to:
 
 **1.** Read pairs that map to different chromosomes or to the same strand cannot originate from un-ligated or self-ligated fragments. Therefore, they are categorized as chimeric read pairs that are valid, if the size d\ :sub:`s` is within the specified range.
 
@@ -65,15 +59,6 @@ Dangling end read pairs
 Fragment ends that corresponding to restriction enzyme cutting sites are referred to as dangling ends.
 In theory, fragments of all categories may have dangling ends. Therefore, there is no separate class for dangling ends.
 However, the number of dangling end read pairs within each of the five disjoint categories is determined and reported.
-
-
-Trans read pairs
-----------------
-
-Trans read pairs (i.e., read pairs in which the read map to different chromosomes)
-may have each of the eight possible orientations but they must be chimeric by
-definition. The number of trans read pairs is determined and reported for each read pair category.
-For the categories un-ligated and self-ligated the number of trans pairs must be zero.
 
 
 .. Dichromatic vs. HiCUP categories
