@@ -2,35 +2,20 @@
 Truncation of chimeric reads
 ============================
 
-Ligation junctions, chimeric fragments and chimeric reads
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Valid Hi-C read pairs originate from chimeric fragments with DNA from two different loci linked by the ligation junction. Diachromatic searches read sequences in 5’-3’ direction and truncates chimeric reads at the location of the ligation site, thereby removing the following sequence.
 
-Valid Hi-C read pairs originate from chimeric fragments with DNA from two different loci linked by the ligation junction.
-Most experimental protocols for capture Hi-C fill in the sticky ends with biotinylated nucleotides.
-This alters the original restriction enzyme motif in a characteristic way.
-
-Therefore, if some sequence contains a HindIII site, '5-NAAGCTTN-3', restriction followed by filling in and religation of the resulting blunt ends with produce the following hybrid sequence '5-NAAGCTAGCTTN-3'.
-Diachromatic searches for hybrid patterns like this according the restriction enzyme or enzymes that were used, and truncates the reads accordingly.
-Rarely, protocols do not fill in the ends but instead perform religation and thereby recreate the original restriction motif.
+For Capture Hi-C, the sticky ends are filled in with biotinylated nucleotides, and the resulting blunt ends are ligated. The corresponding ligation junctions can then be observed as two consecutive copies of the overhang sequence at restriction enzyme cutting sites. For Capture-C, no fill in of the overhangs is performed, and the ligation junctions occur as plain restriction sites.
 
 .. figure:: img/sticky_and_blunt_ends.png
     :align: center
 
-The sonication step of the Hi-C protocol may introduce breakpoints near restriction enzyme cutting
-sites. If the breakpoint occurs at a distance smaller than one read length, this will result in a chimeric read that
-cannot be mapped to the reference sequence.
-The truncation step of the pipeline attempts to address this problem by deleting the sequence that is downstream of
-the enzyme recognition site.
-
-.. figure:: img/chimeric_reads.png
-    :align: center
-
+Use the ``--sticky-ends`` option if no fill in was performed.
 
 
 Running Diachromatic's *truncate* subcommand
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Use the following command to run the truncation step. ::
+Use the following command to run the truncation step: ::
 
     $ java -jar Diachromatic.jar truncate \
         -q test1.fastq \
@@ -40,7 +25,7 @@ Use the following command to run the truncation step. ::
         -o outdir
 
 
-The following table lists all possible arguments:
+Available arguments:
 
 +--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
 | Short option |     Long option     | Example       | Required | Description                                              | Default |
@@ -57,6 +42,7 @@ The following table lists all possible arguments:
 +--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
 | -x           | \\-\\-out-prefix    | stim_rep1     | yes      | Prefix for all generated files in output directory.      | prefix  |
 +--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
+
 
 Output files
 ~~~~~~~~~~~~
