@@ -18,7 +18,6 @@ Welcome to Diachromatic's documentation!
 
 
 
-
 Differential Analysis of Chromatin Interactions by Capture (Diachromatic)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
