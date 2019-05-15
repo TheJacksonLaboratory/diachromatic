@@ -3,7 +3,6 @@
 Creating an *in silico* restriction digest map for Diachromatic using GOPHER
 ============================================================================
 
-
 The Capture Hi-C (CHC) protocol involves the restriction digestion of a sample and the downstream analysis assigns
 reads to pairs of restriction digests. Therefore, the ``align`` subcommand of Diachromatic requires a list of all
 restriction digests that result from the *in silico* digestions of a given genome with the chosen enzyme or enzymes.
@@ -11,6 +10,7 @@ Such lists can be generated using the GOPHER_ software. The TSV
 formatted file exported from GOPHER can be passed to Diachromatic using the ``-d`` or ``--digest-file`` option.
 
 .. _GOPHER: https://github.com/TheJacksonLaboratory/Gopher
+
 
 Performing the in silico digest using GOPHER
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -32,7 +32,6 @@ digests where chosen for enrichment (for instance, with a Python script).
 .. _setup a new project: https://gopher.readthedocs.io/en/latest/02_gui_data.html
 
 .. figure:: img/digest_parameters.png
-
 
 
 Format of the digest file

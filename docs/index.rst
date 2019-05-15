@@ -3,8 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Diachromatic's documentation!
-========================================
+
+Welcome to Diachromatic's documentation
+=======================================
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
@@ -13,9 +14,9 @@ Welcome to Diachromatic's documentation!
    Truncation of chimeric Hi-C reads <truncate>
    Mapping paired-end Hi-C reads <mapping>
    Counting unique valid pairs <count>
-   Calling SNPs on Hi-C reads <allelspec>
-   tutorial
-
+   Tutorial <tutorial>
+   
+..   Calling SNPs on Hi-C reads <allelspec>
 
 
 Differential Analysis of Chromatin Interactions by Capture (Diachromatic)
