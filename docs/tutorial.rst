@@ -83,7 +83,7 @@ This will generate an HTML file called ``HinD3/foo.summary.stats.html``.
 
 HiCUP
 ~~~~~
-HiCUp is currently a standard tool for capture Hi-C Q/C and preprocessing and much of the preprocuessing
+HiCUp is currently a standard tool for capture Hi-C Q/C and preprocessing and much of the preprocessing
 for diachromatic is based on Hicup (and we cite it). Here is how Hicup was used to generate results from
 the Hicup test dataset.
 
@@ -166,8 +166,7 @@ code using a small SAM file that is excerpted from these.
 Finding digests for testing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Note that many of the readpair functions require a Digest object. The following script can help to find the
-positions of the digests, these were used in the makeFakeDigest functions in the test classes
-
+positions of the digests. These were used in the makeFakeDigest functions in the test classes. ::
 
     #!/usr/bin/perl -w
     use strict;
@@ -194,26 +193,24 @@ positions of the digests, these were used in the makeFakeDigest functions in the
 
 
 
-
-
 Test class
 ~~~~~~~~~~
 The main tests of the logic of the Q/C code are in SAMPairerTest. There is currently one pair of sequences
-(in forwardtest.sam and reversetest.sam) for each of the tests we perform.
+(in forwardtest.sam and reversetest.sam) for each of the tests we perform. ::
 
-SRR071233.1
-SRR071233.1     67      chr16   31526917        8       40M     =       84175204        0       NAAGATACCTTGACCGCTCATCCCCTGNNTTCATGAAAGA        !##########################!!###########        AS:i:-13
-        XN:i:0  XM:i:8  XO:i:0  XG:i:0  NM:i:8  MD:Z:0C26A0C6G0T0C0T0T0 YT:Z:UU
-SRR071233.1     131     chr16   84175204        42      40M     =       31526917        0       AGAACCCATTCACACTCCCGCCAGCAGCAGGTTCGTGCCA        @BABA@BBBBBBBB?BBBB@:?AAAB5<BAA92A=2:;77        AS:i:0  XN:i:0  XM:i:0  XO:i:0  XG:i:0  NM:i:0  MD:Z:40 YT:Z:UU
+	SRR071233.1
+	SRR071233.1     67      chr16   31526917        8       40M     =       84175204        0       NAAGATACCTTGACCGCTCATCCCCTGNNTTCATGAAAGA        !##########################!!###########        AS:i:-13
+	        XN:i:0  XM:i:8  XO:i:0  XG:i:0  NM:i:8  MD:Z:0C26A0C6G0T0C0T0T0 YT:Z:UU
+	SRR071233.1     131     chr16   84175204        42      40M     =       31526917        0       AGAACCCATTCACACTCCCGCCAGCAGCAGGTTCGTGCCA        @BABA@BBBBBBBB?BBBB@:?AAAB5<BAA92A=2:;77        AS:i:0  XN:i:0  XM:i:0  XO:i:0  XG:i:0  NM:i:0  MD:Z:40 YT:Z:UU
 
 The first read should be set to 67 [read paired (0x1); read mapped in proper pair (0x2);first in pair (0x40)]. The reverse read is
 131 [read paired (0x1); read mapped in proper pair (0x2); second in pair (0x80)].
 
+
 * Test mapping
 
-
 The paired FASTQ files hg19_HindIII_test_data_sam_flags_1.fast1 and hg19_HindIII_test_data_sam_flags_2.fastq were
-processed with the command
+processed with the command: ::
 
     $ java -jar Diachromatic.jar map -b /usr/bin/bowtie2 -i /path-to/bowtie2-index/hg19 -q hg19_HindIII_test_data_sam_flags_1.fastq -r fastq/hg19_HindIII_test_data_sam_flags_2.fastq -d hg38digest
 
