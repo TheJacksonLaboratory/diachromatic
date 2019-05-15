@@ -1,3 +1,4 @@
+
 Counting of valid read pairs between pairs of restriction fragments
 ===================================================================
 
@@ -10,6 +11,7 @@ restriction digest.
 
 Required input files
 ~~~~~~~~~~~~~~~~~~~~
+
 
 GOPHER digest file
 ------------------
@@ -27,26 +29,26 @@ make sure that the two reads of any given pair occur consecutively. Furthermore,
 removed.
 
 
-Simple and twisted read pairs and counts of directed interaction
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. Simple and twisted read pairs and counts of directed interaction
+.. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+..
+.. Diachromatic aggregates read pairs whose 5' end positions map to the same pair of restriction fragments into interaction counts,
+.. whereby one special feature of Diachromatic is that the relative orientation of read pairs is taken into account.
+.. Inward and outward pointing read pairs (F1R2,F2R1,R1F2,R2F1) are referred to as **simple**, whereas pairs for which the two reads are
+.. pointing in the same direction (R1R2,R2R1,F1F2,F2F1) are referred to as **twisted**.
+.. Therefore, a given pair of interacting restriction fragments is assigned two interaction counts separated by a colon
+.. character. For instance, if we have ``12:2`` for a given pair of restriction fragments, this means that there are ``12``
+.. simple and ``2`` read pairs. The two counts can be used in order to distinguish **directed** from **undirected** interactions
+.. (see manuscript). For the given example ``12:2``, could be considered as directed.
+.. However, if the same number of read pairs were distributed like ``6:8``, the interaction could be considered as undirected.
+.. At the moment, Diachromatic does not provide any rules or statistical framework in order to distinguish directed from
+.. undirected interactions.
 
-Diachromatic aggregates read pairs whose 5' end positions map to the same pair of restriction fragments into interaction counts,
-whereby one special feature of Diachromatic is that the relative orientation of read pairs is taken into account.
-Inward and outward pointing read pairs (F1R2,F2R1,R1F2,R2F1) are referred to as **simple**, whereas pairs for which the two reads are
-pointing in the same direction (R1R2,R2R1,F1F2,F2F1) are referred to as **twisted**.
-Therefore, a given pair of interacting restriction fragments is assigned two interaction counts separated by a colon
-character. For instance, if we have ``12:2`` for a given pair of restriction fragments, this means that there are ``12``
-simple and ``2`` read pairs. The two counts can be used in order to distinguish **directed** from **undirected** interactions
-(see manuscript). For the given example ``12:2``, could be considered as directed.
-However, if the same number of read pairs were distributed like ``6:8``, the interaction could be considered as undirected.
-At the moment, Diachromatic does not provide any rules or statistical framework in order to distinguish directed from
-undirected interactions.
 
+Running Diachromatic's *count* subcommand
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Running Diachromatic's truncation subcommand
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Use the following command to run the counting step. ::
+Use the following command to run the counting step: ::
 
     $ java -jar Diachromatic.jar count \
         -v prefix.valid_pairs.aligned.bam \
@@ -76,10 +78,7 @@ The interactions are written to a tab separated text file that has the following
 
     * ``prefix.interaction.counts.table.tsv``
 
-The structure of this file is similar to that of (`iBED <https://bioconductor.org/packages/release/bioc/vignettes/Chicago/inst/doc/Chicago.html#ibed-format-ends-with-ibed>`_) files. Each line stands for one pair of interacting fragments.
-Consider the following example:
-
- ::
+The structure of this file is similar to that of (`iBED <https://bioconductor.org/packages/release/bioc/vignettes/Chicago/inst/doc/Chicago.html#ibed-format-ends-with-ibed>`_) files. Each line stands for one pair of interacting fragments. Consider the following example: ::
 
     chr7    42304777        42314850        A       chr7    152941166      152943990      I       12:2
     chr7    42304777        42314850        A       chr7    38624777       38625305       I       7:4
@@ -89,6 +88,7 @@ indicates that this fragment is defined to be active, i.e. it is part of a viewp
 The information about active states of fragments originates from the GOPHER digest file passed to Diachromatic
 using the ``-d`` option.
 
+
 Read counts at interacting fragments
 ------------------------------------
 
@@ -96,9 +96,7 @@ Another file that is created contains the counts of reads at interacting fragmen
 
     * ``prefix.interacting.fragments.counts.table.tsv``
 
-The structure is again similar to that of BED files. Consider the following example:
-
- ::
+The structure is again similar to that of BED files. Consider the following example: ::
 
     chr7    42304777       42314850        A       25
     chr7    152941166      152943990       I       14
@@ -109,52 +107,3 @@ whereby ``A`` means active and ``I`` inactive. The fifth column contains the rea
 interactions that end in the corresponding fragment. For better understanding, compare these counts to the two
 interactions given above.
 
-Quality metrics
-~~~~~~~~~~~~~~~
-
-Proportion of singleton interactions (PSI)
-------------------------------------------
-
-The ratio of the numbers of trans and cis read pairs is taken as an indicator of poor Hi-C libraries
-that contain many chimeric fragments arising from cross-ligations events between
-unrelated protein-DNA complexes (Wingett 2015, Nagano 2015).
-The :ref:`align subcommand<rstalign>` of Diachromatic calculates the CLC that is equivalent to the trans/cis ratio
-and defined as the proportion of trans read pairs amongst all uniquely mapped unique pairs.
-However,  the trans/cis ratio quality measure may also depend on other factors such as the genome size and
-number of chromosomes of the analyzed species (Wingett 2015). Diachromatic therefore provides an alternative
-and possibly more robust quality metric that
-can also be used to assess the extent of cross-ligation.
-
-
-Amongst the trans read pairs, we generally observe a large proportion
-of single restriction digest pairs that occur only once in the entire dataset.
-The number of all possible different cross-ligation
-events (including cis and trans) can roughly be estimated as the square of the number of all
-restriction digests across the entire genome.
-Given this huge number, we reasoned that it is very unlikely that the same artefactual cross-ligation event occurs
-twice by chance, and correspondingly hypoithesize that cross-ligation events primarily result in
-interactions (or digest pairs) with only one read pair.
-Therefore, we defined the fraction of singleton interactions as the proportion of interactions with only one
-read pair amongst all interactions.
-
-We typically observe very high PSI around 90%. However, not all of these interactions are necessarily the result
-of cross-ligation events. There might be other factors that contribute singletons interactions such as occasional
-non-functional contacts of spatial proximity.
-
-Interaction count statistics
-----------------------------
-
-As for the other subcommands, a text file containing summary statistics is generated:
-
-    * ``prefix.count.stats.txt``
-
-This file contains:
-
-    * The total number of processed read pairs.
-    * The read pair counts broken down into the eight possible pair orientations.
-    * Summary statistics about interactions between active and inactive fragments.
-    * Quality metrics for experimental trouble shooting
-        + Target Enrichment Coefficient (TEC): The fraction of reads that are mapped to active fragments.
-        + Cross-ligation coefficient (CLC):	The fraction of trans read pairs.
-        + Fraction of Singleton Interactions (FSI): The proportion of interactions consisting of only one read pair among all interactions.
-            - This is an alternative quality metric that is intended to reflect the extend cross-ligation events.

@@ -3,8 +3,8 @@ Summarize results
 =================
 
 
-.. Quality metrics
-.. ~~~~~~~~~~~~~~~
+.. Quality metrics mapping
+.. ~~~~~~~~~~~~~~~~~~~~~~~
 .. Diachromatic outputs a text file with the quality metrics for each run. The following texts provides possible interpretations
 .. of these quality metrics and exemplary numbers for the `CTCF depletion Hi-C datasets of Nora et al. 2017`_.
 ..
@@ -96,4 +96,58 @@ Summarize results
 ..
 .. .. figure:: img/size_distribution_plot.png
 ..     :align: center
+
+
+
+
+.. Quality metrics counting
+.. ~~~~~~~~~~~~~~~~~~~~~~~~
+..
+.. Proportion of singleton interactions (PSI)
+.. ------------------------------------------
+..
+.. The ratio of the numbers of trans and cis read pairs is taken as an indicator of poor Hi-C libraries
+.. that contain many chimeric fragments arising from cross-ligations events between
+.. unrelated protein-DNA complexes (Wingett 2015, Nagano 2015).
+.. The :ref:`align subcommand<rstalign>` of Diachromatic calculates the CLC that is equivalent to the trans/cis ratio
+.. and defined as the proportion of trans read pairs amongst all uniquely mapped unique pairs.
+.. However,  the trans/cis ratio quality measure may also depend on other factors such as the genome size and
+.. number of chromosomes of the analyzed species (Wingett 2015). Diachromatic therefore provides an alternative
+.. and possibly more robust quality metric that
+.. can also be used to assess the extent of cross-ligation.
+..
+..
+.. Amongst the trans read pairs, we generally observe a large proportion
+.. of single restriction digest pairs that occur only once in the entire dataset.
+.. The number of all possible different cross-ligation
+.. events (including cis and trans) can roughly be estimated as the square of the number of all
+.. restriction digests across the entire genome.
+.. Given this huge number, we reasoned that it is very unlikely that the same artefactual cross-ligation event occurs
+.. twice by chance, and correspondingly hypoithesize that cross-ligation events primarily result in
+.. interactions (or digest pairs) with only one read pair.
+.. Therefore, we defined the fraction of singleton interactions as the proportion of interactions with only one
+.. read pair amongst all interactions.
+..
+.. We typically observe very high PSI around 90%. However, not all of these interactions are necessarily the result
+.. of cross-ligation events. There might be other factors that contribute singletons interactions such as occasional
+.. non-functional contacts of spatial proximity.
+..
+.. Interaction count statistics
+.. ----------------------------
+..
+.. As for the other subcommands, a text file containing summary statistics is generated:
+..
+..     * ``prefix.count.stats.txt``
+..
+.. This file contains:
+..
+..     * The total number of processed read pairs.
+..     * The read pair counts broken down into the eight possible pair orientations.
+..     * Summary statistics about interactions between active and inactive fragments.
+..     * Quality metrics for experimental trouble shooting
+..         + Target Enrichment Coefficient (TEC): The fraction of reads that are mapped to active fragments.
+..         + Cross-ligation coefficient (CLC):	The fraction of trans read pairs.
+..         + Fraction of Singleton Interactions (FSI): The proportion of interactions consisting of only one read pair among all interactions.
+..             - This is an alternative quality metric that is intended to reflect the extend cross-ligation events.
+..
 

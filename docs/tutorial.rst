@@ -1,11 +1,12 @@
+
 Tutorial
 ========
 
 Here, we present a complete tutorial for using Diachromatic for processing and quality control of Capture Hi-C reads.
 
 
-The test dataset
-~~~~~~~~~~~~~~~~
+Test dataset
+~~~~~~~~~~~~
 Note: for now I am using the HiCUP test dataset, but we should create our own. I am describing the entire tutorial using the
 HiCUP dataset for now TODO make this up to date!
 
@@ -15,7 +16,6 @@ download the HiCUP_test_dataset. Extract it using this command. ::
     $  tar xvfz test_dataset.tar.gz
 
 This will create a directory called ``test_dataset``, which we will symbolize with ``TESTDIR`` in the following examples.
-
 
 
 Truncation
@@ -61,11 +61,8 @@ Use the following command to run the alignment step. ::
         -d hg19_HinDIII_DigestedGenome.txt
 
 
-
-
 This document contains a summary of how some of the unit tests were designed. Probably this page can/should be
 deleted before publication.
-
 
 
 Summarize
@@ -87,8 +84,10 @@ HiCUp is currently a standard tool for capture Hi-C Q/C and preprocessing and mu
 for diachromatic is based on Hicup (and we cite it). Here is how Hicup was used to generate results from
 the Hicup test dataset.
 
+
 bowtie and index
-~~~~~~~~~~~~~~~~
+----------------
+
 The test data set was digested with HindIII. We will align it to Hg19. We will first create an index file for
 bowtie2 (the files used to create the index and to map the reads need to be the same!).
 
@@ -102,10 +101,12 @@ I used the bowtie2 indexer. ::
 
 This command uses the FASTA file and specifies an output suffix of ``HG19``. (Now go drink some coffee).
 
+
 Digestion
-~~~~~~~~~
+---------
+
 This command is performed separately from the rest of the hicup pipeline. Assuming the path to the genome fasta file
-used to create the bowtie index is ``/path/to/hg19.fa', then use the following command. ::
+used to create the bowtie index is ``/path/to/hg19.fa``, then use the following command: ::
 
     $ ./hicup_digester --re1 A^AGCTT,HindIII --genome hg19 /path/to/hg19.fa
 
@@ -113,10 +114,9 @@ This creates a file named ``Digest_hg19_HindIII_None_21-27-22_04-01-2018.txt`` (
 
 
 Running the pipeline
-~~~~~~~~~~~~~~~~~~~~
-With this in hand, we can run the main pipeline.
+--------------------
 
-The settings file is (abbreviated). ::
+With this in hand, we can run the main pipeline. The settings file is (abbreviated). ::
 
     Outdir: mytest
     Threads: 1
@@ -140,12 +140,9 @@ The settings file is (abbreviated). ::
     test_dataset/test_dataset1.fastq
     test_dataset/test_dataset2.fastq
 
-With this in a file called myhicup.conf, we can run the main hicup pipeline as follows. ::
+With this in a file called myhicup.conf, we can run the main hicup pipeline as follows. The results of the run will be put into the ``mytest`` directory (which must be created before running the script). ::
 
      $ ./hicup -config myhicup.conf
-
-The results of the run will be put into the ``mytest`` directory (which must be created before running the script).
-
 
 My goal is to create two small SAM files for testing the class SAMPairer. To do this, I commented out the following lines
 in the hicup_mapper script. ::
@@ -162,6 +159,7 @@ Sure enough, the bowtie2 single-end alignments are now retained.
 These can be used in conjunction with the other output files of hicup to identify read pairs that should be filtered
 out because of mapping issues or artefacts, as well as read pairs that are ok. We can test most of the diachromatic
 code using a small SAM file that is excerpted from these.
+
 
 Finding digests for testing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -192,19 +190,15 @@ positions of the digests. These were used in the makeFakeDigest functions in the
     }
 
 
-
 Test class
 ~~~~~~~~~~
 The main tests of the logic of the Q/C code are in SAMPairerTest. There is currently one pair of sequences
 (in forwardtest.sam and reversetest.sam) for each of the tests we perform. ::
 
-	SRR071233.1
-	SRR071233.1     67      chr16   31526917        8       40M     =       84175204        0       NAAGATACCTTGACCGCTCATCCCCTGNNTTCATGAAAGA        !##########################!!###########        AS:i:-13
-	        XN:i:0  XM:i:8  XO:i:0  XG:i:0  NM:i:8  MD:Z:0C26A0C6G0T0C0T0T0 YT:Z:UU
+	SRR071233.1     67      chr16   31526917        8       40M     =       84175204        0       NAAGATACCTTGACCGCTCATCCCCTGNNTTCATGAAAGA        !##########################!!###########        AS:i:-13  XN:i:0  XM:i:8  XO:i:0  XG:i:0  NM:i:8  MD:Z:0C26A0C6G0T0C0T0T0 YT:Z:UU
 	SRR071233.1     131     chr16   84175204        42      40M     =       31526917        0       AGAACCCATTCACACTCCCGCCAGCAGCAGGTTCGTGCCA        @BABA@BBBBBBBB?BBBB@:?AAAB5<BAA92A=2:;77        AS:i:0  XN:i:0  XM:i:0  XO:i:0  XG:i:0  NM:i:0  MD:Z:40 YT:Z:UU
 
-The first read should be set to 67 [read paired (0x1); read mapped in proper pair (0x2);first in pair (0x40)]. The reverse read is
-131 [read paired (0x1); read mapped in proper pair (0x2); second in pair (0x80)].
+The first read should be set to 67 [read paired (0x1); read mapped in proper pair (0x2);first in pair (0x40)]. The reverse read is 131 [read paired (0x1); read mapped in proper pair (0x2); second in pair (0x80)].
 
 
 * Test mapping
@@ -215,3 +209,4 @@ processed with the command: ::
     $ java -jar Diachromatic.jar map -b /usr/bin/bowtie2 -i /path-to/bowtie2-index/hg19 -q hg19_HindIII_test_data_sam_flags_1.fastq -r fastq/hg19_HindIII_test_data_sam_flags_2.fastq -d hg38digest
 
 The resulting SAM files are being used for unit testing (to simplify and robustify testing).
+
