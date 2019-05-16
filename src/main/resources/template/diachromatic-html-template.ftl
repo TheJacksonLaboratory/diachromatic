@@ -246,14 +246,12 @@
 	<div class="section">
 	<h2>Quality metrics</h2>
 		<p>
-        The <b>Yield of Valid Pairs (YVP)</b> is the percentage of truncated input read pairs that are not
-        categorized as artifactual by any of the quality control steps. The YVP reflects the
+        The <b>Yield of Valid Pairs (YCP)</b> is the percentage of input read pairs that are categorized as chimeric. The YVP reflects the
         overall efficiency of the Hi-C protocol. The <b>Cross-Ligation Coefficient (CLC)</b> is calculated as
         the proportion of unique valid trans read pairs (i.e., pairs whose reads map to different chromosomes) amongst
         all unique valid read pairs. Trans pairs can be valid or not, but a high CLC may be taken to be an indication
-        of poor library quality. The <b>Re-Ligation Coefficient (RLC)</b> is the percentage of uniquely mapped unique pairs
-        that did not arise from fragments with dangling-ends, i.e. ends that correspond to un-ligated restriction enzyme
-         cutting sites. Higher numbers are good. Finally, the <b>Hi-C pair duplication rate (HPDR)</b> refers
+        of poor library quality. The <b>Re-ligation Coefficient (RLC)</b> is the percentage of chimeric pairs
+        that did not arise from fragments with dangling-ends. Higher numbers are good. Finally, the <b>Hi-C pair duplication rate (HPDR)</b> refers
          to the percentage of uniquely mapped pairs that were removed because of duplication. Usually, high duplication
          rates indicate sequencing libraries with low complexity.
 		</p>
