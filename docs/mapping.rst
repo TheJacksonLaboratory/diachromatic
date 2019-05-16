@@ -53,12 +53,14 @@ Diachromatic distinguishes several read pair categories: (A) Trans reads by defi
 .. **4.** Read pairs arising from chimeric fragments (not un- or self-ligated) are further distinguished. Read pairs with size d\ :sub:`s` outside the specified size range of sheared fragments will be categorizesd as too small or too large, and all remaining read pairs are categorized as valid.
 
 
-Dangling end read pairs
------------------------
 
-Fragment ends that corresponding to restriction enzyme cutting sites are referred to as dangling ends.
-In theory, fragments of all categories may have dangling ends. Therefore, there is no separate class for dangling ends.
-However, the number of dangling end read pairs within each of the five disjoint categories is determined and reported.
+.. Dangling end read pairs
+.. -----------------------
+..
+.. Fragment ends that corresponding to restriction enzyme cutting sites are referred to as dangling ends.
+.. In theory, fragments of all categories may have dangling ends. Therefore, there is no separate class for dangling ends.
+.. However, the number of dangling end read pairs within each of the five disjoint categories is determined and reported.
+
 
 
 .. Dichromatic vs. HiCUP categories
