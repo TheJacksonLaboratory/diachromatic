@@ -10,9 +10,9 @@ Welcome to Diachromatic's documentation
    Truncation of chimeric Hi-C reads <truncate>
    Mapping paired-end Hi-C reads <mapping>
    Counting unique valid pairs <count>
-   Tutorial <tutorial>
+   Summarize results <summarize>
    
-..   Summarize results <summarize>
+.. Tutorial <tutorial>
 ..   Calling SNPs on Hi-C reads <allelspec>
 
 

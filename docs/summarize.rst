@@ -3,6 +3,57 @@ Summarize results
 =================
 
 
+Running Diachromatic's *summarize* subcommand
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To run the summarize subcommand with the truncate data, run the following command. ::
+
+    $ java -jar target/Diachromatic.jar summarize \
+        -o HinD3 \
+        -x foo \
+        -t HinD3/foo.truncation.stats
+
+
+This will generate an HTML file called ``HinD3/foo.summary.stats.html``.
+
+
+
+.. Adjust for summarize!
+
+.. Available arguments:
+..
+.. +--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
+.. | Short option |     Long option     | Example       | Required | Description                                              | Default |
+.. +--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
+.. | -q           | \\-\\-fastq-r1      | forward.fq.gz | yes      | Path to the forward FASTQ file.                          |    --   |
+.. +--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
+.. | -r           | \\-\\-fastq-r2      | reverse.fq.gz | yes      | Path to the reverse FASTQ file.                          |    --   |
+.. +--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
+.. | -e           | \\-\\-enzyme        | HindIII       | yes      | Symbol of the restriction enzyme.                        | null    |
+.. +--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
+.. | -s           | \\-\\-sticky-ends   | false         | no       | True, if no fill-in of sticky ends was performed.        | false   |
+.. +--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
+.. | -o           | \\-\\-out-directory | cd4v2         | yes      | Directory containing the output of the truncate command. | results |
+.. +--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
+.. | -x           | \\-\\-out-prefix    | stim_rep1     | yes      | Prefix for all generated files in output directory.      | prefix  |
+.. +--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
+..
+..
+.. Output files
+.. ~~~~~~~~~~~~
+..
+.. The default names of the truncated and gzipped FASTQ files are:
+..
+..     * ``prefix.truncated_R1.fastq.gz``
+..     * ``prefix.truncated_R2.fastq.gz``
+..
+.. In addition, a file is produced that contains summary statistics about the truncation step.
+..
+..     * ``prefix.truncation.stats.txt``
+
+
+
+
 .. Quality metrics mapping
 .. ~~~~~~~~~~~~~~~~~~~~~~~
 .. Diachromatic outputs a text file with the quality metrics for each run. The following texts provides possible interpretations
