@@ -71,6 +71,9 @@ Use the following command to run the counting step: ::
 Output files
 ~~~~~~~~~~~~
 
+.. mention file ``prefix.count.stats.txt``
+
+
 Interaction counts
 ------------------
 
