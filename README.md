@@ -22,14 +22,13 @@ And view the documentation as local files: ``diachromatic/docs/_build/html/index
 
 ## Program setup
 
-Diachromatic requires Java 8 or higher to run. The source code of Diachromatic can be downloaded
-from its [GitHub page](https://github.com/TheJacksonLaboratory/diachromatic). To build the application, clone the repository and create the Java app with maven.
+Diachromatic requires Java 8 or higher to run. The source code of Diachromatic can be downloaded from [GitHub](https://github.com/TheJacksonLaboratory/diachromatic). To build the application, clone the repository and create the Java app with maven:
 
     $ git clone https://github.com/TheJacksonLaboratory/diachromatic.git
     $ cd diachromatic
     $ mvn package
 
-To test whether the build process was successful, enter the following command:
+Run Diachromatic to test whether the build process was successful:
 
     $ java -jar target/Diachromatic.jar
 
