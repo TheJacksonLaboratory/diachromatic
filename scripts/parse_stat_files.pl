@@ -22,6 +22,7 @@ while (my $row = <$fh>) {
         $TMP2[0] =~ s/\t//g;
         push(@HEADER,$TMP[0]);
         push(@NUMBERS,$TMP2[0]);
+
     }
 }
 close($fh);
