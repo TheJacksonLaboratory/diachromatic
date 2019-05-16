@@ -17,7 +17,7 @@ Documentation is being prepared for ReadTheDocs. The documentation can be genera
 	$ cd docs
 	$ make html
 
-And view the documentation as local files: ``diachromatic/docs/_build/html/index.html``
+View the documentation as local files: ``diachromatic/docs/_build/html/index.html``
 
 
 ## Program setup
@@ -33,4 +33,8 @@ Run Diachromatic to test whether the build process was successful:
     $ java -jar target/Diachromatic.jar
 
 You should see the help message of Diachromatic in the shell.
+
+## Genes manusciprt
+Manuscript:
+https://drive.google.com/drive/folders/1_hOdjZVENnSt9r0xJHqWhD0GREDJ_heY?usp=sharing
 
