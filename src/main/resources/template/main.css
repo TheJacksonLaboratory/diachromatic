@@ -154,13 +154,15 @@ li {
     cursor: pointer;
 }
 .main .section:first-child {
-    width: 40%;
+    width: 60%;
     padding: 5px;
-    margin: 1rem 0 0 30%;
+    margin: 1rem 0 0 20%;
 }
 
 .info-table {
-    margin: 0.5rem 0 0 1rem;
+    margin: 0.5rem 0 0 0.5rem;
+    table-layout: fixed;
+    width: 98%;
 }
 .info-table .table-label {
     text-align: justify-all;
@@ -168,9 +170,11 @@ li {
     font-weight: bold;
     color: #575858b5;
     font-size: 12px;
+    width: 30%;
 }
 
 .info-table .table-data {
+    word-wrap: break-word;
     font-weight: bold;
     font-size: 14px;
 }
@@ -200,8 +204,6 @@ table.redTable td {
     background-color: #f0f3fa;
     text-align: right;
     content: CommaFormatted();
-    font-variant
-
 }
 
 table.minimalistBlack th,
