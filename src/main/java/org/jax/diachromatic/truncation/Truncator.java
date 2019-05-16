@@ -17,8 +17,9 @@ public class Truncator {
     private final String fastqFile2;
     private final RestrictionEnzyme renzyme;
     private final String filledEndSequence;
-
-    private String outputFASTQ1, outputFASTQ2, outputSummaryStatistics;
+    private final String  outputFASTQ1;
+    private final String  outputFASTQ2;
+    private final String  outputSummaryStatistics;
     /**
      * Read 1 was too short after truncation, leading to the removal of the affected read inputSAMfiles.
      */
@@ -56,9 +57,9 @@ public class Truncator {
     /**
      * Parse the two input FASTQ files using a {@link FastqPairParser} object that returns one inputSAMfiles of reads at a time.
      * For each inputSAMfiles of reads, if one or both of the reads was truncated to the extent that the remaining read is too
-     * short, then skip the read inputSAMfiles. Write out each read of valid pairs to separate output files.
+     * short, then skip the read inputSAMfiles. Write out each read of valid pairs to separate summarize files.
      *
-     * @throws DiachromaticException
+     * @throws DiachromaticException if the FASTQ files cannot be parsed
      */
     public void parseFASTQ() throws DiachromaticException {
         PotentiallyTruncatedFastQRecord.setLigationSequence(filledEndSequence);
@@ -127,26 +128,25 @@ public class Truncator {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        printSummaryStatistics.print("Summary statistics\n");
-        printSummaryStatistics.print("==================\n\n");
-        printSummaryStatistics.print("\n");
-        printSummaryStatistics.print("Truncation statistics\n");
-        printSummaryStatistics.print("---------------------\n");
-        printSummaryStatistics.print("\n");
-        printSummaryStatistics.print("Total number of read pairs processed:\t" + parser.getnReadsProcessed() + "\n\n");
-        printSummaryStatistics.print(String.format("Number of truncated forward reads: %d (%.2f%%)\n",
+        printSummaryStatistics.print(String.format("restriction_enzyme:%s (%s)\n",this.renzyme.getName(),this.renzyme.getSite()));
+        printSummaryStatistics.print(String.format("filled_end_sequence:%s\n",filledEndSequence));
+        printSummaryStatistics.print("total_raw_read_pairs_processed:" + parser.getnReadsProcessed() + "\n");
+        printSummaryStatistics.print(String.format("truncated_forward_reads:%d (%.2f%%)\n",
                 parser.getReadOneTruncated(),
                 100.0 * parser.getReadOneTruncated() / parser.getnReadsProcessed()));
-        printSummaryStatistics.print(String.format("Number of truncated reverse reads: %d (%.2f%%)\n\n",
+        printSummaryStatistics.print(String.format("truncated_reverse_reads:%d (%.2f%%)\n",
                 parser.getReadTwoTruncated(),
                 100.0 * parser.getReadOneTruncated() / parser.getnReadsProcessed()));
-        printSummaryStatistics.print(String.format("Number of maybe dangling forward reads: %d (%.2f%%)\n", numOfMaybeDanglingRead1,100.0 * numOfMaybeDanglingRead1/parser.getnReadsProcessed()));
-        printSummaryStatistics.print(String.format("Number of maybe dangling reverse reads: %d (%.2f%%)\n\n", numOfMaybeDanglingRead2,100.0 * numOfMaybeDanglingRead2/parser.getnReadsProcessed()));
-        printSummaryStatistics.print(String.format("Number of too short removed forward reads (<%d): %d\n", LENGTH_THRESHOLD, removedBecauseRead1TooShort));
-        printSummaryStatistics.print(String.format("Number of too short removed reverse reads (<%d): %d\n", LENGTH_THRESHOLD, removedBecauseRead2TooShort));
-        printSummaryStatistics.print(String.format("Number of removed pairs (at least one read too short): %d (%.2f%%)",
+        printSummaryStatistics.print(String.format("dangling_forward_reads:%d (%.2f%%)\n", numOfMaybeDanglingRead1,100.0 * numOfMaybeDanglingRead1/parser.getnReadsProcessed()));
+        printSummaryStatistics.print(String.format("dangling_reverse_reads:%d (%.2f%%)\n", numOfMaybeDanglingRead2,100.0 * numOfMaybeDanglingRead2/parser.getnReadsProcessed()));
+        printSummaryStatistics.println(String.format("length_threshold:%d",LENGTH_THRESHOLD));
+        printSummaryStatistics.print(String.format("short_removed_forward_reads:%d\n", removedBecauseRead1TooShort));
+        printSummaryStatistics.print(String.format("short_removed_reverse_reads:%d\n", removedBecauseRead2TooShort));
+        printSummaryStatistics.print(String.format("removed_pairs_one_or_two_reads_too_short:%d (%.2f%%)\n",
                 NumOfPairsRemovedBecauseAtLeastOneReadTooShort,
                 100.0 * NumOfPairsRemovedBecauseAtLeastOneReadTooShort / parser.getnReadsProcessed()));
+        printSummaryStatistics.print(String.format("input_fastq1:%s\n",fastqFile1));
+        printSummaryStatistics.print(String.format("input_fastq2:%s",fastqFile2));
     }
 
 

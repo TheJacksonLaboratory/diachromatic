@@ -2,52 +2,47 @@
 Truncation of chimeric reads
 ============================
 
-Ligation junctions, chimeric fragments and chimeric reads
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Valid Hi-C read pairs originate from chimeric fragments with DNA from two different loci linked by the ligation junction. Diachromatic searches read sequences in 5’-3’ direction and truncates chimeric reads at the location of the ligation site, thereby removing the following sequence.
 
-Valid Hi-C read pairs stem from chimeric fragments consisting of DNA from two different loci linked by the ligation
-junction. Depending on whether the sticky ends of the dangling ends were filled or not, the ligation junction consist
-of either one or two restriction enzyme cutting motifs.
+For Capture Hi-C, the sticky ends are filled in with biotinylated nucleotides, and the resulting blunt ends are ligated. The corresponding ligation junctions can then be observed as two consecutive copies of the overhang sequence at restriction enzyme cutting sites. For Capture-C, no fill in of the overhangs is performed, and the ligation junctions occur as plain restriction sites.
 
 .. figure:: img/sticky_and_blunt_ends.png
     :align: center
 
-The sonication step of the Hi-C protocol may introduce breakpoints near restriction enzyme cutting
-sites. If the breakpoint occurs at a distance smaller than one read length, this will result in a chimeric read that
-cannot be mapped to the reference sequence.
-The truncation step of the pipeline attempts to address this situation by deleting the sequence that is downstream of
-the enzyme recognition site.
-
-.. figure:: img/chimeric_reads.png
-    :align: center
-
+Use the ``--sticky-ends`` option if no fill in was performed.
 
 
 Running Diachromatic's *truncate* subcommand
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Use the following command to run the truncation step. ::
+Use the following command to run the truncation step: ::
 
-    $ java -jar Diachromatic.jar truncate -q test1.fastq -r test2.fastq -e HindIII
+    $ java -jar Diachromatic.jar truncate \
+        -q test1.fastq \
+        -r test2.fastq \
+        -e HindIII \
+        -x prefix \
+        -o outdir
 
 
-The following table lists all possible arguments.
+Available arguments:
 
-+--------------+-----------------+---------------+----------+----------------------------------------------------------+---------+
-| Short option | Long option     | Example       | Required | Description                                              | Default |
-+--------------+-----------------+---------------+----------+----------------------------------------------------------+---------+
-| -q           | --fastq-r1      | forward.fq.gz | yes      | Path to the forward FASTQ file.                          |    --   |
-+--------------+-----------------+---------------+----------+----------------------------------------------------------+---------+
-| -r           | --fastq-r2      | reverse.fq.gz | yes      | Path to the reverse FASTQ file.                          |    --   |
-+--------------+-----------------+---------------+----------+----------------------------------------------------------+---------+
-| -e           | --enzyme        | HindIII       | yes      | Symbol of the restriction enzyme.                        | null    |
-+--------------+-----------------+---------------+----------+----------------------------------------------------------+---------+
-| -s           | --sticky-ends   | false         | no       | True, if no fill-in of sticky ends was performed.        | false   |
-+--------------+-----------------+---------------+----------+----------------------------------------------------------+---------+
-| -od          | --out-directory | cd4v2         | no       | Directory containing the output of the truncate command. | results |
-+--------------+-----------------+---------------+----------+----------------------------------------------------------+---------+
-| -op          | ---out-prefix   | stim_rep1     | no       | Prefix for all generated files in output directory.      | prefix  |
-+--------------+-----------------+---------------+----------+----------------------------------------------------------+---------+
++--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
+| Short option |     Long option     | Example       | Required | Description                                              | Default |
++--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
+| -q           | \\-\\-fastq-r1      | forward.fq.gz | yes      | Path to the forward FASTQ file.                          |    --   |
++--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
+| -r           | \\-\\-fastq-r2      | reverse.fq.gz | yes      | Path to the reverse FASTQ file.                          |    --   |
++--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
+| -e           | \\-\\-enzyme        | HindIII       | yes      | Symbol of the restriction enzyme.                        | null    |
++--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
+| -s           | \\-\\-sticky-ends   | false         | no       | True, if no fill-in of sticky ends was performed.        | false   |
++--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
+| -o           | \\-\\-out-directory | cd4v2         | yes      | Directory containing the output of the truncate command. | results |
++--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
+| -x           | \\-\\-out-prefix    | stim_rep1     | yes      | Prefix for all generated files in output directory.      | prefix  |
++--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
+
 
 Output files
 ~~~~~~~~~~~~

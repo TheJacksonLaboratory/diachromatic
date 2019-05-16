@@ -16,7 +16,7 @@
    version="1.1"
    inkscape:version="0.91 r13725"
    sodipodi:docname="fragment_formation.svg"
-   inkscape:export-filename="/home/peter/IdeaProjects/diachromatic/docs/img/fragment_formation.png"
+   inkscape:export-filename="/Users/hansep/IdeaProjects/diachromatic/docs/img/fragment_formation.png"
    inkscape:export-xdpi="499"
    inkscape:export-ydpi="499">
   <defs
@@ -1729,16 +1729,16 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.7160343"
-     inkscape:cx="287.37179"
-     inkscape:cy="202.25683"
+     inkscape:zoom="0.65543478"
+     inkscape:cx="735.16499"
+     inkscape:cy="215.88723"
      inkscape:document-units="px"
      inkscape:current-layer="layer1-6"
      showgrid="true"
-     inkscape:window-width="1920"
-     inkscape:window-height="1027"
+     inkscape:window-width="1440"
+     inkscape:window-height="805"
      inkscape:window-x="0"
-     inkscape:window-y="0"
+     inkscape:window-y="1"
      inkscape:window-maximized="1"
      units="px"
      showguides="false">
@@ -7449,7 +7449,7 @@
            y="-827.87073"
            x="453.23178"
            id="tspan6317-8-3-0"
-           sodipodi:role="line">Not cross-linked DNA</tspan></text>
+           sodipodi:role="line">Non cross-linked DNA</tspan></text>
       <text
          xml:space="preserve"
          style="font-style:normal;font-weight:normal;font-size:12.5px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"

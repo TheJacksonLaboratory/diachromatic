@@ -3,17 +3,13 @@ package org.jax.diachromatic.align;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.util.Pair;
 import org.junit.Ignore;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 
 @Ignore("Broken because of new digest map.")
@@ -76,7 +72,7 @@ public class MapPairsTest {
         String digestFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapDigests.txt";
        // String activeDigestsFile = "src/test/resources/data/testInteractionCountsMap/testInteractionCountsMapActiveDigests.txt";
         DigestMap digestMap = new DigestMap(digestFile);
-        sampairer = new Aligner(sam1, sam2, outputRejectedReads,"test1", digestMap, 150, 800, "xxx",true);
+        sampairer = new Aligner(sam1, sam2, outputRejectedReads,"test1", digestMap, 150, 800, 3000,"xxx", true);
         ReadPair pair;
         while ((pair = sampairer.getNextPair())!=null) {
             readpairmap.put(pair.forward().getReadName(),pair);

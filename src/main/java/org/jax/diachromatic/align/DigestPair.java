@@ -38,4 +38,46 @@ public class DigestPair {
             return false;
         }
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o==null) return false;
+        if (! (o instanceof DigestPair) ) return false;
+        DigestPair other = (DigestPair) o;
+        return (this.forwardDigest.equals(other.forwardDigest) && this.reverseDigest.equals(other.reverseDigest))
+                ||
+               (this.forwardDigest.equals(other.reverseDigest) && this.reverseDigest.equals(other.forwardDigest))
+                ;
+    }
+
+    /** Hash code with lazily initialized value*/
+    private int hashCode;
+    @Override
+    public int hashCode() {
+        int result=hashCode;
+        if (result==0) {
+            if(forwardDigest.getDigestStartPosition()<reverseDigest.getDigestStartPosition()) {
+                result = forwardDigest.hashCode();
+                result = 31 * result + reverseDigest.hashCode();
+                hashCode = result;
+            } else {
+                result = reverseDigest.hashCode();
+                result = 31 * result + forwardDigest.hashCode();
+                hashCode = result;
+            }
+        }
+        return result;
+    }
+
+
+    @Override
+    public String toString() {
+        // fragment with the smaller starting position comes always first
+        if(forwardDigest.getDigestStartPosition()<reverseDigest.getDigestStartPosition()) {
+            return forwardDigest.toString() + "\t" + reverseDigest.toString();
+        } else {
+            return reverseDigest.toString() + "\t" + forwardDigest.toString();
+        }
+
+    }
 }

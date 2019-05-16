@@ -117,7 +117,7 @@ public class MakeFilesForTest {
             poslist.add(pos);
         }
         assertEquals(4, found);
-        // output genome file
+        // summarize genome file
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter("genome.small.fa"));
             writer.write(">chrZ\n");
@@ -126,7 +126,7 @@ public class MakeFilesForTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        // output some paired reads
+        // summarize some paired reads
         // we will go for fragments 1-3 and fragments 2-4
         fastq1 = new ArrayList<>();
         fastq2 = new ArrayList<>();
@@ -155,7 +155,6 @@ public class MakeFilesForTest {
         System.out.println("[INFO] Done writing genome and two fastq files");
     }
 
-
     private char getOtherNT(char c) {
         switch (c) {
             case 'A':
@@ -178,7 +177,6 @@ public class MakeFilesForTest {
         return qualstring.charAt(i);
     }
 
-
     private String getReadName(boolean forward, int x, int y) {
         String[] fields = {"HWI-D00119", "50", "H7AP8ADXY", "1", "42", "2100", "2300", "2", "N", "0", "TAAGGCGA"};
         //if (forward) fields[7]="1";
@@ -194,7 +192,6 @@ public class MakeFilesForTest {
         }
         return new String(qual);
     }
-
 
     private void output1and3(String genome, List<Integer> hindIIIpos) {
         // Add a mutation at position 20 and have reads that start at position 12-20
@@ -242,7 +239,6 @@ public class MakeFilesForTest {
         }
     }
 
-
     private void output2and4(String genome, List<Integer> hindIIIpos) {
         // Add a mutation at position 20 and have reads that start at position 12-20
         // three each
@@ -289,9 +285,5 @@ public class MakeFilesForTest {
                 x++;
             }
         }
-
-
     }
-
-
 }

@@ -4,16 +4,15 @@ import htsjdk.samtools.*;
 import htsjdk.samtools.util.Log;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jax.diachromatic.align.Aligner;
-import org.jax.diachromatic.align.DigestMap;
-import org.jax.diachromatic.align.ReadPair;
-import org.jax.diachromatic.exception.DiachromaticException;
+import org.jax.diachromatic.align.*;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * This class is intended for counting read pairs for piars of restriction fragments and for counting reads at
@@ -21,9 +20,9 @@ import java.util.Iterator;
  * clarity.
  *
  * The input for the constructor will be a BAM file containing the valid read pairs as well as a prefix
- * for output file (including the path).
+ * for summarize file (including the path).
  *
- * The output will consist of three files:
+ * The summarize will consist of three files:
  *
  * <li>prefix.interacting.fragments.counts.table.tsv</li>
  * <li>prefix.interaction.counts.table.tsv</li>
@@ -39,9 +38,9 @@ public class Counter {
     private static final htsjdk.samtools.util.Log log = Log.getInstance(Aligner.class);
 
     /**
-     * Stores interaction counts.
+     * HashMap that stores interaction counts. Key: reference of digest pair; Value: SimpleTwistedCount objects.
      */
-    private InteractionCountsMap interactionMap;
+    private Map<DigestPair,SimpleTwistedCount> dp2countsMap;
 
     /**
      * Stores interaction counts.
@@ -49,7 +48,7 @@ public class Counter {
     private DigestMap digestMap;
 
     /**
-     * Paths for output files.
+     * Paths for summarize files.
      */
     private String outputTsvInteractingFragmentCounts;
     private String outputTsvInteractionCounts;
@@ -87,19 +86,82 @@ public class Counter {
     private int n_R2F1 = 0;
     private int n_F2R1 = 0;
 
+    /**
+     * Total number of reads
+     */
+    private int read_count = 0;
 
-    public Counter(String validPairsBamFile, DigestMap digestMap, String outputPathPrefix, String filenamePrefix) {
-        this.reader = SamReaderFactory.makeDefault().open(new File(validPairsBamFile));
-        this.digestMap=digestMap;
+    /**
+     * Total number of reads within active fragments
+     */
+    private int active_read_count = 0;
+
+    /**
+     * Total number of interactions
+     */
+    private int interaction_count = 0;
+
+
+    /**
+     * Total current number of singleton interactions
+     * Note: Initialized only after execution of the function 'printInteractionCountsMapAsCountTable'.
+     */
+    private int n_singleton_interactions = 0;
+    private int n_singleton_interactions_trans = 0;
+    private int n_singleton_interactions_short_range = 0;
+    private int n_singleton_interactions_long_range = 0;
+
+    private int n_gt1_interaction_count = 0;
+    private int n_gt1_interaction_count_trans = 0;
+    private int n_gt1_interaction_count_short_range = 0;
+    private int n_gt1_interaction_count_long_range = 0;
+
+    /**
+     * Number of interactions between two active fragments
+     */
+    private int active_active_interaction_count = 0;
+
+    /**
+     * Number of interactions between two inactive fragments
+     */
+    private int inactive_inactive_interaction_count = 0;
+
+    /**
+     * Number of interactions between active and inactive fragments (both directions)
+     */
+    private int active_inactive_interaction_count = 0;
+
+    /**
+     * Total number of interacting fragments
+     */
+    private int interacting_fragment_count = 0;
+
+    /**
+     * Total number of active interacting fragments
+     */
+    private int active_interacting_fragment_count = 0;
+
+    /**
+     * Largest number of read pairs for given digest pairs.
+     */
+    private static int MAX_K = 10000;
+
+    /**
+     * Array for counting interactions with k read pairs. The index corresponds to k, e.g. array[2]
+     * contains the number of interactions with 2 read pairs.
+     */
+    private int[] kInteractionCounts =  new int[MAX_K+1];
+
+
+    public Counter(SamReader samReader, DigestMap digestMap, String outputDirAndFilePrefix) {
+        this.reader = samReader;
+        this.digestMap = digestMap;
         this.it = reader.iterator();
-        createOutputNames(outputPathPrefix);
-
+        createOutputNames(outputDirAndFilePrefix);
+        this.dp2countsMap = new HashMap<>();
     }
 
-    public void countInteractions() throws DiachromaticException, FileNotFoundException {
-
-        logger.trace("About to determine interaction counts...");
-        interactionMap = new InteractionCountsMap(1);
+    public void countInteractions() {
 
         // iterate over unique valid pairs
         n_pairs_total = 0;
@@ -109,44 +171,83 @@ public class Counter {
 
             // create read pair
             ReadPair readPair = new ReadPair(record1, record2, digestMap);
+            //readPair.setRandomRelativeOrientationTag();
+            readPair.setRelativeOrientationTag();
 
-            // count interaction
-            interactionMap.incrementFragPair(0,
-                    readPair.forward().getReferenceName(),
-                    readPair.getForwardDigestStart(),
-                    readPair.getForwardDigestEnd(),
-                    readPair.forwardDigestIsActive(),
-                    readPair.reverse().getReferenceName(),
-                    readPair.getReverseDigestStart(),
-                    readPair.getReverseDigestEnd(),
-                    readPair.reverseDigestIsActive(),
-                    readPair.getRelativeOrientationTag());
-
-            if(interactionMap.getTotalNumberOfInteractionsForCondition(0)%1000000==0) {
-                logger.trace("Number of Interactions: " + interactionMap.getTotalNumberOfInteractionsForCondition(0));
+            read_count = read_count + 2;
+            if (readPair.forwardDigestIsActive()) {
+                active_read_count++;
+            }
+            if (readPair.reverseDigestIsActive()) {
+                active_read_count++;
             }
 
-            if(readPair.getRelativeOrientationTag().equals("F1F2")) {n_F1F2++;}
-            if(readPair.getRelativeOrientationTag().equals("F2F1")) {n_F2F1++;}
-            if(readPair.getRelativeOrientationTag().equals("R1R2")) {n_R1R2++;}
-            if(readPair.getRelativeOrientationTag().equals("R2R1")) {n_R2R1++;}
-            if(readPair.getRelativeOrientationTag().equals("F1R2")) {n_F1R2++;}
-            if(readPair.getRelativeOrientationTag().equals("R2F1")) {n_R2F1++;}
-            if(readPair.getRelativeOrientationTag().equals("F2R1")) {n_F2R1++;}
-            if(readPair.getRelativeOrientationTag().equals("R1F2")) {n_R1F2++;}
+            DigestPair dp = readPair.getDigestPair();
+            incrementDigestPair(dp, readPair);
 
-            if(readPair.isTrans()) {
+            if (interaction_count % 10000000 == 0) {
+                logger.trace("Number of Interactions: " + interaction_count);
+            }
+
+            if (readPair.getRelativeOrientationTag().equals("F1F2")) {
+                n_F1F2++;
+            }
+            if (readPair.getRelativeOrientationTag().equals("F2F1")) {
+                n_F2F1++;
+            }
+            if (readPair.getRelativeOrientationTag().equals("R1R2")) {
+                n_R1R2++;
+            }
+            if (readPair.getRelativeOrientationTag().equals("R2R1")) {
+                n_R2R1++;
+            }
+            if (readPair.getRelativeOrientationTag().equals("F1R2")) {
+                n_F1R2++;
+            }
+            if (readPair.getRelativeOrientationTag().equals("R2F1")) {
+                n_R2F1++;
+            }
+            if (readPair.getRelativeOrientationTag().equals("F2R1")) {
+                n_F2R1++;
+            }
+            if (readPair.getRelativeOrientationTag().equals("R1F2")) {
+                n_R1F2++;
+            }
+
+            if (readPair.isTrans()) {
                 n_trans_pairs++;
             }
-
             n_pairs_total++;
         }
-        logger.trace("...done with counting!");
-        logger.trace("About to print the results...");
-        logger.trace("interactionMap.getTotalNumberOfInteractionsForCondition(0): " + interactionMap.getTotalNumberOfInteractionsForCondition(0));
-        interactionMap.printInteractionCountsMapAsCountTable(outputTsvInteractionCounts);
-        //interactionMap.printFragmentInteractionCountsMapAsCountTable(outputTsvInteractingFragmentCounts);
-        logger.trace("...done!");
+    }
+
+    public void incrementDigestPair(DigestPair dp, ReadPair rp) {
+
+        if (!dp2countsMap.containsKey(dp)) {
+            // this is the first read pair for this pair of digests
+            interaction_count++;
+            if (dp.forward().isSelected() && dp.reverse().isSelected()) {
+                active_active_interaction_count++;
+            } else if (!dp.forward().isSelected() && !dp.reverse().isSelected()) {
+                inactive_inactive_interaction_count++;
+            } else {
+                active_inactive_interaction_count++;
+            }
+            dp2countsMap.put(dp, new SimpleTwistedCount());
+        }
+        if (rp.isTwisted()) {
+            dp2countsMap.get(dp).twisted++;
+        } else {
+            dp2countsMap.get(dp).simple++;
+        }
+    }
+
+    public SimpleTwistedCount getSimpleTwistedCountForDigestPair(DigestPair dp) {
+        return dp2countsMap.get(dp);
+    }
+
+    public int getInteractionCount(){
+        return interaction_count;
     }
 
     /**
@@ -154,54 +255,168 @@ public class Counter {
      */
     public void printStatistics() throws FileNotFoundException {
 
-        // create file for output
+        // create file for summarize
         PrintStream printStream = new PrintStream(new FileOutputStream(outputTxtStats));
 
-        printStream.print("Summary statistics\n");
+        printStream.print("#Count statistics\n");
         printStream.print("==================\n\n");
-        printStream.print("\n");
-        printStream.print("Interaction count statistics\n");
-        printStream.print("----------------------------\n");
-        printStream.print("\n");
-        printStream.print("Total number of read pairs processed:\t" + n_pairs_total + "\n\n");
-
-        printStream.print("Counts of read pair orientations:\n");
-        printStream.print("\tF1F2 - commie:\t" + n_F1F2 + String.format(" (%.2f%%)", 100.0*n_F1F2/n_pairs_total) + "\n");
-        printStream.print("\tF2F1 - commie:\t" + n_F2F1 + String.format(" (%.2f%%)", 100.0*n_F2F1/n_pairs_total) + "\n");
-        printStream.print("\tR1R2 - commie:\t" + n_R1R2 + String.format(" (%.2f%%)", 100.0*n_R1R2/n_pairs_total) + "\n");
-        printStream.print("\tR2R1 - commie:\t" + n_R2R1 + String.format(" (%.2f%%)", 100.0*n_R2R1/n_pairs_total) + "\n");
-        printStream.print("\tF1R2 - innie:\t" + n_F1R2 + String.format(" (%.2f%%)", 100.0*n_F1R2/n_pairs_total) + "\n");
-        printStream.print("\tF2R1 - innie:\t" + n_F2R1 + String.format(" (%.2f%%)", 100.0*n_F2R1/n_pairs_total) + "\n");
-        printStream.print("\tR2F1 - outie:\t" + n_R2F1 + String.format(" (%.2f%%)", 100.0*n_R2F1/n_pairs_total) + "\n");
-        printStream.print("\tR1F2 - outie:\t" + n_R1F2 + String.format(" (%.2f%%)", 100.0*n_R1F2/n_pairs_total) + "\n");
-        printStream.print("\n");
-
-        printStream.print("\n");
-        printStream.print("Summary statistics about interactions between active and inactive fragments:\n");
-        printStream.print("\t" + "Total number of interactions: " + interactionMap.getTotalNumberOfInteractionsForCondition(0) + "\n");
-        printStream.print("\t" + "Number of interactions between active fragments: " + interactionMap.getNumberOfInteractionsBetweenActiveFragmentsForCondition(0) + "\n");
-        printStream.print("\t" + "Number of interactions between inactive fragments: " + interactionMap.getNumberOfInteractionsBetweenInactiveFragmentsForCondition(0) + "\n");
-        printStream.print("\t" + "Number of interactions between active and inactive fragments: " + interactionMap.getNumberOfInteractionsBetweenActiveAndInactiveFragmentsForCondition(0) + "\n");
+        printStream.print("total_read_pairs_ processed:" + n_pairs_total + "\n");
+        //  Counts of read pair orientations
+        printStream.print("\tF1F2_commie:" + n_F1F2 + String.format(" (%.2f%%)", 100.0*n_F1F2/n_pairs_total) + "\n");
+        printStream.print("\tF2F1_commie:" + n_F2F1 + String.format(" (%.2f%%)", 100.0*n_F2F1/n_pairs_total) + "\n");
+        printStream.print("\tR1R2_commie:" + n_R1R2 + String.format(" (%.2f%%)", 100.0*n_R1R2/n_pairs_total) + "\n");
+        printStream.print("\tR2R1_commie:" + n_R2R1 + String.format(" (%.2f%%)", 100.0*n_R2R1/n_pairs_total) + "\n");
+        printStream.print("\tF1R2_innie:" + n_F1R2 + String.format(" (%.2f%%)", 100.0*n_F1R2/n_pairs_total) + "\n");
+        printStream.print("\tF2R1_innie:" + n_F2R1 + String.format(" (%.2f%%)", 100.0*n_F2R1/n_pairs_total) + "\n");
+        printStream.print("\tR2F1_outie:" + n_R2F1 + String.format(" (%.2f%%)", 100.0*n_R2F1/n_pairs_total) + "\n");
+        printStream.print("\tR1F2_outie:" + n_R1F2 + String.format(" (%.2f%%)", 100.0*n_R1F2/n_pairs_total) + "\n");
+        // Summary statistics about interactions between active (most typically enriched) and inactive fragments
+        printStream.print("total_interaction_count:" + interaction_count + "\n");
+        printStream.print("interactions_between_selected_fragments:" + active_active_interaction_count + "\n");
+        printStream.print("interactions_between_unselected_fragments:" + inactive_inactive_interaction_count + "\n");
+        printStream.print("interactions_between_selected_and_unselected_fragments:" + active_inactive_interaction_count + "\n");
         printStream.print("");
-        printStream.print("\t" + "Total number of interacting fragments: " + interactionMap.getTotalNumberOfInteractingFragmentsForCondition(0) + "\n");
-        printStream.print("\t" + "Number of active interacting fragments: " + interactionMap.getTotalNumberOfActiveInteractingFragmentsForCondition(0) + "\n");
+        printStream.print("total_interacting_fragments:" + interacting_fragment_count + "\n");
+        printStream.print("selected_interacting_fragments:" + active_interacting_fragment_count + "\n");
+        // Quality metrics for experimental trouble shooting:
+        printStream.print("target_enrichment_coefficient:" + String.format("%.2f%%", 100*this.getTargetEnrichmentCoefficient()) + "\n");
+        printStream.print("cross_ligation_coefficient:" + String.format("%.2f%%", 100.0*n_trans_pairs/n_pairs_total) + "\n");
+        double fsi = 100.0*n_singleton_interactions/interaction_count;
+        printStream.print("fraction_singleton_interactions:" + String.format("%.2f%%", fsi) + "\n");
+        printStream.print("n_singleton_interactions:" + n_singleton_interactions + "\n");
+        printStream.print("n_singleton_interactions_trans:" + n_singleton_interactions_trans + "\n");
+        printStream.print("n_singleton_interactions_short_range:" + n_singleton_interactions_short_range + "\n");
+        printStream.print("n_singleton_interactions_long_range:" + n_singleton_interactions_long_range + "\n");
+        printStream.print("n_gt1_interaction_count:" + n_gt1_interaction_count + "\n");
+        printStream.print("n_gt1_interaction_count_trans:" + n_gt1_interaction_count_trans + "\n");
+        printStream.print("n_gt1_interaction_count_short_range:" + n_gt1_interaction_count_short_range + "\n");
+        printStream.print("n_gt1_interaction_count_long_range:" + n_gt1_interaction_count_long_range + "\n");
         printStream.print("\n");
+        printStream.print("self_ligated_fragment_size_count_array:");
+        for(int i=0; i<MAX_K; i++) {
+            if (i < MAX_K - 1) {
+                printStream.print(kInteractionCounts[i] + ", ");
 
-        printStream.print("Quality metrics for experimental trouble shooting:\n");
-        printStream.print("\tTarget Enrichment Coefficient (TEC):\t" + String.format("%.2f%%", 100*interactionMap.getTargetEnrichmentCoefficientForCondition(0)) + "\n");
-        printStream.print("\tCross-ligation coefficient (CLC):\t" + String.format("%.2f%%", 100.0*n_trans_pairs/n_pairs_total) + "\n");
-        double fsi = 100.0*interactionMap.getTotalNumberOfSingletonInteractionsForCondition(0)/interactionMap.getTotalNumberOfInteractionsForCondition(0);
-        printStream.print("\tFraction of Singleton Interactions (FSI):\t" + String.format("%.2f%%", fsi) + "\n");
+            } else {
+                printStream.print(kInteractionCounts[i]);
+
+            }
+        }
+        printStream.print("\n");
     }
 
     private void createOutputNames(String outputPathPrefix) {
-        outputTsvInteractingFragmentCounts = String.format("%s.%s", outputPathPrefix, "interacting.fragments.counts2.table.tsv");
-        outputTsvInteractionCounts = String.format("%s.%s", outputPathPrefix, "interaction.counts2.table.tsv");
+        outputTsvInteractingFragmentCounts = String.format("%s.%s", outputPathPrefix, "interacting.fragments.counts.table.tsv");
+        outputTsvInteractionCounts = String.format("%s.%s", outputPathPrefix, "interaction.counts.table.tsv");
         outputTxtStats = String.format("%s.%s", outputPathPrefix, "count.stats.txt");
+    }
+
+
+    /**
+     * Prints digest pairs with associated read pair counts to a tab separated file.
+     *
+     * @throws FileNotFoundException  if the file output stream cannot be open for the TSV file of interaction counts
+     */
+    public void printInteractionCountsMapAsCountTable() throws FileNotFoundException {
+
+        // init array for k-interaction counting
+        Arrays.fill(kInteractionCounts, 0);
+
+        // create file for summarize
+        PrintStream printStream = new PrintStream(new FileOutputStream(outputTsvInteractionCounts));
+
+        for (DigestPair dp : this.dp2countsMap.keySet()) {
+            SimpleTwistedCount cc = this.dp2countsMap.get(dp);
+            kInteractionCounts[cc.simple + cc.twisted]++;
+            printStream.println(dp.toString() + "\t" + cc.simple + ":" + cc.twisted);
+            if (cc.simple + cc.twisted == 1) {
+                this.n_singleton_interactions++;
+                if (!dp.forward().getChromosome().equals(dp.reverse().getChromosome())) {
+                    n_singleton_interactions_trans++;
+                } else {
+                    int forward_digest_center = dp.forward().getDigestStartPosition() + ((dp.forward().getDigestEndPosition() - dp.forward().getDigestStartPosition()) / 2);
+                    int reverse_digest_center = dp.reverse().getDigestStartPosition() + ((dp.reverse().getDigestEndPosition() - dp.reverse().getDigestStartPosition()) / 2);
+                    if(Math.abs(reverse_digest_center - forward_digest_center)<10000) {
+                        n_singleton_interactions_short_range++;
+                    } else {
+                        n_singleton_interactions_long_range++;
+                    }
+                }
+            } else {
+                n_gt1_interaction_count++;
+                if (!dp.forward().getChromosome().equals(dp.reverse().getChromosome())) {
+                    n_gt1_interaction_count_trans++;
+                } else {
+                    int forward_digest_center = dp.forward().getDigestStartPosition() + ((dp.forward().getDigestEndPosition() - dp.forward().getDigestStartPosition()) / 2);
+                    int reverse_digest_center = dp.reverse().getDigestStartPosition() + ((dp.reverse().getDigestEndPosition() - dp.reverse().getDigestStartPosition()) / 2);
+                    if(Math.abs(reverse_digest_center - forward_digest_center)<10000) {
+                        n_gt1_interaction_count_short_range++;
+                    } else {
+                        n_gt1_interaction_count_long_range++;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Prints coordinates of interacting digests and associated read counts to a tab separated file.
+     *
+     * @throws FileNotFoundException if the file output stream cannot be open for the TSV file of fragment interaction counts
+     */
+    public void printFragmentInteractionCountsMapAsCountTable() throws FileNotFoundException {
+
+        // create file for summarize
+        PrintStream printStream = new PrintStream(new FileOutputStream(outputTsvInteractingFragmentCounts));
+
+        HashMap<Digest, Integer> readCountsAtDigestsMap = new HashMap<>();
+
+        // Iterate over all interactions and add individual digest to a hashMap with key=digestRef and value=read count.
+        Integer readCount;
+        for (DigestPair dp : this.dp2countsMap.keySet()) {
+            SimpleTwistedCount cc = this.dp2countsMap.get(dp);
+            if (!readCountsAtDigestsMap.containsKey(dp.forward())) {
+                readCountsAtDigestsMap.put(dp.forward(), 1);
+                interacting_fragment_count++;
+                if (dp.forward().isSelected()) {
+                    active_interacting_fragment_count++;
+                }
+            } else {
+                readCount = cc.simple + cc.twisted;
+                readCountsAtDigestsMap.put(dp.forward(), readCountsAtDigestsMap.get(dp.forward()) + readCount);
+            }
+            if (!readCountsAtDigestsMap.containsKey(dp.reverse())) {
+                readCountsAtDigestsMap.put(dp.reverse(), 1);
+                interacting_fragment_count++;
+                if (dp.reverse().isSelected()) {
+                    active_interacting_fragment_count++;
+                }
+            } else {
+                readCount = cc.simple + cc.twisted;
+                readCountsAtDigestsMap.put(dp.reverse(), readCountsAtDigestsMap.get(dp.reverse()) + readCount);
+            }
+        }
+
+        // Print unique interacting digests and associated read counts
+        for (Digest d : readCountsAtDigestsMap.keySet()) {
+            char c = 'I';
+            if (d.isSelected()) {
+                c = 'A';
+            }
+            printStream.println(d.getChromosome() + "\t" + d.getDigestStartPosition() + "\t" + d.getDigestEndPosition() + "\t" + c + "\t" + readCountsAtDigestsMap.get(d));
+        }
+
+    }
+
+
+    /**
+     * @return Percentage of reads in selective/active digests.
+     */
+    private double getTargetEnrichmentCoefficient() {
+        return 1.0*active_read_count/read_count;
     }
 
 
 
 }
-
 

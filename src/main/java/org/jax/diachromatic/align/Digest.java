@@ -24,9 +24,9 @@ public class Digest {
     private final int digestLength;
 
 
-    private String fivePrimeRestrictionSite;
+    private final String fivePrimeRestrictionSite;
 
-    private String threePrimeRestrictionSite;
+    private final String threePrimeRestrictionSite;
 
     private final double five_prime_GC;
 
@@ -103,11 +103,11 @@ public class Digest {
         return chromosome;
     }
 
-    int getDigestStartPosition() {
+    public int getDigestStartPosition() {
         return digestStartPosition;
     }
 
-    int getDigestEndPosition() {
+    public int getDigestEndPosition() {
         return digestEndPosition;
     }
 
@@ -174,8 +174,28 @@ public class Digest {
         if (! (o instanceof Digest) ) return false;
         Digest other = (Digest) o;
         return (chromosome.equals(other.chromosome) &&
-        digestStartPosition ==other.digestStartPosition &&
-        digestEndPosition==other.digestEndPosition);
+        digestStartPosition == other.digestStartPosition &&
+        digestEndPosition == other.digestEndPosition);
+    }
+
+    /** Hash code with lazily initialized value*/
+    private int hashCode;
+
+    /**
+     * Calculate the hash code based on the position of the Digest, the other values are not required
+     * to obtain uniqueness.
+     * @return hascode for this object.
+     */
+    @Override
+    public int hashCode() {
+        int result=hashCode;
+        if (result==0) {
+            result=chromosome.hashCode();
+            result=31*result+Integer.hashCode(digestStartPosition);
+            result=31*result+Integer.hashCode(digestEndPosition);
+            hashCode=result;
+        }
+        return result;
     }
 
 
@@ -185,12 +205,14 @@ public class Digest {
      */
     @Override
     public String toString() {
-        return String.format("Digest at %s:%d-%d [frag. %d;%s/%s]",
+        String activeTag = "I";
+        if(active) {
+            activeTag = "A";
+        }
+        return String.format("%s\t%d\t%d\t%s",
                 chromosome,
                 digestStartPosition,
                 digestEndPosition,
-                digesttNumber,
-                fivePrimeRestrictionSite,
-                threePrimeRestrictionSite);
+                activeTag);
     }
 }
