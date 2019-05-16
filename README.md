@@ -34,7 +34,3 @@ Run Diachromatic to test whether the build process was successful:
 
 You should see the help message of Diachromatic in the shell.
 
-## Genes manusciprt
-Manuscript:
-https://drive.google.com/drive/folders/1_hOdjZVENnSt9r0xJHqWhD0GREDJ_heY?usp=sharing
-
