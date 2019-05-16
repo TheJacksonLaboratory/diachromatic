@@ -1,0 +1,482 @@
+---
+title: "Diachromatic motif analysis"
+author: "Jonas Ibn-Salem"
+date: "5 März 2019"
+output:
+  html_document:
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
+```
+
+## Background and aim
+
+Long-range chromatin interactions result in read-pairs mapping in two distinct configurations, simple and twisted. 
+Each pair of restriction fragments is classified as indirected or directed depending on similar fraction of simple and twisted read pairs or one outweighing the other.
+
+### Goal
+
+ - [x] Analyze distribution of twisted vs. simple reads to find classification in directed and undirected
+ - [x] Analyze CTCF motif distribution 
+ - [ ] Analyze all TF motif distributions
+
+### TODO
+
+ - [ ] Analyze other interaction datasets
+ - [ ] Analyze other TF motifs
+ - [ ] Test if distance is significantly different between interaction classes
+ - [ ] Check which score (score_1 or score_2) is the -log_10 p-value of motif hit
+ 
+### Questions to Peter
+
+- Coordinnates of interactions are hg19?
+- Coordinates zero-based or one-based?
+- Is there a BED file with all restriction fragments?
+
+### Data
+
+We start to analyze the following data sets:
+
+sample              |id          |
+--------------------|------------|
+Hi-C_untreated_rep1 | SRR5633682 | 
+Hi-C_untreated_rep1 | SRR5633683 | 
+
+
+## Data and parameters
+
+```{r}
+require(InteractionSet) # infrastructure for chromatin interactions
+require(rtracklayer) # for liftOver of genomic coordinates
+require(R.utils)   # to unzip .gz files
+require(tidyverse)  # to analyze tabular data
+require(fs)         # to work with files and paths 
+
+```
+
+### Set parameters
+
+```{r}
+ssr_ids <- c("SRR5633682", "SRR5633683")
+# ssr_ids <- c("SRR5633682")
+
+# CTCF motif (JASPAR ID MA0139.1)
+CTCF_motif_url_template <- "http://expdata.cmmt.ubc.ca/JASPAR/downloads/UCSC_tracks/2018/mm10/tsv/MA0139.1.chr<N>.tab.gz"
+mm10_to_mm9_chain_url <- "http://hgdownload.cse.ucsc.edu/goldenpath/mm10/liftOver/mm10ToMm9.over.chain.gz"
+
+mm10_chroms <- c(as.character(1:19), "M", "X", "Y")
+
+mm10_seq_info <- Seqinfo(genome = "mm10")
+
+RUN_CLEAN <- TRUE
+
+```
+
+
+```{r}
+
+sample_tab <- tibble(
+  id = ssr_ids,
+  file = dir_ls(fs::path("data", "Diachromatic"), glob = "*.tsv.gz") %>% 
+    str_subset(pattern = ssr_ids)
+)
+
+
+# read interaction files
+read_interactions <- function(infile){
+  
+  df <- read_tsv(infile, col_names = 
+                 c("chr_a", "start_a", "end_a", "type_a", "chr_b", "start_b", "end_b", "type_b", "simple_twisted")) %>% 
+    separate(simple_twisted, into = c("simple", "twisted"), sep = ":") %>% 
+    mutate_at(c("simple", "twisted"), list(parse_integer))
+}
+
+```
+
+## Read data
+
+```{r read interactions}
+
+if (RUN_CLEAN) {
+
+  # read each file
+  sample_tab <- sample_tab %>% 
+    mutate(df = map(file, read_interactions))
+  
+  write_rds(sample_tab, "sample_tab.rds")
+
+} else {
+  sample_tab <- read_rds("sample_tab.rds")  
+}
+
+# combine into a single data set
+df <- sample_tab %>% 
+  unnest(df)
+
+df <- df %>% 
+  mutate(
+    dist = start_b - end_a,
+    simple_twisted_lr = log2( (simple + 1) / (twisted + 1)),
+    class = case_when(
+      simple_twisted_lr > 1 ~ "simple",
+      simple_twisted_lr < -1 ~ "twisted",
+      TRUE ~ "undirected"),
+    k = simple + twisted,
+    k_group = case_when(
+      k >= 10 ~ "k >= 10",
+      k >= 5 ~ "k >= 5",
+      k >= 4 ~ "k >= 4",
+      k >= 3 ~ "k >= 3",
+      k >= 2 ~ "k >= 2",
+    ) %>% 
+      as.factor() %>% 
+      fct_relevel("k >= 10", after = Inf)
+  )
+
+```
+
+
+### Get CTCF motif location
+
+We download CTCF motif predictions from JASPAR database. 
+The CTCF moitf and frequency matrix can be optained from here: http://jaspar.genereg.net/matrix/MA0139.1/.
+
+
+```{r read motifs}
+
+# 
+if (RUN_CLEAN) {
+  
+  chrom_df <- tibble(
+    chr = mm10_chroms,
+    motif_url = map_chr(mm10_chroms, ~str_replace(CTCF_motif_url_template, "<N>", .x)),
+    df = map(motif_url, read_tsv,
+             col_names = c("start", "strand", "score_1", "score_2"),
+             col_types = "dcdd")
+  )
+  
+  motif_df <- chrom_df %>% 
+    select(-motif_url) %>% 
+    unnest(df)
+
+  write_rds(motif_df, "motif_df.rds")
+
+} else {
+  motif_df <- read_rds("motif_df.rds")  
+}
+
+motif_gr <- GRanges(str_c("chr", motif_df$chr),
+                    IRanges(motif_df$start, motif_df$start + 19),
+                    strand = motif_df$strand,
+                    select(motif_df, score_1, score_2),
+                    seqinfo = mm10_seq_info
+  )
+
+# get liftover chain
+
+# download and extract chain file
+if (RUN_CLEAN) {
+  
+  if (file_exists("data/mm10ToMm9.over.chain.gz"))
+    fs::file_delete("data/mm10ToMm9.over.chain.gz")
+  
+  if (file_exists("data/mm10ToMm9.over.chain"))
+    fs::file_delete("data/mm10ToMm9.over.chain")
+  
+  download.file(mm10_to_mm9_chain_url, "data/mm10ToMm9.over.chain.gz")
+  R.utils::gunzip("data/mm10ToMm9.over.chain.gz")
+}
+ch <- import.chain("data/mm10ToMm9.over.chain")
+
+# liftover motifs from mm10 to mm9
+motif_gr <- rtracklayer::liftOver(motif_gr, ch) %>% 
+  unlist()
+
+
+```
+
+```{r}
+ggplot(motif_df, aes(x = score_2)) +
+  geom_histogram() + 
+  geom_vline(xintercept = 500, color = "red") +
+  theme_bw()
+
+```
+
+
+<!-- We filter CTCF motif locations for motif hits with a significance score corresponding to at least $p = 10^-5$. -->
+
+```{r}
+# motif_gr <- motif_gr[motif_gr$score_2 >= 500]
+```
+
+This result in `r length(motif_gr)` motifs.
+
+## Analyze interaction types
+
+### Count interactions per file
+
+```{r}
+df %>% 
+  count(id) %>% 
+  ggplot(aes(x = id, y = n, label = n)) + 
+    geom_bar(stat = "identity") + 
+    geom_text(vjust = "bottom") + 
+    # coord_flip() +
+    theme_bw() + 
+  labs(y = "number of interactions")
+
+```
+
+### Plot simple and twisted counts
+
+```{r}
+
+df %>% 
+  sample_n(10^6) %>% 
+  ggplot(aes(x = simple, y = twisted)) + 
+    geom_bin2d() + 
+    facet_grid(. ~ id) +
+    scale_fill_distiller(direction = 1) +
+    theme_bw() +
+    theme(legend.position = "bottom")
+
+df %>% 
+  filter(simple <= 20, twisted <= 20) %>% 
+  sample_n(10^6) %>% 
+  count(id, simple, twisted) %>% 
+  ggplot(aes(x = simple, y = twisted, fill = n, label = n)) + 
+    geom_bin2d(stat = "identity") + 
+    geom_text(size = 3) +
+    facet_grid(. ~ id) +
+    scale_fill_distiller(direction = 1) +
+    theme_bw() +
+    theme(legend.position = "bottom")
+
+# df %>% 
+#   sample_n(10^6) %>% 
+#   ggplot(aes(x = simple, y = twisted)) + 
+#     geom_bin2d() + 
+#     facet_grid(. ~ id) +
+#     scale_x_log10() + 
+#     scale_y_log10() +
+#     scale_fill_distiller(direction = 1) +
+#     theme_bw()
+
+```
+
+
+### Ratio simple vs. twisted (without zero counts)
+
+```{r}
+
+lfc_df <- df %>% 
+  filter(twisted > 0, simple > 0) %>% 
+  sample_n(10^6) %>%
+  mutate(lfc = log2(simple / twisted))
+
+lfc_df %>%
+  ggplot(aes(x = lfc)) +
+    geom_histogram(bins = 30) +
+    facet_grid(. ~ id) +
+    theme_bw() + 
+    labs(x = "log2(simple / twisted)")
+
+```
+
+### Ratio simple vs. twisted (with pseudo counts)
+
+```{r}
+df %>% 
+  sample_n(10^6) %>%
+  ggplot(aes(x = simple_twisted_lr)) +
+    geom_histogram(bisn = 30) +
+    geom_vline(xintercept = c(-1, 1), color = "red") +
+    facet_grid(. ~ id) +
+    theme_bw() + 
+    labs(x = "log2((simple + 1) / (twisted + 1))")
+
+```
+
+### Classification of interactions
+
+We classify interactions based on simple and twisted reads into the folloing calses:
+
+ - *simple*, if log2( (simple + 1) / (twisted + 1)) > 1
+ - *twisted*, if log2( (simple + 1) / (twisted + 1)) < -1
+ - *undirected*, otherwise
+
+This lets to the follwing number of interactions per class
+
+```{r}
+df %>% 
+  count(id, class) %>% 
+  ggplot(aes(x = class, y = n, label = n, fill = class)) + 
+  geom_bar(stat = "identity") +
+  geom_text(vjust = "top") +
+  facet_grid(. ~ id) +
+  theme(legend.position = "none") +
+  theme_bw()
+```
+
+## Analysze genomic distance
+
+```{r}
+df %>% 
+  ggplot(aes(x = dist)) +
+    geom_histogram(bins = 30) + 
+    facet_grid(. ~ id) +
+    scale_x_log10() +
+    theme_bw() +
+    labs(x = "Distance in bp")
+
+df %>% 
+  sample_n(1000) %>% 
+  ggplot(aes(x = simple_twisted_lr, y = dist)) +
+    geom_bin2d() +
+    facet_grid(. ~ id) +
+    scale_y_log10() +
+    scale_fill_distiller(direction = 1) +
+    theme_bw()
+
+```
+
+### Distance by class
+
+```{r}
+df %>% 
+  sample_n(10000) %>%
+  ggplot(aes(x = class, y = dist, color = class)) + 
+    geom_boxplot() + 
+    facet_grid(. ~ id) +
+    scale_y_log10() +
+    theme_bw()
+
+```
+
+
+## Analyse motifs
+
+### Convert to InteractonSet object
+
+```{r}
+# get regions as GenomicRanges objects
+gr_a <- GRanges(df$chr_a, IRanges(df$start_a, df$end_a))
+gr_b <- GRanges(df$chr_b, IRanges(df$start_b, df$end_b))
+
+# gi <- GInteractions(gr_a, gr_b, metadata = as.list(select(df, simple, twisted, simple_twisted_lr)))
+```
+
+
+### Motif overlap
+
+We use pre-calculated genomic locations of the CTCF recognition motif from JASPAR database and calculate motif occurrence with restriction fragments. For each interaction, we count the number of motif occurrence in the positive and negative strand for the upstream (a) and downstream (b) anchor fragment.  
+
+```{r}
+# split into motifs on positive and negative strand
+motifs_pos <- motif_gr[strand(motif_gr) == "+"]
+motifs_neg <- motif_gr[strand(motif_gr) == "-"]
+
+# count motifs on A and B anchor of interactions
+# and add motif counts to interaction data
+
+df <- df %>% 
+  mutate(
+    motif_a_pos = countOverlaps(gr_a, motifs_pos),
+    motif_a_neg = countOverlaps(gr_a, motifs_neg),
+    motif_b_pos = countOverlaps(gr_b, motifs_pos),
+    motif_b_neg = countOverlaps(gr_b, motifs_neg)
+)
+
+# add convergetn column
+df <- df %>% 
+  mutate(
+    convergent = ifelse(motif_a_pos > 0 & motif_b_neg > 0, "convergent", "not convergent")
+  )
+
+```
+
+### Motifs per fragment
+
+```{r}
+motif_counts <- df %>% 
+  sample_n(10^6) %>% 
+  gather("motif_type", "motif_count", motif_a_pos, motif_a_neg, motif_b_pos, motif_b_neg) %>% 
+  filter(motif_count <= 10) %>% 
+  count(id, motif_type, motif_count)
+
+ggplot(motif_counts, aes(x = motif_count, y = n, fill = motif_type)) + 
+  geom_bar(stat = "identity") + 
+  # scale_x_log10() + 
+  facet_grid(motif_type ~ id) + 
+  theme_bw() +
+  theme(legend.position = "none")
+
+```
+
+
+### Analyze motifs by class
+
+```{r}
+df %>% 
+  group_by(id, class, convergent) %>% 
+  summarize(n = n()) %>% 
+  mutate(percent_convergent = 100 * n / sum(n)) %>% 
+  ggplot(aes(x = class, y = percent_convergent, fill = convergent, label = round(percent_convergent, 2))) +
+    geom_bar(stat = "identity") + 
+    geom_text(position = position_stack(.5)) +
+    facet_grid(. ~ id) +
+    coord_flip() + 
+    theme_bw() + 
+    theme(legend.position = "bottom")
+
+```
+
+We further subdivide interactions according to the total numberof reads k.
+
+
+```{r}
+df %>%
+  count(k_group) %>% 
+  ggplot(aes(x = k_group, y = n, label = n)) + 
+  geom_bar(stat = "identity") + 
+  geom_text(vjust = "bottom") +
+  theme_bw()
+
+df %>% 
+  group_by(id, class, k_group, convergent) %>% 
+  summarize(n = n()) %>% 
+  mutate(percent_convergent = 100 * n / sum(n)) %>% 
+  ggplot(aes(x = class, y = percent_convergent, fill = convergent, label = round(percent_convergent, 2))) +
+    geom_bar(stat = "identity") + 
+    geom_text(position = position_stack(.5)) +
+    facet_grid(k_group ~ id) +
+    coord_flip() + 
+    theme_bw() + 
+    theme(legend.position = "bottom")
+
+```
+
+
+There is a slight trend towards more convergent oriented CTCF motif pairs for interactions of the class simple, compared to undirected and twisted. This effect is stronger for interactions with higher number of total reads.
+
+
+```{r}
+df %>% 
+  group_by(id, class, k_group, convergent) %>% 
+  summarize(n = n()) %>% 
+  mutate(percent_convergent = 100 * n / sum(n)) %>% 
+  filter(convergent == "convergent") %>% 
+  ggplot(aes(x = class, y = percent_convergent, fill = class, label = round(percent_convergent, 2))) +
+    geom_bar(stat = "identity") + 
+    geom_text(vjust = 1.5) +
+    facet_grid(k_group ~ id) +
+    # coord_flip() + 
+    theme_bw() + 
+    theme(legend.position = "none") + 
+  labs(x = "Interaction class", y = "Percent of interactions with convergent CTCF motifs")
+
+```
+
