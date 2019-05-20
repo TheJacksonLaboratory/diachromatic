@@ -181,14 +181,6 @@ Diachromatic uses optional fields of the SAM records to indicate the read pair c
     * Valid pair (Tag: ``VP``)
 
 
-Furthermore, there is an ``RO`` attribute that indicates the relative orientation of the pair:
-
-    * Same strand forward: ``F1F2``, ``F2F1``
-    * Same strand reverse: ``R1R2``, ``R2R1``
-    * Inwards: ``F1R2``, ``F2R1``
-    * Outwards: ``R2F1``, ``R1F2``
-
-
 In addition, a file ``prefix.align.stats.txt`` is produced that contains summary statistics about the alignment step.
 
 

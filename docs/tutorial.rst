@@ -8,12 +8,7 @@ This tutorial shows how to use Diachromatic for processing and quality control o
 Test dataset
 ~~~~~~~~~~~~
 
-To get the data, visit the `download site <https://www.bioinformatics.babraham.ac.uk/projects/download.html#hicup>`_ and
-download the HiCUP_test_dataset. Extract it using this command. ::
-
-    $  tar xvfz test_dataset.tar.gz
-
-This will create a directory called ``test_dataset``, which we will symbolize with ``TESTDIR`` in the following examples.
+To get the data, visit this [ftp server](ftp://ftp.jax.org/robinp/Diachromatic/test_dataset/) and download the two test read files.
 
 
 Truncation
@@ -26,8 +21,8 @@ is too short to be mapped, the entire read pair is discarded. This is performed 
 
 
     $ java -jar Diachromatic.jar truncate \
-        -q ${TESTDIR}/test_dataset1.fastq \
-        -r ${TESTDIR}/test_dataset2.fastq \
+        -q test_1.fastq \
+        -r test_2.fastq \
         -e HinDIII
         -o HinD3
         -x foo

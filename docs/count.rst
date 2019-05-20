@@ -83,8 +83,8 @@ The interactions are written to a tab separated text file that has the following
 
 The structure of this file is similar to that of (`iBED <https://bioconductor.org/packages/release/bioc/vignettes/Chicago/inst/doc/Chicago.html#ibed-format-ends-with-ibed>`_) files. Each line stands for one pair of interacting fragments. Consider the following example: ::
 
-    chr7    42304777        42314850        A       chr7    152941166      152943990      I       12:2
-    chr7    42304777        42314850        A       chr7    38624777       38625305       I       7:4
+    chr7    42304777        42314850        A       chr7    152941166      152943990      I       14
+    chr7    42304777        42314850        A       chr7    38624777       38625305       I       11
 
 The first three columns contain the coordinates of a restriction fragment on chromosome 7. The ``A`` in column 4
 indicates that this fragment is defined to be active, i.e. it is part of a viewpoint that was enriched using capture technology.

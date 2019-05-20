@@ -2,43 +2,35 @@
 Summarize results
 =================
 
+The summarize subcommand outputs an HTML file with a summary of the analysis.
 
 Running Diachromatic's *summarize* subcommand
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To run the summarize subcommand with the truncate data, run the following command. ::
 
-    $ java -jar target/Diachromatic.jar summarize \
-        -o HinD3 \
-        -x foo \
-        -t HinD3/foo.truncation.stats
-
+    $ java -jar Diachromatic.jar summarize \
+        -o sample_dir \
+        -x sample_prefix \
+        -c sample_dir/sample_prefix.count.stats.txt
+        --summaries sample_dir/
 
 This will generate an HTML file called ``HinD3/foo.summary.stats.html``.
 
 
+Available arguments:
 
-.. Adjust for summarize!
++--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
+| Short option |     Long option     | Example       | Required | Description                                              | Default |
++--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
+| -o           | \\-\\-out-dir       | forward.fq.gz | yes      | Name/path of summarize directory.                        |    --   |
++--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
+| -c           | \\-\\-count         | reverse.fq.gz | yes      | Path to the reverse FASTQ file.                          |    --   |
++--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
+| -e           | \\-\\-summaries     | HindIII       | yes      | Symbol of the restriction enzyme.                        |  null   |
++--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
 
-.. Available arguments:
-..
-.. +--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
-.. | Short option |     Long option     | Example       | Required | Description                                              | Default |
-.. +--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
-.. | -q           | \\-\\-fastq-r1      | forward.fq.gz | yes      | Path to the forward FASTQ file.                          |    --   |
-.. +--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
-.. | -r           | \\-\\-fastq-r2      | reverse.fq.gz | yes      | Path to the reverse FASTQ file.                          |    --   |
-.. +--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
-.. | -e           | \\-\\-enzyme        | HindIII       | yes      | Symbol of the restriction enzyme.                        | null    |
-.. +--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
-.. | -s           | \\-\\-sticky-ends   | false         | no       | True, if no fill-in of sticky ends was performed.        | false   |
-.. +--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
-.. | -o           | \\-\\-out-directory | cd4v2         | yes      | Directory containing the output of the truncate command. | results |
-.. +--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
-.. | -x           | \\-\\-out-prefix    | stim_rep1     | yes      | Prefix for all generated files in output directory.      | prefix  |
-.. +--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
-..
-..
+
 .. Output files
 .. ~~~~~~~~~~~~
 ..
