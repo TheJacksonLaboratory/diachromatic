@@ -11,6 +11,9 @@ promoter reads using a likelihood ratio test.
 
 
 ## Documentation
+Documentation is being prepared for ReadTheDocs. We will not be able to publish the
+documentation online until this repository is made public (probably in March.
+Therefore, for now generate the documentation with
 
 Documentation is being prepared for ReadTheDocs. The documentation can be generated with:
 
@@ -33,4 +36,3 @@ Run Diachromatic to test whether the build process was successful:
     $ java -jar target/Diachromatic.jar
 
 You should see the help message of Diachromatic in the shell.
-
