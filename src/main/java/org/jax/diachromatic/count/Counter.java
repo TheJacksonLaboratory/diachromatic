@@ -328,8 +328,9 @@ public class Counter {
         for (DigestPair dp : this.dp2countsMap.keySet()) {
             SimpleTwistedCount cc = this.dp2countsMap.get(dp);
             kInteractionCounts[cc.simple + cc.twisted]++;
-            int cnt = cc.simple + cc.twisted;
-            printStream.println(dp.toString() + "\t" + cnt);
+            //int cnt = cc.simple + cc.twisted;
+            //printStream.println(dp.toString() + "\t" + cnt);
+            printStream.println(dp.toString() + "\t" + cc.simple + ":" + cc.twisted);
             if (cc.simple + cc.twisted == 1) {
                 this.n_singleton_interactions++;
                 if (!dp.forward().getChromosome().equals(dp.reverse().getChromosome())) {
