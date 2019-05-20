@@ -10,9 +10,10 @@ Running Diachromatic's *summarize* subcommand
 To run the summarize subcommand with the truncate data, run the following command. ::
 
     $ java -jar Diachromatic.jar summarize \
-        -o HinD3 \
-        -x foo \
-        -t HinD3/foo.truncation.stats
+        -o sample_dir \
+        -x sample_prefix \
+        -c sample_dir/sample_prefix.count.stats.txt
+        --summaries sample_dir/
 
 This will generate an HTML file called ``HinD3/foo.summary.stats.html``.
 
