@@ -144,7 +144,7 @@ public class Counter {
     /**
      * Largest number of read pairs for given digest pairs.
      */
-    private static int MAX_K = 10000;
+    private static int MAX_K = 100000;
 
     /**
      * Array for counting interactions with k read pairs. The index corresponds to k, e.g. array[2]
