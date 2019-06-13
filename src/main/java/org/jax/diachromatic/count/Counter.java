@@ -152,13 +152,16 @@ public class Counter {
      */
     private int[] kInteractionCounts =  new int[MAX_K+1];
 
+    boolean split = false;
 
-    public Counter(SamReader samReader, DigestMap digestMap, String outputDirAndFilePrefix) {
+
+    public Counter(SamReader samReader, DigestMap digestMap, String outputDirAndFilePrefix, boolean split) {
         this.reader = samReader;
         this.digestMap = digestMap;
         this.it = reader.iterator();
         createOutputNames(outputDirAndFilePrefix);
         this.dp2countsMap = new HashMap<>();
+        this.split=split;
     }
 
     public void countInteractions() {
@@ -330,7 +333,12 @@ public class Counter {
             kInteractionCounts[cc.simple + cc.twisted]++;
             //int cnt = cc.simple + cc.twisted;
             //printStream.println(dp.toString() + "\t" + cnt);
-            printStream.println(dp.toString() + "\t" + cc.simple + ":" + cc.twisted);
+            if(this.split) {
+                printStream.println(dp.toString() + "\t" + cc.simple + ":" + cc.twisted);
+            } else {
+                int c = cc.simple + cc.twisted;
+                printStream.println(dp.toString() + "\t" + c);
+            }
             if (cc.simple + cc.twisted == 1) {
                 this.n_singleton_interactions++;
                 if (!dp.forward().getChromosome().equals(dp.reverse().getChromosome())) {
