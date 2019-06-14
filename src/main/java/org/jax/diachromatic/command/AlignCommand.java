@@ -64,6 +64,10 @@ public class AlignCommand extends Command {
     @Parameter(names={"-j", "--bad"}, description = "Output bad (rejected) reads to separated file.", order = 13)
     private boolean outputRejectedReads=false;
 
+    //** if this is set, an extra BAM file containg the rejected read pairs will be created */
+    @Parameter(names={"-k", "--keep-sam"}, description = "Do not delete temporary SAM files.", order = 14)
+    private boolean keepSamFiles=false;
+
     public AlignCommand(){}
 
 
@@ -86,10 +90,12 @@ public class AlignCommand extends Command {
             Aligner pairer = new Aligner(samFile1,samFile2, outputRejectedReads, outputDirAndFilePrefix, digestMap, lowerFragSize, upperFragSize, upperSelfLigationFragSize, filenamePrefix,useStringentUniqueSettings);
             pairer.inputSAMfiles();
             pairer.printStatistics();
-            File file = new File(samFile1);
-            file.delete();
-            file = new File(samFile2);
-            file.delete();
+            if(!keepSamFiles) {
+                File file = new File(samFile1);
+                file.delete();
+                file = new File(samFile2);
+                file.delete();
+            }
         } catch (DiachromaticException | IOException e){
             e.printStackTrace();
         }
