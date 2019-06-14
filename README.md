@@ -6,7 +6,7 @@ This package will implements truncation, alignment, artifact filtering and count
 
 ## Documentation
 Documentation is being prepared for ReadTheDocs. We will not be able to publish the
-documentation online until this repository is made public (probably in March.
+documentation online until this repository is made public.
 Therefore, for now generate the documentation with
 
 Documentation is being prepared for ReadTheDocs. The documentation can be generated with:
