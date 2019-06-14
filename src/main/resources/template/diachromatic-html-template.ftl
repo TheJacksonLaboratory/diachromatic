@@ -319,7 +319,6 @@
             re-ligation beyond self-ligation.
             </p>
             <div id="container_SelfLigatedDigestSizeCounts" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
-            <font color="red"><b>ToDo: Plot size distribution of self-ligating digests in a histogram rather than line plot.</b></font>
     </div>
     <!-- Fragment sizes - end -->
     <!-- Proportion of trans reads for each chromosome -->
@@ -335,7 +334,6 @@
             Furthermore, the number of digests is determined for each chromosome (y-axis).
             </p>
 	<div id="container_transCisScatterPlot" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
-	<font color="red"><b>ToDo: Add regression line to plot.</b></font>
 	</div>
 	<!-- Proportion of trans reads for each chromosome - end -->
 	 <!-- Interaction statistics -->
@@ -356,7 +354,6 @@
             The target enrichment coefficient (TEC) is defined as the proportion of reads that are mapped to active
             digests. For this dataset, the TEC is <b>${count_target_enrichment_coefficient!"n/a"}</b>.
             </p>
-        <font color="red"><b>ToDo: Pop-up windows show 'mm' unit.</b></font>
         </div>
         <!-- Singleton interactions statistics -->
          <div class="section">
@@ -367,7 +364,6 @@
         digest pair) and all other interactions with respect to cis and trans.
         </p>
             <div id="container_singletonInteractions" style="min-width: 150px; height: 350px; margin: 0 auto"></div>
-            	<font color="red"><b>ToDo: Normalize to values between 0 and 1, because 99% of the interactions are singleton interactions.</b></font>
         </div>
         <!-- Singleton interactions statistics end -->
         <!-- k interactions statistics -->
@@ -376,7 +372,6 @@
         <p>
         The plot shows the distribution of interaction with k read pairs.
         </p>
-            <font color="red"><b>ToDo: Plot histogram of 'self_ligated_fragment_size_count_array'. Index corresponds to k=2.</b></font>
         </div>
      	 <!-- k interactions statistics end -->
     </div>

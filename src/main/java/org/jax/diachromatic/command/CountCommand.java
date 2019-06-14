@@ -32,6 +32,10 @@ public class CountCommand extends Command {
     @Parameter(names={"-d","--digest-file"}, required = true, description = "Path to GOPHER digest file.", order = 4)
     private String digestFile = null;
 
+    /** Aggregate counts for different read pair orienations. */
+    @Parameter(names={"-s", "--split-counts"},description = "Split counts for different read pair orientations.", order = 5)
+    private boolean split=false;
+
 
     public CountCommand() {
     }
@@ -47,7 +51,7 @@ public class CountCommand extends Command {
 
         SamReader reader = SamReaderFactory.makeDefault().open(new File(validPairsBamFile));
 
-        Counter counter = new Counter(reader, digestMap, outputDirAndFilePrefix);
+        Counter counter = new Counter(reader, digestMap, outputDirAndFilePrefix, split);
         try {
             logger.trace("About to determine interaction counts...");
             counter.countInteractions();

@@ -37,7 +37,7 @@ public class CounterTest {
 
         DigestMap dm = Mockito.mock(DigestMap.class);
         SamReader samReader = Mockito.mock(SamReader.class);
-        Counter counter = new Counter(samReader, dm, "fakeOutputPathWithPrefix");
+        Counter counter = new Counter(samReader, dm, "fakeOutputPathWithPrefix",false);
 
         // test whether the same count is incremented for different orders of digests in a given pair.
         counter.incrementDigestPair(dp1,rp1);

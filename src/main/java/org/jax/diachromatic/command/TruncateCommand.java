@@ -43,6 +43,14 @@ public class TruncateCommand extends Command {
         if (re==null) {
             throw new DiachromaticException(String.format("Could not identify restriction enzyme for \"%s\"",enzymeName));
         }
+        File f = new File(fastaqFile1);
+        if(!f.exists()) {
+            throw new DiachromaticException(String.format("%s does not exist", fastaqFile1));
+        }
+        f = new File(fastaqFile2);
+        if(!f.exists()) {
+            throw new DiachromaticException(String.format("%s does not exist", fastaqFile2));
+        }
         String outputDirAndFilePrefix=String.format("%s%s%s", outputDir, File.separator,filenamePrefix);
         truncator = new Truncator(fastaqFile1,fastaqFile2, re, stickyEnds, outputDirAndFilePrefix);
     }
