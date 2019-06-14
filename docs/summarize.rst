@@ -12,23 +12,29 @@ To run the summarize subcommand with the truncate data, run the following comman
     $ java -jar Diachromatic.jar summarize \
         -o sample_dir \
         -x sample_prefix \
-        -c sample_dir/sample_prefix.count.stats.txt
-        --summaries sample_dir/
+        -t sample_dir/sample_prefix.truncation.stats.txt \
+        -a sample_dir/sample_prefix.align.stats.txt \
+        -c sample_dir/sample_prefix.count.stats.txt \
 
-This will generate an HTML file called ``HinD3/foo.summary.stats.html``.
+
+This will generate an HTML file called ``sample_dir/sample_prefix.summary.stats.html``.
 
 
 Available arguments:
 
-+--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
-| Short option |     Long option     | Example       | Required | Description                                              | Default |
-+--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
-| -o           | \\-\\-out-dir       | forward.fq.gz | yes      | Name/path of summarize directory.                        |    --   |
-+--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
-| -c           | \\-\\-count         | reverse.fq.gz | yes      | Path to the reverse FASTQ file.                          |    --   |
-+--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
-| -e           | \\-\\-summaries     | HindIII       | yes      | Symbol of the restriction enzyme.                        |  null   |
-+--------------+---------------------+---------------+----------+----------------------------------------------------------+---------+
++--------------+------------------+--------------------------------------------+----------+--------------------------------------------------------------+---------+
+| Short option | Long option      | Example                                    | Required | Description                                                  | Default |
++--------------+------------------+--------------------------------------------+----------+--------------------------------------------------------------+---------+
+| -o           | \\-\\-out-dir    | GSM1234567                                 | yes      | Directory containing the output of the summarize subcommand. | results |
++--------------+------------------+--------------------------------------------+----------+--------------------------------------------------------------+---------+
+| -x           | \\-\\-out-prefix | GSM1234567                                 | yes      | Prefix for all generated files in output directory.          | prefix  |
++--------------+------------------+--------------------------------------------+----------+--------------------------------------------------------------+---------+
+| -t           | \\-\\-truncate   | GSM1234567/GSM1234567.truncation.stats.txt | yes      | Path to truncate statistics file.                            | null    |
++--------------+------------------+--------------------------------------------+----------+--------------------------------------------------------------+---------+
+| -a           | \\-\\-align      | GSM1234567/GSM1234567.align.stats.txt      | yes      | Path to align statistics file.                               | null    |
++--------------+------------------+--------------------------------------------+----------+--------------------------------------------------------------+---------+
+| -c           | \\-\\-count      | GSM1234567/GSM1234567.count.stats.txt      | yes      | Path to count statistics file.                               | null    |
++--------------+------------------+--------------------------------------------+----------+--------------------------------------------------------------+---------+
 
 
 .. Output files

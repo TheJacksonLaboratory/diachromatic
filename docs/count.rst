@@ -62,9 +62,9 @@ Use the following command to run the counting step: ::
 +--------------+--------------------------+--------------------------------------------------------+----------+------------------------------------------------------------------+---------+
 | -d           | \\-\\-digest-file        | /data/GOPHER/hg38_DpnII_DigestedGenome.txt             | yes      | Path to the digest file produced with GOPHER.                    |    --   |
 +--------------+--------------------------+--------------------------------------------------------+----------+------------------------------------------------------------------+---------+
-| -od          | \\-\\-out-directory      | cd4v2                                                  | no       | Directory containing the output of the align subcommand.         | results |
+| -o           | \\-\\-out-directory      | cd4v2                                                  | no       | Directory containing the output of the align subcommand.         | results |
 +--------------+--------------------------+--------------------------------------------------------+----------+------------------------------------------------------------------+---------+
-| -op          | \\-\\-out-prefix         | stim_rep1                                              | no       | Prefix for all generated files in output directory.              | prefix  |
+| -x           | \\-\\-out-prefix         | stim_rep1                                              | no       | Prefix for all generated files in output directory.              | prefix  |
 +--------------+--------------------------+--------------------------------------------------------+----------+------------------------------------------------------------------+---------+
 
 
