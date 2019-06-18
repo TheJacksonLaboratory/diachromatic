@@ -8,30 +8,34 @@ This tutorial shows how to use Diachromatic for processing and quality control o
 Test dataset
 ~~~~~~~~~~~~
 
-To get the data, visit this [ftp server](ftp://ftp.jax.org/robinp/Diachromatic/test_dataset/) and download the two test read files.
+To get the data, visit this [ftp server](ftp://ftp.jax.org/robinp/Diachromatic/test_dataset/) and download the two test read files or use: ::
+
+	wget ftp://ftp.jax.org/robinp/Diachromatic/test_dataset/test*.fastq
 
 
 Truncation
 ~~~~~~~~~~
+
 The first step of processing with data with Diachromatic is processing of the raw FASTQ files to recognize and truncate
 reads with filled-in ligation juctions, which indicate reads that include the junction of the chimeric CHC fragment. If
 a single read is chimeric, it is not possible to map it to one locus, and therefore the 3' portion of the chimeric read
 is removed ("truncated"), leaving behind the 5' portion of the read that should map to a specific locus. If the 5' sequence
-is too short to be mapped, the entire read pair is discarded. This is performed with the truncate command.::
-
+is too short to be mapped, the entire read pair is discarded. This is performed with the truncate command. ::
 
     $ java -jar Diachromatic.jar truncate \
         -q test_1.fastq \
         -r test_2.fastq \
-        -e HinDIII
-        -o HinD3
-        -x foo
+        -e HinDIII \
+        -x prefix \
+        -o outdir
+
 
 In practice, only about XXXX percent of the readpairs are truncated.
 
 
 Mapping
 ~~~~~~~
+
 The second step of the pipeline is to map the truncated read pairs to the target genome. Diachromatic uses bowtie2 to perform the
 mapping, and then creates a BAM file containing the valid read pairs. If desired, Diachromatic also outputs BAM files
 with the discarded (arterfactual or unmappable reads).
@@ -43,21 +47,32 @@ It is recommended that users download bowtie index files from the bowtie site. I
 downloaded and extracted these files to a directory called ``/data/bt_indices`` (in this directory, there are multiple index files
 hg19.1.bt2, hg19.3.bt2, hg19.rev.1.bt2, hg19.2.bt2, hg19.4.bt2, hg19.rev.2.bt2).
 
-
 Use the following command to run the alignment step. ::
 
     $ java -jar target/Diachromatic.jar align \
         -b /usr/bin/bowtie2 \
         -i /data/bt_indices/hg19 \
-        -q foo.truncated_R1.fastq.gz \
-        -r foo.truncated_R2.fq.gz \
+        -q prefix.truncated_R1.fastq.gz \
+        -r prefix.truncated_R2.fastq.gz \
+        -d hg19_HinDIII_DigestedGenome.txt \
+        -x prefix \
+        -o outdir
+
+
+Counting
+~~~~~~~~
+
+Use the following command to run the counting step: ::
+
+    $ java -jar Diachromatic.jar count \
+        -v prefix.valid_pairs.aligned.bam \
         -d hg19_HinDIII_DigestedGenome.txt
 
 
 Summarize
 ~~~~~~~~~
 
-To run the Summarize command with the truncate data, run the following command. ::
+To run the summarize command with the truncate data, run the following command. ::
 
     $ java -jar target/Diachromatic.jar summarize \
         -o HinD3 \
@@ -152,52 +167,52 @@ This will generate an HTML file called ``HinD3/foo.summary.stats.html``.
 .. code using a small SAM file that is excerpted from these.
 
 
-Finding digests for testing
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Note that many of the readpair functions require a Digest object. The following script can help to find the
-positions of the digests. These were used in the makeFakeDigest functions in the test classes. ::
-
-    #!/usr/bin/perl -w
-    use strict;
-    use IO::File;
-
-    my $fname = shift or die "need to pass digest file name";
-    my $chr = shift or die "need to pass chromosome\n";
-    my $pos= shift or die "need to pass position";
-    print "will analyse $fname, $chr, $pos\n";
-
-    my $fh=new IO::File("$fname") or die "$!";
-    while (my $line=<$fh>) {
-        my @a=split(m/\t/,$line);
-        my $chrom=$a[0];
-        #print "chrom=$chrom and chr=$chr\n";
-        next if ($chr ne $chrom);
-        my $from =$a[1];
-        my $to=$a[2];
-        if ($pos>($from-100) && $pos < ($to+100)) {
-            print $line;
-            printf("position $pos is %d nucleotides 3' to start and %d nucleotides 5' to end of digest [len=%d]\n",($pos-$from),($to-$pos),($to-$from));
-        }
-    }
-
-
-Test class
-~~~~~~~~~~
-The main tests of the logic of the Q/C code are in SAMPairerTest. There is currently one pair of sequences
-(in forwardtest.sam and reversetest.sam) for each of the tests we perform. ::
-
-	SRR071233.1     67      chr16   31526917        8       40M     =       84175204        0       NAAGATACCTTGACCGCTCATCCCCTGNNTTCATGAAAGA        !##########################!!###########        AS:i:-13  XN:i:0  XM:i:8  XO:i:0  XG:i:0  NM:i:8  MD:Z:0C26A0C6G0T0C0T0T0 YT:Z:UU
-	SRR071233.1     131     chr16   84175204        42      40M     =       31526917        0       AGAACCCATTCACACTCCCGCCAGCAGCAGGTTCGTGCCA        @BABA@BBBBBBBB?BBBB@:?AAAB5<BAA92A=2:;77        AS:i:0  XN:i:0  XM:i:0  XO:i:0  XG:i:0  NM:i:0  MD:Z:40 YT:Z:UU
-
-The first read should be set to 67 [read paired (0x1); read mapped in proper pair (0x2);first in pair (0x40)]. The reverse read is 131 [read paired (0x1); read mapped in proper pair (0x2); second in pair (0x80)].
+.. Finding digests for testing
+.. ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. Note that many of the readpair functions require a Digest object. The following script can help to find the
+.. positions of the digests. These were used in the makeFakeDigest functions in the test classes. ::
+..
+..     #!/usr/bin/perl -w
+..     use strict;
+..     use IO::File;
+..
+..     my $fname = shift or die "need to pass digest file name";
+..     my $chr = shift or die "need to pass chromosome\n";
+..     my $pos= shift or die "need to pass position";
+..     print "will analyse $fname, $chr, $pos\n";
+..
+..     my $fh=new IO::File("$fname") or die "$!";
+..     while (my $line=<$fh>) {
+..         my @a=split(m/\t/,$line);
+..         my $chrom=$a[0];
+..         #print "chrom=$chrom and chr=$chr\n";
+..         next if ($chr ne $chrom);
+..         my $from =$a[1];
+..         my $to=$a[2];
+..         if ($pos>($from-100) && $pos < ($to+100)) {
+..             print $line;
+..             printf("position $pos is %d nucleotides 3' to start and %d nucleotides 5' to end of digest [len=%d]\n",($pos-$from),($to-$pos),($to-$from));
+..         }
+..     }
 
 
-* Test mapping
-
-The paired FASTQ files hg19_HindIII_test_data_sam_flags_1.fast1 and hg19_HindIII_test_data_sam_flags_2.fastq were
-processed with the command: ::
-
-    $ java -jar Diachromatic.jar map -b /usr/bin/bowtie2 -i /path-to/bowtie2-index/hg19 -q hg19_HindIII_test_data_sam_flags_1.fastq -r fastq/hg19_HindIII_test_data_sam_flags_2.fastq -d hg38digest
-
-The resulting SAM files are being used for unit testing (to simplify and robustify testing).
+.. Test class
+.. ~~~~~~~~~~
+.. The main tests of the logic of the Q/C code are in SAMPairerTest. There is currently one pair of sequences
+.. (in forwardtest.sam and reversetest.sam) for each of the tests we perform. ::
+..
+.. 	SRR071233.1     67      chr16   31526917        8       40M     =       84175204        0       NAAGATACCTTGACCGCTCATCCCCTGNNTTCATGAAAGA        !##########################!!###########        AS:i:-13  XN:i:0  XM:i:8  XO:i:0  XG:i:0  NM:i:8  MD:Z:0C26A0C6G0T0C0T0T0 YT:Z:UU
+.. 	SRR071233.1     131     chr16   84175204        42      40M     =       31526917        0       AGAACCCATTCACACTCCCGCCAGCAGCAGGTTCGTGCCA        @BABA@BBBBBBBB?BBBB@:?AAAB5<BAA92A=2:;77        AS:i:0  XN:i:0  XM:i:0  XO:i:0  XG:i:0  NM:i:0  MD:Z:40 YT:Z:UU
+..
+.. The first read should be set to 67 [read paired (0x1); read mapped in proper pair (0x2);first in pair (0x40)]. The reverse read is 131 [read paired (0x1); read mapped in proper pair (0x2); second in pair (0x80)].
+..
+..
+.. * Test mapping
+..
+.. The paired FASTQ files hg19_HindIII_test_data_sam_flags_1.fast1 and hg19_HindIII_test_data_sam_flags_2.fastq were
+.. processed with the command: ::
+..
+..     $ java -jar Diachromatic.jar map -b /usr/bin/bowtie2 -i /path-to/bowtie2-index/hg19 -q hg19_HindIII_test_data_sam_flags_1.fastq -r fastq/hg19_HindIII_test_data_sam_flags_2.fastq -d hg38digest
+..
+.. The resulting SAM files are being used for unit testing (to simplify and robustify testing).
 
