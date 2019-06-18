@@ -6,12 +6,12 @@ Welcome to Diachromatic's documentation
    :caption: Contents:
 
    Program setup <setup>
+   Tutorial with test data <tutorial>
    In silico genome digest <digest>
    Truncation of chimeric Hi-C reads <truncate>
    Mapping paired-end Hi-C reads <mapping>
    Counting unique valid pairs <count>
    Summarize results <summarize>
-   Tutorial <tutorial>
 
 ..   Calling SNPs on Hi-C reads <allelspec>
 
