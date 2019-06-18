@@ -123,7 +123,9 @@ Use the following command to run the alignment step: ::
         -i /data/bt_indices/hg38 \
         -q prefix.truncated_R1.fq.gz \
         -r prefix.truncated_R2.fq.gz \
-        -d hg38_DpnII_DigestedGenome.txt
+        -d hg38_DpnII_DigestedGenome.txt \
+        -x prefix \
+        -o outdir
 
 
 The table lists all possible arguments:
