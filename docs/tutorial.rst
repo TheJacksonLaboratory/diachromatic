@@ -12,7 +12,11 @@ To get the data, visit this `ftp server <ftp://ftp.jax.org/robinp/Diachromatic/t
 
 	wget ftp://ftp.jax.org/robinp/Diachromatic/test_dataset/test_1.fastq
 	wget ftp://ftp.jax.org/robinp/Diachromatic/test_dataset/test_2.fastq
-	wget ftp://ftp.jax.org/robinp/Diachromatic/test_dataset/hg19_HinDIII_DigestedGenome.txt
+	wget ftp://ftp.jax.org/robinp/Diachromatic/test_dataset/hg19_HinDIII_DigestedGenome.txt.gz
+
+Then decompress the digest file: ::
+
+	gunzip hg19_HinDIII_DigestedGenome.txt.gz
 
 
 Truncation
@@ -58,7 +62,7 @@ Use the following command to run the counting step: ::
 
     $ java -jar Diachromatic.jar count \
         -v prefix.valid_pairs.aligned.bam \
-        -d hg19_HinDIII_DigestedGenome.txt\
+        -d hg19_HinDIII_DigestedGenome.txt \
         -x prefix \
         -o outdir
 
@@ -75,6 +79,9 @@ To run the summarize command with the truncate data, use the following command. 
         -x prefix \
         -o outdir
 
-
 This will generate an HTML file called ``outdir/prefix.summary.stats.html``.
+
+The summary results file for the test dataset can also be downloaded from the `ftp server <ftp://ftp.jax.org/robinp/Diachromatic/test_dataset/>`_ or use: ::
+
+	wget ftp://ftp.jax.org/robinp/Diachromatic/test_dataset/test_dataset.summary.stats.html
 
