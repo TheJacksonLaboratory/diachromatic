@@ -4,8 +4,8 @@ Summarize results
 
 The summarize subcommand outputs an HTML file with a summary of the analysis.
 
-Running Diachromatic's *summarize* subcommand
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Running the *summarize* subcommand
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To run the summarize subcommand with the truncate data, run the following command. ::
 

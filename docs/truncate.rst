@@ -12,8 +12,8 @@ For Capture Hi-C, the sticky ends are filled in with biotinylated nucleotides, a
 Use the ``--sticky-ends`` option if no fill in was performed.
 
 
-Running Diachromatic's *truncate* subcommand
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Running the *truncate* subcommand
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Use the following command to run the truncation step: ::
 

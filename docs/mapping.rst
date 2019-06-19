@@ -29,8 +29,8 @@ Diachromatic distinguishes several read pair categories: (A) Trans reads by defi
     :align: center
 
 
-Running Diachromatic's *align* subcommand
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Running the *align* subcommand
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Use the following command to run the alignment step: ::
 
@@ -59,9 +59,9 @@ The table lists all possible arguments:
 +--------------+------------------------------+---------------------------------------------+----------+----------------------------------------------------------------------+---------+
 | -d           | \\-\\-digest-file            | /data/GOPHER/hg38_DpnII_DigestedGenome.txt  | yes      | Path to the digest file produced with GOPHER.                        | --      |
 +--------------+------------------------------+---------------------------------------------+----------+----------------------------------------------------------------------+---------+
-| -o           | \\-\\-out-directory          | cd4v2                                       | no       | Directory containing the output of the align subcommand.             | results |
+| -o           | \\-\\-out-directory          | cd4v2                                       | yes      | Directory containing the output of the align subcommand.             | results |
 +--------------+------------------------------+---------------------------------------------+----------+----------------------------------------------------------------------+---------+
-| -x           | \\-\\-out-prefix             | stim_rep1                                   | no       | Prefix for all generated files in output directory.                  | prefix  |
+| -x           | \\-\\-out-prefix             | stim_rep1                                   | yes      | Prefix for all generated files in output directory.                  | prefix  |
 +--------------+------------------------------+---------------------------------------------+----------+----------------------------------------------------------------------+---------+
 | -p           | \\-\\-thread-num             | 15                                          | no       | Number of threads used by bowtie2.                                   | 1       |
 +--------------+------------------------------+---------------------------------------------+----------+----------------------------------------------------------------------+---------+

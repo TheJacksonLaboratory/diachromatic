@@ -23,10 +23,7 @@ this file also includes information about active and inactive restriction fragme
 BAM file with unique valid pairs
 --------------------------------
 
-The second required input file contains the unique valid mapped read pairs in BAM format. If this file was generated using
-Diachromatic with the :ref:`align <rstalign>` subcommand, nothing has to be done or taken care of. If the BAM file was produced in a different way,
-make sure that the two reads of any given pair occur consecutively. Furthermore, make sure that duplicates were previously
-removed.
+The second required input file contains the unique valid mapped read pairs in BAM format. If this file was generated using Diachromatic with the align subcommand, nothing has to be done or taken care of. If the BAM file was produced in a different way, make sure that the two reads of any given pair occur consecutively. Furthermore, make sure that duplicates were previously removed.
 
 
 .. Simple and twisted read pairs and counts of directed interaction
@@ -45,8 +42,8 @@ removed.
 .. undirected interactions.
 
 
-Running Diachromatic's *count* subcommand
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Running the *count* subcommand
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Use the following command to run the counting step: ::
 
@@ -64,16 +61,18 @@ Use the following command to run the counting step: ::
 +--------------+--------------------------+--------------------------------------------------------+----------+------------------------------------------------------------------+---------+
 | -d           | \\-\\-digest-file        | /data/GOPHER/hg38_DpnII_DigestedGenome.txt             | yes      | Path to the digest file produced with GOPHER.                    |    --   |
 +--------------+--------------------------+--------------------------------------------------------+----------+------------------------------------------------------------------+---------+
-| -o           | \\-\\-out-directory      | cd4v2                                                  | no       | Directory containing the output of the align subcommand.         | results |
+| -o           | \\-\\-out-directory      | cd4v2                                                  | yes      | Directory containing the output of the align subcommand.         | results |
 +--------------+--------------------------+--------------------------------------------------------+----------+------------------------------------------------------------------+---------+
-| -x           | \\-\\-out-prefix         | stim_rep1                                              | no       | Prefix for all generated files in output directory.              | prefix  |
+| -x           | \\-\\-out-prefix         | stim_rep1                                              | yes      | Prefix for all generated files in output directory.              | prefix  |
 +--------------+--------------------------+--------------------------------------------------------+----------+------------------------------------------------------------------+---------+
 
 
 Output files
 ~~~~~~~~~~~~
 
-.. mention file ``prefix.count.stats.txt``
+The default name of the output file with statistics is:
+
+    * ``prefix.count.stats.txt``
 
 
 Interaction counts
