@@ -1,32 +1,38 @@
 # Diachromatic
 
-## Summary
+This package implements truncation, alignment, artifact filtering and counting of Hi-C read pairs. The documentation of Diachromatic is available on `ReadTheDocs <https://diachromatic.readthedocs.io/en/latest/>`_.
 
-This package will implements truncation, alignment, artifact filtering and counting of Hi-C read pairs.
+
+## Download
+
+Diachromatic requires Java 8 or higher to run. Diachromatic can be obtained from the Diachromatic `GitHub page <https://github.com/TheJacksonLaboratory/diachromatic>`_. We recommend to download the ``Diachromatic.jar`` file of the latest release on the `release page <https://github.com/TheJacksonLaboratory/diachromatic/releases>`_ of the project.
+
+You can run the program using this command:
+
+	$ java -jar Diachromatic.jar
+
+You should see a help message in the shell.
+
+
+## Building Diachromatic
+
+To build the application on your own, clone the repository and create the Java app with maven:
+
+	$ git clone https://github.com/TheJacksonLaboratory/diachromatic.git
+	$ cd diachromatic
+	$ mvn package
+
+To test whether the build process was successful, enter the following command:
+
+	$ java -jar target/Diachromatic.jar
+
 
 ## Documentation
-Documentation is being prepared for ReadTheDocs. We will not be able to publish the
-documentation online until this repository is made public.
-Therefore, for now generate the documentation with
 
-Documentation is being prepared for ReadTheDocs. The documentation can be generated with:
+The documentation of Diachromatic is available on `ReadTheDocs <https://diachromatic.readthedocs.io/en/latest/>`_. You can also generate the documentation yourself with:
 
 	$ cd docs
 	$ make html
 
 View the documentation as local files: ``diachromatic/docs/_build/html/index.html``
 
-
-## Program setup
-
-Diachromatic requires Java 8 or higher to run. The source code of Diachromatic can be downloaded from [GitHub](https://github.com/TheJacksonLaboratory/diachromatic). To build the application, clone the repository and create the Java app with maven:
-
-    $ git clone https://github.com/TheJacksonLaboratory/diachromatic.git
-    $ cd diachromatic
-    $ mvn package
-
-Run Diachromatic to test whether the build process was successful:
-
-    $ java -jar target/Diachromatic.jar
-
-You should see the help message of Diachromatic in the shell.
