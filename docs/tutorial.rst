@@ -41,7 +41,7 @@ The second step of the pipeline is to map the truncated read pairs to the target
 
 Use the following command to run the alignment step: ::
 
-    $ java -jar target/Diachromatic.jar align \
+    $ java -jar Diachromatic.jar align \
         -b /usr/bin/bowtie2 \
         -i /path/to/bowtie2index/hg19 \
         -q prefix.truncated_R1.fastq.gz \
@@ -58,7 +58,9 @@ Use the following command to run the counting step: ::
 
     $ java -jar Diachromatic.jar count \
         -v prefix.valid_pairs.aligned.bam \
-        -d hg19_HinDIII_DigestedGenome.txt
+        -d hg19_HinDIII_DigestedGenome.txt\
+        -x prefix \
+        -o outdir
 
 
 Summarize
@@ -66,11 +68,13 @@ Summarize
 
 To run the summarize command with the truncate data, use the following command. ::
 
-    $ java -jar target/Diachromatic.jar summarize \
-        -o HinD3 \
-        -x foo \
-        -t HinD3/foo.truncation.stats
+    $ java -jar Diachromatic.jar summarize \
+        -t outdir/prefix.truncation.stats.txt \
+        -a outdir/prefix.align.stats.txt \
+        -c outdir/prefix.count.stats.txt \
+        -o outdir \
+        -x prefix
 
 
-This will generate an HTML file called ``HinD3/foo.summary.stats.html``.
+This will generate an HTML file called ``outdir/prefix.summary.stats.html``.
 
