@@ -13,8 +13,8 @@ To run the summarize subcommand with the truncate data, run the following comman
         -t outdir/prefix.truncation.stats.txt \
         -a outdir/prefix.align.stats.txt \
         -c outdir/prefix.count.stats.txt \
-        -o outdir \
-        -x prefix
+        -x prefix \
+        -o outdir
 
 
 Available arguments:

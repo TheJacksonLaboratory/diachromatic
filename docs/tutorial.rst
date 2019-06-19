@@ -72,8 +72,8 @@ To run the summarize command with the truncate data, use the following command. 
         -t outdir/prefix.truncation.stats.txt \
         -a outdir/prefix.align.stats.txt \
         -c outdir/prefix.count.stats.txt \
-        -o outdir \
-        -x prefix
+        -x prefix \
+        -o outdir
 
 
 This will generate an HTML file called ``outdir/prefix.summary.stats.html``.
