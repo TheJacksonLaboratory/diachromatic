@@ -1,6 +1,6 @@
 # Diachromatic
 
-This package implements truncation, alignment, artifact filtering and counting of Hi-C read pairs. The documentation of Diachromatic is available on [ReadTheDocs](https://diachromatic.readthedocs.io/en/latest).
+This package implements truncation, alignment, artifact filtering and counting of Hi-C read pairs. The documentation of Diachromatic is available on [Read the Docs](https://diachromatic.readthedocs.io/en/latest).
 
 
 ## Download
@@ -29,7 +29,7 @@ To test whether the build process was successful, enter the following command:
 
 ## Documentation
 
-The documentation of Diachromatic is available on [ReadTheDocs](https://diachromatic.readthedocs.io/en/latest). You can also generate the documentation yourself with:
+The documentation of Diachromatic is available on [Read the Docs](https://diachromatic.readthedocs.io/en/latest). You can also generate the documentation yourself with:
 
 	$ cd docs
 	$ make html
