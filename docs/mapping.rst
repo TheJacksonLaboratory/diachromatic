@@ -36,10 +36,10 @@ Use the following command to run the alignment step: ::
 
     $ java -jar target/Diachromatic.jar align \
         -b /usr/bin/bowtie2 \
-        -i /data/bt_indices/hg38 \
-        -q prefix.truncated_R1.fq.gz \
-        -r prefix.truncated_R2.fq.gz \
-        -d hg38_DpnII_DigestedGenome.txt \
+        -i /path/to/bowtie2index/hg19 \
+        -q prefix.truncated_R1.fastq.gz \
+        -r prefix.truncated_R2.fastq.gz \
+        -d hg19_HinDIII_DigestedGenome.txt \
         -x prefix \
         -o outdir
 

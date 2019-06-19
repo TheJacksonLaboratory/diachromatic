@@ -52,7 +52,9 @@ Use the following command to run the counting step: ::
 
     $ java -jar Diachromatic.jar count \
         -v prefix.valid_pairs.aligned.bam \
-        -d hg38_DpnII_DigestedGenome.txt
+        -d hg19_HinDIII_DigestedGenome.txt\
+        -x prefix \
+        -o outdir
 
 
 +--------------+--------------------------+--------------------------------------------------------+----------+------------------------------------------------------------------+---------+

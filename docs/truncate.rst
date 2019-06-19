@@ -18,9 +18,9 @@ Running Diachromatic's *truncate* subcommand
 Use the following command to run the truncation step: ::
 
     $ java -jar Diachromatic.jar truncate \
-        -q test1.fastq \
-        -r test2.fastq \
-        -e HindIII \
+        -q test_1.fastq \
+        -r test_2.fastq \
+        -e HinDIII \
         -x prefix \
         -o outdir
 

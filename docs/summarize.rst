@@ -10,14 +10,11 @@ Running Diachromatic's *summarize* subcommand
 To run the summarize subcommand with the truncate data, run the following command. ::
 
     $ java -jar Diachromatic.jar summarize \
-        -o sample_dir \
-        -x sample_prefix \
-        -t sample_dir/sample_prefix.truncation.stats.txt \
-        -a sample_dir/sample_prefix.align.stats.txt \
-        -c sample_dir/sample_prefix.count.stats.txt \
-
-
-This will generate an HTML file called ``sample_dir/sample_prefix.summary.stats.html``.
+        -t outdir/prefix.truncation.stats.txt \
+        -a outdir/prefix.align.stats.txt \
+        -c outdir/prefix.count.stats.txt \
+        -o outdir \
+        -x prefix
 
 
 Available arguments:
@@ -25,30 +22,22 @@ Available arguments:
 +--------------+------------------+--------------------------------------------+----------+--------------------------------------------------------------+---------+
 | Short option | Long option      | Example                                    | Required | Description                                                  | Default |
 +--------------+------------------+--------------------------------------------+----------+--------------------------------------------------------------+---------+
-| -o           | \\-\\-out-dir    | GSM1234567                                 | yes      | Directory containing the output of the summarize subcommand. | results |
+| -o           | \\-\\-out-dir    | outdir                                     | yes      | Directory for output of the summarize subcommand.            | results |
 +--------------+------------------+--------------------------------------------+----------+--------------------------------------------------------------+---------+
-| -x           | \\-\\-out-prefix | GSM1234567                                 | yes      | Prefix for all generated files in output directory.          | prefix  |
+| -x           | \\-\\-out-prefix | prefix                                     | yes      | Prefix for generated file in output directory.               | prefix  |
 +--------------+------------------+--------------------------------------------+----------+--------------------------------------------------------------+---------+
-| -t           | \\-\\-truncate   | GSM1234567/GSM1234567.truncation.stats.txt | yes      | Path to truncate statistics file.                            | null    |
+| -t           | \\-\\-truncate   | prefix.truncation.stats.txt                | yes      | Path to truncate statistics file.                            | null    |
 +--------------+------------------+--------------------------------------------+----------+--------------------------------------------------------------+---------+
-| -a           | \\-\\-align      | GSM1234567/GSM1234567.align.stats.txt      | yes      | Path to align statistics file.                               | null    |
+| -a           | \\-\\-align      | prefix.align.stats.txt                     | yes      | Path to align statistics file.                               | null    |
 +--------------+------------------+--------------------------------------------+----------+--------------------------------------------------------------+---------+
-| -c           | \\-\\-count      | GSM1234567/GSM1234567.count.stats.txt      | yes      | Path to count statistics file.                               | null    |
+| -c           | \\-\\-count      | prefix.count.stats.txt                     | yes      | Path to count statistics file.                               | null    |
 +--------------+------------------+--------------------------------------------+----------+--------------------------------------------------------------+---------+
 
 
-.. Output files
-.. ~~~~~~~~~~~~
-..
-.. The default names of the truncated and gzipped FASTQ files are:
-..
-..     * ``prefix.truncated_R1.fastq.gz``
-..     * ``prefix.truncated_R2.fastq.gz``
-..
-.. In addition, a file is produced that contains summary statistics about the truncation step.
-..
-..     * ``prefix.truncation.stats.txt``
+Output files
+~~~~~~~~~~~~
 
+This will generate an HTML file called ``outdir/prefix.summary.stats.html``.
 
 
 
