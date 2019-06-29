@@ -92,6 +92,12 @@ indicates that this fragment is defined to be active, i.e. it is part of a viewp
 The information about active states of fragments originates from the GOPHER digest file passed to Diachromatic
 using the ``-d`` option.
 
+In addition, interactions are written to a simple pairwise interaction file `format <http://wiki.wubrowse.org/Long-range>`_ for long-range interactions established by WashU: ::
+
+    chr13:84250549-84256429    chr13:105017710-105020949       1
+    chr3:74550953-74553110     chr3:83489595-83490326          1
+
+Trans and short-range (<10,000) interactions are discarded.
 
 Read counts at interacting fragments
 ------------------------------------

@@ -52,6 +52,7 @@ public class Counter {
      */
     private String outputTsvInteractingFragmentCounts;
     private String outputTsvInteractionCounts;
+    private String outputWashUSimpleInteractionCounts;
     private String outputTxtStats;
 
     /**
@@ -145,6 +146,11 @@ public class Counter {
      * Largest number of read pairs for given digest pairs.
      */
     private static int MAX_K = 20000;
+
+    /**
+     * Largest number of read pairs for given digest pairs.
+     */
+    private static int LONG_RANGE_THRESHOLD = 10000;
 
     /**
      * Array for counting interactions with k read pairs. The index corresponds to k, e.g. array[2]
@@ -311,6 +317,7 @@ public class Counter {
     private void createOutputNames(String outputPathPrefix) {
         outputTsvInteractingFragmentCounts = String.format("%s.%s", outputPathPrefix, "interacting.fragments.counts.table.tsv");
         outputTsvInteractionCounts = String.format("%s.%s", outputPathPrefix, "interaction.counts.table.tsv");
+        outputWashUSimpleInteractionCounts = String.format("%s.%s", outputPathPrefix, "interaction.counts.washU.simple.tsv");
         outputTxtStats = String.format("%s.%s", outputPathPrefix, "count.stats.txt");
     }
 
@@ -320,7 +327,7 @@ public class Counter {
      *
      * @throws FileNotFoundException  if the file output stream cannot be open for the TSV file of interaction counts
      */
-    public void printInteractionCountsMapAsCountTable() throws FileNotFoundException {
+        public void printInteractionCountsMapAsCountTable() throws FileNotFoundException {
 
         // init array for k-interaction counting
         Arrays.fill(kInteractionCounts, 0);
@@ -346,7 +353,7 @@ public class Counter {
                 } else {
                     int forward_digest_center = dp.forward().getDigestStartPosition() + ((dp.forward().getDigestEndPosition() - dp.forward().getDigestStartPosition()) / 2);
                     int reverse_digest_center = dp.reverse().getDigestStartPosition() + ((dp.reverse().getDigestEndPosition() - dp.reverse().getDigestStartPosition()) / 2);
-                    if(Math.abs(reverse_digest_center - forward_digest_center)<10000) {
+                    if(Math.abs(reverse_digest_center - forward_digest_center)<LONG_RANGE_THRESHOLD) {
                         n_singleton_interactions_short_range++;
                     } else {
                         n_singleton_interactions_long_range++;
@@ -359,11 +366,43 @@ public class Counter {
                 } else {
                     int forward_digest_center = dp.forward().getDigestStartPosition() + ((dp.forward().getDigestEndPosition() - dp.forward().getDigestStartPosition()) / 2);
                     int reverse_digest_center = dp.reverse().getDigestStartPosition() + ((dp.reverse().getDigestEndPosition() - dp.reverse().getDigestStartPosition()) / 2);
-                    if(Math.abs(reverse_digest_center - forward_digest_center)<10000) {
+                    if(Math.abs(reverse_digest_center - forward_digest_center)<LONG_RANGE_THRESHOLD) {
                         n_gt1_interaction_count_short_range++;
                     } else {
                         n_gt1_interaction_count_long_range++;
                     }
+                }
+            }
+        }
+    }
+
+    /**
+     * Prints digest pairs with associated read pair counts to simple text format established by washU.
+     *
+     * @throws FileNotFoundException  if the file output stream cannot be opened.
+     */
+    public void printInteractionCountsMapInWashUSimpleTextFormat() throws FileNotFoundException {
+
+        // create file
+        PrintStream printStream = new PrintStream(new FileOutputStream(outputWashUSimpleInteractionCounts));
+
+        for (DigestPair dp : this.dp2countsMap.keySet()) {
+            if(dp.forward().getChromosome().equals(dp.reverse().getChromosome())){
+                int forward_digest_center = dp.forward().getDigestStartPosition() + ((dp.forward().getDigestEndPosition() - dp.forward().getDigestStartPosition()) / 2);
+                int reverse_digest_center = dp.reverse().getDigestStartPosition() + ((dp.reverse().getDigestEndPosition() - dp.reverse().getDigestStartPosition()) / 2);
+                if(LONG_RANGE_THRESHOLD<=Math.abs(reverse_digest_center - forward_digest_center)) {
+                    SimpleTwistedCount cc = this.dp2countsMap.get(dp);
+                    int c = cc.simple + cc.twisted;
+                    String coordinatesF = String.format("%s:%s-%s", dp.forward().getChromosome(),dp.forward().getDigestStartPosition(),dp.forward().getDigestEndPosition());
+                    String coordinatesR = String.format("%s:%s-%s", dp.reverse().getChromosome(),dp.reverse().getDigestStartPosition(),dp.reverse().getDigestEndPosition());
+                    String coordinates;
+                    // fragment with the smaller starting position comes first
+                    if(dp.forward().getDigestStartPosition()<dp.reverse().getDigestStartPosition()) {
+                        coordinates = String.format("%s\t%s", coordinatesF, coordinatesR);
+                    } else {
+                        coordinates = String.format("%s\t%s", coordinatesR, coordinatesF);
+                    }
+                    printStream.println(coordinates + "\t" + c);
                 }
             }
         }

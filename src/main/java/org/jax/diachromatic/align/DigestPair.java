@@ -78,6 +78,5 @@ public class DigestPair {
         } else {
             return reverseDigest.toString() + "\t" + forwardDigest.toString();
         }
-
     }
 }

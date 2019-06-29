@@ -58,6 +58,7 @@ public class CountCommand extends Command {
             logger.trace("...done with counting!");
             logger.trace("About to print the results...");
             counter.printInteractionCountsMapAsCountTable();
+            counter.printInteractionCountsMapInWashUSimpleTextFormat();
             counter.printFragmentInteractionCountsMapAsCountTable();
             counter.printStatistics();
             logger.trace("...done!");
