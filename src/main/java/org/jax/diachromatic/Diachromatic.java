@@ -122,7 +122,7 @@ public class Diachromatic {
     }
 
     public static String getVersion() {
-        String version = "0.0.0";// default, should be overwritten by the following.
+        String version = "0.6.0";// default, should be overwritten by the following.
         try {
             Package p = Diachromatic.class.getPackage();
             version = p.getImplementationVersion();
