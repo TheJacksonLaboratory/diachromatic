@@ -27,9 +27,9 @@ public class AlleleSpecificityCheckerTest{
         AlleleSpecificityChecker checker = new AlleleSpecificityChecker(bamPath,"");
         checker.readAlleles();
         assertEquals(2,checker.getLocuslist().size());
-        for (AlleleSpecificLocus loc : checker.getLocuslist()) {
-            System.err.println(loc);
-            System.err.println("p="+loc.binomialTestPvalue());
-        }
+//        for (AlleleSpecificLocus loc : checker.getLocuslist()) {
+//            System.err.println(loc);
+//            System.err.println("p="+loc.binomialTestPvalue());
+//        }
     }
 }

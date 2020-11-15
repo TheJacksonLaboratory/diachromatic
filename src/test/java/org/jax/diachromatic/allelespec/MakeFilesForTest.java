@@ -1,6 +1,7 @@
 package org.jax.diachromatic.allelespec;
 
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.BufferedWriter;
@@ -60,6 +61,7 @@ import static junit.framework.TestCase.assertTrue;
  * $ samtools tview sample.sorted.bam genome.small.fa
  *
  */
+@Ignore
 public class MakeFilesForTest {
 
     private final static int READLEN = 20;
@@ -86,8 +88,7 @@ public class MakeFilesForTest {
             char c = makeRandomNT(random.nextDouble());
             chars[i] = c;
         }
-        String seq = new String(chars);
-        return seq;
+        return new String(chars);
     }
 
 
