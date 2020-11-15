@@ -2,9 +2,10 @@ package org.jax.diachromatic.align;
 
 
 import htsjdk.samtools.util.Log;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
 import org.jax.diachromatic.exception.DiachromaticException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -42,7 +43,7 @@ import java.util.*;
  */
 
 public class DigestMap {
-    private static final Logger logger = LogManager.getLogger();
+    private static final Logger logger = LoggerFactory.getLogger(DigestMap.class);
     private static final htsjdk.samtools.util.Log log = Log.getInstance(Aligner.class);
 
     /** NEW VERSION */

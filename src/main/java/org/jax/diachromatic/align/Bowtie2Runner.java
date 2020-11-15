@@ -1,16 +1,14 @@
 package org.jax.diachromatic.align;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
 import org.jax.diachromatic.exception.DiachromaticException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 public class Bowtie2Runner {
-    private static final Logger logger = LogManager.getLogger();
-
+    private static final Logger logger = LoggerFactory.getLogger(Bowtie2Runner.class);
     private String pathToBowtie2;
 
     private final String pathToBowtieIndex;
@@ -87,7 +85,7 @@ public class Bowtie2Runner {
         args[10]=outname;// summarize name
 
 
-        String btcomd= Arrays.stream(args).collect(Collectors.joining(" "));
+        String btcomd= String.join(" ", args);
         logger.trace("Running: "+btcomd);
 
         String[] dummy=new String[0];
@@ -101,7 +99,7 @@ public class Bowtie2Runner {
             BufferedReader stdError = new BufferedReader(new
                     InputStreamReader(process.getErrorStream()));
             StringBuilder sb = new StringBuilder();
-            String s=null;
+            String s;
             while ((s = stdInput.readLine()) != null) {
                 sb.append(s+"\n");
             }

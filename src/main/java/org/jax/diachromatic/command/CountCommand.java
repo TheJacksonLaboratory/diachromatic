@@ -1,17 +1,19 @@
 package org.jax.diachromatic.command;
 
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
+
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
 import org.jax.diachromatic.align.DigestMap;
 import org.jax.diachromatic.count.Counter;
 import org.jax.diachromatic.exception.DiachromaticException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import picocli.CommandLine;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.concurrent.Callable;
 
 /**
  * Class to coordinate counting of valid read pairs between pairs of restriction digests.
@@ -20,27 +22,33 @@ import java.io.FileNotFoundException;
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
  * @version 0.0.3 (2018-03-20)
  */
-@Parameters(commandDescription = "The count command takes a BAM file containing unique valid read pairs determined during the align step as well as a GOPHER digest file and counts valid pairs between pairs of restriction fragments.")
-public class CountCommand extends Command {
-    private static final Logger logger = LogManager.getLogger();
 
+@CommandLine.Command(name = "count",
+        aliases = {"C"},
+        mixinStandardHelpOptions = true,
+        description = "count  valid pairs between pairs of restriction fragments from a BAM file creted in the alignstep with a GOPHER digest file.")
+public class CountCommand extends Command implements Callable<Integer> {
+    private static final Logger logger = LoggerFactory.getLogger(CountCommand.class);
+
+    //@CommandLine.Option(names = {"-j", "--jannovar"}, description = "prefix for output files (default: ${DEFAULT-VALUE} )")
     /** Path to BAM file containing unique valid pairs. */
-    @Parameter(names={"-v", "--valid-pairs-bam"}, required = true, description = "Path to BAM file with unique valid pairs produced using the align command.", order = 3)
+    @CommandLine.Option(names={"-v", "--valid-pairs-bam"}, required = true, description = "Path to BAM file with unique valid pairs produced using the align command.", order = 3)
     private String validPairsBamFile = null;
 
     /** Path to the genome digest file produced by GOPHER. */
-    @Parameter(names={"-d","--digest-file"}, required = true, description = "Path to GOPHER digest file.", order = 4)
+    @CommandLine.Option(names={"-d","--digest-file"}, required = true, description = "Path to GOPHER digest file.", order = 4)
     private String digestFile = null;
 
     /** Aggregate counts for different read pair orienations. */
-    @Parameter(names={"-s", "--split-counts"},description = "Split counts for different read pair orientations.", order = 5)
+    @CommandLine.Option(names={"-s", "--split-counts"},description = "Split counts for different read pair orientations.", order = 5)
     private boolean split=false;
 
 
     public CountCommand() {
     }
 
-    public void execute() throws DiachromaticException {
+    @Override
+    public Integer call() throws DiachromaticException {
 
         makeOutdirectoryIfNeeded();
 
@@ -65,7 +73,7 @@ public class CountCommand extends Command {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-
+        return 0;
     }
     @Override
     public String toString() {return "diachromatic:count";} //???

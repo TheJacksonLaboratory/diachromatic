@@ -2,9 +2,10 @@ package org.jax.diachromatic.count;
 
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.Log;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
 import org.jax.diachromatic.align.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -34,7 +35,7 @@ import java.util.Map;
  *
  */
 public class Counter {
-    private static final Logger logger = LogManager.getLogger();
+    private static final Logger logger = LoggerFactory.getLogger(Counter.class);
     private static final htsjdk.samtools.util.Log log = Log.getInstance(Aligner.class);
 
     /**

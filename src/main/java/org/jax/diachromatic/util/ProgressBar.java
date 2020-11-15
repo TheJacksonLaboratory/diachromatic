@@ -1,7 +1,8 @@
 package org.jax.diachromatic.util;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A simple status bar that only work on terminals where "\r" has an affect.
@@ -11,8 +12,7 @@ import org.apache.logging.log4j.Logger;
  * @author <a href="mailto:manuel.holtgrewe@charite.de">Manuel Holtgrewe</a>
  */
 public final class ProgressBar {
-
-    private static final Logger logger = LogManager.getLogger();
+    private static final Logger logger = LoggerFactory.getLogger(ProgressBar.class);
     /** smallest value */
     private final long min;
     /** largest value */

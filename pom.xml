@@ -5,7 +5,7 @@
 
     <groupId>org.jax</groupId>
     <artifactId>diachromatic</artifactId>
-    <version>0.6.1</version>
+    <version>0.6.2</version>
     <packaging>jar</packaging>
 
     <name>diachromatic</name>
@@ -15,7 +15,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <jdk.version>1.8</jdk.version>
-        <junit.version>5.1.0</junit.version>
+        <slf4j.version>1.7.30</slf4j.version>
         <htsjdk.version>2.23.0</htsjdk.version>
         <junit.version>5.7.0</junit.version>
         <junit.platform.version>1.7.0</junit.platform.version>
@@ -24,18 +24,16 @@
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-        </dependency>
-
+        <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-slf4j-impl-->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
+            <version>2.13.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.tukaani/xz -->
@@ -177,11 +175,18 @@
             <version>3.6.1</version>
         </dependency>
 
+        <!-- <dependency>
+           <groupId>com.beust</groupId>
+           <artifactId>jcommander</artifactId>
+           <version>1.72</version>
+       </dependency>
+-->
         <dependency>
-            <groupId>com.beust</groupId>
-            <artifactId>jcommander</artifactId>
-            <version>1.72</version>
+            <groupId>info.picocli</groupId>
+            <artifactId>picocli</artifactId>
+            <version>4.5.1</version>
         </dependency>
+
 
     </dependencies>
     <dependencyManagement>
