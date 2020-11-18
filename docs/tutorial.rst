@@ -35,6 +35,8 @@ The first step of processing raw FASTQ files with Diachromatic is to recognize a
 
 .. In practice, only about XXXX percent of the readpairs are truncated.
 
+See :ref:`rsttruncate` for details.
+
 
 Mapping
 ~~~~~~~
@@ -43,7 +45,7 @@ The second step of the pipeline is to map the truncated read pairs to the target
 
 .. If desired, Diachromatic also outputs BAM files with the discarded (arterfactual or unmappable reads).
 
-Use the following command to run the alignment step: ::
+Use the :ref:`rstmapping` command to run the alignment step: ::
 
     $ java -jar Diachromatic.jar align \
         -b /usr/bin/bowtie2 \
@@ -77,6 +79,8 @@ Use the following command to run the counting step: ::
         -o outdir
 
 
+The :ref:`rstcount`  command produces output files intended for downstream analysis.
+
 Summarize
 ~~~~~~~~~
 
@@ -89,7 +93,7 @@ To run the summarize command with the truncate data, use the following command. 
         -x prefix \
         -o outdir
 
-This will generate an HTML file called ``outdir/prefix.summary.stats.html``.
+The :ref:`rstsummarize` command generates an HTML file called ``outdir/prefix.summary.stats.html``.
 
 The summary results file for the test dataset can also be downloaded from the `ftp server <ftp://ftp.jax.org/robinp/Diachromatic/test_dataset/>`_ or use: ::
 

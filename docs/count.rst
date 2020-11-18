@@ -1,3 +1,4 @@
+.. _rstcount:
 
 Counting of valid read pairs between pairs of restriction fragments
 ===================================================================

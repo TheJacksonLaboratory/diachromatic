@@ -1,3 +1,4 @@
+.. _rstmapping:
 
 Mapping and categorization of Hi-C reads
 ========================================
