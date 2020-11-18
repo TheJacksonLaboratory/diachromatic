@@ -1,8 +1,7 @@
 package org.jax.diachromatic.align;
 
 
-import htsjdk.samtools.util.Log;
-
+import com.google.common.collect.ImmutableMap;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,20 +38,67 @@ import java.util.*;
  *
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
- * @version 0.0.0 (2018-05-09)
+ * @version 0.0.2 (2020-11-18)
  */
 
 public class DigestMap {
     private static final Logger logger = LoggerFactory.getLogger(DigestMap.class);
-    private static final htsjdk.samtools.util.Log log = Log.getInstance(Aligner.class);
-
-    /** NEW VERSION */
+    /** Key: contig/chromosomes, with and without "chr". For instance, 'chr5' and '5' point to the
+     * same {@link Chromosome2DigestArray} object.
+     */
     private final Map<String, Chromosome2DigestArray> digestMap;
 
     public DigestMap(String digestFilePath) throws DiachromaticException {
-        this.digestMap = new HashMap<>();
-        try {
-            parseDigestFile(digestFilePath);
+        File f = new File(digestFilePath);
+        if (! f.exists()) {
+            throw new DiachromaticException(String.format("Could not find digest file at %s.", f.getAbsolutePath() ));
+        }
+        else {
+            logger.trace("Found digest file at {}.",digestFilePath);
+        }
+        try ( BufferedReader br = new BufferedReader(new FileReader(digestFilePath))){
+            Map<String, Chromosome2DigestArray> prelimMap = new HashMap<>();
+            ImmutableMap.Builder<String, Chromosome2DigestArray> builder = new ImmutableMap.Builder<>();
+            String line;
+            while ((line=br.readLine())!=null) {
+                if (line.startsWith("Chromosome")) continue; // the header line
+                String[] fields = line.split("\t");
+                if (fields.length!=Digest.TOTAL_NUMBER_OF_FIELDS) {
+                    throw new DiachromaticException(String.format("Malformed line with %d fields (required: %d): %s",
+                            fields.length,Digest.TOTAL_NUMBER_OF_FIELDS,line ));
+                }
+                Digest digest = new Digest(fields);
+                String chromosome = digest.getChromosome();
+                prelimMap.putIfAbsent(chromosome,new Chromosome2DigestArray());
+                prelimMap.get(chromosome).addDigest(digest);
+            }
+            br.close();
+
+            if (prelimMap.containsKey("M") && ! prelimMap.containsKey("MT")) {
+                prelimMap.put("MT", prelimMap.get("M"));
+            }
+            if (prelimMap.containsKey("MT") && ! prelimMap.containsKey("M")) {
+                prelimMap.put("M", prelimMap.get("MT"));
+            }
+            if (prelimMap.containsKey("chrM") && ! prelimMap.containsKey("chrMT")) {
+                prelimMap.put("chrMT", prelimMap.get("chrM"));
+            }
+            if (prelimMap.containsKey("chrMT") && ! prelimMap.containsKey("chrM")) {
+                prelimMap.put("chrM", prelimMap.get("chrMT"));
+            }
+            builder.putAll(prelimMap);
+            // In some cases, our data uses "chr5" and in others we see just "5".
+            // The following adds some additional references to mitigate this issue
+            for (Map.Entry<String, Chromosome2DigestArray> e : prelimMap.entrySet()) {
+                if (e.getKey().startsWith("chr")) {
+                    String newKey = e.getKey().substring(3);
+                    builder.put(newKey, e.getValue());
+                } else {
+                    String newKey = "chr" + e.getKey();
+                    builder.put(newKey, e.getValue());
+                }
+            }
+            this.digestMap = builder.build();
         } catch (IOException e){
             throw new DiachromaticException(String.format("Could not parse %s: %s",digestFilePath,e.getMessage()));
         }
@@ -62,54 +108,17 @@ public class DigestMap {
         return digestMap;
     }
 
-    public void parseDigestFile(String digestFilePath) throws IOException, DiachromaticException {
-        File f = new File(digestFilePath);
-        if (! f.exists()) {
-            throw new DiachromaticException(String.format("Could not find digest file at %s.", f.getAbsolutePath() ));
-        }
-        else {
-            logger.trace("Found digest file at {}.",digestFilePath);
-        }
-
-        BufferedReader br = new BufferedReader(new FileReader(digestFilePath));
-        String line;
-        while ((line=br.readLine())!=null) {
-            if (line.startsWith("Chromosome")) continue; // the header line
-            String[] fields = line.split("\t");
-            if (fields.length!=Digest.TOTAL_NUMBER_OF_FIELDS) {
-                throw new DiachromaticException(String.format("Malformed line with %d fields (required: %d): %s",
-                        fields.length,Digest.TOTAL_NUMBER_OF_FIELDS,line ));
-            }
-            Digest digest = new Digest(fields);
-            String chromosome = digest.getChromosome();
-            Integer digestEnd = digest.getDigestEndPosition();
-            digestMap.putIfAbsent(chromosome,new Chromosome2DigestArray());
-            digestMap.get(chromosome).addDigest(digest);
-        }
-        br.close();
-        /*
-        DO WE NEED THIS OR CAN/SHOULD WE ASSUME GOPHER WILL SORT?
-        // sort position arrays for each chromosome and init activeState arrays
-            // --------------------------------------------------------------------
-
-            for (String key : digestMap.keySet()) {
-                digestMap.get(key).finalizeArrayPair();
-            }
-         */
-    }
-
 
     /**
      * Get the pair of digests that correspond to the two positions defined by (chrom1,coord1) and (chrom2,coord2)
-     * @param chrom1
-     * @param coord1
-     * @param chrom2
-     * @param coord2
+     * @param chrom1 chromosome of forward read
+     * @param coord1 position on the chromosome of forward read
+     * @param chrom2 chromosome of reverse read
+     * @param coord2 position on the chromosome of reverse read
      * @return DigestPair object corresponding to these position.
      */
     public DigestPair getDigestPair(String chrom1, int coord1, String chrom2, int coord2) {
         // handle exception with unknown reference IDs see test
-        int index = Collections.binarySearch(this.digestMap.get(chrom1).coordArray, coord1);
         Chromosome2DigestArray chrom2array1 = this.digestMap.get(chrom1);
         Digest digest1 = chrom2array1.getDigestAt(coord1);
         Chromosome2DigestArray chrom2array2 = this.digestMap.get(chrom2);
@@ -126,29 +135,20 @@ public class DigestMap {
      */
     static class Chromosome2DigestArray {
         /** List of the chromosomal positions of the digests on this chromosome. The end position is stored for each digest.*/
-        private ArrayList<Integer> coordArray;
+        private final ArrayList<Integer> coordArray;
         /** List of {@link Digest} objects corresponding to this chromosome. */
-        private ArrayList<Digest> digestArray;
-        /** Set of coordinates of all of the active digests. TODO do we need this???????????? */
-        @Deprecated
-        Set<Integer> activeStateCoordSet;
+        private final ArrayList<Digest> digestArray;
+
 
         Chromosome2DigestArray() {
             coordArray = new ArrayList<>();
             digestArray = new ArrayList<>();
-            activeStateCoordSet = new HashSet<>();
         }
 
         void addDigest(Digest digest) {
             digestArray.add(digest);
             coordArray.add(digest.getDigestEndPosition());
-            // TODO DO WE NEED THIS?????
-//            if (digest.isSelected()) {
-//                activeStateCoordSet.add(digest.getDigestEndPosition());
-//            }
         }
-
-
 
         /**
          * Collections.binary search returns the index of a key for a list tyhat is sorted in ascending order.
@@ -174,16 +174,10 @@ public class DigestMap {
             return digest;
         }
 
-
         public int getNumOfDigestsForChromosome() {
             return digestArray.size();
         }
 
-        /* Koennen wir nicht annehmen dass die Digests sortiert sind? */
-        @Deprecated
-        public void finalizeArrayPair() {
-            Collections.sort(coordArray);
-        }
     }
 
 }

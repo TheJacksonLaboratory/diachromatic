@@ -55,6 +55,16 @@ Use the following command to run the alignment step: ::
         -o outdir
 
 
+
+Note that the bowtie2 index can be downloaded from the
+`bowtie 2 site <http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml>`_.  The indices are available as zip archives,
+e.g., ``GRCh37.zip``. Once you unzip it, the resulting folder will contain multiple files (GRCh37.1.bt2, GRCh37.3.bt2, GRCh37.rev.1.bt2
+GRCh37.2.bt2, GRCh37.4.bt2, GRCh37.rev.2.bt2). You need to pass the path to one of these files without the file suffix.
+Assuming the directory is located at ``/some/path/GRCh37``, you would therefore pass ``-i /some/path/GRCh37/CRCh37``.
+
+
+
+
 Counting
 ~~~~~~~~
 
