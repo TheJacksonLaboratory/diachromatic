@@ -205,9 +205,9 @@ public class Digest {
      */
     @Override
     public String toString() {
-        String activeTag = "I";
+        String activeTag = "N";
         if(active) {
-            activeTag = "A";
+            activeTag = "E";
         }
         return String.format("%s\t%d\t%d\t%s",
                 chromosome,
