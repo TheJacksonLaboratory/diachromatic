@@ -56,7 +56,7 @@ public class CounterTest {
 
         // test whether simple and twisted read pairs are counted correctly
         counter.incrementDigestPair(dp1,rp2);
-        assertEquals(2,counter.getSimpleTwistedCountForDigestPair(dp1).simple);
-        assertEquals(1,counter.getSimpleTwistedCountForDigestPair(dp1).twisted);
+        assertEquals(2,counter.getSimpleTwistedCountForDigestPair(dp1).simple_1 + counter.getSimpleTwistedCountForDigestPair(dp1).simple_2);
+        assertEquals(1,counter.getSimpleTwistedCountForDigestPair(dp1).twisted_1 + counter.getSimpleTwistedCountForDigestPair(dp1).twisted_2);
     }
 }

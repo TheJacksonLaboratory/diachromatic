@@ -244,10 +244,17 @@ public class Counter {
             }
             dp2countsMap.put(dp, new SimpleTwistedCount());
         }
-        if (rp.isTwisted()) {
-            dp2countsMap.get(dp).twisted++;
-        } else {
-            dp2countsMap.get(dp).simple++;
+        if (rp.getRelativeOrientationTag().equals("F1R2") || rp.getRelativeOrientationTag().equals("F2R1")) {
+            dp2countsMap.get(dp).simple_1++;
+        }
+        if (rp.getRelativeOrientationTag().equals("R1F2") || rp.getRelativeOrientationTag().equals("R2F1")) {
+            dp2countsMap.get(dp).simple_2++;
+        }
+        if (rp.getRelativeOrientationTag().equals("F1F2") || rp.getRelativeOrientationTag().equals("F2F1")) {
+            dp2countsMap.get(dp).twisted_1++;
+        }
+        if (rp.getRelativeOrientationTag().equals("R1R2") || rp.getRelativeOrientationTag().equals("R2R1")) {
+            dp2countsMap.get(dp).twisted_2++;
         }
     }
 
@@ -337,16 +344,16 @@ public class Counter {
 
         for (DigestPair dp : this.dp2countsMap.keySet()) {
             SimpleTwistedCount cc = this.dp2countsMap.get(dp);
-            kInteractionCounts[cc.simple + cc.twisted]++;
+            kInteractionCounts[cc.simple_1 + cc.simple_2 + cc.twisted_1 + cc.twisted_2]++;
             //int cnt = cc.simple + cc.twisted;
             //printStream.println(dp.toString() + "\t" + cnt);
             if(this.split) {
-                printStream.println(dp.toString() + "\t" + cc.simple + ":" + cc.twisted);
+                printStream.println(dp.toString() + "\t" + cc.simple_1 + ":" + cc.simple_2 + ":" + cc.twisted_1 + ":" + cc.twisted_2);
             } else {
-                int c = cc.simple + cc.twisted;
+                int c = cc.simple_1 + cc.simple_2 + cc.twisted_1 + cc.twisted_2;
                 printStream.println(dp.toString() + "\t" + c);
             }
-            if (cc.simple + cc.twisted == 1) {
+            if (cc.simple_1 + cc.simple_2 + cc.twisted_1 + cc.twisted_2 == 1) {
                 this.n_singleton_interactions++;
                 if (!dp.forward().getChromosome().equals(dp.reverse().getChromosome())) {
                     n_singleton_interactions_trans++;
@@ -392,7 +399,7 @@ public class Counter {
                 int reverse_digest_center = dp.reverse().getDigestStartPosition() + ((dp.reverse().getDigestEndPosition() - dp.reverse().getDigestStartPosition()) / 2);
                 if(LONG_RANGE_THRESHOLD<=Math.abs(reverse_digest_center - forward_digest_center)) {
                     SimpleTwistedCount cc = this.dp2countsMap.get(dp);
-                    int c = cc.simple + cc.twisted;
+                    int c = cc.simple_1 + cc.simple_2 + cc.twisted_1 + cc.twisted_2;
                     String coordinatesF = String.format("%s:%s-%s", dp.forward().getChromosome(),dp.forward().getDigestStartPosition(),dp.forward().getDigestEndPosition());
                     String coordinatesR = String.format("%s:%s-%s", dp.reverse().getChromosome(),dp.reverse().getDigestStartPosition(),dp.reverse().getDigestEndPosition());
                     String coordinates;
@@ -431,7 +438,7 @@ public class Counter {
                     active_interacting_fragment_count++;
                 }
             } else {
-                readCount = cc.simple + cc.twisted;
+                readCount = cc.simple_1 + cc.simple_2 + cc.twisted_1 + cc.twisted_2;
                 readCountsAtDigestsMap.put(dp.forward(), readCountsAtDigestsMap.get(dp.forward()) + readCount);
             }
             if (!readCountsAtDigestsMap.containsKey(dp.reverse())) {
@@ -441,7 +448,7 @@ public class Counter {
                     active_interacting_fragment_count++;
                 }
             } else {
-                readCount = cc.simple + cc.twisted;
+                readCount = cc.simple_1 + cc.simple_2 + cc.twisted_1 + cc.twisted_2;
                 readCountsAtDigestsMap.put(dp.reverse(), readCountsAtDigestsMap.get(dp.reverse()) + readCount);
             }
         }
