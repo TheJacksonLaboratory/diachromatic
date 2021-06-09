@@ -35,6 +35,8 @@ The first step of processing raw FASTQ files with Diachromatic is to recognize a
 
 .. In practice, only about XXXX percent of the readpairs are truncated.
 
+The command will create files called ``<prefix>.truncated_R1.fastq.gz`` and ``<prefix>.truncated_R2.fastq.gz`` in a subdirectory called ``outdir`` (which will be created if not already present).
+
 See :ref:`rsttruncate` for details.
 
 
@@ -64,7 +66,8 @@ e.g., ``GRCh37.zip``. Once you unzip it, the resulting folder will contain multi
 GRCh37.2.bt2, GRCh37.4.bt2, GRCh37.rev.2.bt2). You need to pass the path to one of these files without the file suffix.
 Assuming the directory is located at ``/some/path/GRCh37``, you would therefore pass ``-i /some/path/GRCh37/CRCh37``.
 
-
+The diachromatic ``align`` command above will create a file called ``<prefix>.valid_pairs.aligned.bam`` in the ``outdir`` subdirectory.
+See :ref:`rstmapping` for details.
 
 
 Counting
@@ -79,7 +82,9 @@ Use the following command to run the counting step: ::
         -o outdir
 
 
-The :ref:`rstcount`  command produces output files intended for downstream analysis.
+The :ref:`rstcount`  command produces output files intended for downstream analysis, including ``<prefix>.count.stats.txt``
+and ``<prefix>.frag.sizes.counts.script.R``. See :ref:`rstcount` for details.
+
 
 Summarize
 ~~~~~~~~~

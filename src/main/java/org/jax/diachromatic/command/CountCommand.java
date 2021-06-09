@@ -26,23 +26,20 @@ import java.util.concurrent.Callable;
 @CommandLine.Command(name = "count",
         aliases = {"C"},
         mixinStandardHelpOptions = true,
-        description = "count  valid pairs between pairs of restriction fragments from a BAM file creted in the alignstep with a GOPHER digest file.")
+        description = "count valid pairs between pairs of restriction fragments from a BAM file creted in the alignstep with a GOPHER digest file.")
 public class CountCommand extends Command implements Callable<Integer> {
     private static final Logger logger = LoggerFactory.getLogger(CountCommand.class);
-
-    //@CommandLine.Option(names = {"-j", "--jannovar"}, description = "prefix for output files (default: ${DEFAULT-VALUE} )")
     /** Path to BAM file containing unique valid pairs. */
     @CommandLine.Option(names={"-v", "--valid-pairs-bam"}, required = true, description = "Path to BAM file with unique valid pairs produced using the align command.", order = 3)
-    private String validPairsBamFile = null;
+    private String validPairsBamFile;
 
     /** Path to the genome digest file produced by GOPHER. */
     @CommandLine.Option(names={"-d","--digest-file"}, required = true, description = "Path to GOPHER digest file.", order = 4)
-    private String digestFile = null;
+    private String digestFile;
 
     /** Aggregate counts for different read pair orienations. */
     @CommandLine.Option(names={"-s", "--split-counts"},description = "Split counts for different read pair orientations.", order = 5)
     private boolean split=false;
-
 
     public CountCommand() {
     }

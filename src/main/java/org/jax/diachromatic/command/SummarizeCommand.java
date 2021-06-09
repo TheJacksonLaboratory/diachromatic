@@ -21,7 +21,6 @@ import java.util.concurrent.Callable;
 public class SummarizeCommand extends Command implements Callable<Integer> {
     private static final Logger logger = LoggerFactory.getLogger(SummarizeCommand.class);
 
-
     /** Path to text file with summary statistics produced with the truncate command. */
     @CommandLine.Option(names={"-t","--truncate"}, required = true, description = "Path to diachromatic truncate statistics file.", order = 2)
     private String truncateFile = null;

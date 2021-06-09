@@ -87,7 +87,7 @@ public class Summarizer {
         try (BufferedReader br = new BufferedReader(new FileReader(truncatePath))) {
             String line;
             while ((line=br.readLine())!=null) {
-                logger.debug(line);
+                logger.trace(line);
                 String []fields=line.split(":");
                 if (fields.length!=2) continue; // skip non key-value lines, they are comments
                 templateData.put(fields[0],fields[1]);
@@ -153,7 +153,7 @@ public class Summarizer {
         logger.trace("Parsing the truncation data at {}", truncatePath);
         try (BufferedReader br = new BufferedReader(new FileReader(alignPath))) {
             while ((line=br.readLine())!=null) {
-                logger.debug(line);
+                logger.trace(line);
                 String[] fields = line.split(":");
                 if (fields.length != 2) continue; // skip non key-value lines, they are comments
                 String[] fields2 = fields[1].split(" ");
@@ -170,8 +170,8 @@ public class Summarizer {
                     templateData.put(String.format("align_%s", fields[0].trim()), fields2[0].trim());
                 }
 
-                logger.debug(String.format("align_%s %s",fields[0].trim(), fields2[0].trim()));
-                logger.error(String.format("align_%s",fields[0]));
+                logger.trace(String.format("align_%s %s",fields[0].trim(), fields2[0].trim()));
+                logger.trace(String.format("align_%s",fields[0]));
                 switch (fields[0]) {
                     case "total_read_pairs_processed":
                         total_read_pairs_processed = getIntegerValue(fields[1]);
@@ -231,12 +231,11 @@ public class Summarizer {
         try (BufferedReader br = new BufferedReader(new FileReader(countPath))) {
             String line;
             while ((line = br.readLine()) != null) {
-                logger.debug(line);
+                logger.trace(line);
                 String[] fields = line.split(":");
                 if (fields.length != 2) continue; // skip non key-value lines, they are comments
                 String[] fields2 = fields[1].split(" ");
                 templateData.put(String.format("count_%s", fields[0].trim()), fields2[0].trim());
-                System.out.println(line);
                 countMap.add(line);
             }
         } catch (IOException e) {
