@@ -1,3 +1,4 @@
+.. _rsttruncate:
 
 Truncation of chimeric reads
 ============================

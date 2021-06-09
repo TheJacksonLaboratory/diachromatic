@@ -1,9 +1,9 @@
 package org.jax.diachromatic.align;
 
 import htsjdk.samtools.SAMRecord;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.exception.DiachromaticException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -38,13 +38,13 @@ import java.util.concurrent.ThreadLocalRandom;
  * @version 0.1.3 (2018-01-06)
  */
 public class ReadPair {
-    private static final Logger logger = LogManager.getLogger();
+    private static final Logger logger = LoggerFactory.getLogger(ReadPair.class);
 
     /**
      * First (forward) and second (reverse) read in a read pair.
      */
-    private SAMRecord R1 = null;
-    private SAMRecord R2 = null;
+    private final SAMRecord R1;
+    private final SAMRecord R2;
 
     /**
      * These two thresholds define the range of fragment sizes that are considered to be consistent with the chosen
@@ -142,7 +142,7 @@ public class ReadPair {
      * an in silico digest. A {@link DigestPair} consists of two {@link Digest} objects, one for each read. Note that
      * if both reads were mapped to the same fragment, the {@link Digest} objects are identical to each other.
      */
-    private DigestPair digestPair = null;
+    private final DigestPair digestPair;
 
     /**
      * A read pair belongs to one of the following categories: UL, SL, TS, TL or VP.
@@ -499,7 +499,7 @@ public class ReadPair {
      */
     public String setRelativeOrientationTag() {
 
-        String tag = "NA";
+        String tag;
 
         if (R1.getReadNegativeStrandFlag() == R2.getReadNegativeStrandFlag()) {
             // both reads align to the same strand
@@ -582,7 +582,7 @@ public class ReadPair {
      *
      * @throws DiachromaticException
      */
-    private void categorizeReadPair() throws DiachromaticException {
+    private void categorizeReadPair() {
 
         boolean sameInternal=false;
         if(this.digestPair.forward()==this.digestPair.reverse()) {
@@ -592,7 +592,7 @@ public class ReadPair {
         if (!this.isTrans() && (this.isInwardFacing() || this.isOutwardFacing())) {
             // inward and outward pointing read pairs on the same chromosome may arise from self- or un-ligated fragments
             if (this.isOutwardFacing()) {
-                if (this.getSelfLigationFragmentSize() < this.UPPER_SIZE_SELF_LIGATION_THRESHOLD || sameInternal) {
+                if (this.getSelfLigationFragmentSize() < UPPER_SIZE_SELF_LIGATION_THRESHOLD || sameInternal) {
                     if(!sameInternal) {
                         setCategoryTag(ReadPairCategory.SELF_LIGATED.getTag());
                     } else {
@@ -609,7 +609,7 @@ public class ReadPair {
                 }
             } else {
                 // pair is inward facing
-                if (this.getDistanceBetweenFivePrimeEnds() < this.UPPER_SIZE_THRESHOLD || sameInternal) {
+                if (this.getDistanceBetweenFivePrimeEnds() < UPPER_SIZE_THRESHOLD || sameInternal) {
                         if(!sameInternal) {
                             setCategoryTag(ReadPairCategory.UN_LIGATED.getTag());
                         } else {
@@ -698,9 +698,7 @@ public class ReadPair {
     }
 
     /**
-     * // Shuffle read pair orientation for study about significance of directed interactions
-     *
-     * @return Random orientation tag.
+     *  Shuffle read pair orientation for study about significance of directed interactions
      */
     public void setRandomRelativeOrientationTag() {
         int index = ThreadLocalRandom.current().nextInt(8);

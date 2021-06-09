@@ -1,16 +1,20 @@
 package org.jax.diachromatic.command;
 
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jax.diachromatic.align.DigestMap;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.align.Aligner;
 import org.jax.diachromatic.align.Bowtie2Runner;
+import picocli.CommandLine;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Random;
+import java.util.concurrent.Callable;
 
 /**
  * Class to coordinate bowtie2-mapping of the truncated FASTQ files followed by Q/C and filtering of the mapped reads.
@@ -19,59 +23,58 @@ import java.util.Random;
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
  * @version 0.0.3 (2018-03-20)
  */
-@Parameters(commandDescription = "The align command uses bowtie2 to align Hi-C reads and then performs Q/C, artifact filtering and pairing of valid read pairs.")
-public class AlignCommand extends Command {
-    private static final Logger logger = LogManager.getLogger();
-
+@CommandLine.Command(name = "align",
+        aliases = {"A"},
+        mixinStandardHelpOptions = true,
+        description = "align with uses bowtie2 to align Hi-C reads and then performs Q/C, artifact filtering and pairing of valid read pairs.")
+public class AlignCommand extends Command implements Callable<Integer>  {
+    private static final Logger logger = LoggerFactory.getLogger(AlignCommand.class);
     /** Path to the bowtie2 executable, e.g., {@code /usr/bin/bowtie2}. */
-    @Parameter(names={"-b","--bowtie-path"},required = true, description ="Path to bowtie2.", order = 3)
+    @CommandLine.Option(names={"-b","--bowtie-path"},required = true, description ="Path to bowtie2.", order = 1)
     private String bowtiepath;
 
     /** Path to the bowtie2 index files. Note that the index is made up of multiple files, e.g.,
      * hg19.1.bt2,  hg19.3.bt2,  hg19.rev.1.bt2, hg19.2.bt2,  hg19.4.bt2,  hg19.rev.2.bt2. Assuming all files
      * are in a directory called {@code /path/to/index/}, this parameter should be {@code /path/to/index/hg19}.*/
-
-    @Parameter(names={"-i", "--bowtie-index"}, required = true, description ="Path to bowtie2 index.", order = 4)
+    @CommandLine.Option(names={"-i", "--bowtie-index"}, required = true, description ="Path to bowtie2 index.", order = 2)
     private String pathToBowtieIndex;
 
-    @Parameter(names={"-p", "--thread-num"},description = "Number of threads used by bowtie2.", order = 5)
+    @CommandLine.Option(names={"-p", "--thread-num"},description = "Number of threads used by bowtie2.", order = 3)
     private int threadNum = 1;
 
-    @Parameter(names={"-bsu","--bowtie-stringent-unique"}, description = "Use stringent settings for definition of uniquely mapped reads.", order = 6)
+    @CommandLine.Option(names={"-bsu","--bowtie-stringent-unique"},
+            description = "Use stringent settings for definition of uniquely mapped reads.", order = 4)
     private boolean useStringentUniqueSettings = false;
 
     /** Path to the forward truncated FASTQ file produced by {@link org.jax.diachromatic.command.TruncateCommand}. */
-    @Parameter(names={"-q","fastq-r1"}, required = true, description = "Path to truncated forward FASTQ input file.", order = 7)
+    @CommandLine.Option(names={"-q","fastq-r1"}, required = true, description = "Path to truncated forward FASTQ input file.",order = 5)
     private String pathToInputFastq1 = null;
 
     /** Path to the reverse truncated FASTQ file produced by {@link org.jax.diachromatic.command.TruncateCommand}. */
-    @Parameter(names={"-r","fastq-r2"}, required = true, description = "Path to truncated reverse FASTQ input file.", order = 8)
+    @CommandLine.Option(names={"-r","fastq-r2"}, required = true, description = "Path to truncated reverse FASTQ input file.", order = 6)
     private String pathToInputFastq2 = null;
 
     /** Path to the genome digest file produced by GOPHER.*/
-    @Parameter(names={"-d","--digest-file"}, required = true, description = "Path to GOPHER digest file.", order = 9)
+    @CommandLine.Option(names={"-d","--digest-file"}, required = true, description = "Path to GOPHER digest file.", order = 7)
     private String digestFile;
-
-
-    @Parameter(names={"-l", "--lower-frag-size-limit"}, description = "Lower limit for fragment size.", order = 10)
+    @CommandLine.Option(names={"-l", "--lower-frag-size-limit"}, description = "Lower limit for fragment size.", order = 8)
     private int lowerFragSize = 50;
-    @Parameter(names={"-u", "--upper-frag-size-limit"}, description = "Upper limit for fragment size.", order = 11)
+    @CommandLine.Option(names={"-u", "--upper-frag-size-limit"}, description = "Upper limit for fragment size.", order = 9)
     private int upperFragSize = 800;
-    @Parameter(names={"-s", "--self-ligation-frag-size-limit"}, description = "Upper limit for self-ligation fragment size.", order = 12)
+    @CommandLine.Option(names={"-s", "--self-ligation-frag-size-limit"}, description = "Upper limit for self-ligation fragment size.", order = 10)
     private int upperSelfLigationFragSize = 3000;
-
-    //** if this is set, an extra BAM file containg the rejected read pairs will be created */
-    @Parameter(names={"-j", "--bad"}, description = "Output bad (rejected) reads to separated file.", order = 13)
+    /** if this is set, an extra BAM file containg the rejected read pairs will be created */
+    @CommandLine.Option(names={"-j", "--bad"}, description = "Output bad (rejected) reads to separated file.", order = 11)
     private boolean outputRejectedReads=false;
-
-    //** if this is set, an extra BAM file containg the rejected read pairs will be created */
-    @Parameter(names={"-k", "--keep-sam"}, description = "Do not delete temporary SAM files.", order = 14)
+    /** if this is set, an extra BAM file containg the rejected read pairs will be created */
+    @CommandLine.Option(names={"-k", "--keep-sam"}, description = "Do not delete temporary SAM files.",order = 12)
     private boolean keepSamFiles=false;
 
     public AlignCommand(){}
 
 
-    public void execute() throws DiachromaticException {
+    @Override
+    public Integer call() throws DiachromaticException {
 
         makeOutdirectoryIfNeeded();
 
@@ -99,7 +102,7 @@ public class AlignCommand extends Command {
         } catch (DiachromaticException | IOException e){
             e.printStackTrace();
         }
-
+        return 0;
     }
     @Override
     public String toString() {return "diachromatic:align";}

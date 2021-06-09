@@ -2,10 +2,12 @@ package org.jax.diachromatic.align;
 
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.Log;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
 import org.jax.diachromatic.Diachromatic;
 import org.jax.diachromatic.exception.DiachromaticException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.*;
 import java.util.*;
 
@@ -22,8 +24,7 @@ import java.util.*;
  * @version 0.1.2 (2018-01-06)
  */
 public class Aligner {
-
-    private static final Logger logger = LogManager.getLogger();
+    private static final Logger logger = LoggerFactory.getLogger(Aligner.class);
     private static final htsjdk.samtools.util.Log log = Log.getInstance(Aligner.class);
 
     /**
@@ -283,8 +284,8 @@ public class Aligner {
 
         DeDupMap dedup_map = new DeDupMap(useRelativeOrientationForDuplicateRemoval);
         ReadPair pair;
-        cisCounts = new HashMap<String, Integer>();
-        transCounts = new HashMap<String, Integer>();
+        cisCounts = new HashMap<>();
+        transCounts = new HashMap<>();
 
         while ((pair = getNextPair())!= null) {
 

@@ -1,18 +1,18 @@
 package org.jax.diachromatic.truncation;
 
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
 import org.jax.diachromatic.digest.RestrictionEnzyme;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.util.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.zip.GZIPOutputStream;
 
 public class Truncator {
-    private static final Logger logger = LogManager.getLogger();
-
+    private static final Logger logger = LoggerFactory.getLogger(Truncator.class);
     private final String fastqFile1;
     private final String fastqFile2;
     private final RestrictionEnzyme renzyme;
@@ -103,7 +103,7 @@ public class Truncator {
             out1.close();
             out2.close();
         } catch (IOException e) {
-            logger.fatal(String.format("Error encountered while writing truncated FASTQ files: %s", e.getMessage()));
+            logger.error("Error encountered while writing truncated FASTQ files: {}", e.getMessage());
             e.printStackTrace();
         }
         logger.trace(String.format("Number of pairs processed: %d",
