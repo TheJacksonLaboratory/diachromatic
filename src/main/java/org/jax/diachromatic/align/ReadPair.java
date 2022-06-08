@@ -162,7 +162,7 @@ public class ReadPair {
         STRANGE_INTERNAL("SI"),
         VALID_TOO_LONG("TL");
 
-        private String tag;
+        private final String tag;
 
         ReadPairCategory(String readPairTypeTag) {
             this.tag = readPairTypeTag;
