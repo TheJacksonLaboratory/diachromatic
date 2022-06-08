@@ -1,14 +1,16 @@
 package org.jax.diachromatic.command;
 
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
 import org.jax.diachromatic.digest.RestrictionEnzyme;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.truncation.Truncator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import picocli.CommandLine;
+
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import static org.jax.diachromatic.digest.RestrictionEnzyme.parseRestrictionEnzymes;
 
@@ -19,17 +21,21 @@ import static org.jax.diachromatic.digest.RestrictionEnzyme.parseRestrictionEnzy
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
  * @version 0.0.2 (2018-01-05)
  */
-@Parameters(commandDescription = "The truncate command searches for Hi-C religation sequences and truncates reads accordingly.")
-public class TruncateCommand extends Command {
-    private static final Logger logger = LogManager.getLogger();
 
-    @Parameter(names={"-q","fastq-r1"}, required = true, description = "Path to forward FASTQ input file.", order = 3)
+@CommandLine.Command(name = "truncate",
+        aliases = {"T"},
+        mixinStandardHelpOptions = true,
+        description = "Truncate reads at the positions of Hi-C religation sequences.")
+public class TruncateCommand extends Command implements Callable<Integer> {
+    private static final Logger logger = LoggerFactory.getLogger(TruncateCommand.class);
+
+    @CommandLine.Option(names={"-q","fastq-r1"}, required = true, description = "Path to forward FASTQ input file.", order = 3)
     private String fastaqFile1;
-    @Parameter(names={"-r","fastq-r2"}, required = true, description = "Path to reverse FASTQ input file.", order = 4)
+    @CommandLine.Option(names={"-r","fastq-r2"}, required = true, description = "Path to reverse FASTQ input file.", order = 4)
     private String fastaqFile2;
-    @Parameter(names={"-e", "--enzyme"}, required = true, description = "Restriction enzyme name.", order = 5)
+    @CommandLine.Option(names={"-e", "--enzyme"}, required = true, description = "Restriction enzyme name.", order = 5)
     private String enzymeName;
-    @Parameter(names={"-s", "--sticky-ends"},description = "No fill-in of sticky ends was performed.", order = 6)
+    @CommandLine.Option(names={"-s", "--sticky-ends"},description = "No fill-in of sticky ends was performed.", order = 6)
     private boolean stickyEnds=false;
 
     private Truncator truncator = null;
@@ -56,7 +62,8 @@ public class TruncateCommand extends Command {
     }
 
 
-    public void execute() {
+    @Override
+    public Integer call() {
         makeOutdirectoryIfNeeded();
         logger.trace(String.format("Starting truncate command on files %s and %s",fastaqFile1,fastaqFile2));
         logger.trace(outputDir);
@@ -64,8 +71,9 @@ public class TruncateCommand extends Command {
             init();
             truncator.parseFASTQ();
         } catch (DiachromaticException e) {
-            logger.fatal("Error encountered while truncating FASTQ reads: ", e);
+            logger.error("Error encountered while truncating FASTQ reads: {}", e.getLocalizedMessage());
         }
+        return 0;
     }
 
     @Override

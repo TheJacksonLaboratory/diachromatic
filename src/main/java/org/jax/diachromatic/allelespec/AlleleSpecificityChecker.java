@@ -116,7 +116,7 @@ public class AlleleSpecificityChecker {
             System.out.println("\tisEmpty?: "+locus.isEmpty());
             System.out.println("\tsequence length: "+locus.getSequenceLength());
             System.out.println("\tsequence index: "+locus.getSequenceIndex());
-            System.out.println("\ttostring: "+locus.toString());
+            System.out.println("\ttostring: "+ locus);
             System.out.println();
         }
 

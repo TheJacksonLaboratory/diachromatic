@@ -3,6 +3,11 @@ Changelog
 =========
 
 ------
+v0.7.0
+------
+- update to Java 11/17
+
+------
 v0.4.1
 ------
 - integration with highchart for data display in HTML output

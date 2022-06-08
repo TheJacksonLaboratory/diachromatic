@@ -35,6 +35,10 @@ The first step of processing raw FASTQ files with Diachromatic is to recognize a
 
 .. In practice, only about XXXX percent of the readpairs are truncated.
 
+The command will create files called ``<prefix>.truncated_R1.fastq.gz`` and ``<prefix>.truncated_R2.fastq.gz`` in a subdirectory called ``outdir`` (which will be created if not already present).
+
+See :ref:`rsttruncate` for details.
+
 
 Mapping
 ~~~~~~~
@@ -43,7 +47,7 @@ The second step of the pipeline is to map the truncated read pairs to the target
 
 .. If desired, Diachromatic also outputs BAM files with the discarded (arterfactual or unmappable reads).
 
-Use the following command to run the alignment step: ::
+Use the :ref:`rstmapping` command to run the alignment step: ::
 
     $ java -jar Diachromatic.jar align \
         -b /usr/bin/bowtie2 \
@@ -53,6 +57,17 @@ Use the following command to run the alignment step: ::
         -d hg19_HinDIII_DigestedGenome.txt \
         -x prefix \
         -o outdir
+
+
+
+Note that the bowtie2 index can be downloaded from the
+`bowtie 2 site <http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml>`_.  The indices are available as zip archives,
+e.g., ``GRCh37.zip``. Once you unzip it, the resulting folder will contain multiple files (GRCh37.1.bt2, GRCh37.3.bt2, GRCh37.rev.1.bt2
+GRCh37.2.bt2, GRCh37.4.bt2, GRCh37.rev.2.bt2). You need to pass the path to one of these files without the file suffix.
+Assuming the directory is located at ``/some/path/GRCh37``, you would therefore pass ``-i /some/path/GRCh37/CRCh37``.
+
+The diachromatic ``align`` command above will create a file called ``<prefix>.valid_pairs.aligned.bam`` in the ``outdir`` subdirectory.
+See :ref:`rstmapping` for details.
 
 
 Counting
@@ -67,6 +82,10 @@ Use the following command to run the counting step: ::
         -o outdir
 
 
+The :ref:`rstcount`  command produces output files intended for downstream analysis, including ``<prefix>.count.stats.txt``
+and ``<prefix>.frag.sizes.counts.script.R``. See :ref:`rstcount` for details.
+
+
 Summarize
 ~~~~~~~~~
 
@@ -79,7 +98,7 @@ To run the summarize command with the truncate data, use the following command. 
         -x prefix \
         -o outdir
 
-This will generate an HTML file called ``outdir/prefix.summary.stats.html``.
+The :ref:`rstsummarize` command generates an HTML file called ``outdir/prefix.summary.stats.html``.
 
 The summary results file for the test dataset can also be downloaded from the `ftp server <ftp://ftp.jax.org/robinp/Diachromatic/test_dataset/>`_ or use: ::
 

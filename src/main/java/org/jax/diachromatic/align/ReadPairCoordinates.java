@@ -1,14 +1,10 @@
 package org.jax.diachromatic.align;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 /**
  * This is a helper class of DeDupMap for the removal of duplicates that takes characteristics of Hi-C fragments
  * into account (orientation of read pairs matter).
  */
 public class ReadPairCoordinates {
-    private static final Logger logger = LogManager.getLogger();
     /**
      * Only the two 5' end positions and the orientation of read pairs are taken into account.
      */
@@ -25,7 +21,7 @@ public class ReadPairCoordinates {
         this.fivePrimePos2 = fivePrimePos2;
         this.readPairOrientation = readPairOrientation;
         /* calculate the hashcode */
-        int result=0;
+        int result;
         result=Integer.hashCode(readPairOrientation);
         result=31*result+Integer.hashCode(fivePrimePos1);
         result=31*result+Integer.hashCode(fivePrimePos2);
@@ -41,22 +37,9 @@ public class ReadPairCoordinates {
         if (o==null) return false;
         if (! (o instanceof ReadPairCoordinates) ) return false;
         ReadPairCoordinates other = (ReadPairCoordinates) o;
-        if(this.readPairOrientation==other.readPairOrientation && this.fivePrimePos1==other.fivePrimePos1 && this.fivePrimePos2==other.fivePrimePos2)
-        {
-            /*
-            logger.trace("false");
-            logger.trace(this.readPairOrientation + "\t" + this.fivePrimePos1 + "\t" + this.fivePrimePos2);
-            logger.trace(other.readPairOrientation + "\t" + other.fivePrimePos1 + "\t" + other.fivePrimePos2);
-            */
-            return true;
-        } else {
-            /*
-            logger.trace("false");
-            logger.trace(this.readPairOrientation + "\t" + this.fivePrimePos1 + "\t" + this.fivePrimePos2);
-            logger.trace(other.readPairOrientation + "\t" + other.fivePrimePos1 + "\t" + other.fivePrimePos2);
-            */
-            return false;
-        }
+        return (this.readPairOrientation==other.readPairOrientation
+                && this.fivePrimePos1==other.fivePrimePos1
+                && this.fivePrimePos2==other.fivePrimePos2);
     }
 
     /**

@@ -13,7 +13,6 @@ Welcome to Diachromatic's documentation
    Counting unique valid pairs <count>
    Summarize results <summarize>
 
-..   Calling SNPs on Hi-C reads <allelspec>
 
 
 Differential Analysis of Chromatin Interactions by Capture (Diachromatic)

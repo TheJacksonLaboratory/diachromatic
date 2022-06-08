@@ -1,8 +1,6 @@
 package org.jax.diachromatic.truncation;
 
 import htsjdk.samtools.fastq.FastqRecord;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -13,10 +11,9 @@ import java.io.IOException;
  * {@link Truncator} class that controls these objects via the {@link FastqPairParser} class.
  */
 class PotentiallyTruncatedFastQRecord {
-    private static final Logger logger = LogManager.getLogger();
     private final String name;
-    private  String sequence = null;
-    private  String quality = null;
+    private  String sequence;
+    private  String quality;
 
     private static String ligationSequence = null;
     private static String restrictionSequence = null;

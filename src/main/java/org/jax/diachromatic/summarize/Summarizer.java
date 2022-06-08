@@ -4,8 +4,9 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.Version;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.sql.Timestamp;
@@ -17,16 +18,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Summarizer {
-    private static final Logger logger = LogManager.getLogger();
-
+    private static final Logger logger = LoggerFactory.getLogger(Summarizer.class);
     private final String truncatePath;
     private final String alignPath;
     private final String countPath;
 
-    // Map of data that will be used for the FreeMark template.
+    /** Map of data that will be used for the FreeMark template. */
     private final Map<String, Object> templateData = new HashMap<>();
 
-    // FreeMarker configuration object.
+    /** FreeMarker configuration object. */
     private final Configuration cfg;
 
     public Summarizer(String truncFile, String alignFile, String countFile) {
@@ -87,7 +87,7 @@ public class Summarizer {
         try (BufferedReader br = new BufferedReader(new FileReader(truncatePath))) {
             String line;
             while ((line=br.readLine())!=null) {
-                logger.debug(line);
+                logger.trace(line);
                 String []fields=line.split(":");
                 if (fields.length!=2) continue; // skip non key-value lines, they are comments
                 templateData.put(fields[0],fields[1]);
@@ -153,14 +153,13 @@ public class Summarizer {
         logger.trace("Parsing the truncation data at {}", truncatePath);
         try (BufferedReader br = new BufferedReader(new FileReader(alignPath))) {
             while ((line=br.readLine())!=null) {
-                logger.debug(line);
+                logger.trace(line);
                 String[] fields = line.split(":");
                 if (fields.length != 2) continue; // skip non key-value lines, they are comments
                 String[] fields2 = fields[1].split(" ");
                 if(!fields[0].contains("YVP") && !fields[0].contains("CLC") && !fields[0].contains("RLC") && !fields[0].contains("HPDR")) {
                     if(fields[0].contains("array")) {
                         templateData.put(String.format("align_%s", fields[0].trim()), fields[1].replace("%",":"));
-                        logger.trace(fields[1].length());
                     } else {
                         templateData.put(String.format("align_%s", fields[0].trim()), getIntegerValue(fields2[0].trim()));
                     }
@@ -171,10 +170,8 @@ public class Summarizer {
                     templateData.put(String.format("align_%s", fields[0].trim()), fields2[0].trim());
                 }
 
-
-
-                logger.debug(String.format("align_%s %s",fields[0].trim(), fields2[0].trim()));
-                logger.error(String.format("align_%s",fields[0]));
+                logger.trace(String.format("align_%s %s",fields[0].trim(), fields2[0].trim()));
+                logger.trace(String.format("align_%s",fields[0]));
                 switch (fields[0]) {
                     case "total_read_pairs_processed":
                         total_read_pairs_processed = getIntegerValue(fields[1]);
@@ -234,12 +231,11 @@ public class Summarizer {
         try (BufferedReader br = new BufferedReader(new FileReader(countPath))) {
             String line;
             while ((line = br.readLine()) != null) {
-                logger.debug(line);
+                logger.trace(line);
                 String[] fields = line.split(":");
                 if (fields.length != 2) continue; // skip non key-value lines, they are comments
                 String[] fields2 = fields[1].split(" ");
                 templateData.put(String.format("count_%s", fields[0].trim()), fields2[0].trim());
-                System.out.println(line);
                 countMap.add(line);
             }
         } catch (IOException e) {
