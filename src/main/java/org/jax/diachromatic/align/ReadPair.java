@@ -584,10 +584,7 @@ public class ReadPair {
      */
     private void categorizeReadPair() {
 
-        boolean sameInternal=false;
-        if(this.digestPair.forward()==this.digestPair.reverse()) {
-            sameInternal = true;
-        }
+        boolean sameInternal= this.digestPair.forward() == this.digestPair.reverse();
 
         if (!this.isTrans() && (this.isInwardFacing() || this.isOutwardFacing())) {
             // inward and outward pointing read pairs on the same chromosome may arise from self- or un-ligated fragments

@@ -74,9 +74,9 @@ public class DigestPair {
     public String toString() {
         // fragment with the smaller starting position comes always first
         if(forwardDigest.getDigestStartPosition()<reverseDigest.getDigestStartPosition()) {
-            return forwardDigest.toString() + "\t" + reverseDigest.toString();
+            return forwardDigest + "\t" + reverseDigest;
         } else {
-            return reverseDigest.toString() + "\t" + forwardDigest.toString();
+            return reverseDigest + "\t" + forwardDigest;
         }
     }
 }

@@ -52,7 +52,7 @@ public final class ProgressBar {
         }
 
         bar.append("]   " + percent + "%     ");
-        logger.error("\r" + bar.toString());
+        logger.error("\r" + bar);
         if (pos == max)
             logger.error("\n");
     }
