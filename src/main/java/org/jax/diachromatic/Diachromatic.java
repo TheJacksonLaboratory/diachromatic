@@ -3,10 +3,7 @@ package org.jax.diachromatic;
 
 
 
-import org.jax.diachromatic.command.AlignCommand;
-import org.jax.diachromatic.command.CountCommand;
-import org.jax.diachromatic.command.SummarizeCommand;
-import org.jax.diachromatic.command.TruncateCommand;
+import org.jax.diachromatic.command.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
@@ -35,6 +32,7 @@ public class Diachromatic implements Callable<Integer>  {
         long startTime = System.currentTimeMillis();
         CommandLine cline = new CommandLine(new Diachromatic())
                 .addSubcommand("align", new AlignCommand())
+                .addSubcommand("bad", new BadReadsCommand())
                 .addSubcommand("count", new CountCommand())
                 .addSubcommand("truncate", new TruncateCommand())
                 .addSubcommand("summarize", new SummarizeCommand());

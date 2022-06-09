@@ -92,7 +92,6 @@ public class MakeFilesForTest {
     }
 
 
-    @Test
     public void createGenomeFile() {
         long seed = 42L;
         Random rand = new Random(seed);
