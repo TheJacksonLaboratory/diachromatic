@@ -32,12 +32,18 @@ public class DigestMapTest {
         assertNotNull(dmap);
     }
 
+    /**
+     * hg19_digestedGenome.small.txt contains only chr1.
+     * However, {@link DigestMap} adds both chr1 and 1
+     */
     @Test
     void testGetOneChromosome() throws DiachromaticException {
         DigestMap dmap = new DigestMap(digestFilePath);
         Map<String, DigestMap.Chromosome2DigestArray> mymap = dmap.getDigestMap();
-        int expectedNumberOfChromosomes = 1;
+        int expectedNumberOfChromosomes = 2;
         assertEquals(expectedNumberOfChromosomes,mymap.size());
+        assertTrue(mymap.containsKey("chr1"));
+        assertTrue(mymap.containsKey("1"));
     }
 
     @Test
