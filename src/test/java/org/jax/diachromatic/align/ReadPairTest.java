@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import htsjdk.samtools.SAMRecord;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
 import org.mockito.Mockito;
 
 import java.util.List;
@@ -17,6 +18,7 @@ import static org.mockito.Mockito.when;
  * Disactivating this test because we can no longer use Mockito with reflection to
  * package protected class (SAMRecord).
  */
+@Disabled("Cannot run Mockito with final class from HTSJDK")
 public class ReadPairTest {
 /*
 
