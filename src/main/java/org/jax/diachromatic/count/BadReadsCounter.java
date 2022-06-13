@@ -52,9 +52,7 @@ public class BadReadsCounter {
     /**
      * Paths for summarize files.
      */
-    private String outputTsvInteractingFragmentCounts;
     private String outputTsvInteractionCounts;
-    private String outputWashUSimpleInteractionCounts;
     private String outputTxtStats;
 
     /**
@@ -201,10 +199,10 @@ public class BadReadsCounter {
     }
 
     private void createOutputNames(String outputPathPrefix) {
-        outputTsvInteractingFragmentCounts = String.format("%s.%s", outputPathPrefix, "interacting.fragments.counts.table.tsv");
-        outputTsvInteractionCounts = String.format("%s.%s", outputPathPrefix, "interaction.counts.table.tsv");
-        outputWashUSimpleInteractionCounts = String.format("%s.%s", outputPathPrefix, "interaction.counts.washU.simple.tsv");
-        outputTxtStats = String.format("%s.%s", outputPathPrefix, "count.stats.txt");
+//        outputTsvInteractingFragmentCounts = String.format("%s.%s", outputPathPrefix, "interacting.fragments.counts.table.tsv");
+//        outputTsvInteractionCounts = String.format("%s.%s", outputPathPrefix, "interaction.counts.table.tsv");
+//        outputWashUSimpleInteractionCounts = String.format("%s.%s", outputPathPrefix, "interaction.counts.washU.simple.tsv");
+//        outputTxtStats = String.format("%s.%s", outputPathPrefix, "count.stats.txt");
     }
 
 

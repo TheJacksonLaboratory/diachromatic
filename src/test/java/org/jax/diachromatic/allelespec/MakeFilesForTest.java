@@ -2,7 +2,6 @@ package org.jax.diachromatic.allelespec;
 
 
 import org.junit.Ignore;
-import org.junit.Test;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;

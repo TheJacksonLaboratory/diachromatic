@@ -1,18 +1,5 @@
 package org.jax.diachromatic.align;
 
-import com.google.common.collect.ImmutableMap;
-import htsjdk.samtools.SAMRecord;
-import org.jax.diachromatic.exception.DiachromaticException;
-import org.junit.Test;
-import org.mockito.Mockito;
-
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
-
 /**
  * Disactivating this test because we can no longer use Mockito with reflection to
  * package protected class (SAMRecord).
