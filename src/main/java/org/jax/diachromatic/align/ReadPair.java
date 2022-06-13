@@ -63,7 +63,7 @@ public class ReadPair {
      * Upper threshold for the size of self-ligating fragments.
      * <p>
      * For outward pointing read pairs, the calculated size of the chimeric fragment d' is added to d in order to infer
-     * the size of the corresponding self-ligated fragment d''. If d'' is smaller than the this threshold, the read pair
+     * the size of the corresponding self-ligated fragment d''. If d'' is smaller than this threshold, the read pair
      * will be categorized as self-ligated.
      */
     private static int UPPER_SIZE_SELF_LIGATION_THRESHOLD = 2500;
@@ -71,7 +71,7 @@ public class ReadPair {
     /**
      * Length threshold in nucleotides for the end of a read being near to a restriction fragment/ligation sequence.
      */
-    private static int DANGLING_THRESHOLD = 7;
+    private final static int DANGLING_THRESHOLD = 7;
 
     /**
      * Tag to use to mark invalid reads to summarize to BAM file.
@@ -133,7 +133,7 @@ public class ReadPair {
     /**
      * @return True, if both reads of the pair can be uniquely mapped.
      */
-    boolean isPaired() {
+    public boolean isPaired() {
         return this.isPaired;
     }
 

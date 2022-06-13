@@ -39,6 +39,15 @@ public class DigestPair {
         }
     }
 
+    /**
+     * @return true iff both digests in this digest pair are the same (artefact)
+     */
+    public boolean isSameDigest() {
+        return this.forwardDigest.getChromosome().equals(this.reverseDigest.getChromosome()) &&
+                this.forwardDigest.getDigestStartPosition() == this.reverseDigest.getDigestStartPosition() &&
+                this.forwardDigest.getDigestEndPosition() == this.reverseDigest.getDigestEndPosition();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o==null) return false;

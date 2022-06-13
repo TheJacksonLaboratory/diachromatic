@@ -4,6 +4,7 @@ package org.jax.diachromatic.command;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import org.jax.diachromatic.align.DigestMap;
+import org.jax.diachromatic.count.BadReadsCounter;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,12 +44,14 @@ public class BadReadsCommand extends Command implements Callable<Integer> {
 
         makeOutdirectoryIfNeeded();
 
-        logger.trace(String.format("About to read digests from %s",digestFile));
+        logger.trace(String.format("About to read rejected read pairs file from %s", rejectedPairsBamFile));
         DigestMap digestMap = new DigestMap(digestFile);
         String outputDirAndFilePrefix=String.format("%s%s%s", outputDir, File.separator,filenamePrefix);
         SamReader reader = SamReaderFactory.makeDefault().open(new File(rejectedPairsBamFile));
+        BadReadsCounter counter = new BadReadsCounter(reader, digestMap, outputDirAndFilePrefix);
+        counter.countInteractions();
 
-    // todo -- BAM tags., e.g. 	YY:Z:UL
+        // todo -- BAM tags., e.g. 	YY:Z:UL
         // https://diachromatic.readthedocs.io/en/latest/mapping.html
         // Un-ligated due to size (Tag: UL) ZAEHLT, die anderen nicht
         // Too short chimeric (Tag: TS) -- nachlesen, wohl ja
