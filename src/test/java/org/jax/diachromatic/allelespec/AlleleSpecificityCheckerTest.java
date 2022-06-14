@@ -2,12 +2,13 @@ package org.jax.diachromatic.allelespec;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
 
 import java.io.FileNotFoundException;
 import java.net.URL;
 
 import static org.junit.Assert.assertEquals;
-
+@Disabled("Only used to output text during development.")
 public class AlleleSpecificityCheckerTest{
     // Path to BAM file created with help of {@link MakeFilesForTest}.
     private static String bamPath;

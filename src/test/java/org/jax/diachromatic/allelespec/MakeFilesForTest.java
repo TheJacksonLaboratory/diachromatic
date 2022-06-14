@@ -3,6 +3,8 @@ package org.jax.diachromatic.allelespec;
 
 import org.junit.Ignore;
 
+import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -60,7 +62,7 @@ import static junit.framework.TestCase.assertTrue;
  * $ samtools tview sample.sorted.bam genome.small.fa
  *
  */
-@Ignore
+@Disabled("Used to generate files for testing")
 public class MakeFilesForTest {
 
     private final static int READLEN = 20;
