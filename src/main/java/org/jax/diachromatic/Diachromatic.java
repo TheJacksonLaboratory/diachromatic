@@ -3,10 +3,7 @@ package org.jax.diachromatic;
 
 
 
-import org.jax.diachromatic.command.AlignCommand;
-import org.jax.diachromatic.command.CountCommand;
-import org.jax.diachromatic.command.SummarizeCommand;
-import org.jax.diachromatic.command.TruncateCommand;
+import org.jax.diachromatic.command.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
@@ -23,7 +20,7 @@ import java.util.concurrent.Callable;
  * @version 0.0.1 (2017-11-15)
  */
 @CommandLine.Command(name = "diachromatic", mixinStandardHelpOptions = true, version = "0.2.9",
-        description = "Structural variant annotation")
+        description = "Hi-C and Capture Hi-C analysis")
 public class Diachromatic implements Callable<Integer>  {
     private static final Logger logger = LoggerFactory.getLogger(Diachromatic.class);
 
@@ -35,6 +32,7 @@ public class Diachromatic implements Callable<Integer>  {
         long startTime = System.currentTimeMillis();
         CommandLine cline = new CommandLine(new Diachromatic())
                 .addSubcommand("align", new AlignCommand())
+                .addSubcommand("bad", new BadReadsCommand())
                 .addSubcommand("count", new CountCommand())
                 .addSubcommand("truncate", new TruncateCommand())
                 .addSubcommand("summarize", new SummarizeCommand());

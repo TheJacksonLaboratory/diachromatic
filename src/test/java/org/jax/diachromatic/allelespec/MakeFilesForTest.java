@@ -1,10 +1,6 @@
 package org.jax.diachromatic.allelespec;
 
-
-import org.junit.Ignore;
-import org.junit.Test;
 import org.junit.jupiter.api.Disabled;
-
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -91,6 +87,7 @@ public class MakeFilesForTest {
         }
         return new String(chars);
     }
+
 
     public void createGenomeFile() {
         long seed = 42L;

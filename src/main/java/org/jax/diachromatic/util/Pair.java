@@ -17,9 +17,11 @@ public class Pair<X,Y> {
     @Override
     public boolean equals(Object o) {
         if (o==null) return false;
-        if (!Pair.class.isAssignableFrom(o.getClass())) {
+//        if (!Pair.class.isAssignableFrom(o.getClass())) {
+//            return false;
+//        }
+        if (! (o instanceof Pair))
             return false;
-        }
         Pair other = (Pair)o;
         return first.equals(other.first) && second.equals(other.second);
     }
