@@ -1,15 +1,15 @@
 package org.jax.diachromatic.align;
 
 import htsjdk.samtools.util.Log;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
 public class DeDupMap {
-    private static final Logger logger = LogManager.getLogger();
+    private static final Logger logger = LoggerFactory.getLogger(DeDupMap.class);
     private static final htsjdk.samtools.util.Log log = Log.getInstance(Aligner.class);
 
     /**
@@ -42,7 +42,7 @@ public class DeDupMap {
     private HashMap<String, Set<ReadPairCoordinates>> dedupmap2;
 
     DeDupMap(boolean useRelativeOrientation) {
-        dedupmap2 = new  HashMap<String, Set<ReadPairCoordinates>>();
+        dedupmap2 = new  HashMap<>();
         query_num = 0;
         insertion_num = 0;
         first_coord_num = 0;
@@ -94,7 +94,7 @@ public class DeDupMap {
           * (reference names and 5' end positions) but different relative orientation are not regarded as
           * duplicated.
           */
-         Integer readPairOrientation = 0;
+         int readPairOrientation = 0;
         if(useRelativeOrientation) {
             if (readPair.getRelativeOrientationTag().equals("F1R2") || readPair.getRelativeOrientationTag().equals("F2R1")) {
                 readPairOrientation = 1;

@@ -2,14 +2,15 @@ package org.jax.diachromatic.truncation;
 
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
 
 import java.io.File;
-import java.io.IOException;
 
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.util.Pair;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -17,7 +18,7 @@ import org.jax.diachromatic.util.Pair;
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
  */
 public class FastqPairParser {
-    private static final Logger logger = LogManager.getLogger();
+    private static final Logger logger = LoggerFactory.getLogger(FastqPairParser.class);
     /**
      * First read of paired end sequencing experiment.
      */
@@ -55,17 +56,11 @@ public class FastqPairParser {
         fastqFile1 = file1;
         fastqFile2 = file2;
         logger.trace(String.format("Processing FASTQ files %s and %s with ligation sequence %s", file1, file2, ligationSequence));
-        try {
-            setUpIterator(ligationSequence);
-        } catch (IOException e) {
-            String msg=String.format("I/O error setting up Fastq readers for %s and %s: %s",file1,file2,e.getMessage() );
-            e.printStackTrace();
-            throw new DiachromaticException(msg);
-        }
+        setUpIterator(ligationSequence);
     }
 
 
-    private void setUpIterator(String ligSeq) throws IOException {
+    private void setUpIterator(String ligSeq) {
         fastQreader1 = new FastqReader(new File(fastqFile1));
         fastQreader2 = new FastqReader(new File(fastqFile2));
         this.ligationSequence = ligSeq;

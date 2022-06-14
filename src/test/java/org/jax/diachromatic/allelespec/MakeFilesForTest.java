@@ -1,8 +1,6 @@
 package org.jax.diachromatic.allelespec;
 
-
-import org.junit.Test;
-
+import org.junit.jupiter.api.Disabled;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -60,6 +58,7 @@ import static junit.framework.TestCase.assertTrue;
  * $ samtools tview sample.sorted.bam genome.small.fa
  *
  */
+@Disabled("Used to generate files for testing")
 public class MakeFilesForTest {
 
     private final static int READLEN = 20;
@@ -86,12 +85,10 @@ public class MakeFilesForTest {
             char c = makeRandomNT(random.nextDouble());
             chars[i] = c;
         }
-        String seq = new String(chars);
-        return seq;
+        return new String(chars);
     }
 
 
-    @Test
     public void createGenomeFile() {
         long seed = 42L;
         Random rand = new Random(seed);

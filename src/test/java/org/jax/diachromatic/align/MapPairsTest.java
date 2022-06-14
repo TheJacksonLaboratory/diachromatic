@@ -4,6 +4,7 @@ import org.jax.diachromatic.exception.DiachromaticException;
 import org.jax.diachromatic.util.Pair;
 import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 
 
 import java.util.ArrayList;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 
-@Ignore("Broken because of new digest map.")
+@Disabled("Broken because of new digest map.")
 public class MapPairsTest {
 
     private static int digestcounter=0;

@@ -1,7 +1,5 @@
 package org.jax.diachromatic.align;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.exception.DiachromaticException;
 
 /**
@@ -11,7 +9,7 @@ import org.jax.diachromatic.exception.DiachromaticException;
  * @version 0.1.3 (2018-01-07)
  */
 public class Digest {
-    private static final Logger logger = LogManager.getLogger();
+
     private final String chromosome;
 
     private final int digestStartPosition;
@@ -198,16 +196,11 @@ public class Digest {
         return result;
     }
 
-
-    /**
-     * TODO -- MAYBE ADD OTHER VARIABLES?
-     * @return
-     */
     @Override
     public String toString() {
-        String activeTag = "I";
+        String activeTag = "N";
         if(active) {
-            activeTag = "A";
+            activeTag = "E";
         }
         return String.format("%s\t%d\t%d\t%s",
                 chromosome,

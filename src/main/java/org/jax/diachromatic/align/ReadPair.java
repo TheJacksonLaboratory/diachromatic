@@ -1,9 +1,9 @@
 package org.jax.diachromatic.align;
 
 import htsjdk.samtools.SAMRecord;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jax.diachromatic.exception.DiachromaticException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -38,13 +38,13 @@ import java.util.concurrent.ThreadLocalRandom;
  * @version 0.1.3 (2018-01-06)
  */
 public class ReadPair {
-    private static final Logger logger = LogManager.getLogger();
+    private static final Logger logger = LoggerFactory.getLogger(ReadPair.class);
 
     /**
      * First (forward) and second (reverse) read in a read pair.
      */
-    private SAMRecord R1 = null;
-    private SAMRecord R2 = null;
+    private final SAMRecord R1;
+    private final SAMRecord R2;
 
     /**
      * These two thresholds define the range of fragment sizes that are considered to be consistent with the chosen
@@ -63,7 +63,7 @@ public class ReadPair {
      * Upper threshold for the size of self-ligating fragments.
      * <p>
      * For outward pointing read pairs, the calculated size of the chimeric fragment d' is added to d in order to infer
-     * the size of the corresponding self-ligated fragment d''. If d'' is smaller than the this threshold, the read pair
+     * the size of the corresponding self-ligated fragment d''. If d'' is smaller than this threshold, the read pair
      * will be categorized as self-ligated.
      */
     private static int UPPER_SIZE_SELF_LIGATION_THRESHOLD = 2500;
@@ -71,7 +71,7 @@ public class ReadPair {
     /**
      * Length threshold in nucleotides for the end of a read being near to a restriction fragment/ligation sequence.
      */
-    private static int DANGLING_THRESHOLD = 7;
+    private final static int DANGLING_THRESHOLD = 7;
 
     /**
      * Tag to use to mark invalid reads to summarize to BAM file.
@@ -133,7 +133,7 @@ public class ReadPair {
     /**
      * @return True, if both reads of the pair can be uniquely mapped.
      */
-    boolean isPaired() {
+    public boolean isPaired() {
         return this.isPaired;
     }
 
@@ -142,7 +142,7 @@ public class ReadPair {
      * an in silico digest. A {@link DigestPair} consists of two {@link Digest} objects, one for each read. Note that
      * if both reads were mapped to the same fragment, the {@link Digest} objects are identical to each other.
      */
-    private DigestPair digestPair = null;
+    private final DigestPair digestPair;
 
     /**
      * A read pair belongs to one of the following categories: UL, SL, TS, TL or VP.
@@ -162,7 +162,7 @@ public class ReadPair {
         STRANGE_INTERNAL("SI"),
         VALID_TOO_LONG("TL");
 
-        private String tag;
+        private final String tag;
 
         ReadPairCategory(String readPairTypeTag) {
             this.tag = readPairTypeTag;
@@ -177,7 +177,7 @@ public class ReadPair {
         this.categoryTag = categoryTag;
     }
 
-    String getCategoryTag() {
+    public String getCategoryTag() {
         return this.categoryTag;
     }
 
@@ -209,9 +209,8 @@ public class ReadPair {
      * @param r               SAMRecord for R2.
      * @param digestMap       structure containing all digests.
      * @param stringentUnique If true, more  stringent definition of uniquely mapped is used.
-     * @throws DiachromaticException
      */
-    ReadPair(SAMRecord f, SAMRecord r, DigestMap digestMap, boolean stringentUnique) throws DiachromaticException {
+    ReadPair(SAMRecord f, SAMRecord r, DigestMap digestMap, boolean stringentUnique) {
 
         R1 = f;
         R2 = r;
@@ -420,8 +419,6 @@ public class ReadPair {
         } else {
             d2 = getFivePrimeEndPosOfRead(R2) - digestPair.reverse().getDigestStartPosition() + 1;
         }
-        //logger.trace("d1: " + d1);
-        //logger.trace("d2: " + d2);
         return d1 + d2;
     }
 
@@ -499,7 +496,7 @@ public class ReadPair {
      */
     public String setRelativeOrientationTag() {
 
-        String tag = "NA";
+        String tag;
 
         if (R1.getReadNegativeStrandFlag() == R2.getReadNegativeStrandFlag()) {
             // both reads align to the same strand
@@ -582,17 +579,14 @@ public class ReadPair {
      *
      * @throws DiachromaticException
      */
-    private void categorizeReadPair() throws DiachromaticException {
+    private void categorizeReadPair() {
 
-        boolean sameInternal=false;
-        if(this.digestPair.forward()==this.digestPair.reverse()) {
-            sameInternal = true;
-        }
+        boolean sameInternal= this.digestPair.forward() == this.digestPair.reverse();
 
         if (!this.isTrans() && (this.isInwardFacing() || this.isOutwardFacing())) {
             // inward and outward pointing read pairs on the same chromosome may arise from self- or un-ligated fragments
             if (this.isOutwardFacing()) {
-                if (this.getSelfLigationFragmentSize() < this.UPPER_SIZE_SELF_LIGATION_THRESHOLD || sameInternal) {
+                if (this.getSelfLigationFragmentSize() < UPPER_SIZE_SELF_LIGATION_THRESHOLD || sameInternal) {
                     if(!sameInternal) {
                         setCategoryTag(ReadPairCategory.SELF_LIGATED.getTag());
                     } else {
@@ -609,7 +603,7 @@ public class ReadPair {
                 }
             } else {
                 // pair is inward facing
-                if (this.getDistanceBetweenFivePrimeEnds() < this.UPPER_SIZE_THRESHOLD || sameInternal) {
+                if (this.getDistanceBetweenFivePrimeEnds() < UPPER_SIZE_THRESHOLD || sameInternal) {
                         if(!sameInternal) {
                             setCategoryTag(ReadPairCategory.UN_LIGATED.getTag());
                         } else {
@@ -698,9 +692,7 @@ public class ReadPair {
     }
 
     /**
-     * // Shuffle read pair orientation for study about significance of directed interactions
-     *
-     * @return Random orientation tag.
+     *  Shuffle read pair orientation for study about significance of directed interactions
      */
     public void setRandomRelativeOrientationTag() {
         int index = ThreadLocalRandom.current().nextInt(8);

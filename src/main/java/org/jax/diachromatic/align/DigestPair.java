@@ -39,6 +39,15 @@ public class DigestPair {
         }
     }
 
+    /**
+     * @return true iff both digests in this digest pair are the same (artefact)
+     */
+    public boolean isSameDigest() {
+        return this.forwardDigest.getChromosome().equals(this.reverseDigest.getChromosome()) &&
+                this.forwardDigest.getDigestStartPosition() == this.reverseDigest.getDigestStartPosition() &&
+                this.forwardDigest.getDigestEndPosition() == this.reverseDigest.getDigestEndPosition();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o==null) return false;
@@ -56,7 +65,7 @@ public class DigestPair {
     public int hashCode() {
         int result=hashCode;
         if (result==0) {
-            if(forwardDigest.getDigestStartPosition()<reverseDigest.getDigestStartPosition()) {
+            if (forwardDigest.getDigestStartPosition() < reverseDigest.getDigestStartPosition()) {
                 result = forwardDigest.hashCode();
                 result = 31 * result + reverseDigest.hashCode();
                 hashCode = result;
@@ -69,14 +78,30 @@ public class DigestPair {
         return result;
     }
 
+    public Digest get5digest() {
+        if(forwardDigest.getDigestStartPosition()<reverseDigest.getDigestStartPosition()) {
+            return forwardDigest;
+        } else {
+            return reverseDigest;
+        }
+    }
+
+    public Digest get3digest() {
+        if(forwardDigest.getDigestStartPosition()<reverseDigest.getDigestStartPosition()) {
+            return reverseDigest;
+        } else {
+            return forwardDigest;
+        }
+    }
+
 
     @Override
     public String toString() {
         // fragment with the smaller starting position comes always first
         if(forwardDigest.getDigestStartPosition()<reverseDigest.getDigestStartPosition()) {
-            return forwardDigest.toString() + "\t" + reverseDigest.toString();
+            return forwardDigest + "\t" + reverseDigest;
         } else {
-            return reverseDigest.toString() + "\t" + forwardDigest.toString();
+            return reverseDigest + "\t" + forwardDigest;
         }
     }
 }

@@ -1,7 +1,9 @@
 package org.jax.diachromatic.digest;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.jax.diachromatic.exception.DiachromaticRuntimeException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -14,7 +16,7 @@ import java.util.List;
  * @version 0.2.4 (2017-11-25)
  */
 public class RestrictionEnzyme implements Serializable {
-    private static final Logger logger = LogManager.getLogger();
+    private static final Logger logger = LoggerFactory.getLogger(RestrictionEnzyme.class);
     /** serialization version ID */
     static final long serialVersionUID = 2L;
     /** A name of a restriction enzyme, something like HindIII */
@@ -43,7 +45,7 @@ public class RestrictionEnzyme implements Serializable {
     /** The offset of the cutting site in this restriction enzyme. For instancen the offset for ^GATC is 0 and the
      * offset for A^AGCTT is 1.
      */
-    private Integer offset=null;
+    private Integer offset;
 
     public RestrictionEnzyme(String n, String s) {
         name = n;
@@ -60,9 +62,9 @@ public class RestrictionEnzyme implements Serializable {
         }
         int center = plainSite.length() / 2;
         if (offset <= center) {
-            this.danglingEndSeq = plainSite.substring(offset, plainSite.length());
+            this.danglingEndSeq = plainSite.substring(offset);
         } else {
-            this.danglingEndSeq = plainSite.substring(plainSite.length() - offset, plainSite.length());
+            this.danglingEndSeq = plainSite.substring(plainSite.length() - offset);
         }
     }
 
@@ -91,8 +93,7 @@ public class RestrictionEnzyme implements Serializable {
         List<RestrictionEnzyme> reList = new ArrayList<>();
         ClassLoader classLoader = RestrictionEnzyme.class.getClassLoader();
         InputStream is = classLoader.getResourceAsStream("data/enzymelist.tab");
-        try {
-            BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(is))){
             String line;
             while ((line=br.readLine())!=null) {
                 if (line.startsWith("#"))
@@ -105,11 +106,9 @@ public class RestrictionEnzyme implements Serializable {
                 RestrictionEnzyme re = new RestrictionEnzyme(A[0].trim(),A[1].trim());
                 reList.add(re);
             }
-            br.close();
         } catch (IOException e) {
-            logger.fatal("Could not read restriction enzymes from stream");
-            logger.fatal(e);
-            System.exit(1);
+            logger.error("Could not read restriction enzymes from stream: {}", e.getLocalizedMessage());
+            throw new DiachromaticRuntimeException("Could not read restriction enzymes from stream");
         }
         logger.trace(String.format("Got %d enzyme definitions.", reList.size()));
         return reList;
