@@ -177,7 +177,7 @@ public class ReadPair {
         this.categoryTag = categoryTag;
     }
 
-    String getCategoryTag() {
+    public String getCategoryTag() {
         return this.categoryTag;
     }
 
@@ -209,9 +209,8 @@ public class ReadPair {
      * @param r               SAMRecord for R2.
      * @param digestMap       structure containing all digests.
      * @param stringentUnique If true, more  stringent definition of uniquely mapped is used.
-     * @throws DiachromaticException
      */
-    ReadPair(SAMRecord f, SAMRecord r, DigestMap digestMap, boolean stringentUnique) throws DiachromaticException {
+    ReadPair(SAMRecord f, SAMRecord r, DigestMap digestMap, boolean stringentUnique) {
 
         R1 = f;
         R2 = r;
@@ -420,8 +419,6 @@ public class ReadPair {
         } else {
             d2 = getFivePrimeEndPosOfRead(R2) - digestPair.reverse().getDigestStartPosition() + 1;
         }
-        //logger.trace("d1: " + d1);
-        //logger.trace("d2: " + d2);
         return d1 + d2;
     }
 

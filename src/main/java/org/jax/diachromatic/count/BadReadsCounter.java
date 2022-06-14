@@ -8,27 +8,13 @@ import org.jax.diachromatic.align.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
-import java.util.Arrays;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 /**
- * This class is intended for counting read pairs for piars of restriction fragments and for counting reads at
- * interacting fragments. This is currently done in class Align, but should be moved to this class for better
- * clarity.
- *
- * The input for the constructor will be a BAM file containing the valid read pairs as well as a prefix
- * for summarize file (including the path).
- *
- * The summarize will consist of three files:
- *
- * <li>prefix.interacting.fragments.counts.table.tsv</li>
- * <li>prefix.interaction.counts.table.tsv</li>
- * <li>prefix.interaction.stats.txt</li>
+ *  // https://diachromatic.readthedocs.io/en/latest/mapping.html
  *
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
  * @author <a href="mailto:peter.hansen@charite.de">Peter Hansen</a>
@@ -37,24 +23,16 @@ import java.util.Map;
  */
 public class BadReadsCounter {
     private static final Logger logger = LoggerFactory.getLogger(Counter.class);
-    private static final htsjdk.samtools.util.Log log = Log.getInstance(Aligner.class);
 
     /**
      * HashMap that stores interaction counts. Key: reference of digest pair; Value: SimpleTwistedCount objects.
      */
-    private Map<DigestPair,BadReadCount> dp2countsMap;
+    private final Map<DigestPair,BadReadCount> dp2countsMap;
 
     /**
      * Stores interaction counts.
      */
     private final DigestMap digestMap;
-
-    /**
-     * Paths for summarize files.
-     */
-    private String outputTsvInteractionCounts;
-    private String outputTxtStats;
-
     /**
      * A reader for the unique valid read pairs.
      */
@@ -74,44 +52,36 @@ public class BadReadsCounter {
 
     private int n_same_digest = 0;
 
-
-    /**
-     * Total number of interactions
-     */
-    private int interaction_count = 0;
-
+    private final Map<Digest, BadReadCount> badReadCountMap;
 
 
     /**
-     * Total number of active interacting fragments
+     Un-ligated due to size (Tag: UL)
+     Un-ligated due to same digest (Tag: ULSI)
+     Self-ligated due to size (Tag: SL)
+     Self-ligated due to same digest (Tag: SLSI)
+     Too short chimeric (Tag: TS)
+     Too long chimeric (Tag: TL)
+     Valid pair (Tag: VP)
      */
-    private int active_interacting_fragment_count = 0;
-
-    /**
-     * Largest number of read pairs for given digest pairs.
-     */
-    private static int MAX_K = 20000;
-
-    /**
-     * Largest number of read pairs for given digest pairs.
-     */
-    private static int LONG_RANGE_THRESHOLD = 10000;
-
-    /**
-     * Array for counting interactions with k read pairs. The index corresponds to k, e.g. array[2]
-     * contains the number of interactions with 2 read pairs.
-     */
-    private int[] kInteractionCounts =  new int[MAX_K+1];
-
-    boolean split = false;
+    private final Map<String, Integer> readPairCategoryCounts;
 
 
-    public BadReadsCounter(SamReader samReader, DigestMap digestMap,  String outputDirAndFilePrefix) {
+
+    public BadReadsCounter(SamReader samReader, DigestMap digestMap) {
         this.reader = samReader;
         this.digestMap = digestMap;
         this.it = reader.iterator();
-        createOutputNames(outputDirAndFilePrefix);
         this.dp2countsMap = new HashMap<>();
+        readPairCategoryCounts = new HashMap<>();
+        readPairCategoryCounts.put("UL", 0);
+        readPairCategoryCounts.put("ULSI", 0);
+        readPairCategoryCounts.put("SI", 0);
+        readPairCategoryCounts.put("SLSI", 0);
+        readPairCategoryCounts.put("TS", 0);
+        readPairCategoryCounts.put("TL", 0);
+        readPairCategoryCounts.put("VP", 0);
+        badReadCountMap = new HashMap<>();
     }
 
     public void countInteractions() {
@@ -130,104 +100,63 @@ public class BadReadsCounter {
                 continue;
             }
             DigestPair dp = readPair.getDigestPair();
+
+            // String categoryTag = readPair.getCategoryTag();
+            // is seemingly always NA
+            String read1yy = record1.hasAttribute("YY") ? record1.getAttribute("YY").toString() : "NA";
+            String read2yy = record2.hasAttribute("YY") ? record2.getAttribute("YY").toString() : "NA";
+            if (! read1yy.equals(read2yy)) {
+                System.out.println(read1yy + " - " + read2yy);
+            } else {
+                readPairCategoryCounts.merge(read1yy, 1, Integer::sum);
+            }
             if (dp.isSameDigest()) {
                 n_same_digest++;
                 continue;
             }
-            //record1.get
-            //record1.get
-            incrementDigestPair(dp, readPair);
-
-            if (interaction_count % 10000000 == 0) {
-                logger.trace("Number of Interactions: " + interaction_count);
+            if (read1yy.equals("TS") || read1yy.equals("UL")) {
+                // get too-short (TS) or un-ligated (UL) pairs only
+                Digest d5 = dp.get5digest();
+                Digest d3 = dp.get3digest();
+                this.badReadCountMap.putIfAbsent(d5, new BadReadCount());
+                this.badReadCountMap.putIfAbsent(d3, new BadReadCount());
+                if (read1yy.equals("TS")) {
+                    this.badReadCountMap.get(d5).incrementTs3();
+                    this.badReadCountMap.get(d3).incrementTs5();
+                } else {
+                    this.badReadCountMap.get(d5).incrementUl3();
+                    this.badReadCountMap.get(d3).incrementUl5();
+                }
             }
 
 
-            n_pairs_total++;
-        }
-    }
-
-    public void incrementDigestPair(DigestPair dp, ReadPair rp) {
-
-        if (!dp2countsMap.containsKey(dp)) {
-            // this is the first read pair for this pair of digests
-            interaction_count++;
-
-           // dp2countsMap.put(dp, new SimpleTwistedCount());
-        }
-
-    }
-
-
-    public int getInteractionCount(){
-        return interaction_count;
-    }
-
-    /**
-     * Print statistics to 'prefix.interaction.stats.txt'.
-     */
-    public void printStatistics() throws FileNotFoundException {
-
-        // create file for summarize
-        PrintStream printStream = new PrintStream(new FileOutputStream(outputTxtStats));
-
-        printStream.print("#Count statistics\n");
-        printStream.print("==================\n\n");
-        printStream.print("total_read_pairs_ processed:" + n_pairs_total + "\n");
-        //  Counts of read pair orientations
-
-        // Summary statistics about interactions between active (most typically enriched) and inactive fragments
-        printStream.print("total_interaction_count:" + interaction_count + "\n");
-           printStream.print("");
-        printStream.print("selected_interacting_fragments:" + active_interacting_fragment_count + "\n");
-        // Quality metrics for experimental trouble shooting:
-       // printStream.print("target_enrichment_coefficient:" + String.format("%.2f%%", 100*this.getTargetEnrichmentCoefficient()) + "\n");
-//        double fsi = 100.0*n_singleton_interactions/interaction_count;
-//        printStream.print("fraction_singleton_interactions:" + String.format("%.2f%%", fsi) + "\n");
-          printStream.print("\n");
-        printStream.print("self_ligated_fragment_size_count_array:");
-        for(int i=0; i<MAX_K; i++) {
-            if (i < MAX_K - 1) {
-                printStream.print(kInteractionCounts[i] + ", ");
-
-            } else {
-                printStream.print(kInteractionCounts[i]);
-
+            if (n_pairs_total % 10000000 == 0) {
+                logger.trace("Number of read pairs: " + n_pairs_total);
+                System.out.printf("Number of read pairs: %d\n", n_pairs_total);
+                for (var e : readPairCategoryCounts.entrySet()) {
+                    System.out.printf("%s: %d\n", e.getKey(), e.getValue());
+                }
             }
         }
-        printStream.print("\n");
-    }
-
-    private void createOutputNames(String outputPathPrefix) {
-//        outputTsvInteractingFragmentCounts = String.format("%s.%s", outputPathPrefix, "interacting.fragments.counts.table.tsv");
-//        outputTsvInteractionCounts = String.format("%s.%s", outputPathPrefix, "interaction.counts.table.tsv");
-//        outputWashUSimpleInteractionCounts = String.format("%s.%s", outputPathPrefix, "interaction.counts.washU.simple.tsv");
-//        outputTxtStats = String.format("%s.%s", outputPathPrefix, "count.stats.txt");
     }
 
 
-    /**
-     * Prints digest pairs with associated read pair counts to a tab separated file.
-     *
-     * @throws FileNotFoundException  if the file output stream cannot be open for the TSV file of interaction counts
-     */
-    public void printInteractionCountsMapAsCountTable() throws FileNotFoundException {
-
-        // init array for k-interaction counting
-        Arrays.fill(kInteractionCounts, 0);
-
-        // create file for summarize
-        PrintStream printStream = new PrintStream(new FileOutputStream(outputTsvInteractionCounts));
-
-
-
+    public void writeToFile(String outputName) {
+        logger.info("Writing results to {}", outputName);
+        System.out.printf("Writing results to %s\n", outputName);
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputName))) {
+            String [] headerfields = {"Digest", "5'UL", "5'TS", "3'UL", "#'TS"};
+            bw.write(String.join("\t", headerfields) + "\n");
+            for (var e : this.badReadCountMap.entrySet()) {
+                String digest = e.getKey().toString();
+                BadReadCount brc = e.getValue();
+                String l = String.format("%s\t%d\t%d\t%d\t%d\n",
+                        digest, brc.ul5count, brc.ts5count, brc.ul3count, brc.ts3count);
+                bw.write(l );
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
-
-
-
-
-
-
-
 }
 

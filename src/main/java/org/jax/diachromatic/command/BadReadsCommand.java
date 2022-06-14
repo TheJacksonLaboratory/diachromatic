@@ -34,6 +34,9 @@ public class BadReadsCommand extends Command implements Callable<Integer> {
     @CommandLine.Option(names={"-d","--digest-file"}, required = true, description = "Path to GOPHER digest file.", order = 4)
     private String digestFile;
 
+
+
+
     @Override
     public Integer call() throws DiachromaticException {
        // input BAM file with HTS-JDK
@@ -46,13 +49,15 @@ public class BadReadsCommand extends Command implements Callable<Integer> {
 
         logger.trace(String.format("About to read rejected read pairs file from %s", rejectedPairsBamFile));
         DigestMap digestMap = new DigestMap(digestFile);
-        String outputDirAndFilePrefix=String.format("%s%s%s", outputDir, File.separator,filenamePrefix);
+        String outputName=String.format("%s%s%s.tsv", outputDir, File.separator,filenamePrefix);
         SamReader reader = SamReaderFactory.makeDefault().open(new File(rejectedPairsBamFile));
-        BadReadsCounter counter = new BadReadsCounter(reader, digestMap, outputDirAndFilePrefix);
+        BadReadsCounter counter = new BadReadsCounter(reader, digestMap);
         counter.countInteractions();
 
+        counter.writeToFile(outputName);
+
         // todo -- BAM tags., e.g. 	YY:Z:UL
-        // https://diachromatic.readthedocs.io/en/latest/mapping.html
+
         // Un-ligated due to size (Tag: UL) ZAEHLT, die anderen nicht
         // Too short chimeric (Tag: TS) -- nachlesen, wohl ja
 

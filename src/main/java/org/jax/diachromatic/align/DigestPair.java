@@ -65,7 +65,7 @@ public class DigestPair {
     public int hashCode() {
         int result=hashCode;
         if (result==0) {
-            if(forwardDigest.getDigestStartPosition()<reverseDigest.getDigestStartPosition()) {
+            if (forwardDigest.getDigestStartPosition() < reverseDigest.getDigestStartPosition()) {
                 result = forwardDigest.hashCode();
                 result = 31 * result + reverseDigest.hashCode();
                 hashCode = result;
@@ -76,6 +76,22 @@ public class DigestPair {
             }
         }
         return result;
+    }
+
+    public Digest get5digest() {
+        if(forwardDigest.getDigestStartPosition()<reverseDigest.getDigestStartPosition()) {
+            return forwardDigest;
+        } else {
+            return reverseDigest;
+        }
+    }
+
+    public Digest get3digest() {
+        if(forwardDigest.getDigestStartPosition()<reverseDigest.getDigestStartPosition()) {
+            return reverseDigest;
+        } else {
+            return forwardDigest;
+        }
     }
 
 
