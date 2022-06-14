@@ -4,6 +4,7 @@ package org.jax.diachromatic.align;
  * Disactivating this test because we can no longer use Mockito with reflection to
  * package protected class (SAMRecord).
  */
+@Disabled("Cannot run Mockito with final class from HTSJDK")
 public class ReadPairTest {
 /*
 
