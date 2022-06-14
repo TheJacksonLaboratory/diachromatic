@@ -27,3 +27,4 @@ hs_err_pid*
 /sample1.fq
 /sample2.fq
 /dependency-reduced-pom.xml
+/test/TEST.tsv

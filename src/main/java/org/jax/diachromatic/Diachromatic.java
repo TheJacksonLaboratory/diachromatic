@@ -20,7 +20,7 @@ import java.util.concurrent.Callable;
  * @version 0.0.1 (2017-11-15)
  */
 @CommandLine.Command(name = "diachromatic", mixinStandardHelpOptions = true, version = "0.2.9",
-        description = "Structural variant annotation")
+        description = "Hi-C and Capture Hi-C analysis")
 public class Diachromatic implements Callable<Integer>  {
     private static final Logger logger = LoggerFactory.getLogger(Diachromatic.class);
 
