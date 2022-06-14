@@ -1,5 +1,6 @@
 package org.jax.diachromatic.align;
 
+import org.junit.jupiter.api.Disabled;
 /**
  * Disactivating this test because we can no longer use Mockito with reflection to
  * package protected class (SAMRecord).

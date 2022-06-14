@@ -1,9 +1,5 @@
 package org.jax.diachromatic.allelespec;
 
-
-import org.junit.Ignore;
-
-import org.junit.Test;
 import org.junit.jupiter.api.Disabled;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
