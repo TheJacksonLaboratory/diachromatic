@@ -31,10 +31,9 @@ public class Diachromatic implements Callable<Integer>  {
         }
         long startTime = System.currentTimeMillis();
         CommandLine cline = new CommandLine(new Diachromatic())
-                .addSubcommand("align", new AlignCommand())
-                .addSubcommand("bad", new BadReadsCommand())
-                .addSubcommand("count", new CountCommand())
                 .addSubcommand("truncate", new TruncateCommand())
+                .addSubcommand("align", new AlignCommand())
+                .addSubcommand("count", new CountCommand())
                 .addSubcommand("summarize", new SummarizeCommand());
         cline.setToggleBooleanFlags(false);
         int exitCode = cline.execute(args);

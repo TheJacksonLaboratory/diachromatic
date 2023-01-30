@@ -1,7 +1,6 @@
 package org.jax.diachromatic.align;
 
 
-import com.google.common.collect.ImmutableMap;
 import org.jax.diachromatic.exception.DiachromaticException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +57,6 @@ public class DigestMap {
         }
         try ( BufferedReader br = new BufferedReader(new FileReader(digestFilePath))){
             Map<String, Chromosome2DigestArray> prelimMap = new HashMap<>();
-            ImmutableMap.Builder<String, Chromosome2DigestArray> builder = new ImmutableMap.Builder<>();
             String line;
             while ((line=br.readLine())!=null) {
                 if (line.startsWith("Chromosome")) continue; // the header line
@@ -86,19 +84,18 @@ public class DigestMap {
             if (prelimMap.containsKey("chrMT") && ! prelimMap.containsKey("chrM")) {
                 prelimMap.put("chrM", prelimMap.get("chrMT"));
             }
-            builder.putAll(prelimMap);
             // In some cases, our data uses "chr5" and in others we see just "5".
             // The following adds some additional references to mitigate this issue
             for (Map.Entry<String, Chromosome2DigestArray> e : prelimMap.entrySet()) {
                 if (e.getKey().startsWith("chr")) {
                     String newKey = e.getKey().substring(3);
-                    builder.put(newKey, e.getValue());
+                    prelimMap.put(newKey, e.getValue());
                 } else {
                     String newKey = "chr" + e.getKey();
-                    builder.put(newKey, e.getValue());
+                    prelimMap.put(newKey, e.getValue());
                 }
             }
-            this.digestMap = builder.build();
+            this.digestMap = Map.copyOf(prelimMap); // make immutable
         } catch (IOException e){
             throw new DiachromaticException(String.format("Could not parse %s: %s",digestFilePath,e.getMessage()));
         }
