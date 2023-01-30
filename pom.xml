@@ -5,7 +5,7 @@
 
     <groupId>org.jax</groupId>
     <artifactId>diachromatic</artifactId>
-    <version>0.7.1</version>
+    <version>0.7.2</version>
     <packaging>jar</packaging>
 
     <name>diachromatic</name>
@@ -116,6 +116,10 @@
                     <groupId>org.apiguardian</groupId>
                     <artifactId>apiguardian-api</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.apache.maven.surefire</groupId>
+                    <artifactId>surefire-logger-api</artifactId>
+                </exclusion>
             </exclusions>
 
         </dependency>
@@ -158,6 +162,20 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>4.5.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>net.bytebuddy</groupId>
+                    <artifactId>byte-buddy</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>net.bytebuddy</groupId>
+                    <artifactId>byte-buddy-agent</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.objenesis</groupId>
+                    <artifactId>objenesis</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
 
@@ -173,7 +191,15 @@
                 </exclusion>
                 <exclusion>
                     <groupId>commons-logging</groupId>
-                    <artifactId>:commons-logging</artifactId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-compress</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-jexl</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -209,6 +235,7 @@
     <build>
         <!--  <sourceDirectory>src</sourceDirectory> -->
         <resources>
+
             <resource>
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
@@ -295,6 +322,9 @@
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>3.3.0</version>
+
+
+
                 <executions>
                     <execution>
                         <id>copy-resources</id>
@@ -362,6 +392,14 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.MF</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>org.jax.diachromatic.Diachromatic</mainClass>

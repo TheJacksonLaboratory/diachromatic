@@ -125,9 +125,9 @@ public class DigestMap {
 
 
     /**
-     * This class stores all of the digests that are located on one chromosome (or scaffold). It additionally
+     * This class stores all the digests that are located on one chromosome (or scaffold). It additionally
      * stores an array of locations (the end positions) of each of the digests so that we can find the correct
-     * digest given a position quicly using a binary search. The class is intended to be used with a map whose
+     * digest given a position quickly using a binary search. The class is intended to be used with a map whose
      * key stores the name of the chromosome; the values of the map are objects of this class (one per chromosome).
      */
     static class Chromosome2DigestArray {
