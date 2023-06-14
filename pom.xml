@@ -6,10 +6,9 @@
     <groupId>org.jax</groupId>
     <artifactId>diachromatic</artifactId>
     <version>0.7.3</version>
-    <packaging>jar</packaging>
 
     <name>diachromatic</name>
-    <url>http://maven.apache.org</url>
+    <url>https://github.com/TheJacksonLaboratory/diachromatic</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
