@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mapping and categorization of Hi-C reads &mdash; Diachromatic 0.7.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=c98573da"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Counting of valid read pairs between pairs of restriction fragments" href="count.html" />
+    <link rel="prev" title="Truncation of chimeric reads" href="truncate.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Diachromatic
+          </a>
+              <div class="version">
+                0.7
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Program setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial with test data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="digest.html">In silico genome digest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="truncate.html">Truncation of chimeric Hi-C reads</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Mapping paired-end Hi-C reads</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#independent-mapping-of-forward-and-reverse-paired-end-reads">Independent mapping of forward and reverse paired-end reads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pairing-of-properly-mapped-read-pairs">Pairing of properly mapped read pairs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#categorization-of-read-pairs">Categorization of read pairs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#running-the-align-subcommand">Running the <em>align</em> subcommand</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#output-files">Output files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="count.html">Counting unique valid pairs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="summarize.html">Summarize results</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Diachromatic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Mapping and categorization of Hi-C reads</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/mapping.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="mapping-and-categorization-of-hi-c-reads">
+<span id="rstmapping"></span><h1>Mapping and categorization of Hi-C reads<a class="headerlink" href="#mapping-and-categorization-of-hi-c-reads" title="Link to this heading"></a></h1>
+<p>The two reads of a valid Hi-C read pair come from two different interacting genomic regions that can be separated by a large number of nucleotides on the same chromosome (cis) or even be located on different chromosomes (trans). The truncated forward (R1) and reverse (R2) reads have to be mapped independently.</p>
+<section id="independent-mapping-of-forward-and-reverse-paired-end-reads">
+<h2>Independent mapping of forward and reverse paired-end reads<a class="headerlink" href="#independent-mapping-of-forward-and-reverse-paired-end-reads" title="Link to this heading"></a></h2>
+<p>Diachromatic separately executes <code class="docutils literal notranslate"><span class="pre">bowtie2</span></code>  with the <code class="docutils literal notranslate"><span class="pre">--very-sensitive</span></code> option for the truncated R1 and R2 reads. Read pairs for which at least one read cannot be mapped uniquely are discarded. Diachromatic provides two levels of stringency for the definition of multi-mapped reads:</p>
+<ol class="arabic simple">
+<li><p><strong>Very stringent mapping:</strong> There is no second best alignment for the given read. In this case the line in the SAM record produced by <code class="docutils literal notranslate"><span class="pre">bowtie2</span></code> contains no <code class="docutils literal notranslate"><span class="pre">XS</span></code> tag. Use Diachromatic’s <code class="docutils literal notranslate"><span class="pre">--bowtie-stringent-unique</span></code> or <code class="docutils literal notranslate"><span class="pre">-bsu</span></code> option in order to use this level of stringency.</p></li>
+<li><p><strong>Less stringent mapping:</strong> There can be a second best alignment, but the score of the alignment (MAPQ) must be at least 30 and the difference of the mapping scores between the best and second best alignment must be at least 10 (following the recommendation of <a class="reference external" href="https://www.bioinformatics.babraham.ac.uk/projects/hicup/">HiCUP</a>). Diachromatic uses this option by default.</p></li>
+</ol>
+</section>
+<section id="pairing-of-properly-mapped-read-pairs">
+<h2>Pairing of properly mapped read pairs<a class="headerlink" href="#pairing-of-properly-mapped-read-pairs" title="Link to this heading"></a></h2>
+<p>The independently mapped reads are written to two temporary SAM files, whereby the order of read records in the truncated FASTQ files is retained by using bowtie2’s option <code class="docutils literal notranslate"><span class="pre">--reorder</span></code>. In the next step, Diachromatic iterates simultaneously over the two SAM files. Read pairs for which both reads can be mapped uniquely are paired, i.e. the two SAM records for single-end reads are combined into one paired-end record with appropriate SAM flags reflecting the relative orientation of the reads.</p>
+<section id="categorization-of-read-pairs">
+<h3>Categorization of read pairs<a class="headerlink" href="#categorization-of-read-pairs" title="Link to this heading"></a></h3>
+<p>Diachromatic distinguishes several read pair categories: (A) Trans reads by definition are chimeric fragments and may represent valid biological interactions or random cross-ligation events. (B) Pairs mapping to different strands of the same chromosome may originate from un-ligated or self-ligated digests. (C) Inward pointing pairs that map to the same digest must have originated from un-ligated fragments. Size thresholds are applied to the remaining fragments to categorize them as valid or artefactual. (D) Outward pointing read pairs that map the same digest must have originated from self-ligated digests. Size thresholds are applied to the remaining fragments to categorize them as valid or artefactual. (E) Read pairs mapping to the same strand can only be chimeric. However, we observe very small proportions of read pairs that are mapped to the same strand and digest. Such read pairs are classified as strange internal.</p>
+<figure class="align-center">
+<img alt="_images/categorization.png" src="_images/categorization.png" />
+</figure>
+</section>
+</section>
+<section id="running-the-align-subcommand">
+<h2>Running the <em>align</em> subcommand<a class="headerlink" href="#running-the-align-subcommand" title="Link to this heading"></a></h2>
+<p>Use the following command to run the alignment step:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ java -jar target/Diachromatic.jar align \
+    -b /usr/bin/bowtie2 \
+    -i /path/to/bowtie2index/hg19 \
+    -q prefix.truncated_R1.fastq.gz \
+    -r prefix.truncated_R2.fastq.gz \
+    -d hg19_HinDIII_DigestedGenome.txt \
+    -x prefix \
+    -o outdir
+</pre></div>
+</div>
+<p>The table lists all possible arguments:</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>Short option</p></td>
+<td><p>Long option</p></td>
+<td><p>Example</p></td>
+<td><p>Required</p></td>
+<td><p>Description</p></td>
+<td><p>Default</p></td>
+</tr>
+<tr class="row-even"><td><p>-q</p></td>
+<td><p>\-\-fastq-r1</p></td>
+<td><p>prefix.truncated_R1.fq.gz</p></td>
+<td><p>yes</p></td>
+<td><p>Path to the truncated forward FASTQ file.</p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-odd"><td><p>-r</p></td>
+<td><p>\-\-fastq-r2</p></td>
+<td><p>prefix.truncated_R2.fq.gz</p></td>
+<td><p>yes</p></td>
+<td><p>Path to the truncated forward FASTQ file.</p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-even"><td><p>-b</p></td>
+<td><p>\-\-bowtie2</p></td>
+<td><p>/tools/bowtie2-2.3.4.1-linux-x86_64/bowtie2</p></td>
+<td><p>yes</p></td>
+<td><p>Path to bowtie2 executable.</p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-odd"><td><p>-i</p></td>
+<td><p>\-\-bowtie2-index</p></td>
+<td><p>/data/indices/bowtie2/hg38/hg38</p></td>
+<td><p>yes</p></td>
+<td><p>Path to bowtie2 index of the corresponding genome.</p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-even"><td><p>-d</p></td>
+<td><p>\-\-digest-file</p></td>
+<td><p>/data/GOPHER/hg38_DpnII_DigestedGenome.txt</p></td>
+<td><p>yes</p></td>
+<td><p>Path to the digest file produced with GOPHER.</p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-odd"><td><p>-o</p></td>
+<td><p>\-\-out-directory</p></td>
+<td><p>cd4v2</p></td>
+<td><p>yes</p></td>
+<td><p>Directory containing the output of the align subcommand.</p></td>
+<td><p>results</p></td>
+</tr>
+<tr class="row-even"><td><p>-x</p></td>
+<td><p>\-\-out-prefix</p></td>
+<td><p>stim_rep1</p></td>
+<td><p>yes</p></td>
+<td><p>Prefix for all generated files in output directory.</p></td>
+<td><p>prefix</p></td>
+</tr>
+<tr class="row-odd"><td><p>-p</p></td>
+<td><p>\-\-thread-num</p></td>
+<td><p>15</p></td>
+<td><p>no</p></td>
+<td><p>Number of threads used by bowtie2.</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>-j</p></td>
+<td><p>\-\-output-rejected</p></td>
+<td><p>–</p></td>
+<td><p>no</p></td>
+<td><p>If set, a BAM file containing the reject read pairs will be created.</p></td>
+<td><p>false</p></td>
+</tr>
+<tr class="row-odd"><td><p>-l</p></td>
+<td><p>\-\-lower-frag-size-limit</p></td>
+<td><p>50</p></td>
+<td><p>no</p></td>
+<td><p>Lower threshold for the size of sheared fragments.</p></td>
+<td><p>50</p></td>
+</tr>
+<tr class="row-even"><td><p>-u</p></td>
+<td><p>\-\-upper-frag-size-limit</p></td>
+<td><p>1000</p></td>
+<td><p>no</p></td>
+<td><p>Upper threshold for the size of sheared fragments.</p></td>
+<td><p>1000</p></td>
+</tr>
+<tr class="row-odd"><td><p>-s</p></td>
+<td><p>\-\-self-ligtion-threshold</p></td>
+<td><p>3000</p></td>
+<td><p>no</p></td>
+<td><p>Upper threshold for the size of self-ligating fragments.</p></td>
+<td><p>3000</p></td>
+</tr>
+<tr class="row-even"><td><p>-k</p></td>
+<td><p>\-\-keep-sam</p></td>
+<td><p>–</p></td>
+<td><p>no</p></td>
+<td><p>Do not delete temporary SAM files.</p></td>
+<td><p>false</p></td>
+</tr>
+<tr class="row-odd"><td><p>-bsu</p></td>
+<td><p>\-\-bowtie-stringent-unique</p></td>
+<td><p>–</p></td>
+<td><p>no</p></td>
+<td><p>stringent settings for definition of uniquely mapped reads</p></td>
+<td><p>false</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="output-files">
+<h2>Output files<a class="headerlink" href="#output-files" title="Link to this heading"></a></h2>
+<p>The default name of the BAM file containing all unique valid pairs that can be used for downstream analysis is:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">prefix.valid_pairs.aligned.bam</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>If <code class="docutils literal notranslate"><span class="pre">--output-rejected</span></code> is set, Diachromatic will output a second BAM file cointaing all rejected pairs:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">prefix.rejected_pairs.aligned.bam</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>Diachromatic uses optional fields of the SAM records to indicate the read pair category:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Un-ligated due to size (Tag: <code class="docutils literal notranslate"><span class="pre">UL</span></code>)</p></li>
+<li><p>Un-ligated due to same digest (Tag: <code class="docutils literal notranslate"><span class="pre">ULSI</span></code>)</p></li>
+<li><p>Self-ligated due to size (Tag: <code class="docutils literal notranslate"><span class="pre">SL</span></code>)</p></li>
+<li><p>Self-ligated due to same digest (Tag: <code class="docutils literal notranslate"><span class="pre">SLSI</span></code>)</p></li>
+<li><p>Too short chimeric  (Tag: <code class="docutils literal notranslate"><span class="pre">TS</span></code>)</p></li>
+<li><p>Too long chimeric  (Tag: <code class="docutils literal notranslate"><span class="pre">TL</span></code>)</p></li>
+<li><p>Valid pair (Tag: <code class="docutils literal notranslate"><span class="pre">VP</span></code>)</p></li>
+</ul>
+</div></blockquote>
+<p>In addition, a file <code class="docutils literal notranslate"><span class="pre">prefix.align.stats.txt</span></code> is produced that contains summary statistics about the alignment step.</p>
+<p>Finally, an R script <code class="docutils literal notranslate"><span class="pre">prefix.frag.sizes.counts.script.R</span></code> is generated that contains fragment size counts and can be
+used to generate a plot as shown above.
+In order to produce a PDF file, execute the script as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ Rscript prefix.frag.sizes.counts.script.R
+</pre></div>
+</div>
+<p>Or source the script from the R environment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span> <span class="n">source</span><span class="p">(</span><span class="s2">&quot;prefix.frag.sizes.counts.script.R&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="truncate.html" class="btn btn-neutral float-left" title="Truncation of chimeric reads" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="count.html" class="btn btn-neutral float-right" title="Counting of valid read pairs between pairs of restriction fragments" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, Peter Hansen, Peter Robinson.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

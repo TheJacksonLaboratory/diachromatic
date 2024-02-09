@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Creating an in silico restriction digest map for Diachromatic using GOPHER &mdash; Diachromatic 0.7.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=c98573da"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Truncation of chimeric reads" href="truncate.html" />
+    <link rel="prev" title="Tutorial" href="tutorial.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Diachromatic
+          </a>
+              <div class="version">
+                0.7
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Program setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial with test data</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">In silico genome digest</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#performing-the-in-silico-digest-using-gopher">Performing the in silico digest using GOPHER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#format-of-the-digest-file">Format of the digest file</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="truncate.html">Truncation of chimeric Hi-C reads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mapping.html">Mapping paired-end Hi-C reads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="count.html">Counting unique valid pairs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="summarize.html">Summarize results</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Diachromatic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Creating an <em>in silico</em> restriction digest map for Diachromatic using GOPHER</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/digest.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="creating-an-in-silico-restriction-digest-map-for-diachromatic-using-gopher">
+<span id="rstdigest"></span><h1>Creating an <em>in silico</em> restriction digest map for Diachromatic using GOPHER<a class="headerlink" href="#creating-an-in-silico-restriction-digest-map-for-diachromatic-using-gopher" title="Link to this heading"></a></h1>
+<p>The Capture Hi-C (CHC) protocol involves the restriction digestion of a sample and the downstream analysis assigns
+reads to pairs of restriction digests. Therefore, the <code class="docutils literal notranslate"><span class="pre">align</span></code> subcommand of Diachromatic requires a list of all
+restriction digests that result from the <em>in silico</em> digestions of a given genome with the chosen enzyme or enzymes.
+Such lists can be generated using the <a class="reference external" href="https://github.com/TheJacksonLaboratory/Gopher">GOPHER</a> software. The TSV
+formatted file exported from GOPHER can be passed to Diachromatic using the <code class="docutils literal notranslate"><span class="pre">-d</span></code> or <code class="docutils literal notranslate"><span class="pre">--digest-file</span></code> option.</p>
+<section id="performing-the-in-silico-digest-using-gopher">
+<h2>Performing the in silico digest using GOPHER<a class="headerlink" href="#performing-the-in-silico-digest-using-gopher" title="Link to this heading"></a></h2>
+<p>If the GOPHER software was used for the design of the given capture Hi-C experiment, you can just open the corresponding
+GOPHER project and export the required file via the export menu. In such cases the exported file also includes the
+information about enriched and non-enriched digests, i.e. if there are enrichment probes associated with given digests.</p>
+<figure class="align-default">
+<img alt="_images/output_export.png" src="_images/output_export.png" />
+</figure>
+<p>If you did not  design CHC probes using GOPHER, you can still use diachromatic, but will need to create file with
+the same format. It is easy to do so with the GOPHER software. First, <a class="reference external" href="https://gopher.readthedocs.io/en/latest/02_gui_data.html">setup a new project</a>, and then
+specify the parameters in the <em>Data sources</em> section and the restriction enzyme in the
+<em>Design parameters</em> section. If you prepare the digest map in this way, all digests will be marked as inactive
+(i.e., not enriched with capture probes). In order to use some features of Diachromatic, you will need to change
+the digest file to indicate which
+digests where chosen for enrichment (for instance, with a Python script).</p>
+<figure class="align-default">
+<img alt="_images/digest_parameters.png" src="_images/digest_parameters.png" />
+</figure>
+</section>
+<section id="format-of-the-digest-file">
+<h2>Format of the digest file<a class="headerlink" href="#format-of-the-digest-file" title="Link to this heading"></a></h2>
+<p>The first line of this file contains the column names, and all other lines correspomd to one restriction digest.
+Each line consists of 14 fields that are described in the table .</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>Column</p></td>
+<td><p>Name</p></td>
+<td><p>Example</p></td>
+<td><p>Description</p></td>
+</tr>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>Chromosome</p></td>
+<td><p>chr1</p></td>
+<td><p>Name of the reference sequence.</p></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p>Digest_Start_Position</p></td>
+<td><p>18376</p></td>
+<td><p>1-based start position of the restriction digest.</p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p>Digest_End_Position</p></td>
+<td><p>18392</p></td>
+<td><p>1-based end position of the restriction digest.</p></td>
+</tr>
+<tr class="row-odd"><td><p>4</p></td>
+<td><p>Digest_Number</p></td>
+<td><p>42</p></td>
+<td><p>Consecutive digest number.</p></td>
+</tr>
+<tr class="row-even"><td><p>5</p></td>
+<td><p>5’_Restriction_Site</p></td>
+<td><p>DpnII</p></td>
+<td><p>Name of the enzyme responsible for the cut at the 5’ end of the digest.</p></td>
+</tr>
+<tr class="row-odd"><td><p>6</p></td>
+<td><p>3’_Restriction_Site</p></td>
+<td><p>DpnII</p></td>
+<td><p>Name of the enzyme responsible for the cut at the 3’ end of the digest. May be different from field 5 if more than one enzyme is used.</p></td>
+</tr>
+<tr class="row-even"><td><p>7</p></td>
+<td><p>Length</p></td>
+<td><p>1245</p></td>
+<td><p>Length of the digest.</p></td>
+</tr>
+<tr class="row-odd"><td><p>8</p></td>
+<td><p>5’_GC_Content</p></td>
+<td><p>0.500</p></td>
+<td><p>GC content of the upstream margin (GOPHER’s default margin size is 250 bp).</p></td>
+</tr>
+<tr class="row-even"><td><p>9</p></td>
+<td><p>3’_GC_Content</p></td>
+<td><p>0.500</p></td>
+<td><p>GC content of the downstream margin.</p></td>
+</tr>
+<tr class="row-odd"><td><p>10</p></td>
+<td><p>5’_Repeat_Content</p></td>
+<td><p>0.138</p></td>
+<td><p>Repeat content of the upstream margin.</p></td>
+</tr>
+<tr class="row-even"><td><p>11</p></td>
+<td><p>3’_Repeat_Content</p></td>
+<td><p>0.126</p></td>
+<td><p>Repeat content of the downstream margin.</p></td>
+</tr>
+<tr class="row-odd"><td><p>12</p></td>
+<td><p>Enrichment status</p></td>
+<td><p>T (or F)</p></td>
+<td><p>Enrichment status of the digest. A digest is considered enriched, if it has at least one probe.</p></td>
+</tr>
+<tr class="row-even"><td><p>13</p></td>
+<td><p>5’_Probes</p></td>
+<td><p>2</p></td>
+<td><p>Number of probes for the upstream margin.</p></td>
+</tr>
+<tr class="row-odd"><td><p>14</p></td>
+<td><p>3’_Repeat_Content</p></td>
+<td><p>0</p></td>
+<td><p>Number of probes for the downstream margin.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tutorial.html" class="btn btn-neutral float-left" title="Tutorial" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="truncate.html" class="btn btn-neutral float-right" title="Truncation of chimeric reads" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, Peter Hansen, Peter Robinson.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

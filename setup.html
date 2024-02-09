@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Program setup &mdash; Diachromatic 0.7.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=c98573da"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tutorial" href="tutorial.html" />
+    <link rel="prev" title="Welcome to Diachromatic’s documentation" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Diachromatic
+          </a>
+              <div class="version">
+                0.7
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Program setup</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#building-diachromatic-from-source">Building Diachromatic from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#preparation-for-bowtie2">Preparation for bowtie2</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial with test data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="digest.html">In silico genome digest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="truncate.html">Truncation of chimeric Hi-C reads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mapping.html">Mapping paired-end Hi-C reads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="count.html">Counting unique valid pairs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="summarize.html">Summarize results</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Diachromatic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Program setup</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/setup.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="program-setup">
+<h1>Program setup<a class="headerlink" href="#program-setup" title="Link to this heading"></a></h1>
+<p>Diachromatic requires Java 11 or higher to run. Diachromatic can be obtained from the Diachromatic <a class="reference external" href="https://github.com/TheJacksonLaboratory/diachromatic">GitHub page</a>. We recommend downloading the <code class="docutils literal notranslate"><span class="pre">Diachromatic.jar</span></code> file of the latest release on the <a class="reference external" href="https://github.com/TheJacksonLaboratory/diachromatic/releases">release page</a> of the project.</p>
+<p>You can run the program using this command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ java -jar Diachromatic.jar
+</pre></div>
+</div>
+<p>You should see a help message in the shell.</p>
+<section id="building-diachromatic-from-source">
+<h2>Building Diachromatic from source<a class="headerlink" href="#building-diachromatic-from-source" title="Link to this heading"></a></h2>
+<p>To build the application on your own, clone the repository and create the Java app with maven:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/TheJacksonLaboratory/diachromatic.git
+$ cd diachromatic
+$ mvn package
+</pre></div>
+</div>
+<p>To test whether the build process was successful, enter the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ java -jar target/Diachromatic.jar
+</pre></div>
+</div>
+</section>
+<section id="preparation-for-bowtie2">
+<h2>Preparation for bowtie2<a class="headerlink" href="#preparation-for-bowtie2" title="Link to this heading"></a></h2>
+<p>The mapping step of the diachromatic pipeline relies on <a class="reference external" href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml">bowtie2</a>. If needed, install bowtie2 on your system. For instance, on Debian linux systems bowtie2 can be installed with the following command.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ sudo apt-get install bowtie2
+</pre></div>
+</div>
+<p>The prebuilt <code class="docutils literal notranslate"><span class="pre">bowtie2</span></code> indices for human hg19 (3.5 GB) and other genome builds can be downloaded from the
+<a class="reference external" href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml">bowtie2 website</a>. After downloading the correct archived file to your computer, unpack it with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ unzip hg19.zip
+</pre></div>
+</div>
+<p>In the following pages, we will call the path to the directory where the index was unpacked <strong>/path/to/bowtie2index/</strong>. Substitute this with the actual path on your computer.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to Diachromatic’s documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tutorial.html" class="btn btn-neutral float-right" title="Tutorial" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, Peter Hansen, Peter Robinson.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
