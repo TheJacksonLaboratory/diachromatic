@@ -2,7 +2,7 @@
 Program setup
 =============
 
-Diachromatic requires Java 8 or higher to run. Diachromatic can be obtained from the Diachromatic `GitHub page <https://github.com/TheJacksonLaboratory/diachromatic>`_. We recommend downloading the ``Diachromatic.jar`` file of the latest release on the `release page <https://github.com/TheJacksonLaboratory/diachromatic/releases>`_ of the project.
+Diachromatic requires Java 11 or higher to run. Diachromatic can be obtained from the Diachromatic `GitHub page <https://github.com/TheJacksonLaboratory/diachromatic>`_. We recommend downloading the ``Diachromatic.jar`` file of the latest release on the `release page <https://github.com/TheJacksonLaboratory/diachromatic/releases>`_ of the project.
 
 You can run the program using this command: ::
 
