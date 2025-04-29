@@ -18,7 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Summarizer {
-    private static final Logger logger = LoggerFactory.getLogger(Summarizer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Summarizer.class);
     private final String truncatePath;
     private final String alignPath;
     private final String countPath;
@@ -83,11 +83,11 @@ public class Summarizer {
         String restriction_enzyme = EMPTY_STRING;
         String filled_end_sequence = EMPTY_STRING;
 
-        logger.trace("Parsing the truncation data at {}", truncatePath);
+        LOGGER.trace("Parsing the truncation data at {}", truncatePath);
         try (BufferedReader br = new BufferedReader(new FileReader(truncatePath))) {
             String line;
             while ((line=br.readLine())!=null) {
-                logger.trace(line);
+                LOGGER.trace(line);
                 String []fields=line.split(":");
                 if (fields.length!=2) continue; // skip non key-value lines, they are comments
                 templateData.put(fields[0],fields[1]);
@@ -122,7 +122,7 @@ public class Summarizer {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
 
         // Truncation Data
@@ -149,11 +149,11 @@ public class Summarizer {
         int duplicated_pairs = UNINITIALIZED;
         String line;
 
-        logger.trace("Parsing the align data at {}", alignPath);
-        logger.trace("Parsing the truncation data at {}", truncatePath);
+        LOGGER.trace("Parsing the align data at {}", alignPath);
+        LOGGER.trace("Parsing the truncation data at {}", truncatePath);
         try (BufferedReader br = new BufferedReader(new FileReader(alignPath))) {
             while ((line=br.readLine())!=null) {
-                logger.trace(line);
+                LOGGER.trace(line);
                 String[] fields = line.split(":");
                 if (fields.length != 2) continue; // skip non key-value lines, they are comments
                 String[] fields2 = fields[1].split(" ");
@@ -170,8 +170,8 @@ public class Summarizer {
                     templateData.put(String.format("align_%s", fields[0].trim()), fields2[0].trim());
                 }
 
-                logger.trace(String.format("align_%s %s",fields[0].trim(), fields2[0].trim()));
-                logger.trace(String.format("align_%s",fields[0]));
+                LOGGER.trace(String.format("align_%s %s",fields[0].trim(), fields2[0].trim()));
+                LOGGER.trace(String.format("align_%s",fields[0]));
                 switch (fields[0]) {
                     case "total_read_pairs_processed":
                         total_read_pairs_processed = getIntegerValue(fields[1]);
@@ -206,7 +206,7 @@ public class Summarizer {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
 
         // Data for read alignment
@@ -227,11 +227,11 @@ public class Summarizer {
     private void parseCountData() {
         List<String> countMap = new ArrayList<>();
 
-        logger.trace("Parsing the count data at {}", countPath);
+        LOGGER.trace("Parsing the count data at {}", countPath);
         try (BufferedReader br = new BufferedReader(new FileReader(countPath))) {
             String line;
             while ((line = br.readLine()) != null) {
-                logger.trace(line);
+                LOGGER.trace(line);
                 String[] fields = line.split(":");
                 if (fields.length != 2) continue; // skip non key-value lines, they are comments
                 String[] fields2 = fields[1].split(" ");
@@ -241,18 +241,18 @@ public class Summarizer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        logger.trace("Putting a total of {} items into the align count", countMap.size());
+        LOGGER.trace("Putting a total of {} items into the align count", countMap.size());
         templateData.put("count", countMap);
     }
 
     public void outputFile(String prefix){
         String outname = String.format("%s.summary.stats.html", prefix);
-        logger.trace("Writing HTML file to {}", outname);
+        LOGGER.trace("Writing HTML file to {}", outname);
         try (BufferedWriter out = new BufferedWriter(new FileWriter(outname))) {
             Template template = cfg.getTemplate("template/diachromatic-html-template.ftl");
             template.process(templateData, out);
         } catch (TemplateException | IOException te) {
-            te.printStackTrace();
+            LOGGER.error(te.getMessage());
         }
     }
 }

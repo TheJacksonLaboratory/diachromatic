@@ -2,7 +2,6 @@ package org.jax.diachromatic.align;
 
 
 import htsjdk.samtools.SAMRecord;
-import org.junit.Ignore;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

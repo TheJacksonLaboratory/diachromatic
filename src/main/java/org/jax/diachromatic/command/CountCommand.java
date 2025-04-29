@@ -28,7 +28,7 @@ import java.util.concurrent.Callable;
         mixinStandardHelpOptions = true,
         description = "count valid pairs between pairs of restriction fragments from a BAM file creted in the alignstep with a GOPHER digest file.")
 public class CountCommand extends Command implements Callable<Integer> {
-    private static final Logger logger = LoggerFactory.getLogger(CountCommand.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CountCommand.class);
     /** Path to BAM file containing unique valid pairs. */
     @CommandLine.Option(names={"-v", "--valid-pairs-bam"}, required = true, description = "Path to BAM file with unique valid pairs produced using the align command.", order = 3)
     private String validPairsBamFile;
@@ -49,7 +49,7 @@ public class CountCommand extends Command implements Callable<Integer> {
 
         makeOutdirectoryIfNeeded();
 
-        logger.trace(String.format("About to read digests from %s",digestFile));
+        LOGGER.trace(String.format("About to read digests from %s",digestFile));
         DigestMap digestMap = new DigestMap(digestFile);
 
         String outputDirAndFilePrefix=String.format("%s%s%s", outputDir, File.separator,filenamePrefix);
@@ -58,17 +58,17 @@ public class CountCommand extends Command implements Callable<Integer> {
 
         Counter counter = new Counter(reader, digestMap, outputDirAndFilePrefix, split);
         try {
-            logger.trace("About to determine interaction counts...");
+            LOGGER.trace("About to determine interaction counts...");
             counter.countInteractions();
-            logger.trace("...done with counting!");
-            logger.trace("About to print the results...");
+            LOGGER.trace("...done with counting!");
+            LOGGER.trace("About to print the results...");
             counter.printInteractionCountsMapAsCountTable();
             counter.printInteractionCountsMapInWashUSimpleTextFormat();
             counter.printFragmentInteractionCountsMapAsCountTable();
             counter.printStatistics();
-            logger.trace("...done!");
+            LOGGER.trace("...done!");
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
         return 0;
     }

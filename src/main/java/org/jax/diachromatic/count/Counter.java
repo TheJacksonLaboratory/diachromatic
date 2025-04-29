@@ -19,10 +19,10 @@ import java.util.Map;
  * This class is intended for counting read pairs for piars of restriction fragments and for counting reads at
  * interacting fragments. This is currently done in class Align, but should be moved to this class for better
  * clarity.
- *
+ * <p>
  * The input for the constructor will be a BAM file containing the valid read pairs as well as a prefix
  * for summarize file (including the path).
- *
+ * <p>
  * The summarize will consist of three files:
  *
  * <li>prefix.interacting.fragments.counts.table.tsv</li>
@@ -196,7 +196,7 @@ public class Counter {
             incrementDigestPair(dp, readPair);
 
             if (interaction_count % 10000000 == 0) {
-                logger.trace("Number of Interactions: " + interaction_count);
+                logger.trace("Number of Interactions: {}", interaction_count);
             }
 
             if (readPair.getRelativeOrientationTag().equals("F1F2")) {

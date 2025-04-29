@@ -28,7 +28,7 @@ import java.util.concurrent.Callable;
         mixinStandardHelpOptions = true,
         description = "align with uses bowtie2 to align Hi-C reads and then performs Q/C, artifact filtering and pairing of valid read pairs.")
 public class AlignCommand extends Command implements Callable<Integer>  {
-    private static final Logger logger = LoggerFactory.getLogger(AlignCommand.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AlignCommand.class);
     /** Path to the bowtie2 executable, e.g., {@code /usr/bin/bowtie2}. */
     @CommandLine.Option(names={"-b","--bowtie-path"},required = true, description ="Path to bowtie2.", order = 1)
     private String bowtiepath;
@@ -82,7 +82,7 @@ public class AlignCommand extends Command implements Callable<Integer>  {
 
         String samFile1 = String.format("%s_%s_1.sam", outputDirAndFilePrefix, getRandomPrefix(7));
         String samFile2 = String.format("%s_%s_2.sam", outputDirAndFilePrefix, getRandomPrefix(7));
-        logger.trace(String.format("About to read digests from %s.",digestFile));
+        LOGGER.trace(String.format("About to read digests from %s.",digestFile));
         DigestMap digestMap = new DigestMap(digestFile);
         try {
             Bowtie2Runner runner = new Bowtie2Runner(bowtiepath,pathToBowtieIndex,pathToInputFastq1,samFile1,this.threadNum);
@@ -100,7 +100,7 @@ public class AlignCommand extends Command implements Callable<Integer>  {
                 file.delete();
             }
         } catch (DiachromaticException | IOException e){
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
         return 0;
     }
