@@ -86,15 +86,19 @@ public class DigestMap {
             }
             // In some cases, our data uses "chr5" and in others we see just "5".
             // The following adds some additional references to mitigate this issue
+            Map<String, Chromosome2DigestArray> additionalEntries = new HashMap<>();
+
             for (Map.Entry<String, Chromosome2DigestArray> e : prelimMap.entrySet()) {
-                if (e.getKey().startsWith("chr")) {
-                    String newKey = e.getKey().substring(3);
-                    prelimMap.put(newKey, e.getValue());
+                String key = e.getKey();
+                if (key.startsWith("chr")) {
+                    String newKey = key.substring(3);
+                    additionalEntries.putIfAbsent(newKey, e.getValue());
                 } else {
-                    String newKey = "chr" + e.getKey();
-                    prelimMap.put(newKey, e.getValue());
+                    String newKey = "chr" + key;
+                    additionalEntries.putIfAbsent(newKey, e.getValue());
                 }
             }
+            prelimMap.putAll(additionalEntries);
             this.digestMap = Map.copyOf(prelimMap); // make immutable
         } catch (IOException e){
             throw new DiachromaticException(String.format("Could not parse %s: %s",digestFilePath,e.getMessage()));
