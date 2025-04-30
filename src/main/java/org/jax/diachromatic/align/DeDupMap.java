@@ -34,7 +34,7 @@ public class DeDupMap {
 
     /**
      * Core structure of this class is a HashMap
-     *
+     * <p>
      * Keys: pairs of chromosome names, e.g. chr1:chr2 (lexicographical smaller comes always first)
      * Values: Another HashMap. Key is the coordinate of the lexicographical smaller reference (chr1). Value is a set
      * of integers, which are the coordinates of the lexicographical larger references (chr2).
@@ -153,12 +153,12 @@ public class DeDupMap {
     public void printDeDupStatistics(int n_paired_duplicated) {
         logger.trace("" );
         logger.trace("Deduplication statitics:" );
-        logger.trace("n_duplicate: " + n_paired_duplicated);
-        logger.trace("getNumOfChrPairKeys(): " + getNumOfChrPairKeys());
-        logger.trace("getNumOfQueries(): " + getNumOfQueries());
-        logger.trace("getNumOfInsertions(): " + getNumOfInsertions());
-        logger.trace("getNumOfFirstCoords(): " + getNumOfFirstCoords());
-        logger.trace("getNumOfSecondCoords(): " + getNumOfSecondCoords());
+        logger.trace("n_duplicate: {}", n_paired_duplicated);
+        logger.trace("getNumOfChrPairKeys(): {}", getNumOfChrPairKeys());
+        logger.trace("getNumOfQueries(): {}", getNumOfQueries());
+        logger.trace("getNumOfInsertions(): {}", getNumOfInsertions());
+        logger.trace("getNumOfFirstCoords(): {}", getNumOfFirstCoords());
+        logger.trace("getNumOfSecondCoords(): {}", getNumOfSecondCoords());
         logger.trace("" );
     }
 }

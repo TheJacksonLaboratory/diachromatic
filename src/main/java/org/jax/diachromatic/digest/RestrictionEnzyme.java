@@ -32,11 +32,11 @@ public class RestrictionEnzyme implements Serializable {
     /**
      * Dangling end sequence, i.e. the ends of un-ligated sequences. This is the sequence between the cutting site and
      * the last nucleotide of the recognition motif, e.g.
-     *
+     * <p>
      * for HindIII the recognition motif is A^AGCTT and the dangling end sequence is AGCTT
-     *
+     * <p>
      * or for DpnII the recognition motif is ^GATC and the dangling end sequence is GATC.
-     *
+     * <p>
      * The dangling end sequence is independent of the sticky ends option,
      * i.e. whether a fill-in of the sticky ends was performed for Hi-C or not.
      */

@@ -16,7 +16,7 @@ import java.util.*;
  * produced by {@link org.jax.diachromatic.command.TruncateCommand}. Its purpose is to rejoin the pairs of reads that
  * correspond to the chimeric fragments in the input files and to perform Q/C and filtering on the reads to remove
  * characteristic Hi-C artifacts.
- *
+ * <p>
  * Note that we have made several of the functions in this class package access for testing purposes.
  *
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
@@ -292,11 +292,11 @@ public class Aligner {
             n_total_input_read_pairs++;
 
             if(n_total_input_read_pairs%1000000==0) {
-                logger.trace("n_total_input_read_pairs: " + n_total_input_read_pairs);
+                logger.trace("n_total_input_read_pairs: {}", n_total_input_read_pairs);
             }
 
             if(dedup_map.getNumOfInsertions()%1000000==0 && 0<dedup_map.getNumOfInsertions()) {
-                logger.trace("dedup_map.getNumOfInsertions(): " + dedup_map.getNumOfInsertions());
+                logger.trace("dedup_map.getNumOfInsertions(): {}", dedup_map.getNumOfInsertions());
             }
 
             // first check whether both reads were mapped uniquely
@@ -612,10 +612,6 @@ public class Aligner {
 
         printStream.print("trans_pairs_total:" + n_paired_unique_trans + String.format(" (%.2f%%)", 100.0* n_paired_unique_trans /n_paired_unique) + "\n");
         printStream.print("Note: Trans pairs cannot occur in the categories un-ligated and self-ligated but all others." + "\n\n");
-
-//        printStream.print("Quality metrics for experimental trouble shooting\n");
-//        printStream.print("-------------------------------------------------\n");
-//        printStream.print("\n");
         printStream.print("YVP:\t" + String.format("%.2f%%", 100.0* n_paired_unique_valid / n_total_input_read_pairs) + "\n");
         printStream.print("CLC:\t" + String.format("%.2f%%", 100.0* n_paired_unique_valid_trans/n_paired_unique_valid) + "\n");
         double rlc = 1.0 - 1.0*(n_paired_unique_too_short_dangling+n_paired_unique_too_long_dangling+n_paired_unique_valid_dangling)/(n_paired_unique_too_short+n_paired_unique_too_long+n_paired_unique_valid);
@@ -630,22 +626,22 @@ public class Aligner {
         printStream.print("\n");
 
         printStream.print("Fractions of dangling end pairs:\n");
-        printStream.print(String.format("n_paired_unique_un_ligated_dangling:%d (%.2f%% of all unique un-ligated pairs)\n", n_paired_unique_un_ligated_dangling, (100.0 * n_paired_unique_un_ligated_dangling / n_paired_unique_un_ligated)));
-        printStream.print(String.format("n_paired_unique_self_ligated_dangling:%d (%.2f%% of all unique self-ligated pairs)\n", n_paired_unique_self_ligated_dangling, (100.0 * n_paired_unique_self_ligated_dangling / n_paired_unique_self_ligated)));
-        printStream.print(String.format("n_paired_unique_too_short_dangling:%d (%.2f%% of all unique valid too short pairs)\n", n_paired_unique_too_short_dangling, (100.0 * n_paired_unique_too_short_dangling / n_paired_unique_too_short)));
-        printStream.print(String.format("n_paired_unique_too_long_dangling:%d (%.2f%% of all unique valid too long pairs)\n", n_paired_unique_too_long_dangling, (100.0 * n_paired_unique_too_long_dangling / n_paired_unique_too_long)));
-        printStream.print(String.format("n_paired_unique_valid_dangling:%d (%.2f%% of all unique valid pairs)\n", n_paired_unique_valid_dangling, (100.0 * n_paired_unique_valid_dangling / n_paired_unique_valid)));
-        printStream.print(String.format("n_paired_strange_internal_dangling:%d (%.2f%% of all unique valid pairs)\n", n_paired_strange_internal_dangling, (100.0 * n_paired_strange_internal_dangling / n_paired_unique_valid)));
+        printStream.printf("n_paired_unique_un_ligated_dangling:%d (%.2f%% of all unique un-ligated pairs)\n", n_paired_unique_un_ligated_dangling, (100.0 * n_paired_unique_un_ligated_dangling / n_paired_unique_un_ligated));
+        printStream.printf("n_paired_unique_self_ligated_dangling:%d (%.2f%% of all unique self-ligated pairs)\n", n_paired_unique_self_ligated_dangling, (100.0 * n_paired_unique_self_ligated_dangling / n_paired_unique_self_ligated));
+        printStream.printf("n_paired_unique_too_short_dangling:%d (%.2f%% of all unique valid too short pairs)\n", n_paired_unique_too_short_dangling, (100.0 * n_paired_unique_too_short_dangling / n_paired_unique_too_short));
+        printStream.printf("n_paired_unique_too_long_dangling:%d (%.2f%% of all unique valid too long pairs)\n", n_paired_unique_too_long_dangling, (100.0 * n_paired_unique_too_long_dangling / n_paired_unique_too_long));
+        printStream.printf("n_paired_unique_valid_dangling:%d (%.2f%% of all unique valid pairs)\n", n_paired_unique_valid_dangling, (100.0 * n_paired_unique_valid_dangling / n_paired_unique_valid));
+        printStream.printf("n_paired_strange_internal_dangling:%d (%.2f%% of all unique valid pairs)\n", n_paired_strange_internal_dangling, (100.0 * n_paired_strange_internal_dangling / n_paired_unique_valid));
 
         printStream.print("\n");
         printStream.print("Fractions of trans pairs:\n");
-        printStream.print(String.format("n_paired_unique_un_ligated_trans:%d (%.2f%% of all unique un-ligated pairs)\n", n_paired_unique_un_ligated_trans, (100.0 * n_paired_unique_un_ligated_trans / n_paired_unique_un_ligated)));
-        printStream.print(String.format("n_paired_unique_self_ligated_trans:%d (%.2f%% of all unique self-ligated pairs)\n", n_paired_unique_self_ligated_trans, (100.0 * n_paired_unique_self_ligated_trans / n_paired_unique_self_ligated)));
-        printStream.print(String.format("n_paired_unique_too_short_trans:%d (%.2f%% of all unique valid too short pairs)\n", n_paired_unique_too_short_trans, (100.0 * n_paired_unique_too_short_trans / n_paired_unique_too_short)));
-        printStream.print(String.format("n_paired_unique_too_long_trans:%d (%.2f%% of all unique valid too long pairs)\n", n_paired_unique_too_long_trans, (100.0 * n_paired_unique_too_long_trans / n_paired_unique_too_long)));
-        printStream.print(String.format("n_paired_unique_valid_trans:%d (%.2f%% of all unique valid pairs)\n", n_paired_unique_valid_trans, (100.0 * n_paired_unique_valid_trans / n_paired_unique_valid)));
-        printStream.print(String.format("n_paired_strange_internal_trans:%d (%.2f%% of all unique valid pairs)\n", n_paired_strange_internal_trans, (100.0 * n_paired_strange_internal_trans / n_paired_unique_valid)));
-        printStream.print(String.format("n_total_trans:%d (%.2f%% of all unique paired read pairs)\n", n_paired_unique_trans, (100.0 * n_paired_unique_trans/n_paired_unique)));
+        printStream.printf("n_paired_unique_un_ligated_trans:%d (%.2f%% of all unique un-ligated pairs)\n", n_paired_unique_un_ligated_trans, (100.0 * n_paired_unique_un_ligated_trans / n_paired_unique_un_ligated));
+        printStream.printf("n_paired_unique_self_ligated_trans:%d (%.2f%% of all unique self-ligated pairs)\n", n_paired_unique_self_ligated_trans, (100.0 * n_paired_unique_self_ligated_trans / n_paired_unique_self_ligated));
+        printStream.printf("n_paired_unique_too_short_trans:%d (%.2f%% of all unique valid too short pairs)\n", n_paired_unique_too_short_trans, (100.0 * n_paired_unique_too_short_trans / n_paired_unique_too_short));
+        printStream.printf("n_paired_unique_too_long_trans:%d (%.2f%% of all unique valid too long pairs)\n", n_paired_unique_too_long_trans, (100.0 * n_paired_unique_too_long_trans / n_paired_unique_too_long));
+        printStream.printf("n_paired_unique_valid_trans:%d (%.2f%% of all unique valid pairs)\n", n_paired_unique_valid_trans, (100.0 * n_paired_unique_valid_trans / n_paired_unique_valid));
+        printStream.printf("n_paired_strange_internal_trans:%d (%.2f%% of all unique valid pairs)\n", n_paired_strange_internal_trans, (100.0 * n_paired_strange_internal_trans / n_paired_unique_valid));
+        printStream.printf("n_total_trans:%d (%.2f%% of all unique paired read pairs)\n", n_paired_unique_trans, (100.0 * n_paired_unique_trans/n_paired_unique));
 
         printStream.print("\n");
         printStream.print("chimeric_fragment_size_count_array:");

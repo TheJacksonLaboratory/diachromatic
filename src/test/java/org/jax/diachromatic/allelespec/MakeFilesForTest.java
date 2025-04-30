@@ -1,6 +1,9 @@
 package org.jax.diachromatic.allelespec;
 
 import org.junit.jupiter.api.Disabled;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -25,7 +28,7 @@ import static junit.framework.TestCase.assertTrue;
  * $ samtools view -Sb sample.sam {@literal >} sample.bam
  * $ samtools sort -T sample.sorted sample.bam {@literal >} sample.sorted.bam
  * $ samtools index sample.sorted.bam
- *
+ * <p>
  *
  * This produces a genome sequence like this
  * <pre>
@@ -60,7 +63,7 @@ import static junit.framework.TestCase.assertTrue;
  */
 @Disabled("Used to generate files for testing")
 public class MakeFilesForTest {
-
+    Logger LOGGER = LoggerFactory.getLogger(MakeFilesForTest.class);
     private final static int READLEN = 20;
 
     private List<String> fastq1;
@@ -93,15 +96,13 @@ public class MakeFilesForTest {
         long seed = 42L;
         Random rand = new Random(seed);
         String hindIII = "AAGCTT";
-        StringBuilder sb = new StringBuilder();
-        sb.append(makeran(rand, 50));
-        sb.append(hindIII);
-        sb.append(makeran(rand, 60));
-        sb.append(hindIII);
-        sb.append(makeran(rand, 40));
-        sb.append(hindIII);
-        sb.append(makeran(rand, 30));
-        String genome = sb.toString();
+        String genome = makeran(rand, 50) +
+                hindIII +
+                makeran(rand, 60) +
+                hindIII +
+                makeran(rand, 40) +
+                hindIII +
+                makeran(rand, 30);
         System.out.println(genome);
         assertTrue(genome.length() > 10);
         int found = 0;
@@ -121,7 +122,7 @@ public class MakeFilesForTest {
             writer.write(genome);
             writer.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
         // summarize some paired reads
         // we will go for fragments 1-3 and fragments 2-4
@@ -136,7 +137,7 @@ public class MakeFilesForTest {
             }
             writer.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
 
         try {
@@ -146,7 +147,7 @@ public class MakeFilesForTest {
             }
             writer.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
 
         System.out.println("[INFO] Done writing genome and two fastq files");

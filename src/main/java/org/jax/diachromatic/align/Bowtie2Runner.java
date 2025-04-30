@@ -86,7 +86,7 @@ public class Bowtie2Runner {
 
 
         String btcomd= String.join(" ", args);
-        logger.trace("Running: "+btcomd);
+        logger.trace("Running: {}", btcomd);
 
         String[] dummy=new String[0];
         try {
@@ -101,12 +101,12 @@ public class Bowtie2Runner {
             StringBuilder sb = new StringBuilder();
             String s;
             while ((s = stdInput.readLine()) != null) {
-                sb.append(s+"\n");
+                sb.append(s).append("\n");
             }
             this.stdin=sb.toString();
             sb = new StringBuilder();
             while ((s = stdError.readLine()) != null) {
-                sb.append(s+"\n");
+                sb.append(s).append("\n");
             }
             if (sb.length()>0)
                 this.stderr=sb.toString();

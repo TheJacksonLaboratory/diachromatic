@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A simple status bar that only work on terminals where "\r" has an affect.
- *
+ * <p>
  * The progress is done/shown in the closed interval <code>[min, max]</code>.
  *
  * @author <a href="mailto:manuel.holtgrewe@charite.de">Manuel Holtgrewe</a>
@@ -51,8 +51,8 @@ public final class ProgressBar {
             }
         }
 
-        bar.append("]   " + percent + "%     ");
-        logger.error("\r" + bar);
+        bar.append("]   ").append(percent).append("%     ");
+        logger.error("\r{}", bar);
         if (pos == max)
             logger.error("\n");
     }
